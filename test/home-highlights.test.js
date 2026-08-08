@@ -246,7 +246,12 @@ test("Home composes nothing itself — highlights and Moon come from the server"
 });
 
 test("the current Moon is never confused with the natal Moon", () => {
-  assert.match(APP, /This is the Moon in the sky right now — not the Moon in your birth chart/);
+  // The wording was shortened on 2026-08-08 when the panel was trimmed. Matched
+  // on the GUARANTEE rather than the sentence, so tightening the copy again is
+  // an edit and not a test change — while dropping the distinction entirely
+  // still fails.
+  assert.match(APP, /not your birth chart's Moon/i,
+    "the current Moon must still be distinguished from the natal one");
 
   // Dev Update 1.6 proved the Moon was not a bare unlabelled image by pinning a
   // role="img" wrapper with an aria-label around the single disc. Dev Update

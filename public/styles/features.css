@@ -741,7 +741,11 @@
    below at a deliberately quieter weight — quieter, not smaller, because a
    tight outer-planet contact still deserves to be readable. */
 
-.tr-switcher { display: grid; gap: 4px; max-width: 280px; margin: 0 0 12px; }
+/* No margin-bottom. The panel around this is a grid with its own gap, and a
+   margin does not collapse into a grid gap — it ADDS to it, so this was
+   producing 36px where every neighbouring gap was 24px. The container owns the
+   rhythm; children that also set one create spacing nobody chose. */
+.tr-switcher { display: grid; gap: 4px; max-width: 280px; margin: 0; }
 .tr-switcher__label { font-size: 12px; color: var(--color-secondary); }
 .tr-switcher__select {
   min-height: 44px; padding: 8px 12px; font: inherit; color: inherit;
@@ -749,7 +753,7 @@
   background-color: var(--color-surface-elevated); max-width: 100%;
 }
 .tr-status:empty { display: none; }
-.tr-status { margin: 0 0 8px; font-size: 14px; color: var(--color-secondary); }
+.tr-status { margin: 0; font-size: 14px; color: var(--color-secondary); }  /* see .tr-switcher above */
 
 .tr-summary__text { margin: 0; max-width: 66ch; line-height: 1.55; font-size: 16px; }
 

@@ -49,8 +49,14 @@ test("the editor says what relationship type is FOR, without showing scores", ()
   assert.ok(!/coming soon/i.test(MODAL), "no dead Coming Soon panel");
 });
 
-test("the file input accepts exactly the three normalizable source types", () => {
-  assert.match(MODAL, /id="identity-file"[^>]*accept="image\/jpeg,image\/png,image\/webp"/s);
+test("the file input accepts the formats a phone actually produces", () => {
+  // Was "exactly the three normalizable source types". HEIC was added on
+  // 2026-08-08: an iPhone photo IS HEIC, so the old list refused the format
+  // the device Orbit ships to produces by default.
+  const accept = /id="identity-file"[^>]*accept="([^"]+)"/s.exec(MODAL)?.[1] || "";
+  for (const type of ["image/jpeg", "image/png", "image/webp", "image/heic"]) {
+    assert.ok(accept.includes(type), `the picker must accept ${type}`);
+  }
 });
 
 test("errors are announced, focusable, and carry a named Retry", () => {

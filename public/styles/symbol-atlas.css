@@ -57,8 +57,13 @@
 
 /* The Atlas root owns the rhythm between its blocks, so search, results, and
    the category shelf cannot end up flush against each other depending on which
-   of them rendered. */
-#atlas-root { display: grid; gap: var(--space-xl); align-content: start; }
+   of them rendered.
+
+   --space-lg, NOT --space-xl. The workspace panel around this uses lg (24px),
+   so xl (32px) made the Atlas the one surface with its own rhythm — visible as
+   a void between the search field and "Browse the library" that appears
+   nowhere else in the app. One scale, one page. */
+#atlas-root { display: grid; gap: var(--space-lg); align-content: start; }
 #atlas-root > *:empty { display: none; }
 
 /* ── Search ─────────────────────────────────────────────────────────────── */
