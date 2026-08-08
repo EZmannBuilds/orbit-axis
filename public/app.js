@@ -12,7 +12,9 @@ import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
   relationshipDisplay, chartInitials, validateName,
 } from "./chart-identity.js";
-import { normalizeAvatar, previewFor } from "./avatar-normalize.js";
+import { normalizeAvatar, previewFor, decodeImage, releaseImage } from "./avatar-normalize.js";
+import { validateSourceFile, validateSourceDimensions } from "./chart-avatar-limits.js";
+import { createCropEditor } from "./avatar-crop.js";
 import {
   starField, sceneInputs, illuminationLabel, moonPositionLabel,
   SHOOTING_STAR_KEY, ORIENTATION_NOTE,
@@ -2800,6 +2802,9 @@ const identityForm = {
   chart: null, openedBy: null, submitting: false,
   pendingBlob: null, preview: null, removeRequested: false,
   textDone: false,
+  // The crop editor and the decoded source it is framing. Held so the image is
+  // decoded once per chosen file rather than once per slider move.
+  cropEditor: null, sourceImage: null, sourceFile: null,
 };
 
 function identityAvatarNote(text) {
@@ -2876,6 +2881,8 @@ function renderIdentityLegacy(value) {
 }
 
 function resetIdentityWorkingState() {
+  releaseIdentitySource();
+  showIdentityCrop(false);
   identityForm.preview?.release();
   identityForm.preview = null;
   identityForm.pendingBlob = null;
@@ -2931,18 +2938,85 @@ async function onIdentityFileChosen(event) {
   hideIdentityError();
   identityAvatarNote("Preparing image…");
   try {
-    const blob = await normalizeAvatar(file);
+    // The file is decoded ONCE and handed to the editor, which keeps it for
+    // live framing. Re-decoding on every slider move would make a 12 MP photo
+    // stutter on a phone, and re-decoding on save could produce a different
+    // result from the one being previewed.
+    validateSourceFile({ size: file.size, type: file.type });
+    const image = await decodeImage(file);
+    validateSourceDimensions(image.width, image.height);
+
+    releaseIdentitySource();
+    identityForm.sourceFile = file;
+    identityForm.sourceImage = image;
+    ensureIdentityCropEditor();
+    identityForm.cropEditor?.setImage(image);
+    showIdentityCrop(true);
+    await refreshIdentityCropPreview();
+  } catch (error) {
+    identityAvatarNote("");
+    showIdentityCrop(false);
+    releaseIdentitySource();
+    renderIdentityAvatar();
+    showIdentityError(error?.message || "Orbit couldn't prepare that image.", { retry: false });
+  }
+}
+
+/** Build the editor once, lazily — the dialog exists before any photo does. */
+function ensureIdentityCropEditor() {
+  if (identityForm.cropEditor) return;
+  const stage = $("#identity-crop-stage");
+  const canvas = $("#identity-crop-canvas");
+  const zoom = $("#identity-crop-zoom");
+  if (!stage || !canvas || !zoom) return;
+  identityForm.cropEditor = createCropEditor({
+    stage, canvas, zoom,
+    // Debounced, because onChange fires on every pointer move and encoding a
+    // 512 square per frame would fight the drag it is trying to preview.
+    onChange: () => scheduleIdentityCropPreview(),
+  });
+}
+
+function showIdentityCrop(visible) {
+  const crop = $("#identity-crop");
+  if (crop) crop.hidden = !visible;
+}
+
+let identityCropTimer = null;
+function scheduleIdentityCropPreview() {
+  clearTimeout(identityCropTimer);
+  identityCropTimer = setTimeout(() => { refreshIdentityCropPreview(); }, 180);
+}
+
+/**
+ * Encode what the circle currently shows, and make it the pending upload.
+ *
+ * The SAME crop rectangle the editor is drawing is what gets encoded, so the
+ * preview and the saved picture cannot disagree.
+ */
+async function refreshIdentityCropPreview() {
+  const file = identityForm.sourceFile;
+  const editor = identityForm.cropEditor;
+  if (!file || !editor) return;
+  try {
+    const blob = await normalizeAvatar(file, { crop: editor.cropRect() });
     identityForm.preview?.release();
     identityForm.pendingBlob = blob;
     identityForm.preview = previewFor(blob);
     identityForm.removeRequested = false;
     renderIdentityAvatar();
-    identityAvatarNote(`Preview, ${Math.max(1, Math.round(blob.size / 1024))} KB — saved when you press Save.`);
+    identityAvatarNote(`${Math.max(1, Math.round(blob.size / 1024))} KB — saved when you press Save.`);
   } catch (error) {
     identityAvatarNote("");
-    renderIdentityAvatar();
     showIdentityError(error?.message || "Orbit couldn't prepare that image.", { retry: false });
   }
+}
+
+/** Release the decoded source. The editor never closes a bitmap it was given. */
+function releaseIdentitySource() {
+  if (identityForm.sourceImage) releaseImage(identityForm.sourceImage);
+  identityForm.sourceImage = null;
+  identityForm.sourceFile = null;
 }
 
 function onIdentityRemoveClicked() {
@@ -2967,7 +3041,11 @@ async function uploadChartAvatar(chart, blob) {
     response = await fetch(apiUrl(`/api/charts/${encodeURIComponent(chart.id)}/avatar?expectedVersion=${Number(chart.avatar_version) || 0}`), {
       method: "POST",
       credentials: "same-origin",
-      headers: { "content-type": "image/webp", ...authHeaders() },
+      // The BLOB's type, not a hardcoded one. The normalizer prefers WebP but
+      // falls back to PNG on browsers that cannot encode it — and the server
+      // refuses any upload whose declared type disagrees with its bytes, so a
+      // hardcoded "image/webp" would turn that fallback into a rejection.
+      headers: { "content-type": blob.type || "image/webp", ...authHeaders() },
       body: blob,
     });
     rememberSession(response);

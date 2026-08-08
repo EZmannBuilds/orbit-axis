@@ -17,6 +17,26 @@ export const AVATAR_SOURCE_MIN_DIMENSION = 128;
 export const AVATAR_CONTENT_TYPES = Object.freeze(["image/webp", "image/png"]);
 export const AVATAR_OBJECT_NAME = "avatar.webp";
 
+/**
+ * What the PICKER accepts, before normalization. Distinct from
+ * AVATAR_CONTENT_TYPES above, which is what may be UPLOADED — the browser
+ * re-encodes in between, so the two lists have no reason to match.
+ *
+ * HEIC/HEIF are here because they are what an iPhone camera actually produces.
+ * Leaving them out meant a person picking a photo on the device Orbit ships to
+ * was told "Choose a JPEG, PNG, or WebP image" — which reads as the app being
+ * broken, because from where they are standing it is.
+ *
+ * Whether the BROWSER can decode HEIC is a separate question, and not one this
+ * list can answer: Safari and iOS WebKit can, Chrome and Firefox cannot. So
+ * this list is permissive and decodeImage() reports the honest failure when a
+ * browser cannot open it, rather than this refusing a file that would have
+ * worked perfectly on the device it was chosen on.
+ */
+export const AVATAR_SOURCE_CONTENT_TYPES = Object.freeze([
+  "image/jpeg", "image/png", "image/webp", "image/heic", "image/heif",
+]);
+
 export class AvatarError extends Error {
   constructor(code, message) { super(message); this.code = code; }
 }
@@ -30,8 +50,14 @@ export function validateSourceFile({ size, type } = {}) {
   if (size > AVATAR_SOURCE_MAX_BYTES) {
     throw new AvatarError("avatar_source_too_large", "Choose an image under 10 MB.");
   }
-  if (!["image/jpeg", "image/png", "image/webp"].includes(String(type || "").split(";")[0])) {
-    throw new AvatarError("avatar_source_format", "Choose a JPEG, PNG, or WebP image.");
+  // An EMPTY type is allowed through. iOS sometimes hands over a file with no
+  // MIME at all, and refusing on that alone would reject a valid photo before
+  // anything has tried to open it. decodeImage() is the real check: it either
+  // opens or it does not.
+  const mime = String(type || "").split(";")[0].trim().toLowerCase();
+  if (mime && !AVATAR_SOURCE_CONTENT_TYPES.includes(mime)) {
+    throw new AvatarError("avatar_source_format",
+      "Choose a photo — JPEG, PNG, WebP, or an iPhone HEIC image.");
   }
   return true;
 }

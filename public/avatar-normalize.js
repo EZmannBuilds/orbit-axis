@@ -70,9 +70,56 @@ export function centreSquare(width, height) {
   };
 }
 
+/**
+ * A crop rectangle the canvas can actually be asked for.
+ *
+ * The editor works in floats and in whatever units the pointer produced; this
+ * is the boundary where that becomes a square inside the image. Every value is
+ * clamped rather than validated-and-rejected, because a crop half a pixel over
+ * the edge is a rounding artefact, not a person doing something wrong — and
+ * drawImage with a source rectangle outside the bitmap silently produces
+ * transparent edges, which would upload as a picture with a grey stripe.
+ */
+export function clampCrop(crop, width, height) {
+  const maxSide = Math.min(width, height);
+  const side = Math.round(Math.min(Math.max(Number(crop?.side) || maxSide, 1), maxSide));
+  const sx = Math.round(Math.min(Math.max(Number(crop?.sx) || 0, 0), width - side));
+  const sy = Math.round(Math.min(Math.max(Number(crop?.sy) || 0, 0), height - side));
+  return { sx, sy, side };
+}
+
 /** Frees a decoded bitmap. ImageBitmap holds memory until told otherwise. */
 export function releaseImage(image) {
   if (image && typeof image.close === "function") image.close();
+}
+
+/**
+ * Encode the square canvas, preferring WebP and accepting PNG.
+ *
+ * WHY THIS NO LONGER GIVES UP. It used to demand WebP and throw "This browser
+ * couldn't prepare the image" if `toBlob` returned anything else — which is
+ * exactly what Safari has historically done, silently substituting PNG. So the
+ * one browser Orbit ships to on iOS could be the one that refused every photo.
+ *
+ * PNG was always acceptable: AVATAR_CONTENT_TYPES has listed it all along, the
+ * server sniffs and accepts it, and the Storage bucket's allowed types include
+ * it. The client was the only part insisting.
+ *
+ * WebP is still preferred — it is several times smaller at this quality — so
+ * this asks for it first and only falls back when the browser substitutes.
+ */
+export async function encodeSquare(canvas) {
+  const webp = await canvasToBlob(canvas, "image/webp", WEBP_QUALITY);
+  if (webp && webp.type === "image/webp") return webp;
+
+  // Either toBlob refused outright, or it silently produced something else.
+  // Ask for PNG explicitly rather than trusting whatever the substitute was —
+  // a blob claiming a type nobody requested is not a thing to upload.
+  const png = await canvasToBlob(canvas, "image/png");
+  if (png && png.type === "image/png") return png;
+
+  throw new AvatarError("avatar_encode_failed",
+    "This browser couldn't prepare the image. Try another photo.");
 }
 
 /**
@@ -81,7 +128,7 @@ export function releaseImage(image) {
  * Returns a Blob ready to upload. The original file is never sent — only this
  * result, which is why the metadata cannot come with it.
  */
-export async function normalizeAvatar(file, { createCanvas } = {}) {
+export async function normalizeAvatar(file, { createCanvas, crop = null } = {}) {
   validateSourceFile({ size: file?.size, type: file?.type });
 
   const image = await decodeImage(file);
@@ -90,7 +137,12 @@ export async function normalizeAvatar(file, { createCanvas } = {}) {
     const height = image.height;
     validateSourceDimensions(width, height);
 
-    const { sx, sy, side } = centreSquare(width, height);
+    // An explicit crop from the editor, clamped to the image. Falls back to the
+    // centre square, which is what every caller got before cropping existed —
+    // so a caller that passes nothing behaves exactly as it always has.
+    const { sx, sy, side } = crop
+      ? clampCrop(crop, width, height)
+      : centreSquare(width, height);
     const canvas = createCanvas
       ? createCanvas(AVATAR_DIMENSION, AVATAR_DIMENSION)
       : Object.assign(document.createElement("canvas"),
@@ -101,13 +153,7 @@ export async function normalizeAvatar(file, { createCanvas } = {}) {
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(image, sx, sy, side, side, 0, 0, AVATAR_DIMENSION, AVATAR_DIMENSION);
 
-    const blob = await canvasToBlob(canvas, "image/webp", WEBP_QUALITY);
-    if (!blob) throw new AvatarError("avatar_encode_failed", "Orbit couldn't prepare that image.");
-    if (blob.type !== "image/webp") {
-      // A browser that silently produced PNG instead would send bytes the
-      // server refuses. Better to say so here than to fail after the upload.
-      throw new AvatarError("avatar_encode_failed", "This browser couldn't prepare the image. Try another.");
-    }
+    const blob = await encodeSquare(canvas);
     if (blob.size > AVATAR_MAX_BYTES) {
       throw new AvatarError("avatar_too_large", "That image was still too large after processing.");
     }
