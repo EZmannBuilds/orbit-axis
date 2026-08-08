@@ -46,7 +46,7 @@ const MANIFEST = [
   { name: "user-circle", duo: true },        // You
 
   // Structure and movement
-  "magnifying-glass", "plus", "x", "caret-right", "arrow-right", "arrow-clockwise",
+  "magnifying-glass", "x", "caret-right", "arrow-right", "arrow-clockwise",
 
   // Sky vocabulary. The Moon ships both weights: the outline crescent is a new
   // Moon and the solid disc is a full one, which is the one place in the app

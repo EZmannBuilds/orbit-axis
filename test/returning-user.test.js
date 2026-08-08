@@ -252,10 +252,17 @@ test("10. signed-out local preview is preserved and separate from saved charts",
 });
 
 // ══ 11 & 12. Structure: no-flash, + action, modal, a11y, keyboard ══════════
-test("11. the Home + action and Manage entry point exist beside the selector", () => {
-  assert.ok(html.includes('id="today-chart-add"'), "+ action exists");
-  assert.ok(html.includes('id="today-chart-manage"'), "manage entry point exists");
-  assert.ok(html.includes('aria-label="Add a chart"'), "+ is labelled for screen readers");
+test("11. the Home selector stands alone, and its error state survives", () => {
+  // The "+" and Manage controls were removed on 2026-08-08. This test used to
+  // assert they existed; it now asserts they do NOT, so their return is a
+  // decision rather than a regression.
+  //
+  // What it always really guarded is the part below: a recoverable chart-load
+  // failure must stay distinguishable from "you have no chart", and must offer
+  // a way back. That is untouched.
+  assert.ok(html.includes('id="today-chart-select"'), "the selector exists");
+  assert.ok(!html.includes('id="today-chart-add"'), "the + action is gone");
+  assert.ok(!html.includes('id="today-chart-manage"'), "the manage entry point is gone");
   assert.ok(html.includes('id="today-chart-error"'), "recoverable error state exists");
   assert.ok(html.includes('id="today-chart-retry"'), "retry control exists");
 });

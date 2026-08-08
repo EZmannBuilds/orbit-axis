@@ -127,13 +127,82 @@
 
 .fortune-head__note { margin: 0; font-size: 0.78rem; color: var(--text-muted, #9aa3b2); }
 
-.fortune-grid {
+/* ── The reading deck ───────────────────────────────────────────────────────
+   A horizontal scroll-snap track. The previous carousel here was removed for
+   hiding four of five readings behind a swipe nobody discovers, so the PEEK
+   below is load-bearing rather than decorative: at every width the next card
+   is partly visible, which is what tells a reader there is more. Remove the
+   peek and that objection comes straight back. */
+.fortune-deck { display: grid; gap: var(--space-2, 0.75rem); }
+
+.fortune-deck__track {
   display: grid;
+  grid-auto-flow: column;
+  /* 82% leaves ~18% of the next card showing. */
+  grid-auto-columns: 82%;
   gap: var(--space-3, 1rem);
-  grid-template-columns: 1fr;      /* 375px: one column, no clipping */
+  overflow-x: auto;
+  overscroll-behavior-x: contain;  /* a swipe past the end must not navigate back */
+  scroll-snap-type: x mandatory;
+  /* Room for the focus ring, which a plain overflow container clips away. */
+  padding: 3px;
+  margin: -3px;
+  scrollbar-width: none;
+}
+.fortune-deck__track::-webkit-scrollbar { display: none; }
+
+.fortune-deck__track > * { scroll-snap-align: center; }
+
+.fortune-deck__dots {
+  display: flex;
+  gap: var(--space-2, 0.75rem);
+  justify-content: center;
+  align-items: center;
 }
 
+.fortune-dot {
+  /* 8px of ink inside a 44px target: visually a dot, physically a button. */
+  inline-size: 44px;
+  block-size: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+}
+.fortune-dot::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: 50%;
+  background: var(--text-muted, #9aa3b2);
+  opacity: 0.4;
+  transition: opacity 120ms ease, scale 120ms ease;
+}
+.fortune-dot.is-current::after {
+  background: var(--accent, #8b9cf5);
+  opacity: 1;
+  scale: 1.25;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fortune-deck__track { scroll-behavior: auto; }
+  .fortune-dot::after { transition: none; }
+}
+
+/* Reserved for artwork. Zero height until there is art, so the deck does not
+   sit on a band of empty space in the meantime. */
+.fortune-card2__art:empty { display: none; }
+
 .fortune-card2 {
+  /* Fills its snap cell, so cards in the deck are the same height whatever
+     length the engine's sentence happened to be. */
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  block-size: 100%;
   padding: var(--space-3, 1rem);
   border: 1px solid var(--border, #262b38);
   border-radius: var(--radius-lg, 14px);
@@ -165,14 +234,24 @@
   color: var(--text-muted, #9aa3b2);
 }
 
+/* Above phone widths the deck stops being a deck. There is room to show every
+   reading at once, and swiping to reach content that would already fit is
+   hiding it for no reason — which is exactly what got the last carousel
+   removed. The dots go with it. */
 @media (min-width: 640px) {
-  .fortune-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fortune-deck__track {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+  .fortune-deck__dots { display: none; }
   .fortune-card2--primary { grid-column: 1 / -1; }
 }
 
 @media (min-width: 1100px) {
-  /* Primary spans the top; the three supporting readings sit beneath it. */
-  .fortune-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fortune-deck__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fortune-card2--primary { grid-column: 1 / -1; }
 }
 

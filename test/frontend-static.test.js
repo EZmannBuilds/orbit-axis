@@ -13,6 +13,7 @@ import { dirname, join } from "node:path";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const html = readFileSync(join(ROOT, "public", "index.html"), "utf8");
 const appJs = readFileSync(join(ROOT, "public", "app.js"), "utf8");
+const fortuneCss = readFileSync(join(ROOT, "public", "styles", "fortune.css"), "utf8");
 
 test("the search in the top nav is real, not a decorative button", () => {
   // The ORIGINAL guarantee here was that a fake search bar had been removed:
@@ -89,7 +90,19 @@ test("Home has a saved-chart selector wired to the activate endpoint", () => {
   assert.ok(html.includes('id="today-chart-select"'));
   assert.ok(appJs.includes("axisWireChartPicker"));
   assert.ok(appJs.includes("/activate"));
-  assert.match(appJs, /today-chart-manage[\s\S]*navigate\("me"\)/, "Home Manage should route to Me");
+  // Manage and "+" were REMOVED from the chip on 2026-08-08. They were two
+  // routes to a screen the Chart tab reaches in one tap, competing for
+  // attention with the reading they now sit under. What matters is unchanged
+  // and still asserted above: the selector exists and activates a chart.
+  assert.ok(!html.includes('id="today-chart-manage"'), "the Manage button is gone");
+  assert.ok(!html.includes('id="today-chart-add"'), "the + button is gone");
+
+  // And it sits BELOW the reading, which is the point of the move: the first
+  // question on Today is what the day says, not whose chart it is.
+  assert.ok(html.indexOf('id="today-fortune"') < html.indexOf('id="today-chart-picker"'),
+    "the picker must come after the reading");
+  assert.ok(html.indexOf('id="today-chart-picker"') < html.indexOf('id="today-moon"'),
+    "…and before the Moon");
 });
 
 test("My Chart renders the eight-section reading hierarchy in order", () => {
@@ -345,24 +358,53 @@ test("Me saved-chart failure has Retry and is never an empty state", () => {
   assert.doesNotMatch(renderSaved.slice(errorBranchStart, emptyBranchStart), /No saved charts yet/);
 });
 
-test("Today's Fortune renders as cards, with no carousel left behind", () => {
-  // Update 5.2 replaced the carousel. It hid four of five readings behind a
-  // swipe with only a row of dots to suggest it existed.
-  for (const relic of ["fortune-carousel", "fortune-prev", "fortune-next", "fortune-dots",
+test("Today's Fortune is a deck that hides nothing", () => {
+  // HISTORY, because this test has now argued both sides.
+  //
+  // Update 5.2 removed a carousel here, for a good reason: it "hid four of five
+  // readings behind a swipe with only a row of dots to suggest it existed". A
+  // deck was reinstated on 2026-08-08 at the owner's request, so this test
+  // stopped forbidding the shape and started enforcing the conditions that
+  // made the old one bad. Those conditions are the assertions below.
+  //
+  // The old JS relics must still be gone — the deck is CSS scroll-snap, not a
+  // revived index-juggling carousel.
+  for (const relic of ["fortune-carousel", "fortune-prev", "fortune-next",
                        "axisMoveCarousel", "axisSetCarouselIndex", "axisPaintCarouselCard"]) {
     assert.ok(!appJs.includes(relic), `${relic} should be gone`);
   }
   assert.ok(appJs.includes("axisFortuneCards"), "the card builder should exist");
-  assert.ok(appJs.includes("fortune-grid"), "cards should be laid out as a grid");
+  assert.ok(appJs.includes("fortune-deck__track"), "cards should sit in a deck track");
+
+  // 1. NOTHING IS HIDDEN FROM ANYTHING BUT THE EYE. Every card is real markup,
+  //    always present — so find-in-page and a screen reader still reach every
+  //    word even when only one card is on screen.
+  // The CARD rule itself, isolated. A looser search matched
+  // `.fortune-card2__art:empty { display: none }` — the empty artwork slot,
+  // which is exactly the kind of false positive that teaches people to delete
+  // an assertion instead of reading it.
+  const cardRule = /\n\.fortune-card2\s*\{([^}]*)\}/.exec(fortuneCss)?.[1] || "";
+  assert.ok(cardRule.length > 0, "the card rule must exist to be checked");
+  assert.ok(!/display:\s*none/.test(cardRule), "cards must never be display:none");
+
+  // 2. THE SWIPE IS VISIBLE. The peek is what tells a reader there is more, and
+  //    its absence is precisely what killed the last carousel.
+  assert.match(fortuneCss, /grid-auto-columns:\s*8\d%/,
+    "the track must show a peek of the next card, not a full-width slide");
+
+  // 3. THE DOTS ARE NOT THE ONLY AFFORDANCE, and above phone widths the deck
+  //    stops being a deck at all rather than hiding content that would fit.
+  assert.match(fortuneCss, /\.fortune-deck__dots\s*\{\s*display:\s*none/,
+    "the dots must disappear once every card fits");
 });
 
 test("the fortune title appears above the cards", () => {
   // Order in the source is order in the document: the day gets a name before
   // it gets detail.
   const head = appJs.indexOf("fortune-head__title");
-  const grid = appJs.indexOf('<div class="fortune-grid">');
-  assert.ok(head > 0 && grid > 0, "both the title and the grid should render");
-  assert.ok(head < grid, "the title must be emitted before the card grid");
+  const deck = appJs.indexOf('<div class="fortune-deck">');
+  assert.ok(head > 0 && deck > 0, "both the title and the deck should render");
+  assert.ok(head < deck, "the title must be emitted before the cards");
 });
 
 test("the main fortune copy never names a planet", () => {

@@ -124,17 +124,12 @@
           <!-- Which chart this reading belongs to. A picture, a name, and the
                way to change it — one control instead of a label, a select, and
                two buttons competing for the same row. -->
-          <div class="chart-chip" id="today-chart-picker" hidden>
-            <span class="chart-avatar chart-avatar--sm" id="today-chart-avatar" aria-hidden="true" hidden></span>
-            <div class="chart-chip__text">
-              <span class="chart-chip__eyebrow" id="today-reading-for" hidden>Reading for</span>
-              <label class="sr-only" for="today-chart-select">Viewing chart</label>
-              <select id="today-chart-select" class="chart-chip__select"></select>
-              <span class="sr-only" id="today-chart-name">My Chart</span>
-            </div>
-            <button type="button" class="o-icon-btn axis-chart-add" id="today-chart-add" aria-label="Add a chart" data-icon="plus"></button>
-            <button type="button" class="o-btn o-btn--utility axis-chart-manage" id="today-chart-manage">Manage</button>
-          </div>
+          <!-- The chart picker now lives BELOW the reading — see further down.
+               It sat here, above everything, when the first question on the
+               screen was "whose chart is this?". It isn't: the reading is what
+               the page is for, and the picker only matters once you have read
+               something and want it for someone else. -->
+
 
           <!-- Recoverable saved-chart error. Never mistaken for "you have no
                chart" — that distinction is why this element exists at all. -->
@@ -155,6 +150,20 @@
 
           <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
+
+          <!-- Whose chart the reading above belongs to.
+               Just the picker: the "Reading for" label repeated what the select
+               already says, and Manage and + were two routes to a screen the
+               Chart tab is one tap away from — three controls competing for
+               attention with the reading they sit under. -->
+          <div class="chart-chip chart-chip--under" id="today-chart-picker" hidden>
+            <span class="chart-avatar chart-avatar--sm" id="today-chart-avatar" aria-hidden="true" hidden></span>
+            <div class="chart-chip__text">
+              <label class="sr-only" for="today-chart-select">Viewing chart</label>
+              <select id="today-chart-select" class="chart-chip__select"></select>
+              <span class="sr-only" id="today-chart-name">My Chart</span>
+            </div>
+          </div>
 
           <!-- The Moon. The scene shell is always present so the layout does
                not shift when canonical data arrives. The drawing is decorative;
