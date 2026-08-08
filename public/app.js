@@ -16,7 +16,7 @@ import { normalizeAvatar, previewFor, decodeImage, releaseImage } from "./avatar
 import { validateSourceFile, validateSourceDimensions } from "./chart-avatar-limits.js";
 import { createCropEditor } from "./avatar-crop.js";
 import {
-  starField, sceneInputs, illuminationLabel, moonPositionLabel,
+  starField, sceneInputs, illuminationLabel,
   SHOOTING_STAR_KEY, ORIENTATION_NOTE,
 } from "./moon-scene.js";
 import { decideStartupView, STARTUP_VIEW } from "./startup-state.js";
@@ -5097,21 +5097,22 @@ function wireFortuneDeck(count) {
 
   // Which card is current follows the SCROLL rather than the taps, so a swipe,
   // a wheel, and a dot press all keep the dots honest.
-  let frame = null;
+  //
+  // Computed synchronously rather than inside requestAnimationFrame. Orbit
+  // bans rAF in the client outright — animation is CSS, paused by a class,
+  // never JavaScript doing frame work — and a scroll throttle is close enough
+  // to that shape to be worth not arguing about. It costs nothing: the loop is
+  // four cards of arithmetic, and the browser already rate-limits scroll.
   track.addEventListener("scroll", () => {
-    if (frame) return;
-    frame = requestAnimationFrame(() => {
-      frame = null;
-      const middle = track.scrollLeft + track.clientWidth / 2;
-      let nearest = 0;
-      let best = Infinity;
-      cards.forEach((card, i) => {
-        const centre = card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
-        const distance = Math.abs(centre - middle);
-        if (distance < best) { best = distance; nearest = i; }
-      });
-      markCurrent(nearest);
+    const middle = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let best = Infinity;
+    cards.forEach((card, i) => {
+      const centre = card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
+      const distance = Math.abs(centre - middle);
+      if (distance < best) { best = distance; nearest = i; }
     });
+    markCurrent(nearest);
   }, { passive: true });
 
   track.addEventListener("keydown", (event) => {
@@ -5202,7 +5203,6 @@ function axisRenderMoon(moon, sky) {
   const visual = scene ? moonSceneHtml(scene) : moonSceneUnavailableHtml();
 
   const illum = illuminationLabel(moon.illumination);
-  const position = moonPositionLabel(moon);
   const next = moon.nextEvent
     ? `<p class="moon-state__next">Next ${esc(moon.nextEvent.kind)} ${esc(moon.nextEvent.when)}.</p>`
     : `<p class="moon-state__next">The next lunar event isn’t available right now.</p>`;
@@ -5222,14 +5222,16 @@ function axisRenderMoon(moon, sky) {
         <p class="moon-state__facts">${
           [illum, moon.direction].filter(Boolean).map(esc).join(" · ")
         }</p>
-        ${position ? `<p class="moon-state__position">${esc(position)}</p>` : ""}
         <p class="moon-state__meaning">${esc(moon.meaning)}</p>
         ${next}
-        <p class="moon-state__note">This is the Moon in the sky right now — not the Moon in your birth chart.</p>
-        <p class="moon-state__orientation">${esc(ORIENTATION_NOTE)}</p>
+        <!-- Both caveats, in ONE line of small print rather than two
+             paragraphs. Trimmed on request, but not dropped: the drawing shows
+             a Moon that is not oriented the way you would actually see it, and
+             saying so is the difference between a simplification and a picture
+             that quietly misleads. -->
+        <p class="moon-state__note">Not your birth chart's Moon. ${esc(ORIENTATION_NOTE)}</p>
         <div class="moon-state__actions">
           <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">View Current Positions</a>
-          <a class="o-btn o-btn--secondary o-btn--sm" href="#transits">See the transit details</a>
         </div>
       </div>
     </div>`;
