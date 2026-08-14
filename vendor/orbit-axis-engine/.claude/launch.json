@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "orbit-axis-ui",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "ui"],
+      "port": 4747
+    }
+  ]
+}

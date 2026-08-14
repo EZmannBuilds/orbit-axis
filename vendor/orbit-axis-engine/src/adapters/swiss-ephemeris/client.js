@@ -33,12 +33,19 @@ const SIGN_ABBR = {
 };
 
 // swetest -p body letters → our planet names (order matters for -p string)
-const BODY_CODES = "0123456789mt";
+//
+// D is Chiron and A/B are the lunar apogee (Lilith), mean and osculating. They
+// are requested alongside the planets in the same run — one subprocess either
+// way — but returned under `points` rather than `planets`, because `planets`
+// feeds aspects, element balance, and the sky snapshot hash. Folding new bodies
+// into those would silently change every existing chart and every fortune seed.
+const BODY_CODES = "0123456789mtDAB";
 const BODY_NAMES = {
   "Sun": "Sun", "Moon": "Moon", "Mercury": "Mercury", "Venus": "Venus",
   "Mars": "Mars", "Jupiter": "Jupiter", "Saturn": "Saturn", "Uranus": "Uranus",
   "Neptune": "Neptune", "Pluto": "Pluto",
   "mean Node": "North Node", "true Node": "True Node",
+  "Chiron": "Chiron", "mean Apogee": "Lilith", "osc. Apogee": "TrueLilith",
 };
 
 export const PLANETS = [
@@ -46,7 +53,100 @@ export const PLANETS = [
   "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto",
 ];
 
+/**
+ * Bodies returned under `points`.
+ *
+ * Chiron needs `seas_18.se1`, which this package bundles and `runtime:check`
+ * verifies. Parsing stays tolerant rather than throwing on their absence: a
+ * caller pointing at a minimal ephemeris directory should lose Chiron, not
+ * lose the ability to calculate a natal chart. `checkEphemerisData()` is where
+ * a missing data file is reported.
+ *
+ * Lilith is offered both ways because the two disagree by degrees, not
+ * arcseconds, and charts in the wild are drawn with either. `Lilith` is the
+ * mean apogee (the common default); `TrueLilith` is the osculating apogee.
+ */
+export const POINTS = ["Chiron", "Lilith", "TrueLilith"];
+
 // ── UT conversion ────────────────────────────────────────────────────────────
+
+/**
+ * The UTC offset an IANA time zone was on at a given LOCAL wall-clock time.
+ *
+ * WHY THIS EXISTS
+ *
+ * A birth chart is cast from a wall clock — "1:57 AM in Texas" — but the
+ * ephemeris wants UT. Bridging the two requires knowing whether daylight time
+ * was in force on that date in that place, which is a question about political
+ * history, not arithmetic. Making the caller supply `utc_offset_at_birth` by
+ * hand pushes that history onto them, and an off-by-one-hour offset is the most
+ * common way a chart comes out subtly and unfalsifiably wrong: every angle
+ * moves ~15°, the houses shift, and nothing in the output looks broken.
+ *
+ * Node ships the IANA database with ICU, so this needs no dependency and no
+ * bundled tzdata to go stale.
+ *
+ * HOW
+ *
+ * `Intl` maps an instant to a zone's local time; we need the inverse. Guess
+ * that the local time IS the UT time, ask the zone what local time that instant
+ * actually shows, and correct by the difference. One correction is enough
+ * except across a transition, where the corrected guess can land on the other
+ * side of it — so it is applied twice and the result verified.
+ *
+ * AMBIGUOUS AND IMPOSSIBLE TIMES
+ *
+ * When clocks go back, a local hour happens twice; when they go forward, an
+ * hour does not exist. Rather than guess, this returns the offset in force
+ * BEFORE the transition — the earlier of two ambiguous readings, and for a
+ * skipped hour the offset that was standing when the clock jumped. That is the
+ * conventional reading of a birth certificate written during the gap, and it is
+ * documented rather than silent.
+ *
+ * @param {string} timeZone IANA name, e.g. "America/Chicago"
+ * @param {{year:number, month:number, day:number, hour?:number, minute?:number}} local
+ * @returns {number} minutes east of UTC
+ */
+export function zoneOffsetMinutes(timeZone, local) {
+  const { year, month, day, hour = 12, minute = 0 } = local ?? {};
+  let formatter;
+  try {
+    formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone, hourCycle: "h23",
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    });
+  } catch {
+    const error = new TypeError(`Unknown time zone: ${timeZone}`);
+    error.code = "invalid_input";
+    throw error;
+  }
+
+  // What the zone's clock reads at a given instant, as a UTC-epoch number so
+  // the two can be subtracted.
+  const zoneClockAt = (ms) => {
+    const parts = {};
+    for (const part of formatter.formatToParts(new Date(ms))) {
+      if (part.type !== "literal") parts[part.type] = Number(part.value);
+    }
+    return Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  };
+
+  const wanted = Date.UTC(year, month - 1, day, hour, minute, 0);
+  let guess = wanted;
+  for (let pass = 0; pass < 2; pass += 1) {
+    guess = wanted - (zoneClockAt(guess) - guess);
+  }
+
+  // Across a spring-forward gap the requested local time never occurs, so the
+  // loop cannot converge. Fall back to the offset in force just before it.
+  if (zoneClockAt(guess) !== wanted) {
+    const dayBefore = wanted - 86_400_000;
+    return Math.round((zoneClockAt(dayBefore) - dayBefore) / 60_000);
+  }
+  return Math.round((wanted - guess) / 60_000);
+}
+
 // Parse a UTC offset ("-05:00", "+5.5", -300 minutes, 5) into minutes east.
 export function offsetToMinutes(offset) {
   if (offset == null || offset === "") return 0;
@@ -180,6 +280,7 @@ export function positionsAtUT(input) {
   const raw = run(args);
 
   const planets = {};
+  const points = {};
   const nodes = {};
   const houses = [];
   let asc = null, mc = null;
@@ -203,6 +304,7 @@ export function positionsAtUT(input) {
     if (!mapped) continue;
     if (mapped === "North Node") { nodes.north = body("North Node", b.longitude, b.speed); nodes.south = body("South Node", b.longitude + 180, b.speed); }
     else if (mapped === "True Node") { nodes.trueNorth = body("True Node", b.longitude, b.speed); }
+    else if (POINTS.includes(mapped)) points[mapped] = body(mapped, b.longitude, b.speed);
     else planets[mapped] = body(mapped, b.longitude, b.speed);
   }
 
@@ -224,7 +326,7 @@ export function positionsAtUT(input) {
     );
   }
 
-  return { planets, nodes, houses: houses.filter(Boolean), ascendant: asc, midheaven: mc };
+  return { planets, points, nodes, houses: houses.filter(Boolean), ascendant: asc, midheaven: mc };
 }
 
 // Current sky positions (no houses; angles need a location + exact time).
