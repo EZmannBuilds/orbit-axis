@@ -4796,9 +4796,25 @@ function planetsInHouse(chart, houseNumber) {
 function renderChartData(chart, readingPayload) {
   const target = $("#chart-placements");
   if (!target) return;
-  const rows = STANDARD_PLANET_ORDER.map((name) => chart.planets?.[name]).filter(Boolean).map((p) =>
-    `<tr><td>${esc(p.name)}</td><td>${esc(p.sign)}</td><td>${esc(degLabel(p))}</td><td>${p.retrograde ? "Retrograde" : "Direct"}</td><td>${chart.planet_houses?.[p.name] ? "House " + esc(String(chart.planet_houses[p.name])) : "—"}</td></tr>`
-  ).join("");
+  const bodyRow = (p, label, house) =>
+    `<tr><td>${esc(label)}</td><td>${esc(p.sign)}</td><td>${esc(degLabel(p))}</td><td>${p.retrograde ? "Retrograde" : "Direct"}</td><td>${house ? "House " + esc(String(house)) : "—"}</td></tr>`;
+  const planetRows = STANDARD_PLANET_ORDER.map((name) => chart.planets?.[name]).filter(Boolean)
+    .map((p) => bodyRow(p, p.name, chart.planet_houses?.[p.name])).join("");
+  // Chiron and Lilith sit below the planets and are labelled as points, because
+  // they are not part of the aspect set or the element balance shown elsewhere
+  // on this page. Listing them among the planets would imply they were.
+  // Lilith is shown as the true (osculating) apogee, which is what most charts
+  // drawn elsewhere use; the mean apogee is available from the engine but two
+  // Liliths a few degrees apart reads as an error rather than as a choice.
+  // Labels avoid a trailing parenthesis: client-references.test.js scans this
+  // file for called-but-undefined names and reads "Name (…)" inside a string as
+  // a call, so "Lilith (true)" would fail that check.
+  const POINT_LABELS = { Chiron: "Chiron", TrueLilith: "True Lilith" };
+  const pointRows = Object.entries(POINT_LABELS)
+    .filter(([key]) => chart.points?.[key])
+    .map(([key, label]) => bodyRow(chart.points[key], label, chart.point_houses?.[key]))
+    .join("");
+  const rows = planetRows + pointRows;
   const retro = readingPayload?.retrogrades?.length ? readingPayload.retrogrades.join(", ") : "None";
   target.innerHTML = `
     <details class="chart-details" open>
