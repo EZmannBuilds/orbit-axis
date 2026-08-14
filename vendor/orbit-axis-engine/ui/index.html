@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orbit Axis — engine playground</title>
+<style>
+  /* Meta commerce design language (DESIGN-meta.md): stark white canvas,
+     Optimistic VF type ramp, pill buttons (black marketing primary, outlined
+     secondary), hairline-bordered cards at 16/32px rounding, cobalt reserved
+     for data encoding, links, and focus. */
+  :root {
+    --canvas: #ffffff;
+    --surface-soft: #f1f4f7;
+    --hairline: #ced0d4;
+    --hairline-soft: #dee3e9;
+    --ink-deep: #0a1317;
+    --ink: #1c1e21;
+    --charcoal: #444950;
+    --steel: #5d6c7b;
+    --stone: #8595a4;
+    --primary: #0064e0;        /* cobalt — data meters, links, transit markers */
+    --primary-deep: #0457cb;
+    --fb-blue: #1876f2;        /* focused input border */
+    --success: #31a24c;
+    --critical: #e41e3f;
+    --critical-strong: #f0284a;
+    --warning: #f7b928;
+    /* legacy aliases the SVG renderers consume */
+    --bg: var(--canvas);
+    --surface: var(--canvas);
+    --surface-2: var(--surface-soft);
+    --line: var(--hairline-soft);
+    --ink-2: var(--steel);
+    --ink-3: var(--stone);
+    --accent: var(--primary);
+    --accent-2: var(--primary);
+    --bad: var(--critical);
+    --moon-lit: #ffffff;
+    --moon-dark: #0a1317;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--canvas); color: var(--ink);
+    font-family: "Optimistic VF", Montserrat, Helvetica, Arial, "Noto Sans", sans-serif;
+    font-size: 16px; line-height: 1.5; letter-spacing: -0.16px;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 40px 32px 80px; }
+  a { color: var(--primary); font-weight: 700; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  /* promo strip above the header, ink-deep */
+  .promo-banner {
+    background: var(--ink-deep); color: var(--canvas);
+    font-size: 14px; font-weight: 700; letter-spacing: -0.14px; line-height: 1.43;
+    padding: 12px 24px; text-align: center;
+  }
+  .promo-banner a { color: var(--canvas); text-decoration: underline; }
+  h1 { font-size: 36px; font-weight: 500; line-height: 1.28; margin: 0; letter-spacing: 0; font-feature-settings: "ss01", "ss02"; }
+  h1 .muted { color: var(--steel); font-weight: 300; }
+  /* editorial subhead — the 300-weight tier of the ramp */
+  h2 { font-size: 28px; font-weight: 300; line-height: 1.21; letter-spacing: 0; color: var(--ink-deep); margin: 80px 0 24px; font-feature-settings: "ss01", "ss02"; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding-bottom: 24px; border-bottom: 1px solid var(--hairline-soft); }
+  .badge {
+    font-size: 12px; font-weight: 700; line-height: 1.33; color: var(--charcoal);
+    border: 1px solid var(--hairline); border-radius: 100px; padding: 4px 12px; background: var(--canvas);
+  }
+  .badge.ok { background: var(--success); border-color: var(--success); color: var(--canvas); }
+  .badge.bad { background: var(--critical); border-color: var(--critical); color: var(--canvas); }
+  .grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card {
+    background: var(--canvas); border: 1px solid var(--hairline-soft);
+    border-radius: 16px; padding: 24px; min-width: 0;
+  }
+  .card.feature { border-radius: 32px; padding: 32px; }
+  /* dark promo-strip card (card-promo-strip) */
+  .card.strip { background: var(--ink-deep); border: none; border-radius: 32px; padding: 32px; color: var(--canvas); }
+  .card.strip h3 { color: var(--stone); }
+  .card.strip .sub { color: #b8c4cf; }
+  .card h3 { margin: 0 0 10px; font-size: 18px; font-weight: 700; line-height: 1.44; color: var(--ink); letter-spacing: 0; }
+  .big { font-size: 28px; font-weight: 500; line-height: 1.21; letter-spacing: 0; color: var(--ink-deep); font-feature-settings: "ss01", "ss02"; }
+  .sub { color: var(--steel); font-size: 14px; letter-spacing: -0.14px; line-height: 1.43; }
+  .row { display: flex; align-items: center; gap: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { font-size: 12px; font-weight: 700; line-height: 1.33; border: 1px solid var(--hairline); background: var(--canvas); border-radius: 100px; padding: 4px 12px; color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; letter-spacing: -0.14px; }
+  th { text-align: left; color: var(--ink); font-weight: 700; font-size: 14px; letter-spacing: -0.14px; }
+  th, td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--hairline-soft); }
+  td { color: var(--charcoal); }
+  td:first-child { color: var(--ink); font-weight: 700; }
+  tr:last-child td { border-bottom: 0; }
+  .scroll { overflow-x: auto; }
+  .num { font-variant-numeric: tabular-nums; }
+  .r { color: var(--critical); font-size: 12px; margin-left: 4px; }
+  /* controls */
+  label { display: block; font-size: 14px; font-weight: 700; letter-spacing: -0.14px; color: var(--ink); margin: 0 0 6px; }
+  input, select {
+    font: inherit; letter-spacing: -0.16px; color: var(--ink); background: var(--canvas);
+    border: 1px solid var(--hairline); border-radius: 8px; padding: 0 12px; width: 100%; height: 44px;
+  }
+  input:focus, select:focus { outline: none; border: 2px solid var(--fb-blue); }
+  button {
+    font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: -0.14px; line-height: 1.43;
+    cursor: pointer; border-radius: 100px; padding: 14px 30px; border: none;
+    background: var(--canvas); color: var(--ink-deep);
+  }
+  button:focus-visible { outline: 2px solid var(--fb-blue); outline-offset: 2px; }
+  button.primary { background: #000000; color: #ffffff; }
+  button.primary:active { background: var(--charcoal); }
+  button.secondary { background: transparent; color: var(--ink-deep); border: 2px solid var(--ink-deep); padding: 12px 28px; }
+  form .grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+  .error { color: var(--critical-strong); font-size: 14px; letter-spacing: -0.14px; margin-top: 12px; white-space: pre-wrap; }
+  /* meters: single cobalt hue; the label carries identity, the bar magnitude */
+  .meter { display: grid; grid-template-columns: 72px 1fr 48px; align-items: center; gap: 12px; margin: 8px 0; font-size: 14px; letter-spacing: -0.14px; }
+  .meter .track { display: block; height: 10px; background: var(--surface-soft); border-radius: 100px; overflow: hidden; }
+  .meter .fill { display: block; height: 100%; background: var(--primary); border-radius: 100px; min-width: 2px; }
+  .meter .val { text-align: right; color: var(--steel); font-variant-numeric: tabular-nums; }
+  footer { margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--hairline-soft); color: var(--stone); font-size: 12px; letter-spacing: 0; line-height: 1.33; }
+  footer a { color: var(--steel); }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 0 0 24px; }
+  .controls > div { min-width: 220px; }
+  @media (max-width: 767px) {
+    main { padding: 24px 16px 48px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 24px; margin-top: 48px; }
+    .card.feature, .card.strip { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="promo-banner">Computed by the open-source Orbit Axis Engine — no account, nothing stored. <a href="/source">Source (AGPL)</a></div>
+<main>
+  <header>
+    <h1>Orbit Axis <span class="muted">playground</span></h1>
+    <span class="badge" id="health">checking engine…</span>
+  </header>
+
+  <h2>The sky at an instant</h2>
+  <div class="controls">
+    <div>
+      <label for="instant">Instant (your local time)</label>
+      <input type="datetime-local" id="instant" step="60">
+    </div>
+    <button class="primary" id="btn-sky">Compute</button>
+    <button id="btn-now" class="secondary">Now</button>
+  </div>
+
+  <div class="grid" id="sky-cards" hidden>
+    <div class="card">
+      <h3>Sun</h3>
+      <div class="big" id="sun-sign">—</div>
+      <div class="sub" id="sun-deg"></div>
+    </div>
+    <div class="card">
+      <h3>Moon</h3>
+      <div class="row">
+        <svg id="moon-svg" width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="Moon phase disc"></svg>
+        <div>
+          <div class="big" id="moon-phase">—</div>
+          <div class="sub" id="moon-detail"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Next lunar events</h3>
+      <div id="lunar-events" class="sub" style="font-size:14px"></div>
+    </div>
+    <div class="card">
+      <h3>Retrograde</h3>
+      <div class="chips" id="retro"></div>
+      <h3 style="margin-top:12px">Tight aspects (≤3°)</h3>
+      <div class="sub" id="sky-aspects"></div>
+    </div>
+  </div>
+  <div class="card scroll" id="sky-table-card" style="margin-top:14px" hidden>
+    <h3>Positions</h3>
+    <table id="sky-table"></table>
+  </div>
+  <div class="card strip" id="upcoming-card" style="margin-top:24px" hidden>
+    <h3>Upcoming — stations &amp; ingresses</h3>
+    <div class="sub" id="upcoming" style="font-size:14px">computing…</div>
+  </div>
+  <div class="error" id="sky-error"></div>
+
+  <h2>Natal chart</h2>
+  <form id="natal-form" class="card" autocomplete="off">
+    <div class="grid">
+      <div><label for="n-date">Birth date</label><input id="n-date" type="date" value="1990-06-15" required></div>
+      <div><label for="n-time">Birth time</label><input id="n-time" type="time" value="12:00"></div>
+      <div>
+        <label for="n-acc">Time accuracy</label>
+        <select id="n-acc">
+          <option value="exact">exact</option>
+          <option value="approximate">approximate</option>
+          <option value="unknown">unknown — no houses/rising</option>
+        </select>
+      </div>
+      <div><label for="n-lat">Latitude</label><input id="n-lat" type="number" step="0.0001" min="-90" max="90" value="40.7128" required></div>
+      <div><label for="n-lon">Longitude</label><input id="n-lon" type="number" step="0.0001" min="-180" max="180" value="-74.0060" required></div>
+      <div><label for="n-off">UTC offset at birth</label><input id="n-off" type="text" placeholder="-05:00" value="-04:00" pattern="[+\-]\d{2}:\d{2}"></div>
+      <div>
+        <label for="n-house">House system</label>
+        <select id="n-house">
+          <option value="placidus">Placidus</option>
+          <option value="whole-sign">Whole sign</option>
+          <option value="koch">Koch</option>
+          <option value="equal">Equal</option>
+        </select>
+      </div>
+      <div style="align-self:end"><button class="primary" type="submit">Compute chart</button></div>
+    </div>
+    <div class="error" id="natal-error"></div>
+  </form>
+
+  <div id="natal-out" hidden>
+    <div class="card feature" style="margin-top:24px; display:flex; justify-content:center;">
+      <div>
+        <svg id="wheel" width="520" height="520" viewBox="0 0 520 520" role="img"
+             aria-label="Natal chart wheel" style="max-width:100%; height:auto; display:block;"></svg>
+        <div class="sub" style="text-align:center; margin-top:6px">
+          Inner lines: natal aspects (ink conjunction · cobalt soft · red hard).
+          Cobalt rim markers: the sky at the chosen instant.
+          Grey glyphs are points — Chiron ⚷ and Lilith ⚸ — which carry positions
+          but do not enter the aspects or the balance figures.
+        </div>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="card"><h3>Sun</h3><div class="big" id="bt-sun">—</div></div>
+      <div class="card"><h3>Moon</h3><div class="big" id="bt-moon">—</div></div>
+      <div class="card"><h3>Rising</h3><div class="big" id="bt-rising">—</div><div class="sub" id="bt-note"></div></div>
+      <div class="card">
+        <h3>Element balance</h3><div id="elements"></div>
+        <h3 style="margin-top:10px">Modality</h3><div id="modalities"></div>
+      </div>
+    </div>
+    <div class="card scroll" style="margin-top:14px">
+      <h3>Placements</h3>
+      <table id="natal-table"></table>
+    </div>
+    <div class="card scroll" style="margin-top:14px">
+      <h3>Transits to this chart <span class="sub" id="transit-when"></span></h3>
+      <table id="transit-table"></table>
+      <div class="sub" id="transit-empty" hidden>No transits within orb at this instant.</div>
+    </div>
+  </div>
+
+  <footer>
+    Computed by the <a href="/source">Orbit Axis Engine</a> (AGPL-3.0-or-later, Swiss
+    Ephemeris under its AGPL option) — deterministically, from the ephemeris, with no
+    external astrology service involved. This page holds no accounts, stores nothing,
+    and asks for no birth data it does not immediately discard. Astrology output is
+    reflective, not predictive fact.
+  </footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const fmtDeg = (b) => `${b.degrees}°${String(b.minutes).padStart(2, "0")}′ ${b.sign}`;
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+  return body;
+}
+
+// ── moon disc ───────────────────────────────────────────────────────────────
+// Elongation → two-tone disc. Lit side: right while waxing, left while waning.
+function moonDisc(elongation) {
+  const r = 30, cx = 36, cy = 36;
+  const e = ((elongation % 360) + 360) % 360;
+  const waxing = e < 180;
+  const rx = Math.abs(Math.cos(e * Math.PI / 180)) * r;
+  const gibbous = waxing ? e > 90 : e < 270;
+  // Lit path: top → limb arc down the lit side → terminator ellipse back up.
+  const limbSweep = waxing ? 1 : 0;
+  const termSweep = waxing ? (gibbous ? 1 : 0) : (gibbous ? 0 : 1);
+  const lit = `M ${cx} ${cy - r} A ${r} ${r} 0 0 ${limbSweep} ${cx} ${cy + r}` +
+              ` A ${rx.toFixed(2)} ${r} 0 0 ${termSweep} ${cx} ${cy - r} Z`;
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="var(--moon-dark)" stroke="var(--line)"/>` +
+         `<path d="${lit}" fill="var(--moon-lit)"/>`;
+}
+
+// ── sky ─────────────────────────────────────────────────────────────────────
+function instantParam() {
+  const v = $("instant").value;
+  return v ? `?date=${encodeURIComponent(new Date(v).toISOString())}` : "";
+}
+
+async function loadSky() {
+  $("sky-error").textContent = "";
+  try {
+    const { sky, moon, lunar_events } = await api(`/api/sky${instantParam()}`);
+    window.__sky = sky;
+    loadUpcoming();
+    $("sky-cards").hidden = false;
+    $("sky-table-card").hidden = false;
+    $("sun-sign").textContent = sky.sun.sign;
+    $("sun-deg").textContent = fmtDeg(sky.sun);
+    $("moon-phase").textContent = moon.phase_name;
+    $("moon-detail").textContent =
+      `${fmtDeg(sky.moon)} · ${moon.illumination_percent}% lit · ` +
+      `${moon.waxing ? "waxing" : "waning"} · elongation ${moon.elongation}°`;
+    $("moon-svg").innerHTML = moonDisc(moon.elongation);
+    const when = (iso) => new Date(iso).toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    $("lunar-events").innerHTML =
+      `<div>Full moon — <strong>${when(lunar_events.full_moon.instant_utc)}</strong></div>` +
+      `<div>New moon — <strong>${when(lunar_events.new_moon.instant_utc)}</strong></div>`;
+    $("retro").innerHTML = sky.retrogrades.length
+      ? sky.retrogrades.map((p) => `<span class="chip">${esc(p)} ℞</span>`).join("")
+      : `<span class="sub">none</span>`;
+    $("sky-aspects").innerHTML = sky.aspects.length
+      ? sky.aspects.map((a) => `${esc(a.a)} ${esc(a.aspect)} ${esc(a.b)} (${a.orb}°)`).join("<br>")
+      : "none";
+    $("sky-table").innerHTML =
+      `<tr><th>Body</th><th>Position</th><th class="num">Longitude</th></tr>` +
+      Object.entries(sky.planets).map(([name, b]) =>
+        `<tr><td>${esc(name)}${b.retrograde ? '<span class="r">℞</span>' : ""}</td>` +
+        `<td>${fmtDeg(b)}</td><td class="num">${b.longitude.toFixed(2)}°</td></tr>`).join("") +
+      pointRows(sky.points);
+  } catch (err) {
+    $("sky-error").textContent = err.message;
+  }
+}
+
+// ── upcoming events ─────────────────────────────────────────────────────────
+async function loadUpcoming() {
+  $("upcoming-card").hidden = false;
+  $("upcoming").textContent = "computing…";
+  try {
+    const { stations, ingresses } = await api(`/api/upcoming${instantParam()}`);
+    const events = [
+      ...stations.map((s) => ({
+        when: s.instant_utc,
+        text: `${s.body} stations ${s.kind === "station_retrograde" ? "retrograde" : "direct"} at ${s.degrees}°${String(s.minutes).padStart(2, "0")}′ ${s.sign}`,
+      })),
+      ...ingresses.filter((i) => i.body !== "Moon").map((i) => ({
+        when: i.instant_utc,
+        text: `${i.body} ${i.retrograde ? "retrogrades back into" : "enters"} ${i.to_sign}`,
+      })),
+    ].sort((a, b) => a.when.localeCompare(b.when)).slice(0, 10);
+    const day = (iso) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    $("upcoming").innerHTML = events.map((e) =>
+      `<div><strong class="num">${day(e.when)}</strong> — ${esc(e.text)}</div>`).join("");
+  } catch (err) {
+    $("upcoming").textContent = err.message;
+  }
+}
+
+// ── chart wheel ─────────────────────────────────────────────────────────────
+// U+FE0E forces text presentation — without it several zodiac glyphs render
+// as coloured emoji and ignore SVG fill.
+const T = "\ufe0e";
+const SIGN_GLYPHS = { Aries:"♈"+T,Taurus:"♉"+T,Gemini:"♊"+T,Cancer:"♋"+T,Leo:"♌"+T,Virgo:"♍"+T,Libra:"♎"+T,Scorpio:"♏"+T,Sagittarius:"♐"+T,Capricorn:"♑"+T,Aquarius:"♒"+T,Pisces:"♓"+T };
+const PLANET_GLYPHS = { Sun:"☉",Moon:"☽",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇",
+  Chiron:"⚷", Lilith:"⚸", TrueLilith:"⚸" };
+// Points are drawn and listed in a quieter ink than the planets: they are real
+// positions, but they do not enter the aspects or the balance figures, and the
+// page should not imply they do.
+const POINT_LABELS = { Chiron: "Chiron", Lilith: "Lilith (mean)", TrueLilith: "Lilith (true)" };
+
+function pointRows(points) {
+  return Object.entries(points ?? {}).map(([name, b]) =>
+    `<tr><td style="color:var(--steel)">${esc(POINT_LABELS[name] ?? name)}` +
+    `${b.retrograde ? '<span class="r">℞</span>' : ""}</td>` +
+    `<td>${fmtDeg(b)}</td><td class="num">${b.longitude.toFixed(2)}°</td></tr>`).join("");
+}
+const SIGN_NAMES = Object.keys(SIGN_GLYPHS);
+const ASPECT_STYLE = {
+  Conjunction: "var(--ink-deep)", Trine: "var(--primary)", Sextile: "var(--primary)",
+  Square: "var(--critical)", Opposition: "var(--critical)",
+};
+
+function drawWheel(chart, sky) {
+  const C = 260, R = 250;                       // centre, outer radius
+  const rSignIn = R - 34;                       // inner edge of zodiac band
+  const rPlanet = rSignIn - 34;                 // natal planet ring
+  const rAspect = rPlanet - 26;                 // aspect hub radius
+  const rTransit = R + 0;                       // transit markers sit on the rim
+  const asc = chart.angles?.ascendant?.longitude;
+  const ref = Number.isFinite(asc) ? asc : 0;   // Asc on the left; else 0° Aries
+  const pt = (lon, r) => {
+    const a = (180 + (lon - ref)) * Math.PI / 180;
+    return [C + r * Math.cos(a), C - r * Math.sin(a)];
+  };
+  let svg = `<circle cx="${C}" cy="${C}" r="${R}" fill="var(--surface-2)" stroke="var(--line)"/>` +
+            `<circle cx="${C}" cy="${C}" r="${rSignIn}" fill="var(--surface)" stroke="var(--line)"/>` +
+            `<circle cx="${C}" cy="${C}" r="${rAspect}" fill="var(--surface-2)" stroke="var(--line)"/>`;
+  // zodiac band: 12 dividers + glyphs
+  for (let i = 0; i < 12; i += 1) {
+    const [x1, y1] = pt(i * 30, rSignIn), [x2, y2] = pt(i * 30, R);
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--line)"/>`;
+    const [gx, gy] = pt(i * 30 + 15, (R + rSignIn) / 2);
+    svg += `<text x="${gx}" y="${gy}" text-anchor="middle" dominant-baseline="central" font-size="17" fill="var(--ink-2)">${SIGN_GLYPHS[SIGN_NAMES[i]]}</text>`;
+  }
+  // house cusps + numbers (only when the chart has houses)
+  const houses = chart.houses ?? [];
+  if (houses.length === 12) {
+    for (let i = 0; i < 12; i += 1) {
+      const cusp = houses[i].longitude;
+      const [x1, y1] = pt(cusp, rAspect), [x2, y2] = pt(cusp, rSignIn);
+      const axis = i === 0 || i === 3 || i === 6 || i === 9;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${axis ? "var(--ink-3)" : "var(--line)"}" stroke-width="${axis ? 1.6 : 1}"/>`;
+      const next = houses[(i + 1) % 12].longitude;
+      const span = ((next - cusp) % 360 + 360) % 360;
+      const [nx, ny] = pt(cusp + span / 2, rAspect + 11);
+      svg += `<text x="${nx}" y="${ny}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="var(--ink-3)">${i + 1}</text>`;
+    }
+  }
+  // aspect lines across the hub — tight orbs only, or the hub becomes a web
+  for (const a of (chart.aspects ?? []).filter((x) => x.orb <= 4)) {
+    const A = chart.planets[a.a] ?? (a.a === "Ascendant" ? chart.angles?.ascendant : a.a === "MC" ? chart.angles?.midheaven : null);
+    const B = chart.planets[a.b] ?? (a.b === "Ascendant" ? chart.angles?.ascendant : a.b === "MC" ? chart.angles?.midheaven : null);
+    const colour = ASPECT_STYLE[a.aspect];
+    if (!A || !B || !colour) continue;
+    const [x1, y1] = pt(A.longitude, rAspect), [x2, y2] = pt(B.longitude, rAspect);
+    svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${colour}" stroke-width="1" opacity="0.55"/>`;
+  }
+  // Natal planets, nudged apart when crowded. Chiron and true Lilith ride along
+  // in a quieter ink — they are positions, not aspect participants, and the
+  // wheel should not imply otherwise. Mean Lilith is left out: drawing both
+  // apogees a few degrees apart reads as an error rather than as a choice.
+  const bodies = [
+    ...Object.entries(chart.planets).map(([name, b]) =>
+      ({ name, lon: b.longitude, retro: b.retrograde, point: false })),
+    ...Object.entries(chart.points ?? {})
+      .filter(([name]) => name !== "Lilith")
+      .map(([name, b]) => ({ name, lon: b.longitude, retro: b.retrograde, point: true })),
+  ].sort((a, b) => a.lon - b.lon);
+  let prevLon = -99, level = 0;
+  for (const b of bodies) {
+    level = (b.lon - prevLon) < 7 ? level + 1 : 0;
+    prevLon = b.lon;
+    const r = rPlanet - level * 20;
+    const [x, y] = pt(b.lon, r);
+    const [tx1, ty1] = pt(b.lon, rSignIn), [tx2, ty2] = pt(b.lon, rSignIn - 6);
+    svg += `<line x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}" stroke="var(--ink-3)"/>` +
+           `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central"` +
+           ` font-size="${b.point ? 14 : 17}" fill="${b.point ? "var(--steel)" : "var(--ink)"}">` +
+           `${PLANET_GLYPHS[b.name] ?? b.name[0]}</text>`;
+    if (b.retro) svg += `<text x="${x + 11}" y="${y + 7}" font-size="8" fill="var(--bad)">℞</text>`;
+  }
+  // transit ring: hollow markers on the rim for the current sky
+  if (sky) {
+    for (const [name, b] of Object.entries(sky.planets)) {
+      const [x, y] = pt(b.longitude, R - 8);
+      svg += `<circle cx="${x}" cy="${y}" r="7" fill="none" stroke="var(--accent)" stroke-width="1.2"/>` +
+             `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="8.5" fill="var(--accent)">${PLANET_GLYPHS[name] ?? name[0]}</text>`;
+    }
+  }
+  // Asc marker
+  if (Number.isFinite(asc)) {
+    const [x, y] = pt(asc, rSignIn - 14);
+    svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="var(--ink-2)">ASC</text>`;
+  }
+  $("wheel").innerHTML = svg;
+}
+
+// ── natal + transits ────────────────────────────────────────────────────────
+function natalInput() {
+  return {
+    birth_date: $("n-date").value,
+    birth_time: $("n-time").value || undefined,
+    time_accuracy: $("n-acc").value,
+    latitude: Number($("n-lat").value),
+    longitude: Number($("n-lon").value),
+    utc_offset_at_birth: $("n-off").value || undefined,
+    house_system: $("n-house").value,
+  };
+}
+
+function meters(el, percentages) {
+  el.innerHTML = Object.entries(percentages).map(([k, v]) =>
+    `<div class="meter"><span>${esc(k)}</span>` +
+    `<span class="track"><span class="fill" style="width:${Math.max(2, v)}%"></span></span>` +
+    `<span class="val">${v}%</span></div>`).join("");
+}
+
+async function loadNatal(event) {
+  event.preventDefault();
+  $("natal-error").textContent = "";
+  try {
+    const natal = natalInput();
+    const [{ chart }, { transits, instant_utc }] = await Promise.all([
+      api("/api/natal-chart", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(natal) }),
+      api("/api/transits", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ natal, date: $("instant").value ? new Date($("instant").value).toISOString() : undefined }),
+      }),
+    ]);
+    $("natal-out").hidden = false;
+    drawWheel(chart, window.__sky);
+    const bt = chart.big_three;
+    $("bt-sun").textContent = bt.sun ? bt.sun.sign : "—";
+    $("bt-moon").textContent = bt.moon ? bt.moon.sign : "—";
+    $("bt-rising").textContent = bt.rising.unavailable ? "—" : bt.rising.sign;
+    $("bt-note").textContent = bt.rising.unavailable ? bt.rising.reason : (chart.chart_ruler ? `Chart ruler: ${chart.chart_ruler}` : "");
+    meters($("elements"), chart.element_balance.percentages);
+    meters($("modalities"), chart.modality_balance.percentages);
+    $("natal-table").innerHTML =
+      `<tr><th>Body</th><th>Position</th><th>House</th></tr>` +
+      Object.entries(chart.planets).map(([name, b]) =>
+        `<tr><td>${esc(name)}${b.retrograde ? '<span class="r">℞</span>' : ""}</td>` +
+        `<td>${fmtDeg(b)}</td><td>${chart.planet_houses[name] ?? "—"}</td></tr>`).join("") +
+      Object.entries(chart.points ?? {}).map(([name, b]) =>
+        `<tr><td style="color:var(--steel)">${esc(POINT_LABELS[name] ?? name)}` +
+        `${b.retrograde ? '<span class="r">℞</span>' : ""}</td>` +
+        `<td>${fmtDeg(b)}</td><td>${chart.point_houses?.[name] ?? "—"}</td></tr>`).join("");
+    const rows = transits.map((t) =>
+      `<tr><td>${esc(t.transiting)} ${esc(t.aspect)} natal ${esc(t.natal)}</td>` +
+      `<td class="num">${t.orb.toFixed(2)}°</td><td>${t.applying ? "applying" : "separating"}</td>` +
+      `<td>${esc(t.plain)}</td></tr>`).join("");
+    $("transit-table").innerHTML = rows
+      ? `<tr><th>Transit</th><th class="num">Orb</th><th>Motion</th><th>Tone</th></tr>${rows}` : "";
+    $("transit-empty").hidden = !!rows;
+    $("transit-when").textContent = `· at ${new Date(instant_utc).toLocaleString()}`;
+  } catch (err) {
+    $("natal-error").textContent = err.message;
+  }
+}
+
+// ── boot ────────────────────────────────────────────────────────────────────
+function setNow() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  $("instant").value = now.toISOString().slice(0, 16);
+}
+$("btn-sky").addEventListener("click", loadSky);
+$("btn-now").addEventListener("click", () => { setNow(); loadSky(); });
+$("natal-form").addEventListener("submit", loadNatal);
+setNow();
+loadSky();
+api("/api/health").then((h) => {
+  $("health").textContent = `engine ${h.engine_version ?? ""} · ${h.runtime}`;
+  $("health").classList.add(h.ok ? "ok" : "bad");
+}).catch(() => {
+  $("health").textContent = "engine unreachable";
+  $("health").classList.add("bad");
+});
+</script>
+</body>
+</html>

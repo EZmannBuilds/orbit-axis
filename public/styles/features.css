@@ -66,9 +66,9 @@
   align-content: start;
   gap: 14px;
   padding: 18px;
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 16%, var(--color-border));
-  border-radius: 8px;
-  background: color-mix(in oklab, var(--color-surface-elevated) 92%, var(--axis-indigo) 8%);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
 }
 .me-panel--overview,
 .me-panel--wide {
@@ -270,7 +270,7 @@
   border-color: var(--color-accent-border);
   background: var(--color-accent-soft);
 }
-.chart-choice__option:focus-within { outline: 2px solid var(--axis-lavender); outline-offset: 2px; }
+.chart-choice__option:focus-within { box-shadow: var(--focus-ring); }
 
 .chart-form__notice {
   margin: 0;
@@ -278,7 +278,7 @@
   color: var(--color-secondary);
   background: var(--color-surface-sunken);
   border: 1px solid var(--color-border);
-  border-left: 3px solid var(--axis-lavender);
+  border-left: 3px solid var(--color-accent);
   border-radius: var(--radius-md);
   font-size: var(--text-caption);
   line-height: 1.5;
@@ -505,7 +505,10 @@
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  background: var(--color-surface-elevated);
+  /* background-COLOR, not the shorthand: the shorthand resets
+     background-repeat/-size/-position, and the caret this select inherits from
+     the component library then tiles across it. */
+  background-color: var(--color-surface-elevated);
   color: inherit;
   font: inherit;
   max-width: 260px;
@@ -551,7 +554,8 @@
   flex: 0 0 auto;
   font-size: 22px;
   line-height: 1;
-  color: var(--axis-lavender, inherit);
+  color: var(--color-accent);
+  font-variant-emoji: text;
 }
 .reading-card__ident { min-width: 0; }
 .reading-card__title { margin: 0; font-size: 17px; line-height: 1.3; }
@@ -563,7 +567,7 @@
 .reading-card__aside {
   padding: 10px 12px;
   border-radius: 6px;
-  background: color-mix(in oklab, var(--axis-indigo, #4b4b8f) 8%, transparent);
+  background: var(--color-surface-sunken);
 }
 .reading-card__aside h4 { margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-secondary); }
 .reading-card__aside p { margin: 0; }
@@ -579,20 +583,20 @@
   padding: 6px 2px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 600;
-  color: var(--axis-lavender, inherit);
+  font-weight: var(--weight-semibold);
+  color: var(--color-accent);
   list-style: none;
 }
 .reading-card__more > summary::-webkit-details-marker,
 .chart-details > summary::-webkit-details-marker { display: none; }
 .reading-card__more > summary::before,
 .chart-details > summary::before {
-  content: "＋";
-  font-weight: 700;
+  content: "+";
+  font-weight: var(--weight-semibold);
   transition: transform 120ms ease;
 }
 .reading-card__more[open] > summary::before,
-.chart-details[open] > summary::before { content: "－"; }
+.chart-details[open] > summary::before { content: "\2212"; }
 .reading-card__more > summary:focus-visible,
 .chart-details > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
 
@@ -688,7 +692,7 @@
 .positions-row__glyph {
   grid-row: 1 / span 2;
   font-size: 22px; line-height: 1;
-  color: var(--axis-lavender, inherit);
+  color: var(--color-accent);
 }
 .positions-row__main { display: grid; gap: 3px; min-width: 0; }
 .positions-row__name { font-weight: 600; font-size: 16px; }
@@ -706,7 +710,7 @@
   font-size: 12px; font-weight: 600; letter-spacing: 0.03em;
   padding: 3px 9px; border-radius: 999px;
   border: 1px solid var(--color-border);
-  background: color-mix(in oklab, var(--axis-indigo, #4b4b8f) 10%, transparent);
+  background: var(--color-surface-sunken);
 }
 /* Retrograde is carried by the word, never by the colour alone. */
 .positions-row__direction.is-retrograde {
@@ -742,7 +746,7 @@
 .tr-switcher__select {
   min-height: 44px; padding: 8px 12px; font: inherit; color: inherit;
   border: 1px solid var(--color-border); border-radius: 8px;
-  background: var(--color-surface-elevated); max-width: 100%;
+  background-color: var(--color-surface-elevated); max-width: 100%;
 }
 .tr-status:empty { display: none; }
 .tr-status { margin: 0 0 8px; font-size: 14px; color: var(--color-secondary); }
@@ -762,7 +766,7 @@
 .tr-badge {
   font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
   border: 1px solid var(--color-border);
-  background: color-mix(in oklab, var(--axis-indigo, #4b4b8f) 10%, transparent);
+  background: var(--color-surface-sunken);
 }
 .tr-badge--soft { font-weight: 500; color: var(--color-secondary); }
 .tr-orb { font-size: 13px; color: var(--color-secondary); font-variant-numeric: tabular-nums; }

@@ -1,73 +1,60 @@
-/* The Orbit mark — a small planet with two rings.
-   ---------------------------------------------------------------------------
-   All that survives of the retired chat surface's stylesheet. It is still the
-   thing someone looks at while the app restores their session and while the
-   sign-in gate is open, so it moved here under its own name rather than being
-   left in a 400-line file for a feature that no longer exists. */
+/* ============================================================================
+   Orbit Axis — the brand mark
+   ----------------------------------------------------------------------------
+   A ring with a body on it. The app is named after an orbit, so the logo is
+   simply one: two shapes, one colour, no gradient and no glow.
+
+   ONE definition, three places. The rail draws it small, the sign-in gate and
+   the password-reset page draw it large. `.chat-orbit` is the name the
+   standalone pages were written against and `.auth-mark` is the name the app
+   uses; they are the same mark and are defined together so they cannot drift
+   into being two logos.
+   ========================================================================== */
+
+.auth-mark,
 .chat-orbit {
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: radial-gradient(circle, var(--axis-moon), var(--axis-lavender) 48%, var(--axis-indigo));
-  box-shadow: 0 0 26px color-mix(in oklab, var(--axis-indigo) 42%, transparent);
+  width: 48px;
+  height: 48px;
   flex: none;
-}
-
-.chat-orbit::before,
-.chat-orbit::after {
-  content: "";
-  position: absolute;
-  inset: 7px -8px;
-  border: 1px solid rgba(255, 255, 255, 0.38);
   border-radius: 50%;
-  transform: rotate(-18deg);
+  border: 3px solid var(--color-accent);
+  /* The pages that use it centre it above a heading. */
+  margin-inline: auto;
 }
 
-.chat-orbit::after {
-  inset: -4px 9px;
-  transform: rotate(28deg);
-}
-
+/* The body on the ring. `.chat-orbit` carries an empty <span> for it;
+   `.auth-mark` does too, so one rule serves both. */
+.auth-mark span,
 .chat-orbit span {
-  width: 8px;
-  height: 8px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: #071024;
-  z-index: 1;
+  background: var(--color-accent);
+  /* The cut-out is the page behind it, so the body reads as a separate object
+     rather than a bump welded to the ring. */
+  border: 3px solid var(--color-bg);
 }
 
-/* Light mode darkens the celestial palette, which would leave white rings on a
-   mid-tone planet. The rings need to be darker than what they sit on, not
-   lighter. */
-:root[data-theme="light"] .chat-orbit {
-  background: radial-gradient(circle, #eef1ff, #a9b0ea 48%, var(--axis-indigo));
-  box-shadow: 0 0 20px color-mix(in oklab, var(--axis-indigo) 26%, transparent);
-}
-
-:root[data-theme="light"] .chat-orbit::before,
-:root[data-theme="light"] .chat-orbit::after {
-  border-color: rgba(20, 24, 60, 0.34);
-}
+/* Inside a card, the cut-out has to match the CARD rather than the page.
+   Left at the page colour it renders as a black ring on a grey card — which is
+   exactly what shipped, because this override named only `.auth-mark` and the
+   password-reset page uses the older `.chat-orbit`. Both names, always
+   together; that is the whole reason they are defined as one mark above. */
+.auth-card .auth-mark span,
+.auth-card .chat-orbit span,
+.startup-card .auth-mark span,
+.startup-card .chat-orbit span { border-color: var(--color-surface); }
 
 @media (max-width: 560px) {
-  .chat-orbit { width: 38px; height: 38px; }
+  .auth-mark, .chat-orbit { width: 40px; height: 40px; }
+  .auth-mark span, .chat-orbit span { width: 15px; height: 15px; top: -4px; right: -4px; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .chat-orbit::before,
-  .chat-orbit::after {
-    animation: orbitDrift 14s linear infinite;
-  }
-}
-
-@keyframes orbitDrift {
-  to { rotate: 360deg; }
-}
-
-:root[data-motion="reduced"] .chat-orbit::before,
-:root[data-motion="reduced"] .chat-orbit::after {
-  animation: none;
+@media (forced-colors: active) {
+  .auth-mark, .chat-orbit { border-color: CanvasText; }
+  .auth-mark span, .chat-orbit span { background: Highlight; border-color: Canvas; }
 }

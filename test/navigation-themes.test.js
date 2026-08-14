@@ -23,17 +23,28 @@ const read = (...parts) => readFileSync(join(ROOT, ...parts), "utf8");
 const html = read("public", "index.html");
 const appJs = read("public", "app.js");
 const navCss = read("public", "styles", "navigation.css");
+const appCss = read("public", "styles", "app.css");
 const tokensCss = read("public", "styles", "tokens.css");
 const moreCss = read("public", "styles", "more.css");
 const orbitAxisCss = read("public", "styles", "orbit-axis.css");
 
-/** The five canonical destinations, in their canonical order. */
+/** The five canonical destinations, in their canonical order.
+ *
+ *  The redesign changed this list, deliberately. Two of the five tabs used to be
+ *  directories: "Tools" was four links to pages that exist elsewhere, and "More"
+ *  was a settings drawer — while the reference library, the deepest finished
+ *  thing in the app, sat two taps down.
+ *
+ *  So Tools was dissolved into the surfaces its links pointed at, Positions
+ *  joined Transits under one "Sky" destination with a segmented control, and the
+ *  Atlas took the freed tab. Nothing was deleted; the tests below check exactly
+ *  that. */
 const CANONICAL = [
-  { id: "home", label: "Home" },
-  { id: "me", label: "My Chart" },
-  { id: "transits", label: "Today’s Transits" },
-  { id: "tools", label: "Tools" },
-  { id: "more", label: "More" },
+  { id: "home", label: "Today" },
+  { id: "me", label: "Chart" },
+  { id: "transits", label: "Sky" },
+  { id: "symbol-atlas", label: "Atlas" },
+  { id: "more", label: "You" },
 ];
 
 /** Parse the WORKSPACES registry entries in source order. */
@@ -68,8 +79,11 @@ test("mobile and desktop render from the same links, so they cannot disagree", (
   const build = appJs.slice(appJs.indexOf("function buildRail()"), appJs.indexOf("function requestedRoute"));
   assert.match(build, /availableWorkspaces\(\)\.filter\(ws => ws\.primary\)/);
   assert.equal((html.match(/id="rail-nav"/g) || []).length, 1, "exactly one navigation container ships");
-  assert.match(navCss, /@media \(max-width: 900px\)/, "the same container becomes the phone bar");
-  assert.match(navCss, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/,
+  // app.css owns WHERE the navigation sits (sidebar above 1024, bottom tab bar
+  // below it); navigation.css owns what it SAYS. Both are asserted, because a
+  // five-column bar with no current-tab signal is only half the contract.
+  assert.match(appCss, /@media \(max-width: 1023px\)/, "the same container becomes the phone bar");
+  assert.match(appCss, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/,
     "the phone bar must have exactly five columns");
 });
 
@@ -82,9 +96,9 @@ test("the phone label is an abbreviation of the same name, never a different wor
   }
 });
 
-test("Today's Transits opens the transits view directly, with no page in between", () => {
+test("Sky opens the transits view directly, with no page in between", () => {
   const entry = registry().find((ws) => ws.id === "transits");
-  assert.ok(entry?.primary, "Today's Transits must be primary navigation");
+  assert.ok(entry?.primary, "Sky must be primary navigation");
   assert.ok(html.includes('id="panel-transits"'), "and it must point at the real transits panel");
   // Arriving must also populate it, or a direct link lands on an empty page.
   const render = appJs.slice(appJs.indexOf("function renderRoute()"));
@@ -111,8 +125,13 @@ test("the current page is stated in the accessibility tree and not by colour alo
   assert.match(render, /setAttribute\("aria-current", "page"\)/);
   assert.match(render, /removeAttribute\("aria-current"\)/,
     'inactive links must drop the attribute rather than set it to "false"');
-  assert.match(navCss, /\.rail__link\[aria-current="page"\][\s\S]{0,200}font-weight/,
-    "the current tab needs a non-colour signal too");
+  assert.match(appCss, /\.rail__link\[aria-current="page"\][\s\S]{0,220}font-weight/,
+    "the current tab needs a weight signal, not only a tint");
+  // And a shape signal: the solid icon weight, which is what still reads in
+  // greyscale, at 10px, and for someone who cannot separate the tint from the
+  // surface behind it.
+  assert.match(navCss, /\.rail__link\[aria-current="page"\] \.rail__icon--fill \{ display: block; \}/,
+    "the current tab swaps to the filled icon");
 });
 
 // ── Retired surfaces stay retired ───────────────────────────────────────────
@@ -239,7 +258,7 @@ test("the theme control offers three choices with visible text labels", () => {
 
 test("the theme control meets the 44px target on every screen", () => {
   assert.match(moreCss, /\.o-segment--theme button \{[\s\S]{0,200}min-height: 44px/);
-  assert.match(moreCss, /@media \(max-width: 420px\)[\s\S]{0,400}\.o-segment--theme \{ width: 100%/,
+  assert.match(moreCss, /@media \(max-width: 480px\)[\s\S]{0,500}\.setting-row \.o-segment \{ width: 100%/,
     "three targets must go full width rather than shrink on a narrow phone");
 });
 
@@ -251,16 +270,47 @@ test("high-contrast and forced-colors support survives the theme work", () => {
 });
 
 // ── Light mode is designed, not inverted ────────────────────────────────────
+//
+// These two used to check that light mode had its OWN celestial palette, and
+// that the starfield and the gradient wordmark were withdrawn on a light page.
+// Both were symptoms of the same thing: a decorative layer that only worked on
+// one theme and had to be special-cased on the other.
+//
+// The redesign removed that layer entirely — one accent, no decorative
+// gradients, no starfield — so there is nothing left to withdraw. What replaces
+// these is the stronger property: both themes are complete definitions of the
+// same system, and neither is a filter over the other.
 
-test("light mode gets its own celestial palette rather than inverted darks", () => {
-  assert.match(orbitAxisCss, /:root\[data-theme="light"\] \{[\s\S]{0,400}--axis-indigo/);
+test("both themes define the whole semantic palette, not a partial override", () => {
+  const dark = tokensCss.slice(tokensCss.indexOf(':root[data-theme="dark"] {'),
+                               tokensCss.indexOf(':root[data-theme="light"] {'));
+  const light = tokensCss.slice(tokensCss.indexOf(':root[data-theme="light"] {'),
+                                tokensCss.indexOf("/* ── 7. Modes"));
+  const names = (block) => new Set([...block.matchAll(/^\s*(--color-[a-z-]+):/gm)].map((m) => m[1]));
+  const darkNames = names(dark);
+  const lightNames = names(light);
+  assert.ok(darkNames.size >= 20, `expected a full dark palette, saw ${darkNames.size}`);
+  for (const name of darkNames) {
+    assert.ok(lightNames.has(name),
+      `${name} is defined for dark but not for light — light would inherit a dark value`);
+  }
+  for (const name of lightNames) {
+    assert.ok(darkNames.has(name), `${name} is defined for light but not for dark`);
+  }
 });
 
-test("effects that only work on a dark page are withdrawn in light mode", () => {
-  // White stars on a white page are invisible; a pale gradient wordmark on
-  // white has no contrast at all.
-  assert.match(orbitAxisCss, /:root\[data-theme="light"\] \.axis-starfield \{ display: none; \}/);
-  assert.match(orbitAxisCss, /:root\[data-theme="light"\] \.axis-wordmark/);
+test("the decorative layer that only worked on a dark page is gone, not special-cased", () => {
+  // The starfield, the atmospheric wash, and the gradient wordmark each needed
+  // a light-mode escape hatch because they were decoration rather than content.
+  assert.match(orbitAxisCss, /\.axis-starfield \{ display: none; \}/,
+    "the starfield is withdrawn on every theme, not only the light one");
+  assert.ok(!/#panel-home::before/.test(orbitAxisCss), "the atmospheric wash must be gone");
+  assert.ok(!/-webkit-background-clip: text/.test(orbitAxisCss),
+    "the wordmark is ordinary text, so it needs no forced-colors rescue");
+  // And no second accent survives anywhere in the stylesheets.
+  for (const name of ["--axis-lavender", "--axis-indigo", "--axis-periwinkle", "--axis-pink"]) {
+    assert.ok(!orbitAxisCss.includes(name), `${name} was a second accent colour and must not be used`);
+  }
 });
 
 test("the carried-over feature panels get light values for their legacy variables", () => {
@@ -271,38 +321,64 @@ test("the carried-over feature panels get light values for their legacy variable
   assert.match(features, /:root\[data-theme="light"\][\s\S]{0,500}--text: #12161c/);
 });
 
-// ── Tools is truthful ───────────────────────────────────────────────────────
+// ── Tools is dissolved, and nothing it offered was lost ─────────────────────
+//
+// Tools was a page of four cards whose only job was to link to four pages that
+// already existed. The redesign removed it and put each link on the surface it
+// belongs to. That is only an improvement if every destination survived, which
+// is what this checks — the failure mode of "we deleted the directory" is
+// quietly deleting a room.
 
-test("every Tools action opens a destination that exists", () => {
-  const panel = html.slice(html.indexOf('id="panel-tools"'), html.indexOf('id="panel-tools"') + 3000);
-  const targets = [...panel.matchAll(/data-goto="([^"]+)"/g)].map((m) => m[1]);
-  assert.ok(targets.length >= 3, `Tools should offer the working destinations, saw ${targets.join(", ")}`);
-  const known = new Set(registry().map((ws) => ws.id));
-  for (const target of targets) {
-    assert.ok(known.has(target), `Tools links to "${target}", which is not a workspace`);
-    assert.ok(html.includes(`id="panel-${target}"`), `Tools links to "${target}", which has no panel`);
+test("the Tools page is gone and every destination it offered is still reachable", () => {
+  assert.ok(!html.includes('id="panel-tools"'), "the Tools page must not ship");
+  assert.ok(!/\{ id: "tools"/.test(appJs), "and it must not be a workspace");
+
+  // Each of Tools' four cards, and where it lives now.
+  const rehomed = [
+    { was: "History", now: 'href="#history"', on: "panel-more" },
+    { was: "Symbol Atlas", now: 'href="#symbol-atlas"', on: "panel-more" },
+    { was: "Saved Charts", now: 'href="#me"', on: "panel-more" },
+    { was: "Compatibility", now: 'href="#compatibility"', on: "panel-me" },
+  ];
+  for (const { was, now, on } of rehomed) {
+    const start = html.indexOf(`id="${on}"`);
+    const panel = html.slice(start, html.indexOf('<section class="workspace-panel"', start + 10));
+    assert.ok(panel.includes(now), `${was} used to be a Tools card and is no longer reachable from #${on}`);
+  }
+
+  // And the Atlas — the deepest finished feature — is now a tab of its own
+  // rather than two taps down behind a directory.
+  assert.ok(registry().find((ws) => ws.id === "symbol-atlas")?.primary,
+    "the Atlas took the tab Tools gave up");
+});
+
+test("the retired Tools route explains where its contents went", () => {
+  const block = appJs.slice(appJs.indexOf("const RETIRED_ROUTES"),
+                            appJs.indexOf("});", appJs.indexOf("const RETIRED_ROUTES")));
+  assert.match(block, /tools: \{ to: "more"/, "an old #tools bookmark must land somewhere real");
+  const notice = /tools: \{ to: "more", notice: "([^"]+)"/.exec(block)?.[1] ?? "";
+  for (const word of ["History", "Atlas", "Compatibility"]) {
+    assert.ok(notice.includes(word),
+      `the notice must name where things went; "${word}" is missing from "${notice}"`);
   }
 });
 
-test("planned work is stated as prose, never as a control that does nothing", () => {
-  const planned = html.slice(html.indexOf("tool-card--planned"), html.indexOf("</section>", html.indexOf("tool-card--planned")));
-  assert.ok(!/<button/.test(planned), "a disabled button reads as a bug; a sentence reads as a roadmap");
-  assert.ok(!/data-goto/.test(planned), "and it must not navigate anywhere");
-  assert.match(planned, /not built yet/i, "it must say plainly that the work is not done");
-});
+// ── You is coherent ─────────────────────────────────────────────────────────
 
-// ── More is coherent ────────────────────────────────────────────────────────
-
-test("More carries the account and application actions, each with a visible label", () => {
+test("You carries the account and application actions, each with a visible label", () => {
   const panel = html.slice(html.indexOf('id="panel-more"'), html.indexOf('id="panel-history"'));
   for (const id of ["account-email", "account-export", "account-password-reset",
                     "account-signout", "account-delete-open"]) {
-    assert.ok(panel.includes(`id="${id}"`), `More must carry ${id}`);
+    assert.ok(panel.includes(`id="${id}"`), `You must carry ${id}`);
   }
   for (const href of ["/privacy", "/terms", "/support", "/source", "/account-deletion"]) {
-    assert.ok(panel.includes(`href="${href}"`), `More must link to ${href}`);
+    assert.ok(panel.includes(`href="${href}"`), `You must link to ${href}`);
   }
-  assert.match(panel, /data-goto="settings"/, "and it must reach Settings, where the theme lives");
+  assert.match(panel, /href="#settings"/, "and it must reach Appearance, where the theme lives");
+  // Every row states itself in words. An icon column with no label is a puzzle.
+  const rows = [...panel.matchAll(/class="o-row__title">([^<]+)</g)].map((m) => m[1].trim());
+  assert.ok(rows.length >= 8, `expected a labelled row per action, saw ${rows.length}`);
+  for (const label of rows) assert.ok(label.length > 0, "every row needs visible text");
 });
 
 test("deletion stays visually separated from the harmless actions", () => {
@@ -310,7 +386,12 @@ test("deletion stays visually separated from the harmless actions", () => {
   const exportAt = panel.indexOf('id="account-export"');
   const deleteAt = panel.indexOf('id="account-delete-open"');
   assert.ok(exportAt > 0 && deleteAt > exportAt, "delete must not sit beside the ordinary actions");
-  assert.match(panel, /class="danger-zone"/, "and it must keep its own visual boundary");
+  assert.match(panel, /id="danger-zone"/, "and it must keep its own group");
+  // Its own group means its own list: nothing harmless may share the container,
+  // or a confident tap aimed at the row above lands on deletion.
+  const zone = panel.slice(panel.indexOf('id="danger-zone"'));
+  const buttons = [...zone.matchAll(/class="o-row o-row--link[^"]*"/g)];
+  assert.equal(buttons.length, 1, "the danger group holds exactly one action");
 });
 
 // ── Dev Update 1.2 must survive ─────────────────────────────────────────────

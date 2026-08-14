@@ -102,7 +102,12 @@ test("a 304 carries no body", () => {
 
 test("the session cookie survives on both response paths", () => {
   const dispatch = block(APP, "const handled = await handleChartsRoute", "// Daily fortune");
-  assert.match(dispatch, /const cookie = auth\?\.setCookie/);
+  // withSession() replaced the inline `auth?.setCookie ? … : {}` when the iOS
+  // container needed the session in a readable header as well. What this test
+  // guards is unchanged: whatever the session headers are, BOTH the JSON and
+  // the binary path must carry them, or a rotated session is lost on whichever
+  // path forgot.
+  assert.match(dispatch, /const cookie = withSession\(req, auth\?\.setCookie\)/);
   assert.match(dispatch, /\.\.\.\(handled\.headers \|\| \{\}\), \.\.\.cookie/);
 });
 

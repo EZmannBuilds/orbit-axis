@@ -14,10 +14,46 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const html = readFileSync(join(ROOT, "public", "index.html"), "utf8");
 const appJs = readFileSync(join(ROOT, "public", "app.js"), "utf8");
 
-test("the global search bar is gone from the top nav", () => {
-  assert.ok(!html.includes('id="topnav-search"'), "topnav-search button should be removed");
-  assert.ok(!html.includes("Search Orbit"), "the decorative search label should be removed");
+test("the search in the top nav is real, not a decorative button", () => {
+  // The ORIGINAL guarantee here was that a fake search bar had been removed:
+  // `#topnav-search` was a button that looked like a field and did nothing, and
+  // deleting it was right.
+  //
+  // The redesign put search back — but as a working field over the three things
+  // people actually look for (a page, one of their saved charts, a symbol they
+  // did not recognise), all of it already in the browser. So the guarantee is
+  // no longer "there is no search"; it is "the search is not a prop".
+  assert.ok(!html.includes('id="topnav-search"'), "the old decorative button must not return");
   assert.ok(!appJs.includes("topnav-search"), "no leftover topnav-search listener");
+
+  // A real input, with a real accessible name and a combobox contract.
+  assert.match(html, /<input[^>]*type="search"[^>]*id="find-input"/s, "search is an input, not a button");
+  assert.match(html, /id="find-input"[\s\S]{0,400}aria-label="[^"]+"/, "and it is named");
+  assert.match(html, /id="find-input"[\s\S]{0,400}role="combobox"/);
+  assert.match(html, /id="find-input"[\s\S]{0,400}aria-controls="find-results"/);
+  assert.match(html, /id="find-results"[^>]*role="listbox"/, "results are a real listbox");
+
+  // And a controller behind it that searches all three sources.
+  assert.match(appJs, /function wireFind\(\)/, "the field is wired");
+  const matches = appJs.slice(appJs.indexOf("function findMatches"), appJs.indexOf("function findRender"));
+  assert.match(matches, /availableWorkspaces\(\)/, "it searches destinations");
+  assert.match(matches, /state\.charts/, "it searches your saved charts");
+  assert.match(matches, /searchAtlas/, "it searches the reference library");
+  // Keyboard support, or it is a mouse-only feature wearing a combobox role.
+  const wire = appJs.slice(appJs.indexOf("function wireFind"));
+  for (const key of ["ArrowDown", "ArrowUp", "Enter", "Escape"]) {
+    assert.ok(wire.includes(`"${key}"`), `${key} must be handled`);
+  }
+});
+
+test("the search reaches nothing over the network, so it cannot fail or leak", () => {
+  // Everything it searches is already loaded: a constant, `state`, and a module
+  // the Atlas lazy-loads for its own pages. No request means no spinner, no
+  // failure mode, and no keystroke leaving the device.
+  const block = appJs.slice(appJs.indexOf("const FIND = {"), appJs.indexOf("/** The hash as written"));
+  assert.ok(!/\bfetch\(/.test(block) && !/\bget\(`?\/api/.test(block),
+    "the search must not make a request");
+  assert.ok(!/localStorage/.test(block), "and it must not store what was typed");
 });
 
 test("the command palette is gone, DOM and listeners together", () => {

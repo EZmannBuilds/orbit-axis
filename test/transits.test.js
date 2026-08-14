@@ -475,9 +475,16 @@ test("the workspace links only to routes that exist", () => {
   const registry = APP.slice(APP.indexOf("const WORKSPACES"), APP.indexOf("const RETIRED_ROUTES"));
   const registered = [...registry.matchAll(/id: "([a-z-]+)"/g)].map((m) => m[1]);
   const links = [...panel.matchAll(/href="#([a-z-]+)"/g)].map((m) => m[1]);
-  assert.ok(links.length >= 4);
+  assert.ok(links.length >= 3, `expected the exits, saw ${links.join(", ")}`);
   for (const l of links) assert.ok(registered.includes(l), `#${l} is not a workspace`);
-  assert.ok(!panel.includes('href="#transits"'), "the page does not link to itself");
+  // The page DOES link to itself now, exactly once: the segmented control that
+  // switches between this view and Everyone's sky has to show both, and the
+  // current one is marked aria-current rather than removed. Anything beyond
+  // that self-link would be a link to where you already are.
+  const self = [...panel.matchAll(/href="#transits"/g)];
+  assert.equal(self.length, 1, "only the segmented control may point at this page");
+  assert.match(panel, /href="#transits" aria-current="page"/,
+    "and it must be marked as the current view rather than looking like an exit");
 });
 
 test("no exact-hit time or end date reaches the rendered workspace", () => {

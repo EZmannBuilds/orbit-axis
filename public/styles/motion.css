@@ -1,55 +1,54 @@
 /* ============================================================================
-   Orbit Axis — soft animation system.
-   Calm, slow, atmospheric. All non-essential motion is disabled under
-   prefers-reduced-motion. Motion never delays access to content.
+   Orbit Axis — motion
+   ----------------------------------------------------------------------------
+   Calm, short, and purposeful. Motion here does one of two things: it tells you
+   content has arrived, or it tells you something is still loading. Nothing
+   loops for atmosphere.
+
+   The pre-redesign layer had a pulsing coloured glow around the Moon, a slow
+   float, and a spinning orbit ring — three infinite animations running behind a
+   page whose job is to be read. They are gone with the decorative layer they
+   belonged to; the entrance and the shimmer are what remain, because each one
+   answers a question the reader is actually asking.
+
+   Everything non-essential is disabled under prefers-reduced-motion AND under
+   the in-app toggle, because a person may need one without the other.
    ========================================================================== */
 
 @keyframes axis-fade-rise {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes axis-glow-pulse {
-  0%, 100% { box-shadow: var(--axis-glow-soft) color-mix(in oklab, var(--axis-lavender) 30%, transparent); }
-  50%      { box-shadow: var(--axis-glow) color-mix(in oklab, var(--axis-lavender) 55%, transparent); }
-}
-@keyframes axis-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
-}
-@keyframes axis-orbit-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
 }
 @keyframes axis-shimmer {
   from { background-position: -200% 0; }
   to   { background-position: 200% 0; }
 }
 
-/* Gentle entrance for Today/History cards. */
-.axis-rise { animation: axis-fade-rise var(--duration-slow, 420ms) var(--ease-decelerate, ease-out) both; }
-.axis-rise-2 { animation: axis-fade-rise var(--duration-slow, 420ms) var(--ease-decelerate, ease-out) 80ms both; }
-.axis-rise-3 { animation: axis-fade-rise var(--duration-slow, 420ms) var(--ease-decelerate, ease-out) 160ms both; }
+/* Staggered entrance for the Today and History cards. The delays are small and
+   the total is under half a second — long enough to read as arrival, short
+   enough that nobody waits for it. */
+.axis-rise   { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) both; }
+.axis-rise-2 { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) 70ms both; }
+.axis-rise-3 { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) 140ms both; }
 
-/* Moon breathing glow + slow float. */
-.axis-moon { animation: axis-float var(--axis-float-duration) ease-in-out infinite; }
-.axis-moon__halo { animation: axis-glow-pulse var(--axis-glow-duration) ease-in-out infinite; }
-.axis-orbit-ring { animation: axis-orbit-spin 60s linear infinite; }
-
-/* Loading shimmer (restrained). */
+/* Loading shimmer. Neutral: it is a placeholder for content, not a thing to
+   look at, so it moves in the surface ramp rather than in the accent. */
 .axis-shimmer {
   background: linear-gradient(100deg,
-    var(--color-surface-elevated) 30%,
-    color-mix(in oklab, var(--axis-lavender) 12%, var(--color-surface-elevated)) 50%,
-    var(--color-surface-elevated) 70%);
+    var(--color-surface-ghost) 30%,
+    var(--color-surface-hover) 50%,
+    var(--color-surface-ghost) 70%);
   background-size: 200% 100%;
   animation: axis-shimmer 1.6s ease-in-out infinite;
-  border-radius: 12px; min-height: 18px;
+  border-radius: var(--radius-lg);
+  min-height: 18px;
 }
 
-/* ── Reduced motion: turn OFF all looping/pulsing motion; keep content ────── */
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   The entrance resolves to its finished state rather than disappearing, so the
+   content is still there — it simply arrives without moving. */
 @media (prefers-reduced-motion: reduce) {
   .axis-rise, .axis-rise-2, .axis-rise-3 { animation: none; opacity: 1; transform: none; }
-  .axis-moon, .axis-moon__halo, .axis-orbit-ring { animation: none; }
   .axis-shimmer { animation: none; }
 }
 
@@ -60,10 +59,4 @@
   opacity: 1;
   transform: none;
 }
-
-:root[data-motion="reduced"] .axis-moon,
-:root[data-motion="reduced"] .axis-moon__halo,
-:root[data-motion="reduced"] .axis-orbit-ring,
-:root[data-motion="reduced"] .axis-shimmer {
-  animation: none;
-}
+:root[data-motion="reduced"] .axis-shimmer { animation: none; }

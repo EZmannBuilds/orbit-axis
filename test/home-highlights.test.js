@@ -203,11 +203,17 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HTML = readFileSync(join(ROOT, "public", "index.html"), "utf8");
 const APP = readFileSync(join(ROOT, "public", "app.js"), "utf8");
 
-test("Home renders the seven-section hierarchy in order", () => {
+test("Today renders its hierarchy in order", () => {
   // The reading leads because it is why someone opens the app; the sky that
   // produced it follows; the technical detail is folded away near the end.
-  const order = ["today-reading-for", "today-fortune", "today-moon",
-                 "today-highlights", "today-sky", "today-explore", "today-secondary"];
+  //
+  // `today-explore` is gone from this list. It was a five-item "Continue
+  // exploring" card at the foot of the page, restating destinations that are
+  // one tap away in the tab bar — navigation dressed as content. The week strip
+  // took its place at the TOP, because "which day am I reading" is a question
+  // someone has before the reading, not after it.
+  const order = ["today-days", "today-fortune", "today-moon",
+                 "today-highlights", "today-sky", "today-secondary"];
   const at = order.map((id) => {
     const i = HTML.indexOf(`id="${id}"`);
     assert.ok(i > -1, `${id} is missing from Home`);
@@ -286,9 +292,18 @@ test("Home links only to routes that exist, Positions included", () => {
   // Reversed by Dev Update 1.7: the route now exists, so Home may — and does —
   // link to it. The guarantee this test protects is unchanged: every Home link
   // resolves to a registered workspace.
-  assert.ok(homeHtml.includes("#positions"), "Home links to the Positions workspace");
-  assert.ok(registered.includes("positions"), "and Positions is registered");
+  assert.ok(registered.includes("positions"), "Positions is registered");
   assert.ok(!/Coming Soon/i.test(homeHtml), "no placeholder destinations");
+  // Today no longer carries a list of links to other pages. The tab bar is on
+  // screen at all times and names all five destinations; repeating them at the
+  // foot of the page was a second navigation to keep in step with the first.
+  assert.ok(!homeHtml.includes('id="today-explore"'),
+    "the Continue exploring link farm must not come back");
+  assert.ok(!homeHtml.includes("axis-explore"), "and neither must its markup");
+  // The one exit that is NOT reachable from the tab bar stays: your own past
+  // readings, which is where the week strip sends you.
+  assert.match(homeHtml, /id="today-secondary"[\s\S]{0,200}href="#history"/,
+    "History has no tab, so Today keeps the way in");
 });
 
 test("sky and fortune fail independently, and neither failure is swallowed", () => {

@@ -55,7 +55,7 @@ test("the panel ships the states the interface depends on", () => {
     "the heading takes focus on entry navigation, so it needs tabindex=-1");
   assert.match(HTML, /id="atlas-status" role="status" aria-live="polite"/,
     "one live region announces loading, counts, and route problems");
-  assert.match(HTML, /id="atlas-crumbs" aria-label="Symbol Atlas location"/);
+  assert.match(HTML, /id="atlas-crumbs" aria-label="Atlas location"/);
   assert.match(HTML, /styles\/symbol-atlas\.css/);
 });
 

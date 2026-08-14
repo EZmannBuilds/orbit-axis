@@ -39,8 +39,12 @@ test("the editor offers exactly the four current relationship values", () => {
   assert.match(select, /value="" selected disabled/, "the placeholder is not a choice");
 });
 
-test("the editor carries the future-compatibility line without showing scores", () => {
-  assert.ok(MODAL.includes("Relationship type helps Orbit tailor compatibility in a future update."));
+test("the editor says what relationship type is FOR, without showing scores", () => {
+  // This line used to promise compatibility "in a future update". Compatibility
+  // shipped, so the copy now states what the field actually does today —
+  // a promise kept is not the same as a promise still being made.
+  assert.ok(MODAL.includes("Relationship type decides which questions Compatibility asks."));
+  assert.ok(!/future update/i.test(MODAL), "the feature is built; stop promising it");
   assert.ok(!/compatibility score/i.test(MODAL), "no score UI, no dead panel");
   assert.ok(!/coming soon/i.test(MODAL), "no dead Coming Soon panel");
 });

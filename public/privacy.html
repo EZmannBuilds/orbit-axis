@@ -6,6 +6,24 @@
   <meta name="color-scheme" content="dark light" />
   <title>Privacy Policy — Orbit Axis</title>
   <meta name="description" content="What Orbit Axis collects, why, and how to remove it." />
+  <!-- Theme resolution BEFORE first paint, identical to index.html.
+       These pages are linked straight from the app, so arriving on one used to
+       flip a light-mode reader onto a black page: without this they have no
+       data-theme at all and fall through to the dark default. Inline and tiny on
+       purpose — a linked script would race the stylesheets and flash the wrong
+       theme. Kept byte-identical across pages, and a test enforces that. -->
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem("orbit.theme"); } catch (e) { /* private mode */ }
+      if (stored !== "light" && stored !== "dark" && stored !== "system") stored = "system";
+      var resolved = stored === "system"
+        ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+        : stored;
+      document.documentElement.dataset.theme = resolved;
+      document.documentElement.dataset.themePreference = stored;
+    })();
+  </script>
   <link rel="stylesheet" href="/styles/tokens.css" />
   <link rel="stylesheet" href="/styles/base.css" />
   <link rel="stylesheet" href="/styles/legal.css" />

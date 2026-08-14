@@ -1,53 +1,120 @@
 /* ============================================================================
-   Orbit Axis — Fortune History workspace.
+   Orbit Axis — Reading history
+   ----------------------------------------------------------------------------
+   Every daily reading Orbit Axis has written for you, newest first, each one a
+   disclosure that opens in place. The week strip on Today opens straight into
+   one of these, so an entry has to be identifiable by its date at a glance.
    ========================================================================== */
 
-.history-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
-.history-controls label { color: var(--color-secondary); font-size: 14px; }
+.history-controls {
+  display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap;
+}
+.history-controls label {
+  color: var(--color-muted);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+}
+/* A scope picker is a compact control, not a form field. Full-width it read as
+   an empty text box someone was supposed to fill in. */
 .history-controls select {
-  background: var(--color-surface-elevated); color: var(--color-primary);
-  border: 1px solid var(--color-border); border-radius: 10px; padding: 9px 12px;
-  font-size: 15px; min-height: 40px;
+  width: auto;
+  min-width: 12rem;
+  max-width: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-ghost);
+  border-color: transparent;
+  font-size: var(--type-caption);
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-xl) var(--space-xs) var(--space-md);
 }
 
-.history-list { display: grid; gap: 12px; }
+.history-list { display: grid; gap: var(--space-sm); }
 
 .history-entry {
-  background: var(--color-surface-elevated); border: 1px solid var(--color-border);
-  border-radius: var(--axis-radius-md); overflow: hidden;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 .history-entry > summary {
-  cursor: pointer; list-style: none; padding: 16px 18px; display: grid; gap: 6px;
+  cursor: pointer; list-style: none;
+  padding: var(--space-md); display: grid; gap: var(--space-xxs);
+  min-height: 44px;
 }
 .history-entry > summary::-webkit-details-marker { display: none; }
+.history-entry > summary:focus-visible { box-shadow: var(--focus-ring); }
 .history-entry__top {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-sm); flex-wrap: wrap;
 }
-.history-entry__date { font-size: 16px; font-weight: 600; color: var(--color-primary); }
-.history-entry__chart { font-size: 13px; color: var(--axis-lavender); }
-.history-entry__chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.history-entry__date {
+  font-family: var(--font-display);
+  font-size: var(--type-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-body);
+  color: var(--color-primary);
+}
+.history-entry__chart { font-size: var(--type-caption); color: var(--color-muted); }
+.history-entry__chips { display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap; }
 .history-entry__num {
-  font-variant-numeric: tabular-nums; font-weight: 700; color: var(--axis-moon);
-  background: var(--color-surface-sunken, #12152a); border-radius: 8px; padding: 3px 10px; font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+  color: var(--color-secondary);
+  background: var(--color-surface-ghost);
+  border-radius: var(--radius-xs);
+  padding: 3px var(--space-xs);
+  font-size: var(--type-caption);
 }
 /* The swatch IS the lucky colour, so its border cannot be the colour too — it
    is the only thing separating a pale swatch from a light card. */
-.history-entry__swatch { width: 18px; height: 18px; border-radius: 6px; border: 1px solid var(--color-border-strong); }
-.history-entry__mood { color: var(--color-secondary); font-size: 14px; }
-.history-entry__love { color: var(--color-primary); font-size: 14px; opacity: 0.85; }
+.history-entry__swatch {
+  width: 18px; height: 18px; border-radius: var(--radius-xs);
+  border: var(--border-width) solid var(--color-border-strong);
+}
+.history-entry__mood { color: var(--color-secondary); font-size: var(--type-caption); }
+.history-entry__love { color: var(--color-muted); font-size: var(--type-caption); }
 
 .history-entry__detail {
-  padding: 4px 18px 18px; display: grid; gap: 10px;
-  border-top: 1px solid var(--color-border); margin-top: 4px;
+  padding: 0 var(--space-md) var(--space-md);
+  display: grid; gap: var(--space-sm);
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-md);
 }
 .history-detail-row { display: grid; gap: 2px; }
 .history-detail-row .lbl {
-  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--axis-lavender);
+  font-size: var(--type-fine);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  color: var(--color-muted);
 }
-.history-detail-row .val { font-size: 15px; color: var(--color-primary); line-height: 1.45; }
+.history-detail-row .val {
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  color: var(--color-primary);
+  line-height: var(--lead-body);
+}
 
-/* Empty state — soft, no streak pressure */
-.history-empty { display: grid; justify-items: center; text-align: center; gap: 16px; padding: 40px 20px; }
+/* Empty state — soft, and with no streak pressure. Coming back tomorrow is an
+   invitation here, not a scoreboard. */
+.history-empty {
+  display: grid; justify-items: center; text-align: center;
+  gap: var(--space-md); padding: var(--space-xxl) var(--space-lg);
+}
 .history-empty__art { position: relative; width: 120px; height: 120px; }
-.history-empty h2 { font-size: 20px; color: var(--color-primary); }
-.history-empty p { color: var(--color-secondary); font-size: 15px; max-width: 360px; line-height: 1.5; }
+.history-empty h2 {
+  font-size: var(--type-tagline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
+}
+.history-empty p {
+  color: var(--color-muted);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  max-width: 40ch;
+  line-height: var(--lead-body);
+}
+
+@media (forced-colors: active) {
+  .history-entry { border: 1px solid CanvasText; }
+}

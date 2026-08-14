@@ -1,97 +1,163 @@
 /* ============================================================================
-   Orbit Design System — Component Library
+   Orbit Axis — Component Library
    ----------------------------------------------------------------------------
-   Reusable UI primitives. Every component draws its spacing, color, radius,
-   type, and motion from tokens.css — no hardcoded values. Class names are
-   namespaced with `o-` (Orbit).
+   The reusable primitives, namespaced `o-`. Every one reads spacing, colour,
+   radius, type, and motion from tokens.css and hardcodes nothing.
+
+   TWO BUTTON GRAMMARS, and they mean different things:
+     · A PILL is an action. Primary blue fill, or a bordered ghost. If it is
+       shaped like a pill, tapping it does something.
+     · An 8px RECT is utility. Sign out, refresh, close — chrome that operates
+       the app rather than advancing the reading.
+   Nothing lives between those two, which is what keeps a screen readable at a
+   glance instead of requiring the label to be read before the shape means
+   anything.
+
+   NO SHADOWS. Cards, buttons, tiles, and rows separate by surface tone and a
+   hairline. The single shadow in the system belongs to the chart wheel and the
+   moon (see .o-object), because those are objects resting on a surface rather
+   than interface.
 
    Index:
-     Buttons · Inputs / Select / Search · Badges · Status pills · Cards
-     Metric tiles · Section header · Info panel · Tabs · Segmented control
-     Lists · Tables · Timeline · Progress · Expandable · Tooltip
-     Dialog · Command palette · Skeleton · Empty state · Loading · Toast
+     Buttons · Inputs · Search · Badges · Pills · Cards · Tiles · Rows & groups
+     Section heads · Key/value · Tabs · Segmented · Tables · Timeline
+     Progress · Expandable · Tooltip · Dialog · Sheet & action bar · Skeleton
+     Empty · Toast · Motion
    ========================================================================== */
 
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
+/* ── Astrological glyphs ─────────────────────────────────────────────────────
+   ♈ ☉ ☿ △ and the rest are ordinary Unicode, and several of them ALSO carry an
+   emoji presentation that Apple platforms prefer. Left to the body font, "♈"
+   rendered as a purple-gradient tile from Apple Color Emoji — in an interface
+   with exactly one accent colour, an OS-supplied gradient was the loudest thing
+   on the page.
+
+   Three defences, because each one is ignored somewhere: a symbol-first font
+   stack (below), `font-variant-emoji: text`, and a U+FE0E appended in
+   textGlyph() before the character is written into the DOM.
+
+   ONE rule for every glyph in the app, so a surface added later inherits the
+   fix instead of rediscovering the bug. Colour is left to each surface. */
+.atlas-card__glyph,
+.atlas-category-card__glyph,
+.atlas-entry__glyph,
+.atlas-chip__glyph,
+.reading-card__glyph,
+.positions-row__glyph,
+.sa-card__glyph,
+.symbol-card__glyph {
+  font-family: var(--font-glyph);
+  font-variant-emoji: text;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────
+   The press state is a 0.95 scale, system-wide and on every variant. It is the
+   one micro-interaction the whole app shares. */
 .o-btn {
   --_bg: transparent;
-  --_fg: var(--color-primary);
-  --_bd: var(--color-border-strong);
+  --_fg: var(--color-accent);
+  --_bd: transparent;
   display: inline-flex; align-items: center; justify-content: center;
-  gap: var(--space-2);
-  height: var(--control-height);
-  padding: 0 var(--space-4);
-  font-family: inherit;
-  font-size: var(--text-body);
-  font-weight: var(--weight-medium);
-  line-height: 1;
+  gap: var(--space-xs);
+  min-height: var(--control-height);
+  padding: 11px var(--space-lg);
+  font-family: var(--font-text);
+  font-size: var(--type-body);
+  font-weight: var(--weight-regular);
+  line-height: 1.2;
+  letter-spacing: var(--track-body);
   white-space: nowrap;
   color: var(--_fg);
   background: var(--_bg);
   border: var(--border-width) solid var(--_bd);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-pill);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard),
     transform var(--duration-instant) var(--ease-standard);
 }
-.o-btn:hover { background: var(--color-surface-hover); }
-.o-btn:active { transform: translateY(0.5px); }
-.o-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.o-btn .o-btn__icon { width: 16px; height: 16px; display: inline-flex; }
+.o-btn:active:not(:disabled) { transform: scale(var(--press-scale)); }
+.o-btn:disabled { opacity: 0.42; cursor: not-allowed; }
+.o-btn:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-pill); }
+.o-btn .o-btn__icon,
+.o-btn > svg { width: 18px; height: 18px; flex: none; }
 
-.o-btn--primary {
-  --_bg: var(--color-accent);
-  --_fg: var(--color-on-accent);
+/* The signature action. */
+.o-btn--primary { --_bg: var(--color-accent); --_fg: var(--color-on-accent); --_bd: transparent; }
+.o-btn--primary:hover:not(:disabled) { --_bg: var(--color-accent-hover); }
+
+/* The ghost pill — the second CTA when two appear together. */
+.o-btn--secondary { --_bg: transparent; --_fg: var(--color-accent); --_bd: var(--color-accent-border); }
+.o-btn--secondary:hover:not(:disabled) { --_bg: var(--color-accent-soft); --_bd: var(--color-accent); }
+
+/* Neutral ghost — for actions that are available but not being recommended. */
+.o-btn--ghost { --_bg: transparent; --_fg: var(--color-secondary); --_bd: transparent; }
+.o-btn--ghost:hover:not(:disabled) { --_bg: var(--color-surface-ghost); --_fg: var(--color-primary); }
+
+/* Utility: the compact rect. Chrome, not action. */
+.o-btn--utility {
+  --_bg: var(--color-surface-ghost);
+  --_fg: var(--color-primary);
   --_bd: transparent;
-  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-sm);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  min-height: 36px;
 }
-.o-btn--primary:hover { --_bg: var(--color-accent-hover); }
+.o-btn--utility:focus-visible { border-radius: var(--radius-sm); }
 
-.o-btn--secondary {
-  --_bg: var(--color-surface-elevated);
-  --_bd: var(--color-border-strong);
-}
+.o-btn--danger { --_bg: var(--color-error); --_fg: #fff; --_bd: transparent; }
+.o-btn--danger:hover:not(:disabled) { --_bg: var(--color-error); filter: brightness(0.9); }
 
-.o-btn--ghost {
-  --_bg: transparent;
-  --_bd: transparent;
-  --_fg: var(--color-secondary);
-}
-.o-btn--ghost:hover { --_fg: var(--color-primary); }
+/* The rare weight-300 large CTA, for a surface's single hero action. */
+.o-btn--large { font-size: 1.125rem; font-weight: var(--weight-light); padding: var(--space-md) var(--space-xl); }
 
-.o-btn--sm { height: calc(var(--control-height) - 6px); padding: 0 var(--space-3); font-size: var(--text-caption); }
+.o-btn--sm { min-height: 36px; padding: var(--space-xs) var(--space-md); font-size: var(--type-caption); letter-spacing: var(--track-caption); }
 .o-btn--block { width: 100%; }
 
-/* Icon-only button (nav, toolbar). */
+/* Icon-only utility button. */
 .o-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: var(--control-height); height: var(--control-height);
-  color: var(--color-muted);
+  width: var(--control-height); height: var(--control-height); flex: none;
+  color: var(--color-secondary);
   background: transparent;
   border: var(--border-width) solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: background var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
 }
-.o-icon-btn:hover { background: var(--color-surface-hover); color: var(--color-primary); }
-.o-icon-btn svg { width: 18px; height: 18px; }
+.o-icon-btn:hover { background: var(--color-surface-ghost); color: var(--color-primary); }
+.o-icon-btn:active { transform: scale(var(--press-scale)); }
+.o-icon-btn svg { width: 20px; height: 20px; }
 
-/* ── Inputs / Select / Search ────────────────────────────────────────────── */
-.o-field { display: flex; flex-direction: column; gap: var(--space-2); }
-.o-label {
-  font-size: var(--text-caption);
-  font-weight: var(--weight-medium);
-  color: var(--color-muted);
+/* The translucent circular control that floats over imagery. Exactly 44px. */
+.o-icon-btn--chip {
+  background: var(--chip-translucent);
+  color: var(--color-primary);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
 }
-.o-input, .o-select {
-  height: var(--control-height);
+
+/* ── Inputs ──────────────────────────────────────────────────────────────── */
+.o-field { display: flex; flex-direction: column; gap: var(--space-xs); }
+.o-label {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caption);
+  color: var(--color-secondary);
+}
+.o-input, .o-select, input[type="text"], input[type="email"], input[type="password"],
+input[type="date"], input[type="time"], input[type="search"], select, textarea {
+  min-height: var(--control-height);
   width: 100%;
-  padding: 0 var(--space-3);
-  font-family: inherit;
-  font-size: var(--text-body);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-text);
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
   color: var(--color-primary);
   background: var(--color-surface-sunken);
   border: var(--border-width) solid var(--color-border);
@@ -99,65 +165,88 @@
   transition: border-color var(--duration-fast) var(--ease-standard),
     background var(--duration-fast) var(--ease-standard);
 }
-.o-input::placeholder { color: var(--color-faint); }
+.o-input::placeholder, input::placeholder, textarea::placeholder { color: var(--color-faint); }
 .o-input:hover, .o-select:hover { border-color: var(--color-border-strong); }
-.o-input:focus-visible, .o-select:focus-visible {
+.o-input:focus-visible, .o-select:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
   border-color: var(--color-border-focus);
-  background: var(--color-surface);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
 }
-.o-select {
+.o-select, select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c7787' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  /* The caret is Phosphor's, inlined: a data URI cannot import the icon module,
+     and shipping the one glyph twice is cheaper than a wrapper element on every
+     select in the app. currentColor is not available here, so the two themes
+     each get their own stroke. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='none' stroke='%238a8a8e' stroke-width='16' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='208 96 128 176 48 96'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right var(--space-3) center;
-  padding-right: var(--space-8);
+  background-position: right var(--space-md) center;
+  background-size: 14px;
+  padding-right: var(--space-xl);
+}
+:root[data-theme="light"] .o-select,
+:root[data-theme="light"] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256' fill='none' stroke='%2356565a' stroke-width='16' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='208 96 128 176 48 96'/%3E%3C/svg%3E");
+  /* The repeat, position and size are restated deliberately. This selector
+     outranks a plain `.some-select` rule, so if one of those used the
+     `background:` shorthand its reset survives here — and re-declaring only the
+     IMAGE gave a caret tiled six times across the control. Light theme only,
+     which is why it never showed up on a dark desktop. */
+  background-repeat: no-repeat;
+  background-position: right var(--space-md) center;
+  background-size: 14px;
 }
 
-/* Search — input with a leading icon. */
+/* ── Search — a pill, matching the CTA grammar ───────────────────────────── */
 .o-search { position: relative; display: flex; align-items: center; }
 .o-search svg {
-  position: absolute; left: var(--space-3); width: 16px; height: 16px;
-  color: var(--color-faint); pointer-events: none;
+  position: absolute; left: var(--space-md); width: 18px; height: 18px;
+  color: var(--color-muted); pointer-events: none;
 }
-.o-search .o-input { padding-left: var(--space-8); }
+.o-search .o-input, .o-search input {
+  border-radius: var(--radius-pill);
+  padding-left: calc(var(--space-md) + 26px);
+  background: var(--color-surface-ghost);
+}
+.o-search .o-search__clear {
+  position: absolute; right: 6px;
+  width: 32px; height: 32px;
+}
+.o-search .o-search__clear svg { position: static; width: 16px; height: 16px; }
 
 /* ── Badges ──────────────────────────────────────────────────────────────── */
 .o-badge {
-  display: inline-flex; align-items: center; gap: var(--space-1);
-  padding: 2px var(--space-2);
-  font-size: var(--text-meta);
-  font-weight: var(--weight-medium);
+  display: inline-flex; align-items: center; gap: var(--space-xxs);
+  padding: 3px var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-fine);
   line-height: 1.5;
-  color: var(--color-muted);
-  background: var(--color-surface-sunken);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-sm);
-}
-.o-badge--accent { color: var(--color-accent); background: var(--color-accent-soft); border-color: var(--color-accent-border); }
-
-/* ── Status pills — a dot + label, semantically colored ──────────────────── */
-.o-pill {
-  display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-meta);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
   color: var(--color-secondary);
-  background: var(--color-surface-sunken);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-full);
+  background: var(--color-surface-ghost);
+  border-radius: var(--radius-xs);
 }
-.o-pill::before {
-  content: ""; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--color-faint); flex: none;
+.o-badge--accent { color: var(--color-accent); background: var(--color-accent-soft); }
+
+/* ── Status pills — a dot and a word, never colour alone ─────────────────── */
+.o-pill {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  padding: 5px var(--space-sm);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-fine);
+  color: var(--color-secondary);
+  background: var(--color-surface-ghost);
+  border-radius: var(--radius-pill);
 }
-.o-pill--success { color: var(--color-success); background: var(--color-success-soft); border-color: transparent; }
+.o-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--color-muted); flex: none; }
+.o-pill--success { color: var(--color-success); background: var(--color-success-soft); }
 .o-pill--success::before { background: var(--color-success); }
-.o-pill--warning { color: var(--color-warning); background: var(--color-warning-soft); border-color: transparent; }
+.o-pill--warning { color: var(--color-warning); background: var(--color-warning-soft); }
 .o-pill--warning::before { background: var(--color-warning); }
-.o-pill--error { color: var(--color-error); background: var(--color-error-soft); border-color: transparent; }
+.o-pill--error { color: var(--color-error); background: var(--color-error-soft); }
 .o-pill--error::before { background: var(--color-error); }
-.o-pill--accent { color: var(--color-accent); background: var(--color-accent-soft); border-color: transparent; }
+.o-pill--accent { color: var(--color-accent); background: var(--color-accent-soft); }
 .o-pill--accent::before { background: var(--color-accent); }
 
 /* ── Cards ───────────────────────────────────────────────────────────────── */
@@ -166,213 +255,390 @@
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--density-card-pad);
-  box-shadow: var(--shadow-e1);
 }
-.o-card--elevated { background: var(--color-surface-elevated); box-shadow: var(--shadow-e2); }
+.o-card--elevated { background: var(--color-surface-elevated); }
 .o-card--flush { padding: 0; overflow: hidden; }
-.o-card--interactive { cursor: pointer; transition: border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard); }
-.o-card--interactive:hover { border-color: var(--color-border-strong); transform: translateY(-1px); box-shadow: var(--shadow-e2); }
+.o-card--quiet { background: transparent; border-color: var(--color-border); }
+.o-card--interactive {
+  cursor: pointer; display: block; width: 100%; text-align: left;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+.o-card--interactive:hover { border-color: var(--color-border-strong); background: var(--color-surface-elevated); }
+.o-card--interactive:active { transform: scale(0.99); }
 .o-card__body { display: grid; gap: var(--density-stack); }
 
-/* ── Metric tile — a single number with an eyebrow and optional glyph ─────── */
+/* The ONE shadow. Objects that rest on a surface — the chart wheel, the moon,
+   an avatar over a tile — and nothing else. */
+.o-object { filter: drop-shadow(var(--shadow-object)); }
+
+/* ── Metric tile ─────────────────────────────────────────────────────────── */
 .o-tile {
   display: grid;
-  gap: var(--space-2);
+  gap: var(--space-xs);
   padding: var(--density-tile-pad);
   background: var(--color-surface);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-e1);
 }
-.o-tile__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.o-tile__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-xs); }
 .o-tile__glyph {
-  font-size: 22px; line-height: 1; color: var(--color-secondary);
-  width: 34px; height: 34px; display: grid; place-items: center;
-  background: var(--color-surface-sunken); border-radius: var(--radius-md);
+  width: 34px; height: 34px; flex: none;
+  display: grid; place-items: center;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: var(--radius-full);
+  font-size: 18px; line-height: 1;
 }
-.o-tile__value { font-size: var(--text-heading); font-weight: var(--weight-semibold); color: var(--color-primary); line-height: var(--leading-tight); font-variant-numeric: tabular-nums; }
-.o-tile__sub { font-size: var(--text-caption); color: var(--color-muted); }
-
-/* ── Section header — Title + description + actions ───────────────────────── */
-.o-section-head {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: var(--space-4); flex-wrap: wrap;
-  margin-bottom: var(--density-stack);
+.o-tile__glyph svg { width: 18px; height: 18px; }
+.o-tile__value {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-tight);
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums;
 }
-.o-section-head__text { display: grid; gap: var(--space-1); min-width: 0; }
-.o-section-head__actions { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.o-tile__sub { font-size: var(--type-caption); letter-spacing: var(--track-caption); color: var(--color-muted); }
 
-/* Compact eyebrow header used inside cards. */
-.o-card-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-3); margin-bottom: var(--density-stack);
+/* ── Rows and grouped lists ──────────────────────────────────────────────────
+   The inset grouped list: a card whose children are rows separated by hairlines
+   that stop short of the edge. It is how the whole app presents "a set of things
+   you can open", so Settings, Saved Charts, History, and the Atlas all read as
+   one interface instead of four. */
+.o-group {
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-.o-card-head h3 { font-size: var(--text-card-title); font-weight: var(--weight-semibold); color: var(--color-primary); }
-
-/* ── Info panel — a labelled key/value block ─────────────────────────────── */
-.o-panel { display: grid; gap: var(--space-3); }
-.o-kv { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: var(--space-2) 0; border-bottom: var(--border-width) solid var(--color-border); }
-.o-kv:last-child { border-bottom: none; }
-.o-kv__k { font-size: var(--text-caption); color: var(--color-muted); }
-.o-kv__v { font-size: var(--text-caption); color: var(--color-primary); font-weight: var(--weight-medium); text-align: right; font-variant-numeric: tabular-nums; }
-
-/* ── Tabs ────────────────────────────────────────────────────────────────── */
-.o-tabs { display: flex; gap: var(--space-1); border-bottom: var(--border-width) solid var(--color-border); }
-.o-tab {
-  appearance: none; background: none; border: none; cursor: pointer;
-  font-family: inherit; font-size: var(--text-caption); font-weight: var(--weight-medium);
+.o-group__label {
+  display: block;
+  padding: 0 var(--space-xxs) var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
   color: var(--color-muted);
-  padding: var(--space-3) var(--space-3);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-  transition: color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
 }
-.o-tab:hover { color: var(--color-primary); }
-.o-tab[aria-selected="true"] { color: var(--color-primary); border-bottom-color: var(--color-accent); }
-
-/* ── Segmented control (compact toggle group) ────────────────────────────── */
-.o-segment { display: inline-flex; padding: 3px; gap: 2px; background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); }
-.o-segment button {
-  appearance: none; border: none; cursor: pointer; font-family: inherit;
-  font-size: var(--text-caption); font-weight: var(--weight-medium);
-  color: var(--color-muted); background: transparent;
-  padding: var(--space-1) var(--space-3); border-radius: calc(var(--radius-md) - 3px);
-  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+.o-group__note {
+  padding: var(--space-xs) var(--space-xxs) 0;
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+  line-height: var(--lead-body);
 }
-.o-segment button:hover { color: var(--color-primary); }
-.o-segment button[aria-pressed="true"] { background: var(--color-surface-elevated); color: var(--color-primary); box-shadow: var(--shadow-e1); }
 
-/* ── Lists ───────────────────────────────────────────────────────────────── */
+.o-row {
+  display: flex; align-items: center; gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  min-height: 56px;
+  text-align: left;
+  color: var(--color-primary);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  cursor: default;
+  position: relative;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+/* The hairline is inset from the leading edge so it starts under the text, not
+   under the icon — the detail that makes a list read as grouped. */
+.o-row + .o-row::before {
+  content: ""; position: absolute; top: 0; left: var(--space-md); right: 0;
+  height: 1px; background: var(--color-border);
+}
+.o-row--link { cursor: pointer; }
+.o-row--link:hover { background: var(--color-surface-ghost); }
+.o-row--link:active { background: var(--color-surface-hover); }
+.o-row--link::after {
+  content: "";
+  width: 8px; height: 8px; flex: none;
+  margin-left: auto;
+  border-right: 2px solid var(--color-faint);
+  border-top: 2px solid var(--color-faint);
+  transform: rotate(45deg);
+}
+.o-row__icon {
+  width: 30px; height: 30px; flex: none;
+  display: grid; place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.o-row__icon svg { width: 18px; height: 18px; }
+.o-row__main { min-width: 0; flex: 1; display: grid; gap: 1px; }
+.o-row__title { font-size: var(--type-body); letter-spacing: var(--track-body); color: var(--color-primary); }
+.o-row__sub { font-size: var(--type-caption); letter-spacing: var(--track-caption); color: var(--color-muted); line-height: var(--lead-snug); }
+.o-row__value { font-size: var(--type-caption); color: var(--color-muted); text-align: right; font-variant-numeric: tabular-nums; margin-left: auto; }
+.o-row--link .o-row__value { margin-left: auto; margin-right: var(--space-xs); }
+.o-row--danger .o-row__title { color: var(--color-error); }
+.o-row--danger .o-row__icon { color: var(--color-error); background: var(--color-error-soft); }
+
+/* Legacy list primitive, kept for surfaces not yet on .o-group. */
 .o-list { display: grid; }
 .o-list__row {
-  display: flex; align-items: center; gap: var(--space-3);
+  display: flex; align-items: center; gap: var(--space-sm);
   padding: var(--density-row-pad) 0;
   border-bottom: var(--border-width) solid var(--color-border);
 }
 .o-list__row:last-child { border-bottom: none; }
 .o-list__main { min-width: 0; flex: 1; }
-.o-list__title { font-size: var(--text-body); color: var(--color-primary); font-weight: var(--weight-medium); }
-.o-list__sub { font-size: var(--text-caption); color: var(--color-muted); }
+.o-list__title { font-size: var(--type-body); color: var(--color-primary); }
+.o-list__sub { font-size: var(--type-caption); color: var(--color-muted); }
+
+/* ── Section head ────────────────────────────────────────────────────────── */
+.o-section-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: var(--space-md); flex-wrap: wrap;
+  margin-bottom: var(--density-stack);
+}
+/* As a direct child of a workspace the grid gap already separates it, and the
+   margin was stacking on top of it — 41px of air between a heading and the
+   first thing it introduces. */
+.workspace-panel > .o-section-head { margin-bottom: 0; }
+.o-section-head__text { display: grid; gap: var(--space-xxs); min-width: 0; }
+.o-section-head__actions { display: flex; align-items: center; gap: var(--space-xs); flex-wrap: wrap; }
+
+.o-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-sm); margin-bottom: var(--density-stack);
+}
+.o-card-head h2, .o-card-head h3 {
+  font-family: var(--font-text);
+  font-size: var(--type-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-body);
+  color: var(--color-primary);
+}
+
+/* ── Key/value ───────────────────────────────────────────────────────────── */
+.o-panel { display: grid; gap: 0; }
+.o-kv {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: var(--space-md); padding: var(--space-sm) 0;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.o-kv:last-child { border-bottom: none; }
+.o-kv__k { font-size: var(--type-caption); letter-spacing: var(--track-caption); color: var(--color-muted); }
+.o-kv__v { font-size: var(--type-caption); letter-spacing: var(--track-caption); color: var(--color-primary); text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.o-tabs { display: flex; gap: var(--space-lg); border-bottom: var(--border-width) solid var(--color-border); overflow-x: auto; }
+.o-tab {
+  appearance: none; background: none; border: none; cursor: pointer;
+  font-family: var(--font-text);
+  font-size: var(--type-body); letter-spacing: var(--track-body);
+  color: var(--color-muted);
+  padding: var(--space-sm) 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+.o-tab:hover { color: var(--color-primary); }
+.o-tab[aria-selected="true"] { color: var(--color-primary); font-weight: var(--weight-semibold); border-bottom-color: var(--color-accent); }
+
+/* ── Segmented control ───────────────────────────────────────────────────── */
+.o-segment {
+  display: inline-flex; padding: 2px; gap: 2px;
+  background: var(--color-surface-ghost);
+  border-radius: var(--radius-pill);
+  max-width: 100%;
+}
+/* Segments accept both elements, and the element is chosen by what the control
+   DOES. Sky switches between two routes, so its segments are real anchors with
+   real hrefs — back, forward, and copy-link all work. Settings toggles state in
+   place, so its segments are buttons. Same control, honest markup either way. */
+.o-segment button,
+.o-segment a {
+  display: inline-flex; align-items: center; justify-content: center;
+  appearance: none; border: none; cursor: pointer;
+  font-family: var(--font-text);
+  font-size: var(--type-caption); letter-spacing: var(--track-caption);
+  color: var(--color-secondary); background: transparent;
+  text-decoration: none;
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+.o-segment button:hover,
+.o-segment a:hover { color: var(--color-primary); }
+.o-segment button:active,
+.o-segment a:active { transform: scale(var(--press-scale)); }
+.o-segment button[aria-pressed="true"],
+.o-segment button[aria-selected="true"],
+.o-segment a[aria-selected="true"],
+.o-segment a[aria-current="page"] {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+}
+:root[data-theme="light"] .o-segment button[aria-pressed="true"],
+:root[data-theme="light"] .o-segment button[aria-selected="true"],
+:root[data-theme="light"] .o-segment a[aria-selected="true"],
+:root[data-theme="light"] .o-segment a[aria-current="page"] {
+  background: var(--paper-white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.o-segment--block { display: flex; width: 100%; }
+.o-segment--block button,
+.o-segment--block a { flex: 1 1 0; }
 
 /* ── Tables ──────────────────────────────────────────────────────────────── */
 .o-table-wrap { overflow-x: auto; border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); }
-.o-table { width: 100%; border-collapse: collapse; font-size: var(--text-caption); }
+.o-table { width: 100%; border-collapse: collapse; font-size: var(--type-caption); }
 .o-table th {
-  text-align: left; font-weight: var(--weight-medium); color: var(--color-muted);
-  font-size: var(--text-meta); letter-spacing: var(--tracking-wide); text-transform: uppercase;
-  padding: var(--space-3) var(--space-4);
+  text-align: left; font-weight: var(--weight-semibold); color: var(--color-muted);
+  font-size: var(--type-fine); letter-spacing: var(--track-caps); text-transform: uppercase;
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-surface-sunken);
   border-bottom: var(--border-width) solid var(--color-border);
   position: sticky; top: 0;
 }
-.o-table td { padding: var(--space-3) var(--space-4); border-bottom: var(--border-width) solid var(--color-border); color: var(--color-secondary); }
+.o-table td { padding: var(--space-sm) var(--space-md); border-bottom: var(--border-width) solid var(--color-border); color: var(--color-secondary); }
 .o-table tr:last-child td { border-bottom: none; }
-.o-table tbody tr { transition: background var(--duration-fast) var(--ease-standard); }
-.o-table tbody tr:hover { background: var(--color-surface-hover); }
+.o-table tbody tr:hover { background: var(--color-surface-ghost); }
 .o-table .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--color-primary); }
 
 /* ── Timeline ────────────────────────────────────────────────────────────── */
 .o-timeline { display: grid; gap: 0; }
 .o-timeline__item {
-  position: relative; display: grid; grid-template-columns: 96px 1fr; gap: var(--space-4);
-  padding: var(--space-3) 0 var(--space-4) 0;
+  position: relative; display: grid; grid-template-columns: 88px 1fr; gap: var(--space-md);
+  padding: var(--space-sm) 0 var(--space-md);
 }
 .o-timeline__item::before {
-  content: ""; position: absolute; left: 106px; top: 22px; bottom: -4px; width: 1px;
+  content: ""; position: absolute; left: 98px; top: 24px; bottom: -4px; width: 1px;
   background: var(--color-border);
 }
 .o-timeline__item:last-child::before { display: none; }
-.o-timeline__date { font-size: var(--text-caption); color: var(--color-accent); font-variant-numeric: tabular-nums; padding-top: 1px; }
-.o-timeline__body { position: relative; padding-left: var(--space-5); }
+.o-timeline__date { font-size: var(--type-caption); color: var(--color-accent); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.o-timeline__body { position: relative; padding-left: var(--space-lg); }
 .o-timeline__body::before {
-  content: ""; position: absolute; left: -6px; top: 5px; width: 9px; height: 9px;
+  content: ""; position: absolute; left: -5px; top: 7px; width: 9px; height: 9px;
   border-radius: 50%; background: var(--color-surface); border: 2px solid var(--color-accent);
 }
-.o-timeline__title { font-size: var(--text-body); font-weight: var(--weight-medium); color: var(--color-primary); }
-.o-timeline__detail { font-size: var(--text-caption); color: var(--color-muted); margin-top: 2px; }
+.o-timeline__title {
+  display: flex; align-items: center; gap: var(--space-xs);
+  font-size: var(--type-body); letter-spacing: var(--track-body); color: var(--color-primary);
+}
+.o-timeline__icon { display: inline-grid; place-items: center; flex: none; color: var(--color-muted); }
+.o-timeline__icon svg { width: 17px; height: 17px; display: block; }
+.o-timeline__detail { font-size: var(--type-caption); color: var(--color-muted); margin-top: 2px; }
 
 /* ── Progress ────────────────────────────────────────────────────────────── */
-.o-progress { height: 5px; border-radius: var(--radius-full); background: var(--color-surface-sunken); overflow: hidden; }
+.o-progress { height: 6px; border-radius: var(--radius-pill); background: var(--color-surface-ghost); overflow: hidden; }
 .o-progress__bar { height: 100%; border-radius: inherit; background: var(--color-accent); transition: width var(--duration-slow) var(--ease-decelerate); }
-
-/* Circular / radial progress uses inline conic-gradient via --value. */
 .o-ring {
   --value: 0; --size: 44px;
   width: var(--size); height: var(--size); border-radius: 50%;
-  background: conic-gradient(var(--color-accent) calc(var(--value) * 1%), var(--color-surface-sunken) 0);
+  background: conic-gradient(var(--color-accent) calc(var(--value) * 1%), var(--color-surface-ghost) 0);
   display: grid; place-items: center; flex: none;
 }
 .o-ring::after {
-  content: ""; width: calc(var(--size) - 10px); height: calc(var(--size) - 10px);
+  content: ""; width: calc(var(--size) - 9px); height: calc(var(--size) - 9px);
   border-radius: 50%; background: var(--color-surface);
 }
-.o-ring__label { position: absolute; font-size: var(--text-meta); font-weight: var(--weight-semibold); color: var(--color-primary); }
+.o-ring__label { position: absolute; font-size: var(--type-fine); font-weight: var(--weight-semibold); color: var(--color-primary); }
 
-/* ── Expandable section ──────────────────────────────────────────────────── */
-.o-expand { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+/* ── Expandable ──────────────────────────────────────────────────────────── */
+.o-expand { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface); overflow: hidden; }
 .o-expand__head {
-  display: flex; align-items: center; gap: var(--space-3); width: 100%;
-  padding: var(--space-3) var(--space-4);
-  background: none; border: none; cursor: pointer; font-family: inherit; text-align: left;
-  color: var(--color-primary); font-size: var(--text-body); font-weight: var(--weight-medium);
+  display: flex; align-items: center; gap: var(--space-sm); width: 100%;
+  padding: var(--space-sm) var(--space-md); min-height: 52px;
+  background: none; border: none; cursor: pointer; font-family: var(--font-text); text-align: left;
+  color: var(--color-primary); font-size: var(--type-body); letter-spacing: var(--track-body);
 }
-.o-expand__chevron { margin-left: auto; color: var(--color-muted); transition: transform var(--duration-base) var(--ease-standard); }
+.o-expand__head::-webkit-details-marker { display: none; }
+.o-expand__chevron { margin-left: auto; color: var(--color-faint); transition: transform var(--duration-base) var(--ease-standard); }
+.o-expand__chevron svg { width: 16px; height: 16px; display: block; }
 .o-expand[open] .o-expand__chevron { transform: rotate(90deg); }
-.o-expand__body { padding: 0 var(--space-4) var(--space-4); font-size: var(--text-caption); color: var(--color-muted); line-height: var(--leading-normal); }
+.o-expand__body {
+  padding: 0 var(--space-md) var(--space-md);
+  font-size: var(--type-caption); letter-spacing: var(--track-caption);
+  color: var(--color-secondary); line-height: var(--lead-body);
+}
 
-/* ── Tooltip (CSS-only, data-tooltip attribute) ──────────────────────────── */
+/* ── Tooltip ─────────────────────────────────────────────────────────────── */
 [data-tooltip] { position: relative; }
 [data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
   white-space: nowrap;
-  padding: var(--space-1) var(--space-2);
-  font-size: var(--text-meta); color: var(--color-primary);
-  background: var(--color-surface-elevated);
-  border: var(--border-width) solid var(--color-border-strong);
+  padding: var(--space-xxs) var(--space-xs);
+  font-size: var(--type-fine); color: var(--color-primary);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
+  border: var(--border-width) solid var(--glass-border);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-e2);
   opacity: 0; pointer-events: none;
   transition: opacity var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
   z-index: 40;
 }
 [data-tooltip]:hover::after, [data-tooltip]:focus-visible::after { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ── Floating action bar ─────────────────────────────────────────────────────
+   Frosted, bottom-anchored, and the only place a surface's primary action lives
+   when the surface is long enough to scroll past it. */
+.o-actionbar {
+  position: sticky; bottom: 0; z-index: 30;
+  display: flex; align-items: center; gap: var(--space-md);
+  min-height: 64px;
+  margin: 0 calc(var(--space-md) * -1);
+  padding: var(--space-sm) var(--space-xl) max(var(--space-sm), env(safe-area-inset-bottom));
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
+  border-top: var(--border-width) solid var(--glass-border);
+}
+.o-actionbar__text { min-width: 0; flex: 1; font-size: var(--type-caption); color: var(--color-muted); }
+
 /* ── Dialog ──────────────────────────────────────────────────────────────── */
 .o-overlay {
   position: fixed; inset: 0; z-index: 60;
   background: rgba(0, 0, 0, 0.5);
   display: grid; place-items: start center;
-  padding: 10vh var(--space-4) var(--space-4);
+  padding: 10vh var(--space-md) var(--space-md);
   opacity: 0; visibility: hidden;
   transition: opacity var(--duration-base) var(--ease-standard), visibility var(--duration-base);
 }
 .o-overlay[data-open="true"] { opacity: 1; visibility: visible; }
 .o-dialog {
   width: 100%; max-width: 480px;
-  background: var(--color-surface-elevated);
-  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-e3);
-  padding: var(--space-6);
+  box-shadow: var(--shadow-object);
+  padding: var(--space-lg);
   transform: translateY(-8px) scale(0.98);
   transition: transform var(--duration-base) var(--ease-emphasized);
 }
 .o-overlay[data-open="true"] .o-dialog { transform: translateY(0) scale(1); }
 
-/* ── Skeleton loader ─────────────────────────────────────────────────────── */
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
 .o-skel {
   border-radius: var(--radius-sm);
-  background: linear-gradient(90deg, var(--color-surface-sunken) 25%, var(--color-surface-hover) 50%, var(--color-surface-sunken) 75%);
+  background: linear-gradient(90deg, var(--color-surface-ghost) 25%, var(--color-surface-hover) 50%, var(--color-surface-ghost) 75%);
   background-size: 200% 100%;
   animation: o-shimmer 1.4s ease-in-out infinite;
 }
-.o-skel--line { height: 12px; margin: 6px 0; }
-.o-skel--title { height: 18px; width: 45%; margin-bottom: var(--space-3); }
+.o-skel--line { height: 13px; margin: 7px 0; }
+.o-skel--title { height: 20px; width: 45%; margin-bottom: var(--space-sm); }
 .o-skel--tile { height: 96px; }
 @keyframes o-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
-/* ── Loading spinner ─────────────────────────────────────────────────────── */
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
 .o-spinner {
   width: 18px; height: 18px; border-radius: 50%;
   border: 2px solid var(--color-border-strong);
@@ -382,188 +648,213 @@
 @keyframes o-spin { to { transform: rotate(360deg); } }
 
 /* ── Empty state ─────────────────────────────────────────────────────────── */
-.o-empty { display: grid; justify-items: center; gap: var(--space-3); text-align: center; padding: var(--space-12) var(--space-6); color: var(--color-muted); }
-.o-empty__glyph { font-size: 30px; opacity: 0.7; }
-.o-empty__title { font-size: var(--text-card-title); font-weight: var(--weight-semibold); color: var(--color-secondary); }
-.o-empty__text { font-size: var(--text-caption); max-width: 34ch; }
+.o-empty {
+  display: grid; justify-items: center; gap: var(--space-sm); text-align: center;
+  padding: var(--space-xxl) var(--space-lg); color: var(--color-muted);
+}
+.o-empty__glyph { color: var(--color-faint); }
+.o-empty__glyph svg { width: 34px; height: 34px; }
+.o-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline); font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display); color: var(--color-primary);
+}
+.o-empty__text { font-size: var(--type-caption); letter-spacing: var(--track-caption); max-width: 40ch; line-height: var(--lead-body); }
 
 /* ── Toast ───────────────────────────────────────────────────────────────── */
-.o-toast-region { position: fixed; bottom: var(--space-5); left: 50%; transform: translateX(-50%); z-index: 80; display: grid; gap: var(--space-2); }
+.o-toast-region { position: fixed; bottom: var(--space-lg); left: 50%; transform: translateX(-50%); z-index: 80; display: grid; gap: var(--space-xs); }
 .o-toast {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--color-surface-elevated);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-e3);
-  font-size: var(--text-caption); color: var(--color-primary);
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
+  border: var(--border-width) solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--type-caption); letter-spacing: var(--track-caption);
+  color: var(--color-primary);
   animation: o-toast-in var(--duration-base) var(--ease-decelerate);
 }
 @keyframes o-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Motion utility classes ──────────────────────────────────────────────── */
+/* ── Motion utilities ────────────────────────────────────────────────────── */
 .o-fade-in { animation: o-fade-in var(--duration-base) var(--ease-standard); }
 @keyframes o-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .o-rise-in { animation: o-rise-in var(--duration-slow) var(--ease-decelerate); }
 @keyframes o-rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Danger button ───────────────────────────────────────────────────────── */
-.o-btn--danger {
-  color: #fff;
-  background: #c0384c;
-  border: var(--border-width) solid #c0384c;
+/* ── Modal ───────────────────────────────────────────────────────────────────
+   One dialog shell. Focus is trapped while open, Escape closes, focus returns
+   to whatever opened it (app.js owns that behaviour; this owns the surface). */
+/* Pinned to the VISIBLE region, not the layout viewport.
+   `inset: 0` anchors a fixed element to the layout viewport — which on iOS
+   Safari does not move or shrink when the keyboard opens. The dialog would
+   therefore centre itself in a box a third of which was behind the keys.
+   --vv-height and --vv-top are published by trackVisualViewport() in app.js;
+   the fallbacks are what every non-iOS browser uses, and they are correct
+   there. */
+.o-modal {
+  position: fixed;
+  top: var(--vv-top, 0);
+  left: 0;
+  right: 0;
+  height: var(--vv-height, 100dvh);
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: var(--space-md);
 }
-.o-btn--danger:hover { background: #a92e40; border-color: #a92e40; }
-
-/* ── Modal (chart create/edit, confirm) ──────────────────────────────────────
-   One reusable dialog shell. Focus is trapped while open, Escape closes, and
-   focus returns to whatever opened it. Reduced motion removes the entrance. */
-.o-modal { position: fixed; inset: 0; z-index: 110; display: grid; place-items: center; padding: var(--space-4); }
 .o-modal[hidden] { display: none; }
 
 .o-modal__backdrop {
   position: absolute; inset: 0;
-  background: rgba(5, 8, 20, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .o-modal__panel {
   position: relative;
-  width: min(720px, 100%);
-  max-height: calc(100vh - var(--space-8));
+  width: min(680px, 100%);
+  max-height: calc(var(--vv-height, 100vh) - var(--space-xl));
   overflow-y: auto;
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-5);
-  background: var(--color-surface-elevated);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-e3);
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-object);
   animation: o-rise-in var(--duration-base) var(--ease-decelerate);
 }
 .o-modal__panel--sm { width: min(420px, 100%); }
 
-.o-modal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.o-modal__head h2 { font-size: var(--text-card-title); color: var(--color-primary); }
+.o-modal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+.o-modal__head h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline); font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display); color: var(--color-primary);
+}
 
 .o-modal__close {
-  /* 44px, because this is the control someone reaches for when they want out. */
   width: 44px; height: 44px; flex: none;
   display: grid; place-items: center;
   color: var(--color-secondary);
-  background: var(--color-surface-sunken);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
+  background: var(--color-surface-ghost);
+  border: 0;
+  border-radius: var(--radius-full);
   cursor: pointer;
+  transition: transform var(--duration-instant) var(--ease-standard);
 }
-.o-modal__close svg { width: 16px; height: 16px; }
+.o-modal__close svg { width: 18px; height: 18px; }
 .o-modal__close:hover { color: var(--color-primary); }
+.o-modal__close:active { transform: scale(var(--press-scale)); }
 
-.o-modal__body { color: var(--color-secondary); line-height: 1.55; }
-.o-modal__actions { display: flex; gap: var(--space-3); justify-content: flex-end; flex-wrap: wrap; }
+.o-modal__body { color: var(--color-secondary); line-height: var(--lead-body); }
+.o-modal__actions { display: flex; gap: var(--space-sm); justify-content: flex-end; flex-wrap: wrap; }
 
-/* Visible focus for every interactive control inside a dialog. */
-.o-modal :focus-visible,
-.gate-dismiss:focus-visible,
-.axis-chart-add:focus-visible,
-.axis-chart-manage:focus-visible {
-  outline: 2px solid var(--axis-lavender);
-  outline-offset: 2px;
-}
+.o-modal :focus-visible { box-shadow: var(--focus-ring); }
 
-/* ── A form dialog that survives a mobile keyboard ────────────────────────
-   The problem this solves: a panel sized with `100vh` keeps its full height
-   when the on-screen keyboard opens, because `vh` does not shrink. The bottom
-   of the panel — where Save lives — ends up underneath the keyboard, and the
-   panel itself does not scroll because it believes it already fits.
-
-   `100dvh` is the dynamic viewport height, which does shrink. The header stays
-   put and only the form body scrolls, so the title and the close button remain
-   reachable no matter how little room is left. */
+/* A form dialog that survives a mobile keyboard: `dvh` shrinks when the
+   keyboard opens, `vh` does not, so Save stays reachable. The header is fixed
+   and only the body scrolls. */
 .o-modal__panel--form {
-  max-height: min(calc(100dvh - var(--space-8)), 860px);
+  max-height: min(calc(var(--vv-height, 100dvh) - var(--space-xl)), 860px);
   grid-template-rows: auto 1fr;
   overflow: hidden;
-  padding-bottom: var(--space-4);
+  padding-bottom: var(--space-md);
 }
-
 .o-modal__scroll {
   overflow-y: auto;
-  overscroll-behavior: contain;   /* scrolling the form must not scroll the page behind it */
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   display: grid;
-  gap: var(--space-4);
-  /* No bottom padding here: it would sit BELOW the sticky action bar and let
-     the last field show through underneath it. The bar owns that space. */
+  gap: var(--space-md);
 }
-
-/* The actions sit at the end of the scrolling content rather than pinned, so a
-   keyboard can never cover them: they scroll into view with everything else. */
 .o-modal__panel--form .o-modal__actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
-  padding: var(--space-3) 0 max(var(--space-3), env(safe-area-inset-bottom));
-  background: var(--color-surface-elevated);
-  /* The fade tells you there is more form above, without a hard rule. */
-  box-shadow: 0 -10px 14px -8px var(--color-surface-elevated),
-              0 -1px 0 0 var(--color-border);
+  position: sticky; bottom: 0; z-index: 1;
+  padding: var(--space-sm) 0 max(var(--space-sm), env(safe-area-inset-bottom));
+  /* Opaque, and the same fill as the panel: a translucent bar lets the last
+     field show through underneath Save. The fade above it says there is more
+     form, without a hard rule. */
+  background: var(--color-surface);
+  box-shadow: 0 -10px 14px -8px var(--color-surface), 0 -1px 0 0 var(--color-border);
 }
+/* 44px regardless of density. Compact mode drops --control-height to 38, and
+   Save in a dialog is not the control to shrink. */
 .o-modal__panel--form .o-modal__actions .o-btn { min-height: 44px; }
 
 @media (max-width: 560px) {
-  .o-modal { padding: var(--space-3); }
-  .o-modal__panel { padding: var(--space-4); max-height: calc(100dvh - var(--space-6)); }
-  .o-modal__panel--form { max-height: calc(100dvh - var(--space-4)); }
+  .o-modal { padding: var(--space-sm); }
+  .o-modal__panel { padding: var(--space-md); max-height: calc(var(--vv-height, 100dvh) - var(--space-lg)); }
+  .o-modal__panel--form { max-height: calc(var(--vv-height, 100dvh) - var(--space-md)); }
   .o-modal__actions { justify-content: stretch; }
   .o-modal__actions .o-btn { flex: 1 1 auto; }
 }
-
-/* Very short viewports — a landscape phone with the keyboard up is the real
-   case — give the dialog everything they have. */
 @media (max-height: 520px) {
-  .o-modal { padding: var(--space-2); }
-  .o-modal__panel--form { max-height: calc(100dvh - var(--space-3)); }
+  .o-modal { padding: var(--space-xs); }
+  .o-modal__panel--form { max-height: calc(var(--vv-height, 100dvh) - var(--space-sm)); }
 }
 
 :root[data-motion="reduced"] .o-modal__panel { animation: none; }
 @media (prefers-reduced-motion: reduce) { .o-modal__panel { animation: none; } }
 
-/* Auth footnote — the "Forgot your password?" affordance and the return link.
-   `linklike` is a real <button> styled as a link: it performs an action rather
-   than navigating, so a button is the honest element, and keyboard and screen
-   reader behaviour follow from that rather than needing to be re-added. */
+/* ── Link-styled button ──────────────────────────────────────────────────────
+   `linklike` is a real <button> that looks like a link: it performs an action
+   rather than navigating, so a button is the honest element and keyboard and
+   screen-reader behaviour follow for free. */
 .auth-footnote {
   margin: 0;
   text-align: center;
-  font-size: 0.85rem;
-  color: var(--text-muted, #9aa3b2);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+  line-height: var(--lead-body);
 }
-
-.auth-footnote a,
-.linklike {
-  color: var(--accent, #8b9cf5);
+.auth-footnote a, .linklike {
+  color: var(--color-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-
 .linklike {
-  background: none;
-  border: 0;
-  padding: 0;
-  font: inherit;
-  cursor: pointer;
+  background: none; border: 0; padding: 0; font: inherit; cursor: pointer;
+  font-size: var(--type-caption);
+}
+.linklike:hover:not(:disabled) { color: var(--color-accent-hover); }
+.linklike:disabled { opacity: 0.6; cursor: default; }
+.linklike:focus-visible, .auth-footnote a:focus-visible {
+  box-shadow: var(--focus-ring); border-radius: var(--radius-xs);
 }
 
-.linklike:hover:not(:disabled) { color: var(--accent-strong, #a9b6ff); }
-.linklike:disabled { opacity: 0.6; cursor: default; }
+/* Forced colours: translucency and tinted fills all collapse to the system
+   palette, so anything that carried meaning through a fill needs a real border
+   to survive. */
+/* ── Touch targets ───────────────────────────────────────────────────────────
+   The compact controls sit at 36–40px, which is right for a mouse and wrong for
+   a thumb. On a coarse pointer, or at any width where the layout has gone to a
+   phone bar, they all come up to 44.
 
-/* Focus must stay visible: this control is reachable only by keyboard for some
-   users, and it is the sole route into password recovery. */
-.linklike:focus-visible,
-.auth-footnote a:focus-visible {
-  outline: 2px solid var(--accent, #8b9cf5);
-  outline-offset: 3px;
-  border-radius: 3px;
+   Both conditions, not one: `pointer: coarse` catches a touch laptop at full
+   width, and the width query catches a narrow window on a desktop, where a
+   person may well be using a trackpad but the layout is the phone one. Missing
+   either leaves a surface with 36px targets on a device someone is tapping.
+
+   Audited by walking every route at 375px and measuring — not by eye. */
+@media (pointer: coarse), (max-width: 1023px) {
+  .o-btn--utility,
+  .o-btn--sm { min-height: 44px; }
+  .o-segment button,
+  .o-segment a { min-height: 44px; }
+  .o-input, .o-select, select, input[type="text"], input[type="email"],
+  input[type="password"], input[type="date"], input[type="time"],
+  input[type="search"], textarea { min-height: 44px; }
+  .o-row { min-height: 52px; }
+}
+
+@media (forced-colors: active) {
+  .o-card, .o-group, .o-tile, .o-expand { border: 1px solid CanvasText; }
+  .o-segment button[aria-pressed="true"],
+  .o-segment button[aria-selected="true"],
+  .o-segment a[aria-current="page"] { border: 2px solid Highlight; }
+  .o-btn { border: 1px solid CanvasText; }
 }

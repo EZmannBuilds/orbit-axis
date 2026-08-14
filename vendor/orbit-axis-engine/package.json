@@ -1,11 +1,15 @@
 {
   "name": "@ezmannbuilds/orbit-axis-engine",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Deterministic astrology calculation engine for Orbit Axis. Natal charts, houses, aspects, transits, lunar phase, and structured evidence, computed locally with Swiss Ephemeris.",
   "type": "module",
   "main": "src/index.js",
+  "types": "src/index.d.ts",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
   },
   "license": "AGPL-3.0-or-later",
   "author": "EZmannBuilds",
@@ -26,9 +30,10 @@
     "deterministic"
   ],
   "scripts": {
-    "lint": "node --check src/index.js && node --check src/domain/*.js && node --check src/adapters/swiss-ephemeris/*.js && node --check src/contracts/v1/*.js && node --check tests/*.js && node --check scripts/*.js",
+    "lint": "node --check src/index.js && node --check src/domain/*.js && node --check src/adapters/swiss-ephemeris/*.js && node --check src/contracts/v1/*.js && node --check tests/*.js && node --check scripts/*.js && node --check api/*.js && node --check ui/*.mjs",
     "typecheck": "npm run lint",
     "test": "node --test",
+    "ui": "node ui/server.mjs",
     "runtime:check": "node scripts/runtime-check.js",
     "verify": "npm run lint && npm run runtime:check && npm test"
   },

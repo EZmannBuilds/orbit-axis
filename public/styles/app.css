@@ -1,91 +1,215 @@
 /* ============================================================================
-   Orbit — Application Layout
+   Orbit Axis — Application Shell
    ----------------------------------------------------------------------------
-   Composes the design-system primitives into Orbit's app shell: navigation
-   rail, top navigation, workspace surface, and the few app-specific views
-   (zodiac wheel, symbol atlas). App-specific rules still consume only tokens.
+   The chassis every workspace sits in: the navigation rail, the frosted
+   sub-nav, and the workspace surface itself.
+
+   TWO ROWS OF CHROME, exactly as Apple's surfaces do it:
+     · The RAIL is the persistent list of destinations. On a desktop it is a
+       sidebar; on a phone it is the bottom tab bar. Same DOM, same order, same
+       labels — two sets of markup are two places for them to drift.
+     · The SUB-NAV is frosted and sticky, and it names where you are on the left
+       with the surface's own actions on the right. It floats over content while
+       you scroll, which is functional rather than decorative: it is how the
+       page keeps saying where you are.
+
+   The workspace itself carries no chrome. Sections separate by the canvas
+   changing tone under them.
    ========================================================================== */
 
-/* ── App shell ───────────────────────────────────────────────────────────── */
 .app-shell {
   display: grid;
   grid-template-columns: var(--rail-width) 1fr;
   min-height: 100vh;
 }
+.app-main { min-width: 0; display: flex; flex-direction: column; }
 
-/* ── Navigation rail (primary workspace switcher) ────────────────────────── */
+/* ── The rail (desktop sidebar) ──────────────────────────────────────────── */
 .rail {
   position: sticky; top: 0; align-self: start;
   height: 100vh;
   display: flex; flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-3);
-  background: var(--color-surface);
+  gap: var(--space-xxs);
+  padding: var(--space-lg) var(--space-sm);
+  background: var(--color-canvas);
   border-right: var(--border-width) solid var(--color-border);
 }
-.rail__brand { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-2) var(--space-4); }
+.rail__brand {
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm) var(--space-lg);
+}
+/* The mark: a ring with a body on it. Flat, two colours, no glow — the app is
+   named after an orbit and the logo can simply be one. */
 .rail__orb {
   width: 22px; height: 22px; border-radius: 50%; flex: none;
-  background: radial-gradient(circle at 35% 30%, var(--blue-300), var(--color-accent) 70%);
-  box-shadow: 0 0 0 4px var(--color-accent-soft);
+  border: 2px solid var(--color-accent);
+  position: relative;
 }
-.rail__wordmark { font-size: var(--text-card-title); font-weight: var(--weight-bold); letter-spacing: 0.16em; color: var(--color-primary); }
+.rail__orb::after {
+  content: ""; position: absolute; top: -3px; right: -3px;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid var(--color-canvas);
+}
+.rail__wordmark {
+  font-family: var(--font-display);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.14em;
+  color: var(--color-primary);
+}
 .rail__nav { display: grid; gap: 2px; }
-.rail__section-label { padding: var(--space-3) var(--space-2) var(--space-1); font-size: var(--text-meta); letter-spacing: var(--tracking-caps); text-transform: uppercase; color: var(--color-faint); }
-.rail__link {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  color: var(--color-muted);
-  font-size: var(--text-body); font-weight: var(--weight-medium);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+.rail__section-label {
+  padding: var(--space-sm) var(--space-sm) var(--space-xxs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
 }
-.rail__link:hover { background: var(--color-surface-hover); color: var(--color-primary); }
-.rail__link[aria-current="page"] { background: var(--color-accent-soft); color: var(--color-primary); }
-.rail__link[aria-current="page"] .rail__icon { color: var(--color-accent); }
-.rail__icon { width: 18px; height: 18px; flex: none; color: var(--color-faint); }
-.rail__link:hover .rail__icon { color: var(--color-secondary); }
+.rail__link {
+  display: flex; align-items: center; gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-md);
+  color: var(--color-secondary);
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+.rail__link:hover { background: var(--color-surface-ghost); color: var(--color-primary); }
+/* Current page is stated three ways — the filled icon, the weight, and the
+   tint — so it never rests on colour alone. */
+.rail__link[aria-current="page"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+}
+.rail__icon { width: 22px; height: 22px; flex: none; }
 .rail__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rail__spacer { flex: 1; }
-.rail__foot { display: grid; gap: var(--space-1); padding-top: var(--space-3); border-top: var(--border-width) solid var(--color-border); }
 
-/* ── Top navigation ──────────────────────────────────────────────────────── */
-.topnav {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; gap: var(--space-4);
-  height: var(--topbar-height);
-  padding: 0 var(--space-6);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-  border-bottom: var(--border-width) solid var(--color-border);
+/* ── The standing offer ──────────────────────────────────────────────────────
+   Signed-out only, and below the spacer so it can never be mistaken for a sixth
+   destination. Quiet by construction: the button carries the one accent this
+   interface allows, and everything under it is small print. It is on screen
+   from every page because opening the app no longer demands an account — this
+   is how someone who changes their mind says so. */
+.rail__cta { display: grid; gap: var(--space-xxs); justify-items: stretch; padding-top: var(--space-sm); }
+.rail__cta[hidden] { display: none; }
+.rail__cta-btn { width: 100%; }
+.rail__cta-note {
+  margin: 0;
+  text-align: center;
+  font-size: var(--type-fine);
+  color: var(--color-secondary);
 }
-.topnav__title { font-size: var(--text-card-title); font-weight: var(--weight-semibold); color: var(--color-primary); }
-.topnav__crumb { font-size: var(--text-caption); color: var(--color-faint); }
+.rail__cta-signin {
+  font-size: var(--type-fine);
+  color: var(--color-secondary);
+  padding: var(--space-xxs) 0;
+}
+
+/* ── The frosted sub-nav ─────────────────────────────────────────────────── */
+.topnav {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: var(--space-md);
+  min-height: var(--topbar-height);
+  padding: var(--space-xs) var(--space-xl);
+  padding-top: max(var(--space-xs), env(safe-area-inset-top));
+  background: var(--glass-bg);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
+  border-bottom: var(--border-width) solid var(--glass-border);
+}
+.topnav__title {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.topnav__crumb { font-size: var(--type-fine); letter-spacing: var(--track-fine); color: var(--color-muted); }
 .topnav__spacer { flex: 1; }
-.topnav__date { font-size: var(--text-caption); color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.topnav__date { font-size: var(--type-caption); color: var(--color-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.topnav__actions { display: flex; align-items: center; gap: var(--space-xxs); }
+
+/* ── Universal search ────────────────────────────────────────────────────────
+   One field over everything the app already holds: the reference library, the
+   saved charts, and the destinations themselves. It searches what is loaded and
+   claims nothing more — there is no server round-trip behind it. */
+.o-find { position: relative; }
+.o-find__panel {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: min(440px, calc(100vw - var(--space-xl)));
+  max-height: min(60vh, 480px);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--space-xs);
+  /* OPAQUE, deliberately. The sub-nav above it is frosted, and the first
+     version of this panel was too — which meant the page scrolled visibly
+     underneath the results and the two layers of text competed. A backdrop
+     filter nested inside another element's backdrop filter is also not
+     reliable. A dropdown has one job: be readable. */
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-object);
+  z-index: 50;
+}
+.o-find__group { padding: var(--space-xs) var(--space-sm) var(--space-xxs); }
+.o-find__option {
+  display: flex; align-items: center; gap: var(--space-sm);
+  width: 100%; min-height: 48px;
+  padding: var(--space-xs) var(--space-sm);
+  border: 0; background: transparent; cursor: pointer;
+  border-radius: var(--radius-md);
+  text-align: left; font-family: inherit;
+  color: var(--color-primary); font-size: var(--type-body); letter-spacing: var(--track-body);
+}
+.o-find__option:hover,
+.o-find__option[aria-selected="true"] { background: var(--color-accent-soft); }
+.o-find__option svg { width: 20px; height: 20px; flex: none; color: var(--color-muted); }
+.o-find__option[aria-selected="true"] svg { color: var(--color-accent); }
+.o-find__label { min-width: 0; flex: 1; }
+.o-find__sub { display: block; font-size: var(--type-caption); color: var(--color-muted); }
+.o-find__empty { padding: var(--space-md) var(--space-sm); font-size: var(--type-caption); color: var(--color-muted); text-align: center; }
+/* On a phone the field takes the whole bar when it opens; a 200px input beside
+   a title is a field nobody can type a city into. */
+.o-find__field { width: 260px; max-width: 100%; }
 
 /* ── Workspace surface ───────────────────────────────────────────────────── */
 .workspace {
+  width: 100%;
   max-width: var(--container-max);
   margin: 0 auto;
-  padding: var(--space-8) var(--space-6) var(--space-16);
+  padding: var(--space-xxl) var(--space-xl) var(--space-section);
   display: grid; gap: var(--density-gap);
 }
-.workspace-panel { display: grid; gap: var(--density-gap); }
+.workspace--wide { max-width: var(--container-wide); }
+.workspace-panel { display: grid; gap: var(--density-gap); align-content: start; }
 .workspace-panel[hidden] { display: none; }
-.workspace__intro { display: grid; gap: var(--space-2); }
+/* A grid child with no content still takes a gap. Several panels hold live
+   regions and result containers that are empty most of the time — left as-is
+   they opened a 24px hole in the middle of the page for a status message that
+   was not there. They collapse until they have something to say. */
+.workspace-panel > :empty { display: none; }
+.workspace__intro { display: grid; gap: var(--space-xs); }
 
-/* Reusable responsive grids. */
-.grid-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: var(--density-gap); }
+/* Reusable grids. */
+.grid-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--density-gap); }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-lg); }
 .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--density-gap); align-items: start; }
-.grid-split { display: grid; grid-template-columns: minmax(300px, 420px) 1fr; gap: var(--density-gap); align-items: start; }
+.grid-split { display: grid; grid-template-columns: minmax(300px, 400px) 1fr; gap: var(--density-gap); align-items: start; }
 .stack { display: grid; gap: var(--density-gap); }
 .stack-sm { display: grid; gap: var(--density-stack); }
 
-/* ── Zodiac wheel (Charts workspace) ─────────────────────────────────────── */
-.wheel-wrap { display: grid; place-items: center; padding: var(--space-2) 0; }
-#zodiac-wheel { width: 100%; max-width: 360px; }
+/* ── Zodiac wheel ────────────────────────────────────────────────────────────
+   An object, not interface: it takes the one shadow in the system. */
+.wheel-wrap { display: grid; place-items: center; padding: var(--space-xs) 0; }
+#zodiac-wheel { width: 100%; max-width: 360px; filter: drop-shadow(var(--shadow-object)); }
 #zodiac-wheel .seg { fill: var(--color-surface-sunken); stroke: var(--color-border); stroke-width: 1; cursor: pointer; transition: fill var(--duration-fast) var(--ease-standard); }
 #zodiac-wheel .seg:hover { fill: var(--color-surface-hover); }
 #zodiac-wheel .seg.active { fill: var(--color-accent-soft); stroke: var(--color-accent); }
@@ -93,72 +217,98 @@
 #zodiac-wheel .hub { fill: var(--color-surface); stroke: var(--color-border); }
 #zodiac-wheel .hub-glyph { font-size: 24px; fill: var(--color-primary); }
 #zodiac-wheel .hub-now { font-size: 9px; fill: var(--color-faint); letter-spacing: 2px; }
-.wheel-detail { margin-top: var(--space-4); font-size: var(--text-caption); color: var(--color-muted); line-height: var(--leading-normal); min-height: 60px; }
+.wheel-detail { margin-top: var(--space-md); font-size: var(--type-caption); color: var(--color-muted); line-height: var(--lead-body); min-height: 60px; }
 .wheel-detail strong { color: var(--color-primary); }
 
-/* ── Symbol atlas (Research workspace) ───────────────────────────────────── */
-.atlas { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--density-stack); }
-.symbol-card {
-  display: grid; gap: var(--space-2);
-  background: var(--color-surface-elevated);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4);
-  transition: border-color var(--duration-fast) var(--ease-standard);
-}
-.symbol-card:hover { border-color: var(--color-border-strong); }
-.symbol-card__top { display: flex; align-items: center; gap: var(--space-3); }
-.symbol-card__glyph { font-size: 22px; color: var(--color-primary); width: 28px; text-align: center; }
-.symbol-card__name { font-weight: var(--weight-semibold); font-size: var(--text-card-title); color: var(--color-primary); }
-.symbol-card__kind { margin-left: auto; }
-.symbol-card__meta { font-size: var(--text-meta); color: var(--color-accent); }
-.symbol-card__text { font-size: var(--text-caption); color: var(--color-muted); line-height: var(--leading-normal); }
-.symbol-card__keywords { display: flex; flex-wrap: wrap; gap: var(--space-1); margin-top: var(--space-1); }
+/* ── Responsive ──────────────────────────────────────────────────────────────
+   The structural switch is 1024px: above it a sidebar, below it a bottom tab
+   bar. There is no intermediate "icon-only sidebar" state, because a rail
+   nobody can read is a rail nobody uses. */
 
-/* Ask Orbit conversation result. */
-.ask-result { margin-top: var(--space-3); }
-.ask-result .score { font-size: var(--text-title); font-weight: var(--weight-bold); color: var(--color-primary); }
-
-/* Small helper for the sun-season progress caption row. */
-.tile-progress { display: grid; gap: var(--space-2); }
-
-/* ── Responsive layout ───────────────────────────────────────────────────── */
-
-/* Laptop — narrow the rail a touch. */
 @media (max-width: 1200px) {
-  .app-shell { grid-template-columns: var(--rail-width-collapsed) 1fr; }
-  .rail { padding: var(--space-4) var(--space-2); align-items: stretch; }
-  .rail__wordmark, .rail__label, .rail__section-label, .rail__foot .u-caption { display: none; }
-  .rail__brand { justify-content: center; padding: var(--space-2) 0 var(--space-4); }
-  .rail__link { justify-content: center; padding: var(--space-3) 0; }
-  .rail__foot { justify-items: center; }
+  .workspace { padding-left: var(--space-lg); padding-right: var(--space-lg); }
 }
 
-/* Tablet — split layouts collapse to single column, rail becomes a top bar. */
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
   .app-shell { grid-template-columns: 1fr; }
+
+  /* The rail becomes the bottom tab bar. */
   .rail {
-    position: sticky; top: 0; height: auto; z-index: 25;
-    flex-direction: row; align-items: center; gap: var(--space-1);
-    padding: var(--space-2) var(--space-3);
-    border-right: none; border-bottom: var(--border-width) solid var(--color-border);
-    overflow-x: auto;
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 60;
+    height: auto;
+    display: block;
+    padding: 6px max(8px, env(safe-area-inset-left)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-right));
+    background: var(--glass-bg);
+    backdrop-filter: var(--blur-frosted);
+    -webkit-backdrop-filter: var(--blur-frosted);
+    border-right: 0;
+    border-top: var(--border-width) solid var(--glass-border);
   }
-  .rail__brand { display: flex; padding: 0 var(--space-2) 0 0; }
-  .rail__orb { width: 18px; height: 18px; }
-  .rail__nav { display: flex; gap: var(--space-1); }
-  .rail__section-label, .rail__spacer, .rail__foot { display: none; }
-  .rail__link { padding: var(--space-2) var(--space-3); }
-  .rail__label { display: inline; }
+  /* The rail is a five-column tab bar here. The standing offer would either
+     become a sixth column or sit on top of one, and Today already carries the
+     same call to action at full width — so it is dropped, not shrunk. */
+  .rail__brand, .rail__section-label, .rail__spacer, .rail__cta { display: none; }
+
+  /* Five equal columns. Five labelled tabs fit a 375px screen; six turn the
+     labels into ellipses, and the failure is silent. */
+  .rail__nav {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 2px;
+  }
+  .rail__link {
+    display: grid; place-items: center; gap: 3px;
+    min-width: 0; min-height: 52px;
+    padding: 5px 2px;
+    border-radius: var(--radius-md);
+    font-size: 10px;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-align: center;
+  }
+  .rail__link[aria-current="page"] { background: transparent; }
+  .rail__icon { width: 25px; height: 25px; }
+  /* The phone shows the short form of the same name. Swapping the rendered text
+     rather than the accessible name keeps the announced name identical on every
+     device. */
+  .rail__label {
+    display: block; width: 100%;
+    font-size: 0;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .rail__label::before { content: attr(data-mobile-label); font-size: 10px; }
+
+  .topnav { padding-left: var(--space-md); padding-right: var(--space-md); }
+  .workspace {
+    padding: var(--space-lg) var(--space-md) calc(var(--space-section) + env(safe-area-inset-bottom));
+  }
   .grid-split, .grid-2 { grid-template-columns: 1fr; }
-  .workspace { padding: var(--space-6) var(--space-4) var(--space-12); }
+
+  /* The toast yields to the tab bar; the navigation never moves. */
+  .o-toast-region {
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    left: max(var(--space-md), env(safe-area-inset-left));
+    right: max(var(--space-md), env(safe-area-inset-right));
+    transform: none;
+    justify-items: center;
+  }
+  .o-actionbar { bottom: calc(72px + env(safe-area-inset-bottom)); border-radius: var(--radius-lg); margin: 0; border: var(--border-width) solid var(--glass-border); }
 }
 
-/* Mobile — tighten the top navigation. */
 @media (max-width: 640px) {
-  .topnav { padding: 0 var(--space-4); gap: var(--space-2); }
-  .topnav__date { display: none; }
-  .topnav__crumb { display: none; }
-  .rail__label { display: none; }
-  .rail__link { padding: var(--space-2); }
+  .topnav__crumb, .topnav__date { display: none; }
+  .o-find__field { width: 44px; }
+  /* Focused, the field earns the room it needs. */
+  .o-find__field:focus-within { width: min(100%, 320px); }
+}
+
+@media (max-width: 380px) {
+  .rail__label::before { font-size: 9px; }
+  .rail__icon { width: 23px; height: 23px; }
+}
+
+@media (forced-colors: active) {
+  .rail__link[aria-current="page"] { border: 2px solid Highlight; }
 }

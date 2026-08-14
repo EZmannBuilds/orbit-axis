@@ -1,34 +1,55 @@
-/* Orbit Axis :: Symbol Atlas (Dev Update 1.12)
- *
- * A calm observatory library: existing cards, existing type scale, generous
- * reading width, subtle category distinction. Nothing decorative competes
- * with the words, because the words are the product here.
- *
- * WIDTH DISCIPLINE, same as compatibility.css and for the same scars: every
- * grid child declares min-width: 0, every track is minmax(0, 1fr), and any
- * author-length token wraps with overflow-wrap. 375px is a contract.
- */
+/* ============================================================================
+   Orbit Axis — the Atlas
+   ----------------------------------------------------------------------------
+   The reference library, and now a primary destination. It explains the symbols
+   that are already on screen everywhere else, which makes it the one page the
+   whole app links into.
+
+   Nothing decorative competes with the words, because the words are the product
+   here. Cards are hairline-on-surface, glyphs are text, and the only colour is
+   the one accent.
+
+   WIDTH DISCIPLINE, same as compatibility.css and for the same scars: every grid
+   child declares min-width: 0, every track is minmax(0, 1fr), and any
+   author-length token wraps with overflow-wrap. 375px is a contract.
+
+   GLYPH PRESENTATION. Astrological glyphs are ordinary Unicode, and several of
+   them ("♈", "♌", "☉") have emoji presentations that macOS and iOS prefer by
+   default — which rendered Zodiac Signs as a purple gradient tile in an
+   interface that allows exactly one accent colour. `font-variant-emoji: text`
+   asks for the text presentation; the variation selector in the content module
+   would be the other half of the fix if a browser ignores it.
+   ========================================================================== */
+
+/* The glyph font stack itself is in components.css, applied to every glyph the
+   app draws. Only the Atlas-specific sizing lives here. */
+.atlas-card__glyph,
+.atlas-category-card__glyph,
+.atlas-entry__glyph,
+.atlas-chip__glyph { color: var(--color-secondary); }
 
 /* ── Breadcrumbs ─────────────────────────────────────────────────────────
-   Plain links, wrapping freely — a crumb trail must never force the page
-   wider or truncate the one entry name the person came for. */
-
+   Plain links, wrapping freely — a crumb trail must never force the page wider
+   or truncate the one entry name the person came for. */
 .atlas-crumbs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 0.4rem;
-  font-size: 0.8125rem;
-  color: var(--text-muted, #8b8f9a);
-  margin-block-end: 0.35rem;
+  gap: var(--space-xxs) var(--space-xs);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+  margin-block-end: var(--space-xxs);
   overflow-wrap: anywhere;
 }
 .atlas-crumbs[hidden] { display: none; }
 /* Crumbs and backlinks are inline navigation rather than buttons, so the
    44px rule does not apply — but WCAG's 24px minimum does, and at 0.8125rem
    the bare line box came in at 21. The padding buys the difference without
-   changing where the text sits. */
+   changing where the text sits.
+   Colour is left to the global `a` rule in base.css rather than set again
+   here; the local override predated that rule and named a token the design
+   system has since replaced. */
 .atlas-crumbs a {
-  color: var(--accent, #7c9cff);
   text-underline-offset: 0.2em;
   display: inline-flex;
   align-items: center;
@@ -36,147 +57,175 @@
 }
 .atlas-crumbs__sep { opacity: 0.6; }
 
+/* An empty live region must take no space. Left at a fixed min-height it opened
+   a 20px hole under every Atlas heading, on every view, for a message that is
+   usually absent. */
 .atlas-status {
-  min-block-size: 1.25rem;
-  color: var(--text-muted, #8b8f9a);
-  margin-block: 0.25rem 0.75rem;
+  color: var(--color-muted);
+  font-size: var(--type-caption);
   overflow-wrap: anywhere;
 }
+.atlas-status:empty { display: none; }
+
+/* The Atlas root owns the rhythm between its blocks, so search, results, and
+   the category shelf cannot end up flush against each other depending on which
+   of them rendered. */
+#atlas-root { display: grid; gap: var(--space-xl); align-content: start; }
+#atlas-root > *:empty { display: none; }
 
 /* ── Search ─────────────────────────────────────────────────────────────── */
-
-.atlas-search { margin-block: 0.5rem 1rem; }
-
+.atlas-search { display: grid; gap: var(--space-xs); }
 .atlas-search__label {
-  display: block;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-muted, #8b8f9a);
-  margin-block-end: 0.35rem;
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-muted);
 }
-
 .atlas-search .o-input {
   inline-size: 100%;
   min-width: 0;
   max-inline-size: 34rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-ghost);
 }
 
 /* ── Category grid (home) ───────────────────────────────────────────────── */
-
-.atlas-block { margin-block: 1rem; min-width: 0; }
+.atlas-block { display: grid; gap: var(--space-sm); min-width: 0; }
 
 .atlas-category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr));
-  gap: var(--space-3, 0.75rem);
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  gap: var(--space-sm);
 }
 
 .atlas-category-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas: "glyph name" "glyph count" "desc desc";
-  column-gap: 0.6rem;
+  column-gap: var(--space-sm);
   align-items: center;
   min-width: 0;
-  padding: 0.9rem 1rem;
-  border: 1px solid var(--border, #2a2d36);
-  border-radius: var(--radius-lg, 0.75rem);
-  background: var(--surface-2, #16181e);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
   color: inherit;
   text-decoration: none;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
 }
-.atlas-category-card:hover { border-color: var(--accent, #7c9cff); }
-.atlas-category-card:focus-visible {
-  outline: 2px solid var(--accent, #7c9cff);
-  outline-offset: 2px;
-}
+.atlas-category-card:hover { border-color: var(--color-border-strong); background: var(--color-surface-elevated); }
+.atlas-category-card:active { transform: scale(0.99); }
+.atlas-category-card:focus-visible { box-shadow: var(--focus-ring); }
 
 .atlas-category-card__glyph {
   grid-area: glyph;
-  font-size: 1.5rem;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  font-size: 1.375rem;
   line-height: 1;
-  opacity: 0.85;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
 }
-.atlas-category-card__name { grid-area: name; font-weight: 650; overflow-wrap: anywhere; }
-.atlas-category-card__count { grid-area: count; font-size: 0.8125rem; color: var(--text-muted, #8b8f9a); }
+.atlas-category-card__name {
+  grid-area: name;
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+.atlas-category-card__count { grid-area: count; font-size: var(--type-caption); color: var(--color-muted); }
 .atlas-category-card__desc {
   grid-area: desc;
-  margin-block-start: 0.5rem;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--text-muted, #8b8f9a);
+  margin-block-start: var(--space-xs);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  line-height: var(--lead-body);
+  color: var(--color-muted);
   overflow-wrap: anywhere;
 }
 
 /* ── Entry cards (category pages, search results, featured) ─────────────── */
-
 .atlas-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
-  gap: var(--space-3, 0.75rem);
+  gap: var(--space-sm);
 }
 
 .atlas-card {
   display: flex;
-  gap: 0.7rem;
+  gap: var(--space-sm);
   align-items: flex-start;
   min-width: 0;
-  padding: 0.8rem 0.95rem;
-  border: 1px solid var(--border, #2a2d36);
-  border-radius: var(--radius-lg, 0.75rem);
-  background: var(--surface-2, #16181e);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
   color: inherit;
   text-decoration: none;
-  /* 44px minimum tap target comes from padding + two lines of content. */
   min-block-size: 44px;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
 }
-.atlas-card:hover { border-color: var(--accent, #7c9cff); }
-.atlas-card:focus-visible { outline: 2px solid var(--accent, #7c9cff); outline-offset: 2px; }
+.atlas-card:hover { border-color: var(--color-border-strong); background: var(--color-surface-elevated); }
+.atlas-card:active { transform: scale(0.99); }
+.atlas-card:focus-visible { box-shadow: var(--focus-ring); }
 
-.atlas-card__glyph { font-size: 1.35rem; line-height: 1.3; opacity: 0.85; flex: none; }
+.atlas-card__glyph { font-size: 1.25rem; line-height: 1.35; flex: none; }
 .atlas-card__body { min-width: 0; display: block; }
-.atlas-card__title { display: block; font-weight: 650; overflow-wrap: anywhere; }
-.atlas-card__kind { display: block; font-size: 0.75rem; color: var(--text-muted, #8b8f9a); text-transform: uppercase; letter-spacing: 0.06em; margin-block: 0.1rem 0.25rem; }
+.atlas-card__title {
+  display: block;
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+.atlas-card__kind {
+  display: block;
+  font-size: var(--type-fine);
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: var(--track-caps);
+  margin-block: 2px var(--space-xxs);
+}
 .atlas-card__summary {
   display: block;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: var(--text-muted, #8b8f9a);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  line-height: var(--lead-body);
+  color: var(--color-muted);
   overflow-wrap: anywhere;
 }
 
 /* ── Category page ──────────────────────────────────────────────────────── */
-
-.atlas-category-desc {
-  max-inline-size: 44rem;
-  line-height: 1.55;
-  margin-block: 0.25rem 0.35rem;
-}
+.atlas-category-desc { max-inline-size: 44rem; line-height: var(--lead-body); }
 
 /* ── Entry page ─────────────────────────────────────────────────────────── */
+.atlas-entry { max-inline-size: 46rem; display: grid; gap: var(--space-lg); }
 
-.atlas-entry { max-inline-size: 46rem; }
-
-.atlas-entry__head {
-  display: flex;
-  gap: 0.8rem;
-  align-items: flex-start;
-  margin-block: 0.5rem 1rem;
-  min-width: 0;
+.atlas-entry__head { display: flex; gap: var(--space-md); align-items: flex-start; min-width: 0; }
+.atlas-entry__glyph { font-size: 2rem; line-height: 1.2; flex: none; }
+.atlas-entry__summary {
+  margin: 0;
+  font-size: var(--type-lead-airy);
+  font-weight: var(--weight-light);
+  line-height: var(--lead-airy);
+  color: var(--color-secondary);
+  overflow-wrap: anywhere;
 }
-.atlas-entry__glyph { font-size: 2rem; line-height: 1.2; opacity: 0.9; flex: none; }
-.atlas-entry__summary { margin: 0; font-size: 1.0625rem; line-height: 1.6; overflow-wrap: anywhere; }
 
-.atlas-two-col {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-3, 0.75rem);
-}
+.atlas-two-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); }
 @media (min-width: 44rem) {
   .atlas-two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }
 
-.atlas-list { margin: 0.4rem 0 0; padding-inline-start: 1.1rem; line-height: 1.65; overflow-wrap: anywhere; }
+.atlas-list { margin: var(--space-xs) 0 0; padding-inline-start: 1.1rem; line-height: 1.65; overflow-wrap: anywhere; }
 
 /* Dev Update 3.1 — completed entries and combinations.
    Prose sections run as prose rather than as cards: an entry that stacks
@@ -206,82 +255,68 @@
   font-size: 1.6rem;
 }
 
-.atlas-chip-list {
-  list-style: none;
-  margin: 0.4rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
+.atlas-chip-list { list-style: none; margin: var(--space-xs) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 
 .atlas-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  /* 44px, measured rather than assumed. The 1.12 value was 2.35rem, which the
-     comment beside it called ≥44px; in the browser it rendered at 40. Dev
-     Update 3.1 leans on chips much harder — related symbols, combination
-     links, worked examples — so the number is now the real one. */
-  padding: 0.5rem 0.8rem;
-  min-block-size: 2.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--border, #2a2d36);
-  background: var(--surface-2, #16181e);
+  gap: var(--space-xxs);
+  /* 44px, measured rather than assumed. An earlier value was 2.35rem, whose
+     comment claimed ≥44px while the browser rendered 40. Dev Update 3.1 leans
+     on chips much harder — related symbols, combination links, worked
+     examples — so the number is stated literally and not derived from a
+     font-relative unit. */
+  padding: var(--space-xs) var(--space-md);
+  min-block-size: 44px;
+  border-radius: var(--radius-pill);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
   color: inherit;
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
   overflow-wrap: anywhere;
 }
-a.atlas-chip:hover { border-color: var(--accent, #7c9cff); }
-a.atlas-chip:focus-visible { outline: 2px solid var(--accent, #7c9cff); outline-offset: 2px; }
-.atlas-chip--static { color: var(--text-muted, #8b8f9a); }
+a.atlas-chip:hover { border-color: var(--color-accent); color: var(--color-accent); }
+a.atlas-chip:active { transform: scale(var(--press-scale)); }
+a.atlas-chip:focus-visible { box-shadow: var(--focus-ring); }
+.atlas-chip--static { color: var(--color-muted); }
 
-/* Both disclosure summaries carry the same padding. The Advanced summary got
-   it in 1.12 and the methodology summary did not, which left "About this
-   reference" at a 22px line box — under WCAG 2.5.8's 24px minimum, and found
-   at 768px during hosted acceptance rather than at 375px where the wrapping
-   happened to hide it. */
+/* Both disclosure summaries carry the same rule. The methodology summary once
+   lagged the Advanced one and sat at a 22px line box — under WCAG 2.5.8's 24px
+   minimum, and found at 768px during hosted acceptance rather than at 375px
+   where wrapping happened to hide it. Both now clear 44px, which satisfies the
+   AAA target rather than merely the AA floor. */
 .atlas-advanced summary,
 .atlas-method summary {
   cursor: pointer;
-  font-weight: 600;
-  padding-block: 0.25rem;
-  min-block-size: 1.5rem;
+  font-weight: var(--weight-semibold);
+  display: flex; align-items: center;
+  min-height: 44px;
 }
-.atlas-advanced summary:focus-visible {
-  outline: 2px solid var(--accent, #7c9cff);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm, 0.25rem);
-}
-.atlas-advanced__body p { line-height: 1.6; }
+.atlas-advanced summary:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-xs); }
+.atlas-advanced__body p { line-height: var(--lead-body); }
 
 .atlas-facts {
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(0, 1fr);
-  gap: 0.35rem 1rem;
-  margin: 0.75rem 0 0;
+  gap: var(--space-xxs) var(--space-md);
+  margin: var(--space-sm) 0 0;
 }
 .atlas-facts div { display: contents; }
-.atlas-facts dt {
-  font-size: 0.8125rem;
-  color: var(--text-muted, #8b8f9a);
-  text-transform: capitalize;
-}
-.atlas-facts dd { margin: 0; font-size: 0.9375rem; overflow-wrap: anywhere; }
+.atlas-facts dt { font-size: var(--type-caption); color: var(--color-muted); text-transform: capitalize; }
+.atlas-facts dd { margin: 0; font-size: var(--type-caption); color: var(--color-primary); overflow-wrap: anywhere; }
 
 .atlas-note {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  color: var(--text-muted, #8b8f9a);
-  border-inline-start: 2px solid var(--border, #2a2d36);
-  padding-inline-start: 0.75rem;
-  margin-block: 1rem 0.75rem;
+  font-size: var(--type-caption);
+  line-height: var(--lead-body);
+  color: var(--color-muted);
+  border-inline-start: 2px solid var(--color-border);
+  padding-inline-start: var(--space-sm);
 }
 
-.atlas-backlinks { font-size: 0.9375rem; }
+.atlas-backlinks { font-size: var(--type-caption); }
 .atlas-backlinks a {
-  color: var(--accent, #7c9cff);
   text-underline-offset: 0.2em;
   display: inline-flex;
   align-items: center;
@@ -289,36 +324,30 @@ a.atlas-chip:focus-visible { outline: 2px solid var(--accent, #7c9cff); outline-
 }
 
 /* ── Empty / not-found ──────────────────────────────────────────────────── */
-
 .atlas-empty {
-  padding: 1.25rem;
-  border: 1px dashed var(--border, #2a2d36);
-  border-radius: var(--radius-lg, 0.75rem);
+  padding: var(--space-lg);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
   text-align: center;
 }
-.atlas-empty p { margin: 0.35rem 0; overflow-wrap: anywhere; }
-.atlas-empty a { color: var(--accent, #7c9cff); }
+.atlas-empty p { margin: var(--space-xxs) 0; overflow-wrap: anywhere; }
 
-.atlas-method summary:focus-visible {
-  outline: 2px solid var(--accent, #7c9cff);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm, 0.25rem);
-}
-.atlas-method__body { font-size: 0.9375rem; line-height: 1.6; }
+
+.atlas-method summary:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-xs); }
+.atlas-method__body { font-size: var(--type-caption); line-height: var(--lead-body); }
 .atlas-method__body ul { padding-inline-start: 1.1rem; }
 
 /* ── Contextual reference links on other surfaces ───────────────────────
-   Quietly distinct: an underline offset and the accent on hover — a linked
-   symbol name must read as the same sentence, not as advertising. */
-
+   Quietly distinct: an underline offset, and the accent on hover. A linked
+   symbol name must read as part of the same sentence, not as advertising. */
 .atlas-ref {
   color: inherit;
   text-decoration: underline;
   text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
   text-underline-offset: 0.2em;
 }
-.atlas-ref:hover { color: var(--accent, #7c9cff); text-decoration-color: currentColor; }
-.atlas-ref:focus-visible { outline: 2px solid var(--accent, #7c9cff); outline-offset: 1px; border-radius: 2px; }
+.atlas-ref:hover { color: var(--color-accent); text-decoration-color: currentColor; }
+.atlas-ref:focus-visible { box-shadow: var(--focus-ring); border-radius: 2px; }
 
 /* A combination link is a whole sentence rather than a name inside one, so it
    gets its own line and a ≥44px target rather than borrowing the inline
@@ -336,11 +365,15 @@ a.atlas-chip:focus-visible { outline: 2px solid var(--accent, #7c9cff); outline-
   .atlas-card, .atlas-category-card, .atlas-chip { transition: none; }
 }
 
+@media (forced-colors: active) {
+  .atlas-card, .atlas-category-card, .atlas-chip { border: 1px solid CanvasText; }
+}
+
 /* The Atlas reference line under a compatibility factor. Styled here rather
-   than in compatibility.css so 1.12 leaves that file byte-identical. */
+   than in compatibility.css, so that file stays about compatibility. */
 .compat-factor__refs {
-  margin: 0.3rem 0 0;
-  font-size: 0.8125rem;
-  color: var(--text-muted, #8b8f9a);
+  margin: var(--space-xxs) 0 0;
+  font-size: var(--type-caption);
+  color: var(--color-muted);
   overflow-wrap: anywhere;
 }

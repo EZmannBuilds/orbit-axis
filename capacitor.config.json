@@ -1,0 +1,25 @@
+{
+  "appId": "dev.orbitaxis.app",
+  "appName": "Orbit Axis",
+  "webDir": "public",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#050814",
+    "scrollEnabled": true
+  },
+  "server": {
+    "iosScheme": "capacitor",
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": false,
+      "backgroundColor": "#050814"
+    }
+  }
+}

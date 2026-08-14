@@ -120,7 +120,7 @@ test("reconciled: Sun, Moon, Rising, and every planet still reach the reader", (
   const compose = readFileSync(join(ROOT, "lib", "interpretation", "compose.js"), "utf8");
   assert.match(compose, /composeBigThree/, "the Big Three are still composed as a set");
   assert.match(compose, /PLANET_ORDER\.map/, "every planet is composed, in a stable order");
-  assert.ok(html.includes("Sun, Moon, and Rising") && html.includes(">Planet Placements<"));
+  assert.ok(html.includes("Sun, Moon, and Rising") && html.includes(">Planet placements<"));
 });
 
 test("reconciled: unknown birth time still hides Rising/houses (no fabrication)", () => {

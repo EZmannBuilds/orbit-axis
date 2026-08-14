@@ -33,6 +33,17 @@ name rather than a raw offset.
 Maps coordinates to an IANA time-zone name, so a birthplace chosen on a map
 yields the correct historical offset.
 
+## Phosphor Icons
+
+    Copyright (c) 2020-2024 Phosphor Icons
+    https://phosphoricons.com
+    Licence: MIT
+
+Every icon in the interface. Not a runtime dependency: `scripts/build-icons.js`
+inlines the path data for the ~60 icons Orbit Axis actually draws into the
+committed `public/icons.js`, so the app ships no icon font, loads no CDN, and
+makes no third-party request to render its own navigation.
+
 ## Orbit Axis Engine
 
     Copyright (C) 2026 EZmannBuilds

@@ -62,9 +62,11 @@ export {
   ephemerisCapability,
   EPHEMERIS_VERSION,
   PLANETS,
+  POINTS,
   SIGNS,
   SIGN_ABBR,
   offsetToMinutes,
+  zoneOffsetMinutes,
   localToUT,
   EphemerisUnavailableError,
 } from "./adapters/swiss-ephemeris/client.js";
@@ -97,6 +99,14 @@ export {
   personalTransits,
   TRANSIT_VERSION,
 } from "./domain/transits.js";
+
+export {
+  nextStations,
+  nextIngresses,
+  STATION_BODIES,
+  INGRESS_BODIES,
+  UPCOMING_EVENTS_VERSION,
+} from "./domain/upcoming-events.js";
 
 export {
   computeSynastryAspects,

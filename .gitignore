@@ -45,3 +45,10 @@ supabase/.branches/
 
 # Local QA session hand-off (never committed)
 public/qa-local-session.json
+
+# Claude Code. `.claude/launch.json` IS tracked — it documents how to start the
+# dev server and is the same for everyone. Everything else under here is local:
+# `worktrees/` in particular holds whole checkouts (34 MB at the time of
+# writing), and one careless `git add .claude/` would commit all of them.
+.claude/*
+!.claude/launch.json

@@ -181,10 +181,21 @@ test("current sky matches the recorded fixture at a fixed instant", () => {
 
 // ── transits: the evidence Ask Orbit stands on ──────────────────────────────
 
+// The scope this fixture was recorded with, when the app carried its own copy
+// of the transit calculation. It is passed explicitly so the fixture keeps
+// proving what it was written to prove — that the numbers are identical — now
+// that the engine's default scope has grown to include the outer planets,
+// Chiron, the nodes, and the angles. Widening the fixture instead would have
+// re-recorded it against the very code it exists to check.
+const RECORDED_SCOPE = {
+  bodies: ["Moon", "Sun", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"],
+  targets: ["Sun", "Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn"],
+};
+
 test("personal transits match the recorded fixture, including applying state", () => {
   const chart = computeNatalChart(PROFILE);
   const sky = currentSky(new Date(FIXTURE.instant));
-  const actual = personalTransits(sky, chart, 3);
+  const actual = personalTransits(sky, chart, 3, RECORDED_SCOPE);
 
   assert.equal(actual.length, FIXTURE.transits.length, "transit count");
   for (const [i, e] of FIXTURE.transits.entries()) {

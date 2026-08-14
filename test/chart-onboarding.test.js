@@ -224,7 +224,20 @@ test("the result count is announced, not just rendered", () => {
 });
 
 test("search is debounced and a slow answer cannot overwrite a fast one", () => {
-  assert.match(appJs, /const PLACE_DEBOUNCE_MS = 300/);
+  // Asserted as a RANGE, not a literal. Every search that gets through is a
+  // billed Geoapify credit, so this number is a cost/latency dial someone will
+  // legitimately turn — but both ends of it are real failures. Too low and a
+  // slow typist pays one credit per keystroke; too high and the birthplace
+  // field feels broken on the form that decides whether anyone signs up.
+  const debounce = Number(appJs.match(/const PLACE_DEBOUNCE_MS = (\d+)/)?.[1]);
+  assert.ok(Number.isFinite(debounce), "the debounce must be a plain literal we can audit");
+  assert.ok(debounce >= 250, `debounce ${debounce}ms is low enough to bill a credit per keystroke`);
+  assert.ok(debounce <= 600, `debounce ${debounce}ms makes birthplace search feel broken`);
+
+  // The 3-character floor is deliberate: Ely, Rye, Ufa and Jos are real places.
+  const minQuery = Number(appJs.match(/const PLACE_MIN_QUERY = (\d+)/)?.[1]);
+  assert.equal(minQuery, 3, "raising this to save a request makes short place names unsearchable");
+
   assert.match(appJs, /state\.places\.controllers\[prefix\]\?\.abort\(\)/);
   assert.match(appJs, /if \(error\.name === "AbortError"\) return;/);
 });
@@ -312,7 +325,12 @@ test("the dialog is sized so a mobile keyboard cannot cover Save", () => {
 test("the sticky action bar does not let the form show through beneath it", () => {
   const scroll = componentsCss.slice(componentsCss.indexOf(".o-modal__scroll {"), componentsCss.indexOf(".o-modal__panel--form .o-modal__actions"));
   assert.ok(!/padding-bottom/.test(scroll), "bottom padding here sits below the sticky bar");
-  assert.match(componentsCss, /\.o-modal__panel--form \.o-modal__actions \{[\s\S]{0,260}background: var\(--color-surface-elevated\)/);
+  // Opaque, and the SAME fill as the panel it sits in — a translucent bar, or
+  // one filled with a different surface token, lets the last field show through
+  // underneath Save.
+  assert.match(componentsCss, /\.o-modal__panel--form \.o-modal__actions \{[\s\S]{0,400}background: var\(--color-surface\)/);
+  assert.match(componentsCss, /\.o-modal__panel \{[\s\S]{0,400}background: var\(--color-surface\)/,
+    "the bar's fill has to match the panel's, so they are asserted together");
 });
 
 test("form controls meet the touch target and do not trigger iOS zoom", () => {
@@ -367,9 +385,28 @@ test("the form invents no legal facts", () => {
   }
 });
 
-test("Home's no-chart state stopped being a third form", () => {
+test("Home's no-chart state stopped being a third form, and is never a dead end", () => {
   const fn = appJs.slice(appJs.indexOf("function axisRenderSetup"), appJs.indexOf("// ── History"));
   assert.ok(!/<form/.test(fn), "it is a call to action now");
   assert.match(fn, /openChartForm\(/, "which opens the one real form");
-  assert.match(fn, /Sign in first/, "and says plainly that signed-out visitors need an account");
+  // The signed-out branch used to end at "Sign in first — your chart is saved
+  // to your account". True, and a dead end: the highest-intent card in the app
+  // stated our architecture and gave the visitor nothing to press.
+  assert.doesNotMatch(fn, /Sign in first/,
+    "signed-out visitors are offered the chart, not told what we require");
+  assert.match(fn, /requireAccount\(/,
+    "the account is asked for when the button is pressed, not implied by a missing button");
+});
+
+test("the chart form asks for an account at its one door", () => {
+  // Four call sites reach the form and all of them go through openChartModal.
+  // The guard belongs there: birthplace search is authenticated and per-user
+  // rate limited, so a signed-out visitor who reaches the fields can only meet
+  // a 401 under the Save button.
+  const fn = appJs.slice(appJs.indexOf("function openChartModal"), appJs.indexOf("/* ── Chart identity editor"));
+  assert.match(fn, /requireAccount\("chart"\)/, "the one door carries the one guard");
+  assert.ok(
+    fn.indexOf("requireAccount") < fn.indexOf("openChartForm"),
+    "the guard runs before any form is opened",
+  );
 });

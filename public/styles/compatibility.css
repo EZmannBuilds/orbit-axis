@@ -49,11 +49,15 @@
      drags the whole page wider. This is the 1.10 defect, in one line. */
   min-width: 0;
   max-inline-size: 100%;
+  /* `background-color`, NOT the `background` shorthand: the shorthand also
+     resets background-image, which is where the component library puts the
+     dropdown caret. Without it these read as read-only fields rather than as
+     controls you can open. */
   padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-md, 0.5rem);
-  border: 1px solid var(--border, #2a2d36);
-  background: var(--surface-2, #16181e);
-  color: var(--text, #e8e9ed);
+  border-radius: var(--radius-md);
+  border: var(--border-width) solid var(--color-border);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-primary);
   font: inherit;
 }
 
@@ -291,8 +295,11 @@
 
 .compat-method__summary {
   cursor: pointer;
-  font-weight: 600;
-  padding-block: 0.25rem;
+  font-weight: var(--weight-semibold);
+  /* A disclosure is a control; 33px of line-height is not a tap target. */
+  display: flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 .compat-method__summary:focus-visible {

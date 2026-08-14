@@ -268,14 +268,23 @@ test("#positions is registered as a secondary route, not a sixth tab", () => {
     "Positions is a real workspace but does not earn a bottom-bar slot");
   // The five primary destinations are untouched.
   const primary = [...registry.matchAll(/id: "([a-z-]+)"[^}]*primary: true/g)].map((m) => m[1]);
-  assert.deepEqual(primary, ["home", "me", "transits", "tools", "more"]);
+  assert.deepEqual(primary, ["home", "me", "transits", "symbol-atlas", "more"]);
+  // Positions now lights the Sky tab it lives under, rather than lighting
+  // nothing — arriving somewhere and being told you are nowhere is worse than
+  // not having a tab at all.
+  assert.match(registry, /id: "positions"[^}]*tab: "transits"/);
   assert.ok(HTML.includes('id="panel-positions"'), "the panel markup ships");
   assert.match(APP, /if \(id === "positions"\)/, "and the route loads it");
 });
 
 test("the workspace follows its stated hierarchy", () => {
-  const order = ["positions-title", "positions-time", "positions-general",
-                 "positions-summary", "positions-list", "positions-calc", "positions-explore"];
+  // `positions-general` was a whole card whose content was one sentence
+  // ("This is the sky everyone shares") and one button to Transits. Both now sit
+  // where they are seen without scrolling: the sentence is the page subtitle,
+  // and the way to Transits is the segmented control at the top. The next test
+  // checks that neither meaning was lost in the move.
+  const order = ["positions-title", "positions-time",
+                 "positions-summary", "positions-list", "positions-calc"];
   const at = order.map((id) => {
     const i = HTML.indexOf(`id="${id}"`);
     assert.ok(i > -1, `${id} is missing`);
@@ -288,9 +297,19 @@ test("the workspace follows its stated hierarchy", () => {
 });
 
 test("Positions states that it is the shared sky, and points to Transits for the personal one", () => {
-  assert.match(HTML, /These positions are the same for everyone right now/);
-  assert.match(HTML, /Today’s Transits shows how this sky meets your own birth chart/);
-  assert.match(HTML, /href="#transits"[\s\S]{0,140}See how this affects my chart/);
+  const panel = HTML.slice(HTML.indexOf('id="panel-positions"'), HTML.indexOf('id="panel-symbol-atlas"'));
+  // The distinction between "the sky" and "the sky as it meets YOUR chart" is
+  // the entire reason this page is separate from Transits, so it has to be
+  // stated above the fold rather than in a card someone scrolls past.
+  assert.match(panel, /These positions are the same for everyone/,
+    "the page must say whose sky this is");
+  assert.match(panel, /Everyone's sky<\/h1>/, "and its heading must say it too");
+  // And the way to the personal reading is the segmented control, which is
+  // visible without scrolling and works as a link.
+  assert.match(panel, /<a href="#transits">Your sky<\/a>/,
+    "the segmented control is the route to the personal reading");
+  assert.match(panel, /href="#transits"[\s\S]{0,160}How this sky meets your chart/,
+    "and the relationship is spelled out in words at the end of the page");
 });
 
 test("the browser formats positions but never recalculates them", () => {
@@ -340,11 +359,17 @@ test("Positions links only to destinations that exist and are named truthfully",
   const registry = APP.slice(APP.indexOf("const WORKSPACES"), APP.indexOf("const RETIRED_ROUTES"));
   const registered = [...registry.matchAll(/id: "([a-z-]+)"/g)].map((m) => m[1]);
   const links = [...panel.matchAll(/href="#([a-z-]+)"/g)].map((m) => m[1]);
-  assert.ok(links.length >= 4);
+  assert.ok(links.length >= 3, `expected the exits, saw ${links.join(", ")}`);
   for (const l of links) assert.ok(registered.includes(l), `#${l} is not a workspace`);
-  assert.ok(!panel.includes("#positions"), "the page does not link to itself");
-  // Symbol Atlas is named Symbol Atlas, not relabelled as something else.
-  assert.match(panel, /href="#symbol-atlas"[\s\S]{0,140}Open Symbol Atlas/);
+  // The page DOES link to itself now, once: the segmented control has to show
+  // both views, and the current one is marked aria-current rather than removed.
+  // Anything beyond that self-link would be a link to where you already are.
+  const self = [...panel.matchAll(/href="#positions"/g)];
+  assert.equal(self.length, 1, "only the segmented control may point at this page");
+  assert.match(panel, /href="#positions" aria-current="page"/,
+    "and it must be marked as the current view rather than looking like an exit");
+  assert.match(panel, /href="#symbol-atlas"[\s\S]{0,160}What every symbol means/,
+    "the Atlas exit says what it is for");
 });
 
 test("Positions loads on arrival, like every other secondary destination", () => {

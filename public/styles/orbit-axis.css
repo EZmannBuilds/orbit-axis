@@ -1,251 +1,295 @@
 /* ============================================================================
-   Orbit Axis — daily-experience layer.
-   Beginner-first, calm, dreamy, space-themed. Extends the existing design
-   system tokens; adds only what's new. Do NOT flatten or replace the system.
+   Orbit Axis — Today, and the pieces only Today uses
+   ----------------------------------------------------------------------------
+   The daily return point. Extends the design system; adds nothing that competes
+   with it.
+
+   WHAT CHANGED IN THE REDESIGN, and why. This surface used to open with a
+   gradient-filled wordmark over a purple atmospheric wash and a CSS starfield,
+   with a lavender glow around the Moon. Four accent colours, three gradients,
+   and a decorative layer between the reader and the reading.
+
+   The system allows one accent and no decorative gradients: atmosphere comes
+   from the content, not from a background. So the wash, the starfield, the
+   glow, and the gradient text are gone. What replaced them is hierarchy — the
+   date is small, the headline is large and tight, the reading is the widest
+   thing on the page, and everything else is quieter than it.
    ========================================================================== */
 
-:root {
-  /* Orbit Axis accent + glow tokens (used alongside the base design tokens). */
-  --axis-lavender: #b8a7ff;
-  --axis-periwinkle: #a6b1ff;
-  --axis-blue: #6fa8ff;
-  --axis-pink: #ffb7c5;
-  --axis-moon: #eaeeff;
-  --axis-indigo: #8c7bff;
-  --axis-glow: 0 0 40px;
-  --axis-glow-soft: 0 0 24px;
-  --axis-radius-lg: 22px;
-  --axis-radius-md: 16px;
-  /* animation timing (respect base --duration-* where present) */
-  --axis-float-duration: 7s;
-  --axis-glow-duration: 5s;
-}
-
-/* Soft cosmic wash behind the Home workspace only — atmospheric, not crowded. */
-#panel-home {
-  position: relative;
-  overflow: hidden;
-}
-#panel-home::before {
-  content: "";
-  position: absolute;
-  inset: -8% -4% auto -4%;
-  height: 320px;
-  background:
-    radial-gradient(60% 80% at 78% 18%, color-mix(in oklab, var(--axis-indigo) 26%, transparent), transparent 70%),
-    radial-gradient(50% 70% at 20% 0%, color-mix(in oklab, var(--axis-blue) 18%, transparent), transparent 65%);
-  filter: blur(6px);
-  pointer-events: none;
-  z-index: 0;
-  border-radius: 0 0 40px 40px;
-}
-#panel-home > * { position: relative; z-index: 1; }
-
-/* ── Today header ─────────────────────────────────────────────────────────── */
+/* ── The header ──────────────────────────────────────────────────────────── */
 .axis-today-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-md);
   flex-wrap: wrap;
-  margin-bottom: 20px;
+}
+.axis-today-head__main { display: grid; gap: var(--space-xxs); min-width: 0; }
+.axis-today-date {
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
 }
 .axis-wordmark {
-  font-size: clamp(28px, 4vw, 40px);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1.05;
-  background: linear-gradient(120deg, var(--axis-moon), var(--axis-lavender) 60%, var(--axis-periwinkle));
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
+  font-family: var(--font-display);
+  font-size: var(--type-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lead-display);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
 }
-.axis-subtitle { color: var(--color-secondary); font-size: 15px; margin-top: 4px; }
-.axis-today-date { color: var(--color-secondary); font-size: 14px; }
-.axis-reading-for {
-  display: inline-flex; align-items: center; gap: 8px;
-  margin-top: 8px; padding: 6px 12px;
-  background: color-mix(in oklab, var(--axis-lavender) 12%, transparent);
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 30%, transparent);
-  border-radius: 999px; font-size: 14px; color: var(--color-primary);
+.axis-subtitle {
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+  color: var(--color-muted);
+  max-width: 46ch;
 }
-.axis-reading-for strong { color: var(--axis-lavender); }
+.axis-timezone { font-size: var(--type-fine); color: var(--color-faint); }
 
-/* ── Active chart selector ("Viewing") ────────────────────────────────────── */
-/* :not([hidden]) so the `hidden` attribute always wins without !important. */
-.axis-chart-picker:not([hidden]) { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; max-width: 100%; }
-.axis-chart-picker label { color: var(--color-secondary); font-size: 14px; flex: 0 0 auto; }
-.axis-chart-picker select {
-  background: var(--color-surface-elevated); color: var(--color-primary);
-  border: 1px solid var(--color-border); border-radius: 10px; padding: 9px 12px;
-  font-size: 15px; min-height: 44px; max-width: 100%;
+/* ── The chart chip ──────────────────────────────────────────────────────────
+   Which chart this reading belongs to, as ONE control. It replaces a label, a
+   select, a "+" and a "Manage" button competing for the same row — the picture
+   and the name say whose reading this is, and the two actions sit at the end
+   where they cannot be mistaken for the answer. */
+.chart-chip { display: none; }
+.chart-chip:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  /* 52px so the select inside can stretch to a real target. */
+  min-height: 52px;
+  padding: var(--space-xxs) var(--space-xxs) var(--space-xxs) var(--space-sm);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-pill);
+  max-width: 100%;
+  width: fit-content;
+}
+.chart-chip__text { display: grid; align-content: center; min-width: 0; flex: 1 1 auto; }
+.chart-chip__eyebrow {
+  font-size: var(--type-fine);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+/* The select carries the name, so it is styled as text rather than as a field:
+   a chip that looks like a form control invites people to fill it in.
+
+   It still has to be TAPPABLE. Styled as bare text it measured 20px tall — half
+   a thumb — so the row it sits in supplies the height instead, and the select
+   stretches to fill it. The control reads as text and targets as a control. */
+.chart-chip__select {
+  appearance: none;
+  width: auto;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-lg) 0 0;
+  background-color: transparent;
+  background-position: right 0 center;
+  background-size: 12px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: var(--color-primary);
+  font-size: var(--type-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-body);
   text-overflow: ellipsis;
 }
-.axis-chart-picker select:disabled {
-  opacity: 0.85; cursor: default; color: var(--color-primary);
-  background: color-mix(in oklab, var(--color-surface-elevated) 85%, transparent);
-}
-@media (max-width: 640px) {
-  .axis-chart-picker select { flex: 1 1 auto; min-width: 0; }
-}
 
-/* Add-a-chart "+" beside the Viewing selector. Stays available even when the
-   selector is disabled (single chart), so creating another chart is always a
-   deliberate one-tap action instead of a recurring popup. */
-.axis-chart-add {
-  width: 44px; height: 44px; flex: 0 0 auto;
-  display: grid; place-items: center;
-  color: var(--color-primary);
-  background: var(--color-surface-elevated);
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 30%, var(--color-border));
-  border-radius: 10px; cursor: pointer;
-}
+.chart-chip__select:focus-visible { box-shadow: var(--focus-ring); }
+.chart-chip__select:disabled { color: var(--color-primary); opacity: 1; background-image: none; padding-right: 0; }
+.axis-chart-add { width: 36px; height: 36px; }
 .axis-chart-add svg { width: 18px; height: 18px; }
-.axis-chart-add:hover { background: color-mix(in oklab, var(--color-surface-elevated) 70%, var(--axis-indigo) 30%); }
+.axis-chart-manage { flex: 0 0 auto; }
 
-.axis-chart-manage {
-  min-height: 44px; flex: 0 0 auto;
-  padding: 0 12px;
-  color: var(--color-secondary);
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 10px; cursor: pointer; font: inherit;
-}
-.axis-chart-manage:hover { color: var(--color-primary); }
-
-/* Recoverable saved-chart error — offers a retry instead of wrongly implying
-   the user has no chart. */
+/* Recoverable saved-chart error — offers a retry rather than wrongly implying
+   the reader has no chart. */
 .axis-chart-error { display: none; }
 .axis-chart-error:not([hidden]) {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 18px; padding: 12px 14px;
+  display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap;
+  padding: var(--space-sm) var(--space-md);
   color: var(--color-primary);
-  background: color-mix(in oklab, var(--color-surface-elevated) 88%, #e0576b 12%);
-  border: 1px solid color-mix(in oklab, #e0576b 34%, var(--color-border));
-  border-radius: 12px;
+  background: var(--color-error-soft);
+  border: var(--border-width) solid var(--color-error);
+  border-radius: var(--radius-lg);
+  font-size: var(--type-caption);
 }
 
-/* ── Card scaffold shared by Today modules ────────────────────────────────── */
+/* ── The week strip ──────────────────────────────────────────────────────────
+   Seven days ending today. Three states, each stated by shape as well as by
+   colour, because the difference between "you have a reading" and "you don't"
+   is the whole point of the row:
+
+     today  — filled disc, the accent
+     read   — a dot under the number, and the cell is a button
+     empty  — nothing under the number, and the cell is not focusable
+
+   Not a date picker. Orbit Axis calculates today's sky, so there is no tomorrow
+   to offer and the strip does not pretend otherwise. */
+.day-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-xxs);
+  /* Capped, and not full-bleed. Seven 44px cells stretched across a 1100px
+     desktop column is a row of postage stamps in a field — the strip is a
+     compact control and should keep looking like one at every width. */
+  max-width: 560px;
+  padding: var(--space-xs);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.day-strip__day {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 3px;
+  min-height: 62px;
+  padding: var(--space-xs) 2px;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-muted);
+  font-family: inherit;
+  transition: background var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+.day-strip__letter {
+  font-size: var(--type-fine);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.day-strip__num {
+  font-size: var(--type-body);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-body);
+  font-variant-numeric: tabular-nums;
+  color: inherit;
+}
+.day-strip__dot { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+
+.day-strip__day[data-state="read"] { cursor: pointer; color: var(--color-primary); }
+.day-strip__day[data-state="read"] .day-strip__dot { background: var(--color-accent); }
+.day-strip__day[data-state="read"]:hover { background: var(--color-surface-ghost); }
+.day-strip__day[data-state="read"]:active { transform: scale(var(--press-scale)); }
+.day-strip__day[data-state="read"]:focus-visible { box-shadow: var(--focus-ring); }
+
+.day-strip__day[data-state="today"] { background: var(--color-accent); color: var(--color-on-accent); }
+.day-strip__day[data-state="today"] .day-strip__letter { color: var(--color-on-accent); opacity: 0.75; }
+.day-strip__day[data-state="today"] .day-strip__dot { background: var(--color-on-accent); }
+
+.day-strip__day[data-state="empty"] { color: var(--color-faint); }
+
+@media (forced-colors: active) {
+  .day-strip__day[data-state="today"] { border: 2px solid Highlight; }
+  .day-strip__day[data-state="read"] { border: 1px solid CanvasText; }
+}
+
+/* ── Card scaffold shared by Today's modules ─────────────────────────────── */
 .axis-card {
-  background: color-mix(in oklab, var(--color-surface-elevated) 92%, var(--axis-indigo) 8%);
-  border: 1px solid var(--color-border);
-  border-radius: var(--axis-radius-lg);
-  padding: 22px;
-  margin-bottom: 18px;
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--density-card-pad);
 }
-.axis-card h2 { font-size: 20px; margin-bottom: 4px; }
-.axis-card .axis-card-hint { color: var(--color-secondary); font-size: 14px; }
+.axis-section-title {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
+}
+.axis-section-help {
+  margin-top: var(--space-xxs);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+}
+.axis-card-hint { color: var(--color-muted); font-size: var(--type-caption); }
+.moon-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); flex-wrap: wrap; }
+.moon-status { font-size: var(--type-caption); color: var(--color-muted); }
+.axis-secondary-note { font-size: var(--type-caption); }
 
-/* ── Space graphic primitives (CSS/SVG, no external assets) ───────────────── */
+/* ── Related links ───────────────────────────────────────────────────────────
+   What replaced the "Continue exploring" cards. Those were a five-item link
+   farm at the bottom of three different pages — navigation pretending to be
+   content, restating destinations that are one tap away in the tab bar.
+
+   This is the honest remainder: the two or three places that are genuinely
+   *next* from here, as plain links, taking one line. */
+.related-row {
+  display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-lg);
+  padding-top: var(--space-xs);
+}
+.related-row__link {
+  display: inline-flex; align-items: center; gap: var(--space-xxs);
+  min-height: 44px;
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-accent);
+}
+.related-row__link::after {
+  content: "";
+  width: 6px; height: 6px;
+  border-right: 1.5px solid currentColor;
+  border-top: 1.5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+/* ── The Moon ────────────────────────────────────────────────────────────────
+   An object resting on a surface, so it takes the one shadow in the system —
+   and no glow. It is a rock lit by the sun, and it reads as one. */
 .axis-moon {
   --moon-size: 96px;
   position: relative; width: var(--moon-size); height: var(--moon-size);
   border-radius: 50%; flex: 0 0 auto;
-  background:
-    radial-gradient(circle at 35% 32%, #ffffff 0%, var(--axis-moon) 34%, #c9d2f5 66%, #97a3d6 100%);
-  box-shadow: var(--axis-glow) color-mix(in oklab, var(--axis-lavender) 45%, transparent),
-              inset -10px -8px 20px rgba(20, 24, 54, 0.55);
+  background: radial-gradient(circle at 35% 32%, #ffffff 0%, #e8e8ea 38%, #b9b9be 72%, #8e8e93 100%);
+  box-shadow: var(--shadow-object), inset -10px -8px 22px rgba(0, 0, 0, 0.45);
 }
-.axis-moon__halo {
-  position: absolute; inset: -22%; border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in oklab, var(--axis-lavender) 30%, transparent), transparent 62%);
-  z-index: -1;
-}
-.axis-orbit-ring {
-  position: absolute; border: 1px solid color-mix(in oklab, var(--axis-periwinkle) 35%, transparent);
-  border-radius: 50%; inset: -30%; z-index: -1;
-}
-.axis-starfield {
-  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.7;
-  background-image:
-    radial-gradient(1px 1px at 12% 30%, #ffffffcc 50%, transparent 51%),
-    radial-gradient(1px 1px at 68% 18%, #ffffff99 50%, transparent 51%),
-    radial-gradient(1.5px 1.5px at 42% 70%, #ffffffaa 50%, transparent 51%),
-    radial-gradient(1px 1px at 84% 56%, #ffffff88 50%, transparent 51%),
-    radial-gradient(1px 1px at 26% 88%, #ffffff77 50%, transparent 51%);
+/* The halo and orbit ring were decorative depth the system does not allow.
+   They stay in the markup (the moon scene builds them) and render as nothing. */
+.axis-moon__halo, .axis-orbit-ring { display: none; }
+/* The starfield was a white-dots-on-dark background image. Removed: atmosphere
+   comes from the content, and on the light theme it was invisible anyway. */
+.axis-starfield { display: none; }
+
+/* ── Loading shimmer ─────────────────────────────────────────────────────── */
+.axis-shimmer {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, var(--color-surface-ghost) 25%, var(--color-surface-hover) 50%, var(--color-surface-ghost) 75%);
+  background-size: 200% 100%;
+  animation: o-shimmer 1.4s ease-in-out infinite;
 }
 
-/* ── Accessibility: comfortable sizing, visible focus ─────────────────────── */
-/* 44px, not 40. This is the global sizing rule for every button on Home and
-   History, so raising it here fixes the whole surface instead of patching the
-   two controls that happened to be measured. */
+/* ── Touch targets and focus ─────────────────────────────────────────────────
+   44px is the floor for every control on these surfaces. Set once here rather
+   than on the handful that happened to get measured. */
 #panel-home button, #panel-history button, #panel-positions button,
-#panel-positions .o-btn, #panel-positions .axis-explore__link { min-height: 44px; }
-#panel-home a:focus-visible, #panel-home button:focus-visible,
-#panel-history a:focus-visible, #panel-history button:focus-visible {
-  outline: 2px solid var(--axis-blue); outline-offset: 2px; border-radius: 8px;
-}
+#panel-positions .o-btn { min-height: 44px; }
+.day-strip__day, .chart-chip .o-icon-btn { min-height: 0; }
 
 @media (max-width: 640px) {
   .axis-today-head { flex-direction: column; }
   .axis-moon { --moon-size: 76px; }
+  .day-strip__day { min-height: 56px; }
 }
 
-/* ── Detail level applied to My Chart presentation (data-detail on <html>) ──
-   Update Two: only Simple and Advanced remain. Simple hides exact degrees, the
-   technical placements table, and technical chart metadata; Advanced reveals
-   them. The engine/calculations are untouched — this only controls what a
-   beginner sees by default. Any unknown data-detail value falls through to the
-   Simple-hiding rules below, so a stale "Balanced" attribute degrades safely. */
+/* ── Detail level applied to Chart presentation (data-detail on <html>) ──────
+   Simple hides exact degrees, the technical placements table, and technical
+   chart metadata; Advanced reveals them. The engine and the calculations are
+   untouched — this only controls what a beginner sees by default. Any unknown
+   data-detail value falls through to the Simple-hiding rules, so a stale
+   attribute degrades safely. */
 :root[data-detail="Simple"] #panel-me .advanced-only,
 :root[data-detail="Simple"] #panel-me .me-panel--advanced { display: none; }
 :root:not([data-detail="Advanced"]) #panel-me .advanced-only,
 :root:not([data-detail="Advanced"]) #panel-me .me-panel--advanced { display: none; }
 
-/* `hidden` attribute must win over the flex display above. */
-.axis-chart-picker[hidden], .axis-reading-for[hidden] { display: none !important; }
+/* The `hidden` attribute must win over the display rules above. */
+.chart-chip[hidden], .axis-reading-for[hidden], .day-strip[hidden] { display: none !important; }
 
-/* ══ Light theme ═════════════════════════════════════════════════════════════
-   Light mode is designed, not inverted. The celestial identity is carried by
-   the same hues at lower saturation against light surfaces; what changes is
-   which end of the ramp does the work.
-
-   Three things break under a naive inversion, and each is corrected here:
-     1. White stars on a white page are invisible — the starfield is a night
-        effect and has no light-mode equivalent, so it is withdrawn rather than
-        faked.
-     2. A pale gradient wordmark on white loses all contrast — light mode uses
-        the deep end of the same palette.
-     3. The atmospheric wash is sized for a dark page; at full strength on white
-        it reads as a smudge. */
-:root[data-theme="light"] {
-  --axis-lavender: #6f5bd6;
-  --axis-periwinkle: #5a68d8;
-  --axis-blue: #2f6bff;
-  --axis-pink: #c04f6a;
-  --axis-moon: #4a4f7a;
-  --axis-indigo: #5b4bd1;
-}
-
-:root[data-theme="light"] .axis-starfield { display: none; }
-
-:root[data-theme="light"] #panel-home::before {
-  background:
-    radial-gradient(60% 80% at 78% 18%, color-mix(in oklab, var(--axis-indigo) 9%, transparent), transparent 70%),
-    radial-gradient(50% 70% at 20% 0%, color-mix(in oklab, var(--axis-blue) 7%, transparent), transparent 65%);
-}
-
-:root[data-theme="light"] .axis-wordmark {
-  background: linear-gradient(120deg, #26305c, var(--axis-indigo) 60%, var(--axis-blue));
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent;
-}
-
-/* The Moon graphic stays a moon: a light-grey disc on a white card disappears,
-   so it keeps its own contrast rather than following the page. */
-:root[data-theme="light"] .axis-moon {
-  background:
-    radial-gradient(circle at 35% 32%, #ffffff 0%, #eef1ff 34%, #c3cbef 66%, #8e99cf 100%);
-  box-shadow: var(--axis-glow-soft) color-mix(in oklab, var(--axis-indigo) 22%, transparent),
-              inset -10px -8px 20px rgba(40, 46, 92, 0.35);
-}
-
-/* Forced colors: gradient text renders as nothing at all, because the clip
-   makes the glyphs transparent and the browser paints the background instead. */
 @media (forced-colors: active) {
-  .axis-wordmark {
-    background: none;
-    -webkit-text-fill-color: CanvasText;
-    color: CanvasText;
-  }
-  .axis-starfield { display: none; }
+  .axis-wordmark { color: CanvasText; }
 }

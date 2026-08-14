@@ -2,9 +2,9 @@
 <html lang="en" data-theme="dark" data-density="comfortable">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="dark light" />
-  <meta name="theme-color" id="meta-theme-color" content="#0a0c0f" />
+  <meta name="theme-color" id="meta-theme-color" content="#000000" />
   <title>Orbit Axis — your daily sky</title>
   <meta name="description" content="Orbit Axis — a calm, beginner-friendly daily astrology companion." />
   <!-- Theme resolution BEFORE first paint. Three choices — system (default),
@@ -23,7 +23,7 @@
       root.dataset.theme = resolved;
       root.dataset.themePreference = stored;
       var meta = document.getElementById("meta-theme-color");
-      if (meta) meta.setAttribute("content", resolved === "light" ? "#f5f6f8" : "#0a0c0f");
+      if (meta) meta.setAttribute("content", resolved === "light" ? "#f5f5f7" : "#000000");
     })();
   </script>
   <link rel="stylesheet" href="/styles/tokens.css" />
@@ -41,13 +41,19 @@
   <link rel="stylesheet" href="/styles/compatibility.css" />
   <link rel="stylesheet" href="/styles/symbol-atlas.css" />
   <link rel="stylesheet" href="/styles/motion.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='30' fill='none' stroke='%234f83ff' stroke-width='6'/><circle cx='78' cy='30' r='9' fill='%234f83ff'/></svg>" />
+  <!-- Last, so its container corrections win over the base primitives. -->
+  <link rel="stylesheet" href="/styles/native.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='30' fill='none' stroke='%23a185ff' stroke-width='6'/><circle cx='78' cy='30' r='9' fill='%23a185ff'/></svg>" />
 </head>
 <body>
   <a class="skip-link" href="#workspace-title">Skip to content</a>
 
   <div class="app-shell">
-    <!-- ── Primary navigation ──────────────────────────────────────────── -->
+    <!-- ── Primary navigation ────────────────────────────────────────────
+         Five destinations: Today · Chart · Sky · Atlas · You. One list, one
+         DOM — a desktop sidebar and a phone tab bar are the same links in
+         different CSS, which is what stops them disagreeing. Built by
+         buildRail() from the WORKSPACES registry in app.js. -->
     <nav class="rail" aria-label="Primary sections">
       <div class="rail__brand">
         <span class="rail__orb" aria-hidden="true"></span>
@@ -60,143 +66,156 @@
       </div>
 
       <div class="rail__spacer"></div>
+
+      <!-- The standing offer, for signed-out visitors only. Populated by
+           renderAuthCta() and emptied the moment someone signs in, so a paying
+           customer is never sold to. Below the spacer on purpose: it is an
+           offer, not a destination, and it must not compete with navigation. -->
+      <div class="rail__cta" id="rail-cta" hidden></div>
     </nav>
 
     <!-- ── Main area ──────────────────────────────────────────────────── -->
-    <div>
+    <div class="app-main">
+      <!-- The frosted sub-nav: where you are on the left, what you can do from
+           anywhere on the right. Sticky, because a header that scrolls away
+           stops answering "where am I" halfway down a long reading. -->
       <header class="topnav">
-        <div>
-          <div class="topnav__title" id="workspace-title" tabindex="-1">Home</div>
+        <div class="topnav__where">
+          <div class="topnav__title" id="workspace-title" tabindex="-1">Today</div>
           <div class="topnav__crumb" id="workspace-crumb">Orbit Axis · Your day</div>
         </div>
         <div class="topnav__spacer"></div>
+
+        <!-- ── Universal search ──────────────────────────────────────────
+             One field over everything the app already holds: the reference
+             library, your saved charts, and the destinations themselves. It
+             searches what is loaded and claims nothing more — there is no
+             server behind it, so it cannot be slow and cannot be wrong about
+             what it found. -->
+        <div class="o-find" id="find">
+          <div class="o-search o-find__field">
+            <span id="find-icon" data-icon="magnifying-glass" aria-hidden="true"></span>
+            <input type="search" id="find-input" class="o-input"
+                   placeholder="Search Orbit Axis" aria-label="Search charts, symbols, and pages"
+                   autocomplete="off" spellcheck="false"
+                   role="combobox" aria-expanded="false" aria-autocomplete="list"
+                   aria-controls="find-results" />
+          </div>
+          <div class="o-find__panel" id="find-results" role="listbox" aria-label="Search results" hidden></div>
+        </div>
+
         <div class="topnav__date" id="topnav-date"></div>
       </header>
 
       <main class="workspace" id="workspace">
-        <!-- ── Home (Orbit Axis daily return point) ─────────────────── -->
+        <!-- ══ TODAY ═══════════════════════════════════════════════════════
+             The daily return point, and the reason someone opens the app.
+
+             Order is the whole design: what does today mean for me, which day
+             am I reading, what is the Moon doing, what else is in the sky, and
+             only then the technical detail. The reading leads because it is
+             what was asked for; the positions that produced it come after,
+             because a reader who wants degrees can ask and a reader who does
+             not should never scroll past a table to finish the page. -->
         <section class="workspace-panel" id="panel-home" role="region" aria-labelledby="home-title">
-          <div class="axis-starfield" aria-hidden="true"></div>
-
           <div class="axis-today-head">
-            <div>
-              <h1 class="axis-wordmark" id="home-title">Orbit Axis</h1>
-              <div class="axis-subtitle">Your sky today, in plain language.</div>
-              <div class="axis-reading-for" id="today-reading-for" hidden>Reading for: <strong id="today-chart-name">My Chart</strong></div>
-              <div class="axis-timezone" id="today-timezone" hidden></div>
-            </div>
-            <div class="axis-today-head__right">
-              <div class="axis-today-date" id="today-date"></div>
+            <div class="axis-today-head__main">
+              <p class="axis-today-date" id="today-date"></p>
+              <h1 class="axis-wordmark" id="home-title">Your sky today</h1>
+              <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
+              <p class="axis-timezone" id="today-timezone" hidden></p>
             </div>
           </div>
 
-          <div class="axis-chart-picker" id="today-chart-picker" hidden>
-            <label for="today-chart-select">Viewing</label>
-            <!-- The active chart's face. aria-hidden: the select already
-                 speaks the chart's name; the picture would repeat it. -->
+          <!-- Which chart this reading belongs to. A picture, a name, and the
+               way to change it — one control instead of a label, a select, and
+               two buttons competing for the same row. -->
+          <div class="chart-chip" id="today-chart-picker" hidden>
             <span class="chart-avatar chart-avatar--sm" id="today-chart-avatar" aria-hidden="true" hidden></span>
-            <select id="today-chart-select"></select>
-            <button type="button" class="axis-chart-add" id="today-chart-add" aria-label="Add a chart">
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
-            <button type="button" class="axis-chart-manage" id="today-chart-manage">Manage</button>
+            <div class="chart-chip__text">
+              <span class="chart-chip__eyebrow" id="today-reading-for" hidden>Reading for</span>
+              <label class="sr-only" for="today-chart-select">Viewing chart</label>
+              <select id="today-chart-select" class="chart-chip__select"></select>
+              <span class="sr-only" id="today-chart-name">My Chart</span>
+            </div>
+            <button type="button" class="o-icon-btn axis-chart-add" id="today-chart-add" aria-label="Add a chart" data-icon="plus"></button>
+            <button type="button" class="o-btn o-btn--utility axis-chart-manage" id="today-chart-manage">Manage</button>
           </div>
 
-          <!-- Recoverable saved-chart error. Never mistaken for "you have no chart". -->
+          <!-- Recoverable saved-chart error. Never mistaken for "you have no
+               chart" — that distinction is why this element exists at all. -->
           <div class="axis-chart-error" id="today-chart-error" role="alert" hidden>
             <span id="today-chart-error-text">We couldn't load your saved charts.</span>
             <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="today-chart-retry">Try again</button>
           </div>
 
-          <!-- Update 5.2 hierarchy: the reading comes first. Technical Sky
-               explains it and therefore sits below it — putting planetary
-               positions above the fortune made the app open on the most
-               technical thing it does. -->
-          <!-- ── The briefing ────────────────────────────────────────────
-               Home answers three questions in order: what does today mean for
-               me, what is the sky doing, and where do I go next. The personal
-               reading leads because it is the reason someone opens the app;
-               the sky that produced it follows; the technical detail sits last
-               and folded away, because a reader who wants degrees can ask for
-               them and a reader who does not should never have to scroll past
-               a table to reach the end of the page. -->
+          <!-- ── The week ──────────────────────────────────────────────────
+               Seven days ending today. Each one says whether Orbit Axis wrote
+               you a reading that day, and tapping a day that has one opens it.
+               Days with nothing saved are stated as such rather than being
+               tappable and empty — a control that does nothing reads as a bug.
 
-          <!-- 2. Daily celestial reading -->
+               The data is your own reading history; nothing here is predicted
+               or back-filled. -->
+          <nav class="day-strip" id="today-days" aria-label="Your last seven days" hidden></nav>
+
+          <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
 
-          <!-- 3. Moon state — the scene shell is always present so the layout
-               does not shift when canonical data arrives. The scene itself is
-               decorative; every fact it depicts is also written in the text
-               beside it. -->
+          <!-- The Moon. The scene shell is always present so the layout does
+               not shift when canonical data arrives. The drawing is decorative;
+               every fact it depicts is also written beside it. -->
           <section class="axis-card axis-rise-3" id="today-moon" aria-labelledby="today-moon-title" hidden>
             <div class="moon-head">
               <h2 class="axis-section-title" id="today-moon-title">The Moon right now</h2>
-              <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="moon-refresh">Refresh the sky</button>
+              <button type="button" class="o-btn o-btn--utility" id="moon-refresh">Refresh</button>
             </div>
             <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
             <div id="today-moon-body"></div>
           </section>
 
-          <!-- 4. Current sky highlights -->
+          <!-- What else is worth noticing, most personally relevant first. -->
           <section class="axis-card axis-rise-3" id="today-highlights" aria-labelledby="today-highlights-title" hidden>
             <h2 class="axis-section-title" id="today-highlights-title">In the sky today</h2>
             <p class="axis-section-help">A few things worth noticing, most personally relevant first.</p>
             <div id="today-highlights-body"></div>
           </section>
 
-          <!-- 5. Technical Sky (secondary, folded) -->
+          <!-- Technical Sky — folded, and last. -->
           <div id="today-sky" class="axis-card axis-rise-3"><div class="axis-shimmer" style="height:120px"></div></div>
 
-          <!-- 6. Continue exploring -->
-          <section class="axis-card axis-rise-3" id="today-explore" aria-labelledby="today-explore-title">
-            <h2 class="axis-section-title" id="today-explore-title">Continue exploring</h2>
-            <div class="axis-explore">
-              <a class="axis-explore__link" href="#me">
-                <span class="axis-explore__label">View My Chart</span>
-                <span class="axis-explore__help">Your birth chart, explained placement by placement.</span>
-              </a>
-              <a class="axis-explore__link" href="#transits">
-                <span class="axis-explore__label">Explore Today’s Transits</span>
-                <span class="axis-explore__help">How the moving sky meets your chart.</span>
-              </a>
-              <a class="axis-explore__link" href="#positions">
-                <span class="axis-explore__label">See Current Positions</span>
-                <span class="axis-explore__help">Where every planet is in the zodiac right now.</span>
-              </a>
-              <a class="axis-explore__link" href="#symbol-atlas">
-                <span class="axis-explore__label">Learn the symbols</span>
-                <span class="axis-explore__help">Every glyph Orbit Axis uses, in plain language.</span>
-              </a>
-              <a class="axis-explore__link" href="#tools">
-                <span class="axis-explore__label">Open Tools</span>
-                <span class="axis-explore__help">Reading history, exports, and settings.</span>
-              </a>
-            </div>
-          </section>
-
-          <!-- 7. Secondary context -->
           <p class="axis-secondary-note" id="today-secondary" hidden>
-            <a href="#history">See your recent readings</a>
+            <a href="#history">See all your past readings</a>
           </p>
         </section>
 
-        <!-- ── Transits ─────────────────────────────────────────────── -->
+        <!-- ══ SKY — your transits ═════════════════════════════════════════
+             The moving sky measured against ONE chart. Its sibling view,
+             Current Positions, is the same sky with no chart involved; the
+             segmented control switches between them because they are two zoom
+             levels on one question, not two destinations. -->
         <section class="workspace-panel" id="panel-transits" role="region" aria-labelledby="transits-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="transits-title">Today’s Transits</h1>
-              <p class="u-caption">The moving sky, measured against <strong id="transits-chart-name">your chart</strong>.</p>
+              <h1 class="u-title" id="transits-title" tabindex="-1">The sky today</h1>
+              <p class="u-caption">Where the planets are, and what they are touching in <strong id="transits-chart-name">your chart</strong>.</p>
             </div>
             <div class="o-section-head__actions">
-              <button class="o-btn o-btn--secondary" id="transits-refresh">Refresh</button>
+              <button class="o-btn o-btn--utility" id="transits-refresh">Refresh</button>
             </div>
           </div>
 
-          <!-- ── The personal reading ───────────────────────────────────
-               Positions owns the shared sky; this page owns the intersection
-               with ONE chart. Immediate influences lead because they are what
-               changed today; background influences follow because they matter
-               without being news. -->
+          <!-- Two views of one moment. Real anchors with real hrefs, so Back,
+               Forward, and copy-link work; aria-current is the whole
+               current-view story (aria-selected would be wrong here — these are
+               links, not tabs in a tablist). -->
+          <div class="subnav">
+            <nav class="o-segment o-segment--block" aria-label="Sky views">
+              <a href="#transits" aria-current="page">Your sky</a>
+              <a href="#positions">Everyone's sky</a>
+            </nav>
+          </div>
+
           <p class="u-meta" id="transits-context"></p>
 
           <div class="tr-switcher" id="transits-switcher" hidden>
@@ -209,59 +228,41 @@
 
           <div id="transits-body"></div>
 
-          <!-- Forthcoming shared-sky changes. Not chart-specific, so it sits
-               after the personal reading and before the exit links. -->
+          <!-- Forthcoming shared-sky changes: not chart-specific, so they sit
+               after the personal reading. -->
           <div class="o-card">
-            <div class="o-card-head"><h2 class="u-card-title">Upcoming Sky Events</h2><span class="u-meta" id="events-count"></span></div>
+            <div class="o-card-head"><h2 class="u-card-title">Upcoming sky events</h2><span class="u-meta" id="events-count"></span></div>
             <div class="o-timeline" id="events-timeline"></div>
           </div>
 
-          <section class="o-card" id="transits-explore" aria-labelledby="transits-explore-title" hidden>
-            <h2 class="axis-section-title" id="transits-explore-title">Continue exploring</h2>
-            <div class="axis-explore">
-              <a class="axis-explore__link" href="#positions">
-                <span class="axis-explore__label">View Current Positions</span>
-                <span class="axis-explore__help">Where every planet is in the zodiac right now.</span>
-              </a>
-              <a class="axis-explore__link" href="#me">
-                <span class="axis-explore__label">Review My Chart</span>
-                <span class="axis-explore__help">The natal placements these transits are contacting.</span>
-              </a>
-              <a class="axis-explore__link" href="#symbol-atlas">
-                <span class="axis-explore__label">Open Symbol Atlas</span>
-                <span class="axis-explore__help">What the planet and aspect symbols mean.</span>
-              </a>
-              <a class="axis-explore__link" href="#home">
-                <span class="axis-explore__label">Back to Home</span>
-                <span class="axis-explore__help">Your daily reading and the Moon.</span>
-              </a>
-            </div>
-          </section>
+          <div class="related-row" id="transits-explore" hidden>
+            <a class="related-row__link" href="#positions">Where every planet is right now</a>
+            <a class="related-row__link" href="#me">The natal placements these are contacting</a>
+            <a class="related-row__link" href="#symbol-atlas">What these symbols mean</a>
+          </div>
         </section>
 
-        <!-- ── Current Positions ────────────────────────────────────────
-             The shared sky, with no birth chart involved. Today's Transits is
-             where that sky meets one person's chart; keeping the two apart is
-             why this workspace exists at all. -->
+        <!-- ══ SKY — everyone's sky ════════════════════════════════════════ -->
         <section class="workspace-panel" id="panel-positions" role="region" aria-labelledby="positions-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="positions-title" tabindex="-1">Current Positions</h1>
-              <p class="u-caption">Where the planets are in the zodiac right now.</p>
+              <h1 class="u-title" id="positions-title" tabindex="-1">Everyone's sky</h1>
+              <p class="u-caption">Where the planets are in the zodiac right now. These positions are the same for everyone.</p>
               <p class="u-meta" id="positions-time"></p>
             </div>
             <div class="o-section-head__actions">
-              <button type="button" class="o-btn o-btn--secondary" id="positions-refresh">Refresh</button>
+              <button type="button" class="o-btn o-btn--utility" id="positions-refresh">Refresh</button>
             </div>
           </div>
 
-          <div class="positions-status" id="positions-status" role="status" aria-live="polite"></div>
+          <div class="subnav">
+            <nav class="o-segment o-segment--block" aria-label="Sky views">
+              <a href="#transits">Your sky</a>
+              <a href="#positions" aria-current="page">Everyone's sky</a>
+            </nav>
+          </div>
 
-          <section class="o-card" id="positions-general" aria-labelledby="positions-general-title">
-            <h2 class="axis-section-title" id="positions-general-title">This is the sky everyone shares</h2>
-            <p class="positions-general__text">These positions are the same for everyone right now. Today’s Transits shows how this sky meets your own birth chart.</p>
-            <a class="o-btn o-btn--secondary o-btn--sm" href="#transits" id="positions-transits-link">See how this affects my chart</a>
-          </section>
+          <div class="positions-status" id="positions-status" role="status" aria-live="polite"></div>
 
           <section class="o-card" id="positions-summary" aria-labelledby="positions-summary-title" hidden>
             <h2 class="axis-section-title" id="positions-summary-title">Sky summary</h2>
@@ -278,53 +279,31 @@
             <div id="positions-calc-body"></div>
           </section>
 
-          <section class="o-card" id="positions-explore" aria-labelledby="positions-explore-title">
-            <h2 class="axis-section-title" id="positions-explore-title">Continue exploring</h2>
-            <div class="axis-explore">
-              <a class="axis-explore__link" href="#transits">
-                <span class="axis-explore__label">Explore Today’s Transits</span>
-                <span class="axis-explore__help">How this sky meets your chart.</span>
-              </a>
-              <a class="axis-explore__link" href="#symbol-atlas">
-                <span class="axis-explore__label">Open Symbol Atlas</span>
-                <span class="axis-explore__help">What every planet and sign symbol means.</span>
-              </a>
-              <a class="axis-explore__link" href="#me">
-                <span class="axis-explore__label">View My Chart</span>
-                <span class="axis-explore__help">Your birth chart, placement by placement.</span>
-              </a>
-              <a class="axis-explore__link" href="#home">
-                <span class="axis-explore__label">Back to Home</span>
-                <span class="axis-explore__help">Your daily reading and the Moon.</span>
-              </a>
-            </div>
-          </section>
+          <div class="related-row">
+            <a class="related-row__link" href="#transits">How this sky meets your chart</a>
+            <a class="related-row__link" href="#symbol-atlas">What every symbol means</a>
+          </div>
         </section>
 
-        <!-- ── Symbol Atlas ─────────────────────────────────────────────
-             Its own destination as of Update 5.2b. It explains symbols that
-             are already on screen elsewhere, so it is reached from Technical
-             Sky rather than living inside Research. -->
-        <section class="workspace-panel" id="panel-symbol-atlas" role="region" aria-labelledby="symbol-atlas-title" hidden>
-          <!-- Symbol Atlas (Dev Update 1.12): the reference library.
-               Everything below the section head is rendered by the atlas
-               client from the validated content module — the markup here is
-               only the stable skeleton routes and focus depend on.
+        <!-- ══ ATLAS ═══════════════════════════════════════════════════════
+             The reference library, promoted to a primary destination. It
+             explains the symbols that are already on screen everywhere else,
+             which makes it the one page the whole app links into — so it
+             should be one tap away, not three.
 
-               Routes: #symbol-atlas                    home
-                       #symbol-atlas/<category>         category page
-                       #symbol-atlas/<category>/<slug>  entry page -->
+             Routes: #symbol-atlas                    home
+                     #symbol-atlas/<category>         category page
+                     #symbol-atlas/<category>/<slug>  entry page
+
+             Everything below the section head is rendered by the atlas client
+             from the validated content module; the markup here is only the
+             stable skeleton that routes and focus depend on. -->
+        <section class="workspace-panel" id="panel-symbol-atlas" role="region" aria-labelledby="symbol-atlas-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <nav class="atlas-crumbs" id="atlas-crumbs" aria-label="Symbol Atlas location"></nav>
-              <h1 class="u-title" id="symbol-atlas-title" tabindex="-1">Symbol Atlas</h1>
-              <p class="u-caption" id="atlas-subtitle">Orbit's astrology reference — every symbol, in plain language.</p>
-            </div>
-            <div class="o-section-head__actions">
-              <!-- The way back points at where the Atlas is reached from, not
-                   at Home — a back action that skips the page you came from is
-                   a dead end wearing an arrow. (Inherited from Update 1.8.) -->
-              <button class="o-btn o-btn--secondary" data-goto="tools">Back to Tools</button>
+              <nav class="atlas-crumbs" id="atlas-crumbs" aria-label="Atlas location"></nav>
+              <h1 class="u-title" id="symbol-atlas-title" tabindex="-1">Atlas</h1>
+              <p class="u-caption" id="atlas-subtitle">Every symbol Orbit Axis uses, in plain language.</p>
             </div>
           </div>
 
@@ -335,12 +314,22 @@
           <div id="atlas-root"></div>
         </section>
 
-        <!-- ── My Chart (Swiss Ephemeris) ───────────────────────────── -->
+        <!-- ══ CHART ═══════════════════════════════════════════════════════
+             Your birth chart, and the people you have saved.
+
+             Section order is deliberate: who this chart is and how it was
+             calculated, then what a chart cannot show, then the reading from
+             broadest to most specific, then the raw figures.
+
+             The limitation notice sits HIGH rather than last. A caution about
+             what a chart cannot tell you has to be read before the chart, not
+             after it — placed last it qualifies something the reader has
+             already finished and believed. -->
         <section class="workspace-panel" id="panel-me" role="region" aria-labelledby="mychart-title" hidden>
           <div class="o-section-head me-page-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="mychart-title" tabindex="-1">My Chart</h1>
-              <p class="u-meta">Your birth chart, explained placement by placement.</p>
+              <h1 class="u-title" id="mychart-title" tabindex="-1">Your chart</h1>
+              <p class="u-caption">Your birth chart, explained placement by placement.</p>
               <div class="me-active-line">
                 <span id="mychart-name">No active chart yet</span>
                 <span class="o-pill o-pill--success" id="me-active-badge" hidden>Active</span>
@@ -352,33 +341,21 @@
                 <span class="chart-avatar chart-avatar--sm" id="chart-switcher-avatar" aria-hidden="true" hidden></span>
                 <select class="chart-switcher__select" id="chart-switcher-select"></select>
               </div>
-              <button type="button" class="o-btn o-btn--secondary" id="me-edit-chart" hidden>Edit Chart</button>
-              <button type="button" class="o-btn o-btn--primary" id="me-add-chart">Add Chart</button>
+              <button type="button" class="o-btn o-btn--utility" id="me-edit-chart" hidden>Edit</button>
+              <button type="button" class="o-btn o-btn--primary" id="me-add-chart">Add chart</button>
             </div>
           </div>
 
           <div class="me-status" id="me-status" role="status" aria-live="polite">Loading your chart…</div>
 
-          <!-- ── The reading ──────────────────────────────────────────────
-               Section order matters and is deliberate: identity and how the
-               chart was calculated, then the limitation notice, then the
-               reading itself from broadest (Big Three, patterns) to most
-               specific (placements, aspects, houses), then the raw data.
-
-               The limitation notice sits HIGH rather than at the position it
-               occupies in the brief's list. A caution about what a chart
-               cannot show has to be read before the chart, not after it —
-               placed last it qualifies content the reader has already
-               finished and believed. -->
           <div class="me-grid" id="me-reading" data-state="idle">
-
             <!-- 1. Chart identity and calculation context -->
             <article class="me-panel me-panel--overview" id="me-overview"></article>
 
-            <!-- 7. Birth-time limitations (rendered high; see note above) -->
+            <!-- 2. Birth-time limitations (rendered high; see note above) -->
             <div class="me-panel--bare" id="chart-limitation"></div>
 
-            <!-- 2. Big Three -->
+            <!-- 3. Big Three -->
             <section class="me-panel me-panel--placements" id="section-bigthree" aria-labelledby="me-chart-keys-title">
               <div class="me-section-head">
                 <h2 id="me-chart-keys-title">Sun, Moon, and Rising</h2>
@@ -387,37 +364,37 @@
               <div class="reading-grid reading-grid--keys" id="bigthree"></div>
             </section>
 
-            <!-- 3. Chart patterns -->
+            <!-- 4. Chart patterns -->
             <section class="me-panel" id="section-patterns" aria-labelledby="me-patterns-title">
               <div class="me-section-head">
-                <h2 id="me-patterns-title">Chart Patterns</h2>
+                <h2 id="me-patterns-title">Chart patterns</h2>
                 <p>What this chart emphasises overall, across every placement.</p>
               </div>
               <div id="chart-patterns"></div>
             </section>
 
-            <!-- 4. Planet placements -->
+            <!-- 5. Planet placements -->
             <section class="me-panel me-panel--placements" id="section-planets" aria-labelledby="me-planets-title">
               <div class="me-section-head">
-                <h2 id="me-planets-title">Planet Placements</h2>
+                <h2 id="me-planets-title">Planet placements</h2>
                 <p>Each planet describes one function, shaped by its sign and house.</p>
               </div>
               <div class="reading-grid reading-grid--planets" id="key-placements"></div>
             </section>
 
-            <!-- 5. Major aspects -->
+            <!-- 6. Major aspects -->
             <section class="me-panel" id="section-aspects" aria-labelledby="me-aspects-title">
               <div class="me-section-head">
-                <h2 id="me-aspects-title">Major Aspects</h2>
+                <h2 id="me-aspects-title">Major aspects</h2>
                 <p>How the planets in this chart relate to one another.</p>
               </div>
               <div id="chart-aspects"></div>
             </section>
 
-            <!-- 6. Houses and angles -->
+            <!-- 7. Houses and angles -->
             <section class="me-panel" id="section-houses" aria-labelledby="me-houses-title">
               <div class="me-section-head">
-                <h2 id="me-houses-title">Houses and Angles</h2>
+                <h2 id="me-houses-title">Houses and angles</h2>
                 <p>The areas of life the chart maps onto.</p>
               </div>
               <div id="chart-houses"></div>
@@ -426,98 +403,58 @@
             <!-- 8. Chart data and source information -->
             <section class="me-panel me-panel--advanced" id="section-data" aria-labelledby="me-advanced-title">
               <div class="me-section-head">
-                <h2 id="me-advanced-title">Chart Data</h2>
+                <h2 id="me-advanced-title">Chart data</h2>
                 <p>The calculated figures behind every reading above.</p>
               </div>
               <div id="chart-placements"></div>
             </section>
 
+            <!-- ── The people you have saved ─────────────────────────────
+                 Saved charts and Compatibility used to be two cards on a Tools
+                 page. They belong here: both are about the charts you keep, and
+                 comparing two of them is something you do while looking at
+                 them. -->
             <section class="me-panel me-panel--wide" aria-labelledby="me-saved-charts-title">
               <div class="me-section-head me-section-head--actions">
                 <div>
-                  <h2 id="me-saved-charts-title">Saved Charts</h2>
-                  <p>Manage your chart and the people or launch moments Orbit Axis remembers.</p>
+                  <h2 id="me-saved-charts-title">Saved charts</h2>
+                  <p>The people and launch moments Orbit Axis remembers for you.</p>
                 </div>
-                <button type="button" class="o-btn o-btn--secondary" id="me-saved-chart-add">Add Chart</button>
+                <button type="button" class="o-btn o-btn--utility" id="me-saved-chart-add">Add chart</button>
               </div>
               <div id="me-saved-charts-status" class="more-note">Restoring your session…</div>
               <div id="me-saved-charts-list" class="saved-charts-list me-saved-charts-list"></div>
+
+              <a class="o-row o-row--link compat-entry" href="#compatibility">
+                <span class="o-row__icon" data-icon="users"></span>
+                <span class="o-row__main">
+                  <span class="o-row__title">Compare two charts</span>
+                  <span class="o-row__sub">How your chart meets another, read for the relationship you saved it as.</span>
+                </span>
+              </a>
             </section>
           </div>
         </section>
 
-        <!-- ── Tools ────────────────────────────────────────────────────
-             One truthful destination for the things Orbit Axis can already do.
-             Nothing here is a placeholder: each card opens a working page.
-             Planned work is stated as a sentence, not as a button that does
-             nothing — a dead control reads as a bug, a sentence reads as a
-             roadmap. -->
-        <section class="workspace-panel" id="panel-tools" role="region" aria-labelledby="tools-title" hidden>
-          <div class="o-section-head">
-            <div class="o-section-head__text">
-              <h1 class="u-title" id="tools-title">Tools</h1>
-              <p class="u-caption">Everything Orbit Axis can do beyond your daily reading.</p>
-            </div>
-          </div>
-
-          <div class="tools-grid">
-            <article class="tool-card">
-              <h2>History</h2>
-              <p>Every daily reading Orbit Axis has written for you, newest first.</p>
-              <button class="o-btn o-btn--primary" type="button" data-goto="history">Open History</button>
-            </article>
-
-            <article class="tool-card">
-              <h2>Symbol Atlas</h2>
-              <p>What every glyph, sign, planet, and aspect in Orbit Axis means, in plain language.</p>
-              <button class="o-btn o-btn--primary" type="button" data-goto="symbol-atlas">Open Symbol Atlas</button>
-            </article>
-
-            <article class="tool-card">
-              <h2>Saved Charts</h2>
-              <p>Add, edit, and switch between the charts Orbit Axis remembers for you.</p>
-              <button class="o-btn o-btn--primary" type="button" data-goto="me">Open My Chart</button>
-            </article>
-
-            <article class="tool-card">
-              <h2>Compatibility</h2>
-              <p>
-                How your chart meets another saved chart, read for the relationship
-                you saved it as — partner, friend, or family.
-              </p>
-              <button class="o-btn o-btn--primary" type="button" data-goto="compatibility">Open Compatibility</button>
-            </article>
-
-            <article class="tool-card tool-card--planned">
-              <h2>More tools are on the way</h2>
-              <p>
-                A gratitude and dream journal, and reminders for the sky events that
-                matter to you, are both planned. They are not built yet, so Orbit Axis
-                does not pretend they are.
-              </p>
-            </article>
-          </div>
-        </section>
-
-        <!-- ── Compatibility ────────────────────────────────────────────
+        <!-- ══ COMPATIBILITY ═══════════════════════════════════════════════
              Two SAVED charts, compared. The relationship type stored on the
-             other chart decides which questions get asked of the same
-             astrology — see lib/compatibility/categories.js.
+             other chart decides which questions get asked of the same astrology
+             — see lib/compatibility/categories.js.
 
              Everything visible here is composed on the server. The browser
              renders sentences it was handed and writes none of its own, which
-             is the same rule the reading and the transits follow. -->
+             is the rule the reading and the transits follow too. -->
         <section class="workspace-panel" id="panel-compatibility" role="region" aria-labelledby="compatibility-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="compatibility-title">Compatibility</h1>
+              <h1 class="u-title" id="compatibility-title" tabindex="-1">Compatibility</h1>
               <p class="u-caption" id="compat-subtitle">How two saved charts meet.</p>
+            </div>
+            <div class="o-section-head__actions">
+              <a class="o-btn o-btn--utility" href="#me">Back to your chart</a>
             </div>
           </div>
 
-          <!-- Chart pickers. Both are ordinary selects: they work with a
-               keyboard, they work with a screen reader, and they need no
-               instructions. -->
           <div class="compat-pickers" id="compat-pickers" hidden>
             <div class="compat-picker">
               <label class="compat-picker__label" for="compat-subject">Your chart</label>
@@ -533,127 +470,239 @@
           </div>
 
           <!-- One live region for every state: loading, empty, refusal, error.
-               A person using a screen reader hears what happened without
-               hunting for where the text appeared. -->
+               Someone using a screen reader hears what happened without hunting
+               for where the text appeared. -->
           <div class="compat-status" id="compat-status" role="status" aria-live="polite"></div>
 
           <div id="compat-result" hidden></div>
         </section>
 
-        <!-- ── Tarot ────────────────────────────────────────────────── -->
-        <!-- Tarot panel lives in features/panels/tarot.html and is
-             injected at runtime only when ORBIT_FEATURE_TAROT is enabled.
-             It is deliberately outside public/ so it cannot ship. -->
+        <!-- ── Feature panels ───────────────────────────────────────────────
+             Tarot, Learn, and News live in features/panels/*.html and are
+             injected at runtime only when their flag is enabled. They are
+             deliberately outside public/ so they cannot ship. -->
 
-        <!-- ── Learn ────────────────────────────────────────────────── -->
-        <!-- Learn panel lives in features/panels/learn.html and is
-             injected at runtime only when ORBIT_FEATURE_LEARN is enabled.
-             It is deliberately outside public/ so it cannot ship. -->
-
-        <!-- ── News ─────────────────────────────────────────────────── -->
-        <!-- News panel lives in features/panels/news.html and is
-             injected at runtime only when ORBIT_FEATURE_NEWS is enabled.
-             It is deliberately outside public/ so it cannot ship. -->
-
-        <!-- ── More ─────────────────────────────────────────────────── -->
+        <!-- ══ YOU ═════════════════════════════════════════════════════════
+             Account, appearance, history, data, and the way out. Grouped
+             inset lists rather than a grid of cards: this is a settings
+             surface, and a settings surface should be scannable top to bottom
+             with one thing per row. -->
         <section class="workspace-panel" id="panel-more" role="region" aria-labelledby="more-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="more-title">More</h1>
-              <p class="u-caption">Your account, appearance, privacy, and support.</p>
+              <h1 class="u-title" id="more-title" tabindex="-1">You</h1>
+              <p class="u-caption">Your account, what Orbit Axis stores, and how it looks.</p>
             </div>
           </div>
 
-          <div class="more-grid">
-            <article class="more-card" id="account-card">
-              <h2>Account</h2>
-              <div class="o-kv"><span class="o-kv__k">Signed in as</span><span class="o-kv__v" id="account-email">Not signed in</span></div>
-              <div class="more-actions">
-                <button class="o-btn o-btn--secondary" type="button" id="account-export">Export my data</button>
-                <button class="o-btn o-btn--secondary" type="button" id="account-password-reset">Reset password</button>
-                <button class="o-btn o-btn--secondary" type="button" id="account-signout">Sign out</button>
-              </div>
-              <div class="auth-message" id="account-export-message" role="status" aria-live="polite" aria-atomic="true"></div>
-            </article>
+          <div class="more-stack">
+            <section class="more-section" id="account-card" aria-labelledby="you-account-title">
+              <h2 class="o-group__label" id="you-account-title">Account</h2>
 
-            <article class="more-card">
-              <h2>Appearance</h2>
-              <p>Choose light, dark, or match your device. Text size, contrast, and motion live here too.</p>
-              <div class="more-actions">
-                <button class="o-btn o-btn--primary" type="button" data-goto="settings">Open Settings</button>
-              </div>
-            </article>
-
-            <article class="more-card">
-              <h2>Your data</h2>
-              <!-- What is collected, why, where it lives, who can see it, and how
-                   to leave. Stated here as well as at the gate, because this is
-                   where someone comes looking for it. -->
-              <p class="more-note">
-                Orbit Axis stores your email, your birth date, birth time, and
-                birthplace, your saved charts, your active chart, your daily
-                readings and their history, and your display preferences.
-              </p>
-              <p class="more-note">
-                Birth details are needed to calculate your chart — the date places
-                the planets, the time places the houses and angles, and the
-                birthplace supplies the coordinates and timezone. Without a
-                reliable time, Orbit Axis leaves houses and angles out rather than
-                guessing at them.
-              </p>
-              <p class="more-note">
-                Your information is private to your account. It is not sold, and it
-                is not shared with advertisers or other users.
-              </p>
-              <p class="more-note">
-                Your chart, transits, moon phases, and daily readings are calculated
-                by Orbit Axis's own astronomy engine. They do not depend on
-                generative AI, and they keep working when AI is unavailable.
-              </p>
-              <p class="more-note">
-                You can download everything at any time, and deleting your account
-                removes all of it permanently.
-              </p>
-            </article>
-
-            <article class="more-card">
-              <h2>Privacy, terms, and support</h2>
-              <p>The full policies, how to get help, and where the source code lives.</p>
-              <p class="more-note legal-links">
-                <a href="/privacy">Privacy Policy</a> ·
-                <a href="/terms">Terms of Use</a> ·
-                <a href="/support">Support</a> ·
-                <a href="/source">Source code</a> ·
-                <a href="/account-deletion">About deletion</a>
-              </p>
-            </article>
-
-            <article class="more-card more-card--danger">
-              <!-- Destructive actions are separated from ordinary ones so
-                   "Delete account" is never adjacent to something harmless a
-                   person might be aiming for. -->
-              <div class="danger-zone" id="danger-zone">
-                <h2 class="danger-zone__title">Delete your account</h2>
-                <p class="danger-zone__body">
-                  This permanently removes your saved charts, birth details, daily
-                  readings, reading history, saved conversations, and preferences,
-                  and closes your account. It cannot be undone, and Orbit Axis
-                  cannot recover it for you.
-                </p>
-                <button class="o-btn o-btn--danger" type="button" id="account-delete-open">
-                  Delete account
+              <!-- This panel is reachable without an account now, which the
+                   rows below were never written for: signed out, they offered
+                   to sign you out of nothing, reset a password that does not
+                   exist, and — worst — permanently delete an account you have
+                   not got. renderAccount() swaps the two blocks. -->
+              <div class="o-group" id="account-signed-in" hidden>
+                <div class="o-row">
+                  <span class="o-row__icon" data-icon="user"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Signed in as</span>
+                  </span>
+                  <span class="o-row__value" id="account-email">Not signed in</span>
+                </div>
+                <button type="button" class="o-row o-row--link" id="account-password-reset">
+                  <span class="o-row__icon" data-icon="lock-key"></span>
+                  <span class="o-row__main"><span class="o-row__title">Reset password</span></span>
+                </button>
+                <button type="button" class="o-row o-row--link" id="account-signout">
+                  <span class="o-row__icon" data-icon="sign-out"></span>
+                  <span class="o-row__main"><span class="o-row__title">Sign out</span></span>
                 </button>
               </div>
-            </article>
+              <!-- Feedback for "Reset password" belongs BESIDE the button that
+                   causes it. It previously wrote into the export status line
+                   two sections further down, so pressing the button appeared to
+                   do nothing at all — the confirmation was real and off-screen.
+
+                   Hidden with the signed-in rows: it is the live region for a
+                   control that is not on the page when signed out, and a live
+                   region announcing for an absent button is worse than absent. -->
+              <div class="auth-message" id="account-password-message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+              <div class="account-offer" id="account-signed-out" hidden>
+                <p class="account-offer__lead">You're using Orbit Axis without an account. Today's sky, the Atlas, and every position are yours either way.</p>
+                <p class="account-offer__sub">An account adds the part that's about you: your birth chart, your daily reading, and your history — on every device.</p>
+                <button type="button" class="o-btn o-btn--primary" id="account-create">Create your chart — free</button>
+                <button type="button" class="linklike" id="account-signin">Already have an account?</button>
+              </div>
+            </section>
+
+            <section class="more-section" aria-labelledby="you-library-title">
+              <h2 class="o-group__label" id="you-library-title">Your readings</h2>
+              <div class="o-group">
+                <a class="o-row o-row--link" href="#history">
+                  <span class="o-row__icon" data-icon="clock-counter-clockwise"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Reading history</span>
+                    <span class="o-row__sub">Every daily reading Orbit Axis has written for you.</span>
+                  </span>
+                </a>
+                <a class="o-row o-row--link" href="#symbol-atlas">
+                  <span class="o-row__icon" data-icon="book-open-text"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Atlas</span>
+                    <span class="o-row__sub">What every glyph, sign, planet, and aspect means.</span>
+                  </span>
+                </a>
+                <a class="o-row o-row--link" href="#me">
+                  <span class="o-row__icon" data-icon="compass-rose"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Saved charts</span>
+                    <span class="o-row__sub">Add, edit, and switch between the charts you keep.</span>
+                  </span>
+                </a>
+              </div>
+            </section>
+
+            <section class="more-section" aria-labelledby="you-appearance-title">
+              <h2 class="o-group__label" id="you-appearance-title">Appearance</h2>
+              <div class="o-group">
+                <a class="o-row o-row--link" href="#settings">
+                  <span class="o-row__icon" data-icon="circle-half"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Theme, text size, and motion</span>
+                    <span class="o-row__sub">Saved on this device.</span>
+                  </span>
+                </a>
+              </div>
+            </section>
+
+            <section class="more-section" aria-labelledby="you-data-title">
+              <h2 class="o-group__label" id="you-data-title">Your data</h2>
+              <!-- Signed-in only: there is nothing to export without an
+                   account, and the request 401s. The privacy prose below stays
+                   visible either way — that is what someone came here to read. -->
+              <div class="o-group" id="account-export-group" hidden>
+                <button type="button" class="o-row o-row--link" id="account-export">
+                  <span class="o-row__icon" data-icon="download-simple"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Export everything</span>
+                    <span class="o-row__sub">A copy of your account, charts, and readings.</span>
+                  </span>
+                </button>
+              </div>
+              <div class="auth-message" id="account-export-message" role="status" aria-live="polite" aria-atomic="true"></div>
+              <!-- What is collected, why, where it lives, who can see it, and
+                   how to leave. Stated here as well as at the gate, because
+                   this is where someone comes looking for it. -->
+              <details class="o-expand more-details">
+                <summary class="o-expand__head">
+                  What Orbit Axis stores, and why
+                  <span class="o-expand__chevron" data-icon="caret-right"></span>
+                </summary>
+                <div class="o-expand__body">
+                  <p>
+                    Orbit Axis stores your email, your birth date, birth time, and
+                    birthplace, your saved charts, your active chart, your daily
+                    readings and their history, and your display preferences.
+                  </p>
+                  <p>
+                    Birth details are needed to calculate your chart — the date
+                    places the planets, the time places the houses and angles, and
+                    the birthplace supplies the coordinates and timezone. Without a
+                    reliable time, Orbit Axis leaves houses and angles out rather
+                    than guessing at them.
+                  </p>
+                  <p>
+                    Your information is private to your account. It is not sold, and
+                    it is not shared with advertisers or other users.
+                  </p>
+                  <p>
+                    Your chart, transits, moon phases, and daily readings are
+                    calculated by Orbit Axis's own astronomy engine. They do not
+                    depend on generative AI, and they keep working when AI is
+                    unavailable.
+                  </p>
+                  <p>
+                    You can download everything at any time, and deleting your
+                    account removes all of it permanently.
+                  </p>
+                </div>
+              </details>
+            </section>
+
+            <section class="more-section" aria-labelledby="you-legal-title">
+              <h2 class="o-group__label" id="you-legal-title">Privacy, terms, and support</h2>
+              <div class="o-group">
+                <a class="o-row o-row--link" href="/privacy">
+                  <span class="o-row__icon" data-icon="shield-check"></span>
+                  <span class="o-row__main"><span class="o-row__title">Privacy Policy</span></span>
+                </a>
+                <a class="o-row o-row--link" href="/terms">
+                  <span class="o-row__icon" data-icon="file-text"></span>
+                  <span class="o-row__main"><span class="o-row__title">Terms of Use</span></span>
+                </a>
+                <a class="o-row o-row--link" href="/support">
+                  <span class="o-row__icon" data-icon="lifebuoy"></span>
+                  <span class="o-row__main"><span class="o-row__title">Support</span></span>
+                </a>
+                <a class="o-row o-row--link" href="/source">
+                  <span class="o-row__icon" data-icon="code"></span>
+                  <span class="o-row__main"><span class="o-row__title">Source code</span></span>
+                </a>
+                <!-- A different origin, not a route here: the playground is
+                     served from the open-source engine repository. Absolute
+                     https means native-shell.js hands it to the system browser
+                     rather than replacing the app's WebView. -->
+                <a class="o-row o-row--link" href="https://orbit-axis-playground.vercel.app"
+                   target="_blank" rel="noopener noreferrer">
+                  <span class="o-row__icon" data-icon="code"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Engine playground</span>
+                    <span class="o-row__sub">The sky and any chart, computed in the open. No account.</span>
+                  </span>
+                </a>
+                <a class="o-row o-row--link" href="/account-deletion">
+                  <span class="o-row__icon" data-icon="info"></span>
+                  <span class="o-row__main"><span class="o-row__title">About deletion</span></span>
+                </a>
+              </div>
+            </section>
+
+            <!-- Destructive actions are separated from ordinary ones, so
+                 "Delete account" is never adjacent to something harmless a
+                 person might be aiming for. -->
+            <section class="more-section" id="danger-zone" aria-labelledby="you-danger-title">
+              <h2 class="o-group__label" id="you-danger-title">Danger zone</h2>
+              <div class="o-group">
+                <button type="button" class="o-row o-row--link o-row--danger" id="account-delete-open">
+                  <span class="o-row__icon" data-icon="trash"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Delete your account</span>
+                    <span class="o-row__sub">Permanently removes your charts, birth details, readings, and preferences. It cannot be undone.</span>
+                  </span>
+                </button>
+              </div>
+            </section>
+
+            <p class="u-fine more-disclaimer">
+              Orbit Axis offers symbolic reflection — never prediction, and never
+              medical, financial, or relationship advice.
+            </p>
           </div>
         </section>
 
-        <!-- ── History (fortune log) ────────────────────────────────── -->
+        <!-- ══ HISTORY ═════════════════════════════════════════════════════ -->
         <section class="workspace-panel" id="panel-history" role="region" aria-labelledby="history-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="history-title">History</h1>
-              <p class="u-meta">Your recent daily readings — the latest 30.</p>
+              <h1 class="u-title" id="history-title" tabindex="-1">Reading history</h1>
+              <p class="u-caption">Your recent daily readings — the latest 30.</p>
+            </div>
+            <div class="o-section-head__actions">
+              <a class="o-btn o-btn--utility" href="#more">Back to You</a>
             </div>
           </div>
           <div class="history-controls">
@@ -666,19 +715,21 @@
           <div id="history-body"><div class="axis-shimmer" style="height:120px"></div></div>
         </section>
 
-        <!-- ── Settings ─────────────────────────────────────────────── -->
+        <!-- ══ APPEARANCE ══════════════════════════════════════════════════ -->
         <section class="workspace-panel" id="panel-settings" role="region" aria-labelledby="settings-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="settings-title">Settings</h1>
+              <h1 class="u-title" id="settings-title" tabindex="-1">Appearance</h1>
               <p class="u-caption">How Orbit Axis looks and moves. Saved on this device.</p>
+            </div>
+            <div class="o-section-head__actions">
+              <a class="o-btn o-btn--utility" href="#more">Back to You</a>
             </div>
           </div>
 
-          <div class="grid-2">
-            <div class="o-card">
-              <div class="o-card-head"><h2 class="u-card-title">Appearance</h2></div>
-              <div class="o-panel">
+          <div class="more-stack">
+            <section class="more-section">
+              <div class="o-group settings-group">
                 <!-- Theme: three explicit choices with visible text labels. The
                      icons are decorative; the words are what is announced, and
                      what stays readable in forced-colors mode. System is the
@@ -687,15 +738,15 @@
                   <span class="setting-row__label" id="set-theme-label">Theme</span>
                   <div class="o-segment o-segment--theme" id="set-theme" role="group" aria-labelledby="set-theme-label">
                     <button type="button" data-value="system" aria-pressed="true">
-                      <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                      <span class="segment-icon" data-icon="monitor" aria-hidden="true"></span>
                       <span>System</span>
                     </button>
                     <button type="button" data-value="light" aria-pressed="false">
-                      <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+                      <span class="segment-icon" data-icon="sun" aria-hidden="true"></span>
                       <span>Light</span>
                     </button>
                     <button type="button" data-value="dark" aria-pressed="false">
-                      <svg class="segment-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                      <span class="segment-icon" data-icon="moon" aria-hidden="true"></span>
                       <span>Dark</span>
                     </button>
                   </div>
@@ -731,21 +782,29 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div class="stack-sm">
-              <div class="o-card">
-                <div class="o-card-head"><h2 class="u-card-title">About Orbit Axis</h2></div>
-                <p class="o-body u-muted" id="settings-disclaimer">Orbit Axis offers symbolic reflection — never prediction, and never medical, financial, or relationship advice.</p>
-                <p class="o-body u-muted">Your chart, transits, and daily readings are calculated from real astronomy, not guessed.</p>
-                <p class="more-note legal-links">
-                  <a href="/privacy">Privacy Policy</a> ·
-                  <a href="/terms">Terms of Use</a> ·
-                  <a href="/support">Support</a> ·
-                  <a href="/source">Source code</a>
-                </p>
+            <section class="more-section" aria-labelledby="settings-about-title">
+              <h2 class="o-group__label" id="settings-about-title">About Orbit Axis</h2>
+              <div class="o-group">
+                <div class="o-row">
+                  <span class="o-row__main">
+                    <span class="o-row__sub" id="settings-disclaimer">Orbit Axis offers symbolic reflection — never prediction, and never medical, financial, or relationship advice.</span>
+                  </span>
+                </div>
+                <div class="o-row">
+                  <span class="o-row__main">
+                    <span class="o-row__sub">Your chart, transits, and daily readings are calculated from real astronomy, not guessed.</span>
+                  </span>
+                </div>
               </div>
-            </div>
+              <p class="o-group__note legal-links">
+                <a href="/privacy">Privacy Policy</a> ·
+                <a href="/terms">Terms of Use</a> ·
+                <a href="/support">Support</a> ·
+                <a href="/source">Source code</a>
+              </p>
+            </section>
           </div>
         </section>
       </main>
@@ -766,14 +825,36 @@
   <div class="auth-gate" id="auth-gate" hidden role="dialog" aria-modal="true"
        aria-labelledby="auth-gate-title" aria-describedby="auth-gate-description">
     <div class="auth-card">
-      <div class="chat-orbit" aria-hidden="true"><span></span></div>
-      <div>
-        <h1 id="auth-gate-title">Welcome to Orbit Axis</h1>
-        <p id="auth-gate-description">Sign in to save charts, restore your active chart, and keep daily readings across devices.</p>
+      <div class="auth-mark" aria-hidden="true"><span></span></div>
+      <!-- Dismissible now, so it needs a way out that isn't the Escape key.
+           There is a working app behind this; trapping a mouse user in front of
+           a form they have decided against is how you lose the visit and the
+           account. -->
+      <button type="button" class="auth-close" id="auth-close" aria-label="Close">Not now</button>
+
+      <div class="auth-intro">
+        <!-- Both strings are replaced by openAuthGate() with copy for whatever
+             the visitor was reaching for. These are the defaults. -->
+        <h1 id="auth-gate-title">Make this about you</h1>
+        <p id="auth-gate-description">You're reading the sky everyone shares. Add your birth details and Orbit Axis reads today against the sky the day you were born.</p>
       </div>
-      <div class="auth-tabs" role="group" aria-label="Account action">
-        <button type="button" data-auth-mode="signin" aria-pressed="true">Sign in</button>
-        <button type="button" data-auth-mode="signup" aria-pressed="false">Create account</button>
+
+      <!-- What the account buys, before the fields that cost something to fill.
+           This is the half of the exchange the old gate never stated: it opened
+           with a password box and a privacy disclosure, so the only thing above
+           the fold was what we wanted from you. -->
+      <ul class="auth-benefits">
+        <li>Your birth chart, calculated from real astronomy — not a sun-sign horoscope</li>
+        <li>A daily reading written against your chart, in plain language</li>
+        <li>Free, no card. Your birth data is yours: export or delete it any time</li>
+      </ul>
+
+      <!-- Create account leads, and is the default tab: most people opening
+           this have no account yet, and a returning user recognises the tab
+           they need without being defaulted onto it. -->
+      <div class="auth-tabs o-segment o-segment--block" role="group" aria-label="Account action">
+        <button type="button" data-auth-mode="signup" aria-pressed="true">Create account</button>
+        <button type="button" data-auth-mode="signin" aria-pressed="false">Sign in</button>
       </div>
       <form id="auth-form" class="auth-form">
         <label for="auth-email">Email</label>
@@ -781,13 +862,13 @@
         <label for="auth-password">Password</label>
         <span class="password-row">
           <input type="password" id="auth-password" autocomplete="current-password" minlength="8" required />
-          <button type="button" id="auth-toggle-password" aria-label="Show password" aria-pressed="false">Show</button>
+          <button type="button" id="auth-toggle-password" class="o-btn o-btn--utility" aria-label="Show password" aria-pressed="false">Show</button>
         </span>
         <span id="auth-confirm-wrap" hidden>
           <label for="auth-confirm">Confirm password</label>
           <input type="password" id="auth-confirm" autocomplete="new-password" minlength="8" />
         </span>
-        <button type="submit" id="auth-submit">Sign in</button>
+        <button type="submit" id="auth-submit" class="o-btn o-btn--primary o-btn--block">Sign in</button>
         <!-- assertive, not polite: a failed sign-in is the one thing a screen
              reader user must not have to go hunting for. -->
         <div class="auth-message" id="auth-message" role="status" aria-live="assertive" aria-atomic="true"></div>
@@ -796,19 +877,28 @@
           <button type="button" class="linklike" id="auth-forgot">Forgot your password?</button>
         </p>
         <!-- Before any account or birth data is requested, say plainly what is
-             collected and where the full answers live. -->
-        <div class="auth-privacy" id="auth-privacy">
+             collected and where the full answers live.
+
+             Collapsed, not cut. Every word here is still one tap away and still
+             ahead of the submit button — but as a two-paragraph grey slab it was
+             the largest thing on a card whose headline had already fallen below
+             the fold, so the first impression of Orbit Axis was a disclosure
+             about data collection. The promise is a good one; it converts as a
+             benefit in the list above and reassures as detail down here. It does
+             not need to be both, twice. -->
+        <details class="auth-privacy" id="auth-privacy">
+          <summary class="auth-footnote">What Orbit Axis collects, and what it never does</summary>
           <p class="auth-footnote">
             Orbit Axis asks for your birth date, birth time, and birthplace so it
             can calculate your chart. That data is stored in your account, is
             visible only to you, and is never sold or shared. You can export it
-            or delete your account at any time, from Settings.
+            or delete your account at any time.
           </p>
           <p class="auth-footnote">
             Your chart, transits, and daily readings are calculated by Orbit's
             own astronomy engine. They do not depend on generative AI.
           </p>
-        </div>
+        </details>
         <p class="auth-footnote auth-legal">
           By continuing you agree to the <a href="/terms">Terms of Use</a>
           and <a href="/privacy">Privacy Policy</a>.
@@ -823,12 +913,11 @@
        This is what stops the setup form from flashing at a returning user. -->
   <div class="startup-gate" id="startup-gate">
     <div class="startup-card">
-      <div class="chat-orbit" aria-hidden="true"><span></span></div>
+      <div class="auth-mark" aria-hidden="true"><span></span></div>
       <p class="startup-status" id="startup-status" role="status">Restoring your Orbit…</p>
     </div>
   </div>
 
-  <!-- ── Chart modal (create / edit) ──────────────────────────────────── -->
   <!-- ── Permanent account deletion ──────────────────────────────────────
        Typed confirmation rather than a yes/no button: this is irreversible,
        and the friction is the point. The submit button stays disabled until
@@ -839,9 +928,7 @@
     <div class="o-modal__panel o-modal__panel--danger">
       <header class="o-modal__head">
         <h2 id="delete-account-title">Delete your account permanently</h2>
-        <button type="button" class="o-modal__close" id="delete-account-close" aria-label="Close">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
+        <button type="button" class="o-modal__close" id="delete-account-close" aria-label="Close" data-icon="x"></button>
       </header>
       <div class="o-modal__body">
         <p id="delete-account-body">
@@ -863,7 +950,7 @@
                  aria-describedby="delete-account-hint" />
           <p class="field-hint" id="delete-account-hint">Exactly DELETE, in capitals.</p>
           <div class="o-modal__actions">
-            <button type="button" class="o-btn o-btn--secondary" id="delete-account-cancel">Cancel</button>
+            <button type="button" class="o-btn o-btn--ghost" id="delete-account-cancel">Cancel</button>
             <button type="submit" class="o-btn o-btn--danger" id="delete-account-submit" disabled>
               Delete my account
             </button>
@@ -890,9 +977,7 @@
     <div class="o-modal__panel o-modal__panel--form">
       <header class="o-modal__head">
         <h2 id="chart-modal-title">Add a saved chart</h2>
-        <button type="button" class="o-modal__close" id="chart-modal-close" aria-label="Close">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
+        <button type="button" class="o-modal__close" id="chart-modal-close" aria-label="Close" data-icon="x"></button>
       </header>
 
       <div class="o-modal__scroll">
@@ -976,9 +1061,7 @@
                      role="combobox" aria-expanded="false" aria-autocomplete="list"
                      aria-controls="cm-place-results"
                      aria-describedby="cm-place-status cm-place-error" />
-              <button type="button" class="place-clear" id="cm-place-clear" hidden aria-label="Clear birthplace">
-                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-              </button>
+              <button type="button" class="place-clear" id="cm-place-clear" hidden aria-label="Clear birthplace" data-icon="x"></button>
               <ul class="place-results" id="cm-place-results" role="listbox" aria-label="Birthplace results" hidden></ul>
             </div>
             <p class="chart-field__help" id="cm-place-help">Pick a result from the list — Orbit Axis needs the coordinates and timezone.</p>
@@ -1000,7 +1083,7 @@
               <option value="friend">Friend</option>
               <option value="partner">Partner</option>
             </select>
-            <p class="chart-field__help" id="cm-relationship-help">How this chart relates to you. Only you can see it. Relationship type helps Orbit tailor compatibility in a future update.</p>
+            <p class="chart-field__help" id="cm-relationship-help">How this chart relates to you. Only you can see it. Relationship type decides which questions Compatibility asks.</p>
             <p class="chart-field__error" id="cm-relationship-error" role="alert" hidden></p>
           </div>
 
@@ -1015,7 +1098,7 @@
               <div class="identity-avatar-actions">
                 <input type="file" id="cm-avatar-file" accept="image/jpeg,image/png,image/webp" aria-describedby="cm-avatar-note" />
                 <p class="chart-field__help" id="cm-avatar-note" role="status" aria-live="polite"></p>
-                <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="cm-avatar-discard" hidden>Discard picture</button>
+                <button type="button" class="o-btn o-btn--utility" id="cm-avatar-discard" hidden>Discard picture</button>
               </div>
             </div>
           </div>
@@ -1028,7 +1111,7 @@
           </p>
 
           <div class="o-modal__actions">
-            <button type="button" class="o-btn o-btn--secondary" id="chart-modal-cancel">Cancel</button>
+            <button type="button" class="o-btn o-btn--ghost" id="chart-modal-cancel">Cancel</button>
             <button type="submit" class="o-btn o-btn--primary" id="chart-modal-save">Save chart</button>
           </div>
           <p class="chart-form-hint" id="chart-modal-hint" role="status" aria-live="polite"></p>
@@ -1047,7 +1130,7 @@
     <div class="o-modal__panel o-modal__panel--form">
       <header class="o-modal__head">
         <h2 id="identity-modal-title">Chart identity</h2>
-        <button type="button" class="o-modal__close" id="identity-modal-close" aria-label="Close">&times;</button>
+        <button type="button" class="o-modal__close" id="identity-modal-close" aria-label="Close" data-icon="x"></button>
       </header>
       <form id="identity-form" novalidate>
         <p class="chart-form__intro" id="identity-modal-intro">
@@ -1064,7 +1147,7 @@
             <input type="file" id="identity-file" accept="image/jpeg,image/png,image/webp"
               aria-describedby="identity-avatar-note" />
             <p class="chart-field__help" id="identity-avatar-note" role="status" aria-live="polite"></p>
-            <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="identity-avatar-remove" hidden>Remove picture</button>
+            <button type="button" class="o-btn o-btn--utility" id="identity-avatar-remove" hidden>Remove picture</button>
           </div>
         </div>
 
@@ -1085,7 +1168,7 @@
           </select>
           <p class="chart-field__help" id="identity-relationship-help">
             How this chart relates to you. Only you can see it.
-            Relationship type helps Orbit tailor compatibility in a future update.
+            Relationship type decides which questions Compatibility asks.
           </p>
           <!-- Legacy stored values ('other', 'public_figure', or nothing) are
                named here honestly rather than mapped onto a current choice. -->
@@ -1093,13 +1176,13 @@
         </div>
 
         <div class="o-modal__actions">
-          <button type="button" class="o-btn o-btn--secondary" id="identity-cancel">Cancel</button>
+          <button type="button" class="o-btn o-btn--ghost" id="identity-cancel">Cancel</button>
           <button type="submit" class="o-btn o-btn--primary" id="identity-save">Save</button>
         </div>
         <p class="chart-form-hint" id="identity-hint" role="status" aria-live="polite"></p>
         <div class="chart-form-error" id="identity-error" role="alert" tabindex="-1" hidden>
           <span id="identity-error-text"></span>
-          <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="identity-retry" hidden>Retry</button>
+          <button type="button" class="o-btn o-btn--utility" id="identity-retry" hidden>Retry</button>
         </div>
       </form>
     </div>
@@ -1114,7 +1197,7 @@
       </header>
       <p class="o-modal__body" id="confirm-modal-body"></p>
       <div class="o-modal__actions">
-        <button type="button" class="o-btn o-btn--secondary" id="confirm-cancel">Cancel</button>
+        <button type="button" class="o-btn o-btn--ghost" id="confirm-cancel">Cancel</button>
         <button type="button" class="o-btn o-btn--danger" id="confirm-accept">Delete</button>
       </div>
     </div>
@@ -1123,6 +1206,16 @@
   <!-- ── Toast region ─────────────────────────────────────────────────── -->
   <div class="o-toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- Committed with an inert same-origin default, and rewritten locally by
+       `npm run app:config` so the native container knows which origin to call.
+       Committed rather than gitignored because scripts/build.js fails when this
+       document references a file that does not exist, and a browser must never
+       depend on a step only a native build runs. Not a module: it assigns a
+       global that platform.js reads, and must be evaluated before it. -->
+  <script src="/app-config.js"></script>
+  <!-- Container behavior: safe areas, external links, hardware back, resume.
+       Every part of it is a no-op in a browser. -->
+  <script src="/native-shell.js" type="module"></script>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

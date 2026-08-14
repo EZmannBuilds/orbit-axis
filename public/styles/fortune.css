@@ -3,34 +3,45 @@
    One clear primary card; progressive disclosure for detail.
    ========================================================================== */
 
+/* The reading itself. It used to carry an indigo gradient wash and a coloured
+   glow, which made the most important card on the surface the one that looked
+   least like the rest of the app. It is now the same card as everything else —
+   it leads because it is FIRST and WIDEST, not because it is tinted. */
 .fortune-card {
-  background:
-    linear-gradient(180deg, color-mix(in oklab, var(--axis-indigo) 12%, var(--color-surface-elevated)) 0%,
-                    var(--color-surface-elevated) 60%);
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 22%, var(--color-border));
-  border-radius: var(--axis-radius-lg);
-  padding: 24px;
-  margin-bottom: 18px;
-  box-shadow: var(--axis-glow-soft) color-mix(in oklab, var(--axis-indigo) 22%, transparent);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--density-card-pad);
 }
-.fortune-card h2 { font-size: 22px; margin-bottom: 2px; }
-.fortune-card__sub { color: var(--color-secondary); font-size: 14px; margin-bottom: 16px; }
+.fortune-card h2 {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  margin-bottom: 2px;
+}
+.fortune-card__sub {
+  color: var(--color-muted);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  margin-bottom: var(--space-md);
+}
 
 /* Why this reading — progressive disclosure */
 .why-reading { margin-top: 16px; }
 .why-reading > summary {
-  cursor: pointer; color: var(--axis-blue); font-size: 15px; font-weight: 600;
+  cursor: pointer; color: var(--color-accent); font-size: var(--type-body); font-weight: var(--weight-semibold);
   list-style: none; padding: 10px 0; display: flex; align-items: center; gap: 8px;
 }
 .why-reading > summary::-webkit-details-marker { display: none; }
-.why-reading > summary::before { content: "✦"; color: var(--axis-lavender); }
-.why-reading[open] > summary::before { content: "✧"; }
+.why-reading > summary::before { content: "+"; color: var(--color-accent); font-weight: var(--weight-semibold); }
+.why-reading[open] > summary::before { content: "−"; }
 .why-list { list-style: none; display: grid; gap: 8px; padding: 8px 0 4px; }
 .why-list li {
   display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--color-primary);
   padding: 8px 12px; background: var(--color-surface-sunken, #12152a); border-radius: 10px;
 }
-.why-list li::before { content: "•"; color: var(--axis-lavender); }
+.why-list li::before { content: "•"; color: var(--color-accent); }
 
 /* ── Current Sky: unified panel, procedural Moon clipping the top-left ────── */
 .current-sky {
@@ -40,7 +51,7 @@
 .current-sky__moon {
   flex: 0 0 auto; width: 132px; height: 132px;
   margin: -34px 0 -10px -34px; /* pulls the disc into the panel's top-left corner */
-  filter: drop-shadow(var(--axis-glow-soft) color-mix(in oklab, var(--axis-lavender) 45%, transparent));
+  filter: drop-shadow(var(--shadow-object));
 }
 .current-sky-moon__svg { width: 100%; height: 100%; display: block; }
 .current-sky__body { flex: 1 1 auto; min-width: 0; }
@@ -53,7 +64,7 @@
   background: var(--color-surface-sunken, #12152a); border: 1px solid var(--color-border);
   border-radius: 999px; padding: 7px 13px; font-size: 14px; color: var(--color-primary);
 }
-.sky-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--axis-blue); }
+.sky-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); }
 .sky-chip.retro .dot { background: var(--color-warning, #f0c674); }
 .sky-next-events {
   display: flex; flex-wrap: wrap; gap: 8px 18px;
@@ -62,7 +73,7 @@
 .sky-next-events strong { color: var(--color-primary); font-weight: 650; }
 .sky-theme { margin-top: 12px; font-size: 15px; color: var(--color-primary); line-height: 1.5; }
 .sky-advanced { margin-top: 10px; }
-.sky-advanced summary { cursor: pointer; color: var(--axis-blue); font-size: 14px; }
+.sky-advanced summary { cursor: pointer; color: var(--color-accent); font-size: var(--type-caption); }
 
 .current-sky__personal {
   margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-border);
@@ -355,7 +366,7 @@
 .sky-highlights { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .sky-highlight {
   display: grid; gap: 4px; padding: 12px 14px;
-  border: 1px solid var(--color-border); border-radius: 8px;
+  border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
   background: var(--color-surface-elevated); min-width: 0;
 }
 .sky-highlight__label { font-weight: 600; }
@@ -367,11 +378,11 @@
 .tech-sky__more > summary {
   display: flex; align-items: center; gap: 8px; min-height: 44px;
   cursor: pointer; font-size: 14px; font-weight: 600;
-  color: var(--axis-lavender, inherit); list-style: none;
+  color: var(--color-accent); list-style: none;
 }
 .tech-sky__more > summary::-webkit-details-marker { display: none; }
-.tech-sky__more > summary::before { content: "＋"; font-weight: 700; }
-.tech-sky__more[open] > summary::before { content: "－"; }
+.tech-sky__more > summary::before { content: "+"; font-weight: var(--weight-semibold); }
+.tech-sky__more[open] > summary::before { content: "\2212"; }
 .tech-sky__more > summary:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
 .tech-sky__body { display: grid; gap: 12px; padding-top: 8px; }
 .tech-sky__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; margin: 0; }
@@ -387,7 +398,7 @@
   border: 1px solid var(--color-border); border-radius: 8px;
   background: var(--color-surface-elevated); text-decoration: none; color: inherit;
 }
-.axis-explore__link:hover { border-color: color-mix(in oklab, var(--axis-lavender, #8f8fd9) 45%, var(--color-border)); }
+.axis-explore__link:hover { border-color: var(--color-border-strong); background: var(--color-surface-hover); }
 .axis-explore__link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .axis-explore__label { font-weight: 600; }
 .axis-explore__help { font-size: 13px; color: var(--color-secondary); }

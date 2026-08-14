@@ -1,0 +1,150 @@
+/* Orbit Axis :: container corrections (Update 1.1.1)
+   ---------------------------------------------------------------------------
+   Everything a WebView on a phone needs that a desktop browser does not. Kept
+   in one file on purpose: these rules exist because of the container, not
+   because of the design, and a future update that drops the iOS target should
+   be able to delete this file and lose nothing else.
+
+   Nothing here is scoped to the native app alone. A phone browser has the same
+   thumbs and the same notch, so the corrections are keyed to the CAPABILITY
+   (`pointer: coarse`) rather than to Capacitor. The web version gets the same
+   improvement, which is the point of shipping one application.
+   ========================================================================= */
+
+/* ── Touch targets ─────────────────────────────────────────────────────────
+   Measured at 375px before this rule: the .o-btn family rendered at 38px and
+   the Settings segmented controls at 23px. Apple's minimum is 44pt and the
+   WCAG 2.5.8 minimum is 24px; the segmented controls failed both.
+
+   Applied at the primitive rather than per screen. There were 16 undersized
+   controls on More alone, and fixing them individually would be a redesign
+   that drifts the moment someone adds the seventeenth.
+
+   Two conditions, either of which is enough. `pointer: coarse` is the real
+   signal — a phone or tablet, at any width. The 900px breakpoint is the one
+   navigation.css already uses to switch to the phone bottom bar, so the two
+   agree about what "phone layout" means; it also makes this rule reachable in
+   a desktop browser at 375px, which is the only way it can actually be
+   verified rather than asserted. */
+@media (pointer: coarse), (max-width: 900px) {
+  .o-btn,
+  .o-segment button,
+  .auth-tabs button,
+  .rail__link,
+  .linklike {
+    min-height: 44px;
+  }
+
+  /* Segmented controls are a row of small labels inside one pill. Padding
+     alone would make the pill taller than its container, so the track grows
+     with them. */
+  .o-segment {
+    align-items: stretch;
+  }
+  .o-segment button {
+    padding-block: 0;
+  }
+
+  /* Icon-only controls need width as well as height. */
+  .o-modal__close,
+  .gate-dismiss {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* orbit-axis.css line 186 sets `#panel-home button, #panel-history button
+     { min-height: 40px }`. An id selector outranks any class rule no matter
+     how late it loads, so the class rules above lost silently on exactly the
+     two screens a phone user opens first.
+
+     Matched rather than escalated: the same id specificity, not !important,
+     so this stays overridable by anything more specific later. Forms inside
+     those panels are included because their submit buttons carry no class at
+     all — "See today's reading" is a bare <button> in .chart-form. */
+  #panel-home button,
+  #panel-history button,
+  #panel-home .chart-form button,
+  #panel-more .account-panel button {
+    min-height: 44px;
+  }
+
+  /* .o-btn--sm sets an explicit `height`, which a min-height alone does not
+     always win against once flex sizing is involved. */
+  .o-btn.o-btn--sm {
+    height: auto;
+    min-height: 44px;
+  }
+}
+
+/* ── Safe areas ────────────────────────────────────────────────────────────
+   navigation.css has always padded the phone bottom bar with
+   env(safe-area-inset-bottom), but index.html lacked `viewport-fit=cover`, so
+   those insets resolved to 0 and the padding silently did nothing — on a
+   notched browser as much as in the app. The meta tag is the actual fix; what
+   follows covers the surfaces navigation.css does not.
+
+   env() is safe in every browser Orbit supports: where there is no notch it
+   resolves to 0, which is the correct answer. */
+.auth-gate,
+.startup-gate {
+  padding-top: max(22px, env(safe-area-inset-top));
+  padding-bottom: max(22px, env(safe-area-inset-bottom));
+}
+
+.o-modal__panel {
+  margin-top: env(safe-area-inset-top);
+  margin-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── Keyboard ──────────────────────────────────────────────────────────────
+   The WebView resizes when the keyboard opens, but a fixed bottom bar does
+   not know that on its own and ends up underneath it. native-shell.js
+   publishes the height; this consumes it. The variable defaults to 0px so the
+   rule is inert in a browser, where nothing sets it. */
+:root {
+  --orbit-keyboard-inset: 0px;
+}
+
+.keyboard-open .rail {
+  transform: translateY(calc(-1 * var(--orbit-keyboard-inset)));
+}
+
+/* A bottom bar floating above the keyboard is worse than no bottom bar: it
+   covers the field being typed into. Hidden while typing, restored on close. */
+@media (max-width: 900px) {
+  .keyboard-open .rail {
+    display: none;
+  }
+  .keyboard-open .workspace {
+    padding-bottom: var(--orbit-keyboard-inset);
+  }
+}
+
+/* ── Native container only ─────────────────────────────────────────────────
+   The few rules that genuinely must not apply to a browser. */
+
+/* A WebView has no URL bar to reveal by overscrolling, so rubber-banding the
+   whole document just exposes the background and looks broken. Individual
+   scrollers keep their own momentum. */
+.is-native-app,
+.is-native-app body {
+  overscroll-behavior-y: none;
+}
+
+/* Long-press on a WebView pops the system callout menu over ordinary UI.
+   Text that a person may legitimately want to copy keeps it. */
+.is-native-app .rail,
+.is-native-app .o-btn,
+.is-native-app .o-segment {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────
+   Stated here as well because the keyboard transform above is new motion. */
+@media (prefers-reduced-motion: reduce) {
+  .keyboard-open .rail {
+    transition: none;
+  }
+}

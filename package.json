@@ -12,12 +12,19 @@
     "dev:local": "node scripts/dev-local.js",
     "env:check": "node scripts/env-check.js",
     "env:check:production": "node scripts/env-check.js --production",
-    "lint": "node --check server.js && node --check api/*.js && node --check lib/*.js && node --check lib/auth/*.js && node --check lib/env/*.js && node --check lib/server/*.js && node --check lib/deploy/*.js && node --check lib/api/*.js && node --check lib/api/v1/*.js && node --check lib/api/v1/*/*.js && node --check lib/local-llm/*.js && node --check lib/astro/*.js && node --check lib/astro/runtime/*.js && node --check lib/charts/*.js && node --check lib/compatibility/*.js && node --check lib/symbol-atlas/*.js && node --check public/symbol-atlas/*.js && node --check lib/fortune/*.js && node --check lib/interpretation/*.js && node --check lib/ask-orbit/*.js && node --check lib/locations/*.js && node --check public/app.js && node --check public/moon-phase.js && node --check public/chart-identity.js && node --check public/avatar-normalize.js && node --check public/chart-avatar-limits.js && node --check public/startup-state.js && node --check scripts/*.js",
+    "lint": "node --check server.js && node --check api/*.js && node --check lib/*.js && node --check lib/auth/*.js && node --check lib/env/*.js && node --check lib/server/*.js && node --check lib/deploy/*.js && node --check lib/api/*.js && node --check lib/api/v1/*.js && node --check lib/api/v1/*/*.js && node --check lib/local-llm/*.js && node --check lib/astro/*.js && node --check lib/astro/runtime/*.js && node --check lib/charts/*.js && node --check lib/entitlements/*.js && node --check lib/compatibility/*.js && node --check lib/symbol-atlas/*.js && node --check public/symbol-atlas/*.js && node --check lib/fortune/*.js && node --check lib/interpretation/*.js && node --check lib/ask-orbit/*.js && node --check lib/locations/*.js && node --check public/app.js && node --check public/icons.js && node --check public/moon-phase.js && node --check public/chart-identity.js && node --check public/avatar-normalize.js && node --check public/chart-avatar-limits.js && node --check public/startup-state.js && node --check public/platform.js && node --check public/native-shell.js && node --check public/app-config.js && node --check scripts/*.js",
     "typecheck": "npm run lint",
     "pretest": "node scripts/test-guard.js",
     "test": "node --test",
     "test:local": "node scripts/test-local.js",
     "build": "node scripts/build.js",
+    "icons:build": "node scripts/build-icons.js",
+    "app:icon": "node scripts/build-app-icon.js",
+    "app:config": "node scripts/app-config.js",
+    "app:check": "node scripts/app-check.js",
+    "app:build": "npm run build && npm run app:check && npx cap sync ios",
+    "app:sync": "npx cap sync ios",
+    "app:ios": "npx cap open ios",
     "deploy:check": "node scripts/deploy-check.js",
     "orbit:runtime:check": "node scripts/runtime-check.js",
     "supabase:start:orbit": "supabase start",
@@ -41,11 +48,20 @@
     "engine:check": "node scripts/engine-sync.js --check"
   },
   "dependencies": {
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/browser": "^7.0.5",
+    "@capacitor/core": "^7.6.8",
+    "@capacitor/ios": "^7.6.8",
+    "@capacitor/keyboard": "^7.0.6",
+    "@capacitor/status-bar": "^7.0.6",
+    "@ezmannbuilds/orbit-axis-engine": "file:vendor/orbit-axis-engine",
     "luxon": "^3.7.2",
-    "tz-lookup": "^6.1.25",
-    "@ezmannbuilds/orbit-axis-engine": "file:vendor/orbit-axis-engine"
+    "tz-lookup": "^6.1.25"
   },
   "engines": {
     "node": "22.x"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.6.8"
   }
 }

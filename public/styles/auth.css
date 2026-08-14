@@ -1,306 +1,253 @@
+/* ============================================================================
+   Orbit Axis — the sign-in gate and the startup gate
+   ----------------------------------------------------------------------------
+   The first screen anyone sees, so it is the screen that has to be most plainly
+   itself: a card, one action, and the plain sentences about birth data that
+   belong before the data is asked for rather than after.
+
+   The gradient-filled submit button and the indigo wash behind the card are
+   gone with the rest of the decorative layer. One accent, one pill.
+   ========================================================================== */
+
 .auth-gate {
   position: fixed;
   inset: 0;
   z-index: 100;
   display: grid;
   place-items: center;
-  padding: 22px;
-  background:
-    radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--axis-indigo) 22%, transparent), transparent 36%),
-    rgba(5, 8, 20, 0.86);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: var(--space-lg);
+  background: color-mix(in oklab, var(--color-bg) 88%, transparent);
+  backdrop-filter: var(--blur-frosted);
+  -webkit-backdrop-filter: var(--blur-frosted);
+  /* The gate scrolls rather than clipping at 200% zoom, on a short phone in
+     landscape, or simply once the privacy explanation made the card taller.
+     BOTH properties are needed: `align-content` positions the single grid
+     track, `align-items` positions the card inside it, and `safe` is what makes
+     each fall back to start-alignment exactly when centring would push content
+     out of reach. */
+  overflow-y: auto;
+  align-content: safe center;
+  align-items: safe center;
 }
-
-.auth-gate[hidden] {
-  display: none;
-}
+.auth-gate[hidden] { display: none; }
 
 .auth-card {
-  width: min(460px, 100%);
+  position: relative; /* anchors .auth-close */
+  width: min(440px, 100%);
+  max-height: none;
   display: grid;
-  gap: 18px;
+  gap: var(--space-md);
   justify-items: center;
-  padding: 24px;
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 24%, var(--color-border));
-  border-radius: 22px;
-  background: color-mix(in oklab, var(--color-surface-elevated) 92%, var(--axis-indigo) 8%);
-  box-shadow: 0 24px 80px rgba(0,0,0,0.38);
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+.auth-card--wide { width: min(760px, 100%); justify-items: stretch; position: relative; }
+
+/* The mark itself lives in orbit-mark.css — one definition shared with the
+   password-reset page, so the app and its standalone pages cannot end up with
+   two logos. */
+
+.auth-intro { display: grid; gap: var(--space-xs); }
+.auth-card h1 {
+  font-family: var(--font-display);
+  font-size: var(--type-section);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-display);
+  color: var(--color-primary);
+  text-align: center;
+}
+.auth-card p {
+  color: var(--color-secondary);
+  text-align: center;
+  font-size: var(--type-body);
+  line-height: var(--lead-body);
 }
 
-.auth-card--wide {
-  width: min(760px, 100%);
-  justify-items: stretch;
-  position: relative;
+/* ── The way out ─────────────────────────────────────────────────────────────
+   The gate is dismissible now, so a mouse user needs a control and not just the
+   Escape key. "Not now" rather than an X: it declines an offer, which is what
+   this actually is, and it says the offer will still be there. */
+.auth-close {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  padding: var(--space-xxs) var(--space-xs);
+  min-height: 44px;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-secondary);
+  font-size: var(--type-fine);
+  cursor: pointer;
 }
+.auth-close:hover { color: var(--color-primary); }
+
+/* ── What the account buys ───────────────────────────────────────────────────
+   The half of the exchange the old gate never showed. Left-aligned against the
+   centred headline on purpose: a list is read down its left edge, and centring
+   these three lines turned them into decoration. */
+.auth-benefits {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--space-xs);
+}
+.auth-benefits li {
+  position: relative;
+  padding-left: calc(var(--space-md) + 2px);
+  text-align: left;
+  font-size: var(--type-fine);
+  line-height: 1.5;
+  color: var(--color-secondary);
+}
+.auth-benefits li::before {
+  content: "";
+  position: absolute;
+  left: var(--space-xs);
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent, currentColor);
+}
+
+/* The mode switch is the segmented control, not a bespoke pair of buttons. */
+.auth-tabs { width: 100%; }
+
+.auth-form { width: 100%; display: grid; gap: var(--space-sm); }
+
+/* Labels are separate elements associated by `for`, rather than wrapping their
+   input. A wrapping label reads its whole subtree as the accessible name, so
+   the "Show"/"Hide" button inside the password row became part of the field's
+   name — "Password Show" — for every screen reader user. */
+.auth-form > label,
+#auth-confirm-wrap label {
+  justify-self: start;
+  margin-bottom: calc(var(--space-xs) * -1);
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+}
+
+.password-row { display: grid; grid-template-columns: 1fr auto; gap: var(--space-xs); }
+/* Fixed width so the row does not reflow between "Show" and "Hide", and so the
+   field beside it keeps a predictable size. 68px + the gap fits beside the
+   input at 375px, so the row stays one row. */
+.password-row button { min-width: 68px; min-height: 44px; }
+
+/* The confirm-password pair is one grid child so `hidden` still hides both. */
+#auth-confirm-wrap { display: grid; gap: var(--space-xxs); }
+#auth-confirm-wrap[hidden] { display: none; }
+
+#auth-submit { margin-top: var(--space-xs); }
+
+/* Status text carries values the layout did not choose: a download filename, a
+   message forwarded from the server. Without a wrapping rule one long unbroken
+   token widens the whole page — measured at 375px, where a long filename pushed
+   the layout viewport to 921px. `anywhere` rather than `break-word` so the break
+   is allowed to count toward the intrinsic width, which is what actually stops
+   the expansion. */
+.auth-message {
+  min-height: 20px;
+  color: var(--color-accent);
+  font-size: var(--type-caption);
+  text-align: center;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* What is collected and why, before it is asked for — now behind a summary.
+   Still ahead of the submit button, still in full, but no longer the largest
+   element on a card whose headline had fallen below the fold. */
+.auth-privacy {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+.auth-privacy p { margin: var(--space-xs) 0 0; font-size: var(--type-fine); line-height: 1.55; text-align: left; }
+.auth-privacy summary {
+  cursor: pointer;
+  text-align: left;
+  color: var(--color-secondary);
+  /* A 14px line of text is not a 44px target. The padding is what makes this
+     tappable; the negative margin keeps it from inflating the collapsed box,
+     which is the whole reason this became a summary. */
+  padding: var(--space-xs) 0;
+  margin: calc(var(--space-xs) * -1) 0;
+}
+/* --focus-ring is a box-shadow value in tokens.css, not an outline one. */
+.auth-privacy summary:focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: var(--radius-xs); }
+
+/* ── Terms, privacy, and support ─────────────────────────────────────────────
+   These sit inline inside a sentence, where a 44px-tall box would break the
+   line. WCAG 2.5.8 exempts links in a block of text for exactly that reason —
+   but "exempt" is not the same as "comfortable on a phone", and these are the
+   links a person taps when they want to know what happens to their birth data.
+
+   So the tap area grows with padding, and the LINE HEIGHT grows with it. The
+   obvious version of this — padding plus a cancelling negative margin, to keep
+   the sentence compact — was measured at 375px and rejected: it produced 43px
+   boxes whose tops were 19px apart, so "Terms of Use" overlapped the two links
+   on the line below. Overlapping targets are worse than small ones, because a
+   confident tap lands on the wrong document.
+
+   The sentence is allowed to get taller. It is four lines of small print on the
+   one screen where being unhurried is the point. */
+.auth-legal { margin-top: var(--space-xxs); font-size: var(--type-fine); line-height: 3.8; }
+/* Vertical padding only. Horizontal padding is what makes a comma or a full
+   stop appear to float away from the link it follows. */
+.auth-legal a { display: inline-block; padding: 13px 1px; border-radius: var(--radius-xs); }
+
+.auth-form .linklike { min-height: 44px; padding: 0 var(--space-xs); }
 
 /* Dismiss control on the onboarding gate. */
 .gate-dismiss {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
+  position: absolute; top: var(--space-sm); right: var(--space-sm);
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
   color: var(--color-secondary);
-  background: var(--color-surface-sunken);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
+  background: var(--color-surface-ghost);
+  border: 0;
+  border-radius: var(--radius-full);
   cursor: pointer;
 }
-.gate-dismiss svg { width: 16px; height: 16px; }
+.gate-dismiss svg { width: 18px; height: 18px; }
 .gate-dismiss:hover { color: var(--color-primary); }
+.gate-dismiss:active { transform: scale(var(--press-scale)); }
 
 /* ── Startup gate ───────────────────────────────────────────────────────────
-   Shown from first paint until auth + saved charts resolve, so a returning user
-   never sees the chart-setup form flash. */
+   Shown from first paint until auth and the saved-chart request resolve, so a
+   returning user never sees the chart-setup form flash. */
 .startup-gate {
   position: fixed;
   inset: 0;
   z-index: 120;
   display: grid;
   place-items: center;
-  padding: 22px;
-  background:
-    radial-gradient(circle at 50% 0%, color-mix(in oklab, var(--axis-indigo) 22%, transparent), transparent 36%),
-    rgba(5, 8, 20, 0.92);
+  padding: var(--space-lg);
+  background: var(--color-bg);
 }
 .startup-gate[hidden] { display: none; }
-
-.startup-card {
-  display: grid;
-  gap: 16px;
-  justify-items: center;
-  text-align: center;
-}
-.startup-status {
-  color: var(--color-secondary);
-  font-size: 15px;
-}
-.startup-gate .startup-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.auth-card h1 {
-  color: var(--color-primary);
-  text-align: center;
-}
-
-.auth-card p {
-  color: var(--color-secondary);
-  text-align: center;
-  line-height: 1.55;
-}
-
-.auth-tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  width: 100%;
-  padding: 4px;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface-sunken);
-}
-
-.auth-tabs button,
-.auth-form button {
-  border: 0;
-  border-radius: 999px;
-  padding: 10px 14px;
-  color: var(--color-secondary);
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
-}
-
-.auth-tabs button[aria-pressed="true"],
-.auth-form button[type="submit"] {
-  color: #081024;
-  background: linear-gradient(135deg, var(--axis-blue), var(--axis-indigo));
-  font-weight: 700;
-}
-
-/* Light mode uses the deep end of the same hues, so the gradient is now dark
-   enough that near-black text on it fails contrast. White passes on both. */
-:root[data-theme="light"] .auth-tabs button[aria-pressed="true"],
-:root[data-theme="light"] .auth-form button[type="submit"] {
-  color: #ffffff;
-}
-
-.auth-form {
-  width: 100%;
-  display: grid;
-  gap: 12px;
-}
-
-.auth-form label {
-  display: grid;
-  gap: 6px;
-  color: var(--color-secondary);
-  font-size: 14px;
-}
-
-.auth-form input {
-  width: 100%;
-  min-height: 46px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  color: var(--color-primary);
-  background: var(--color-surface-sunken);
-  padding: 10px 12px;
-  font: inherit;
-}
-
-.password-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-}
-
-.password-row button {
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  color: var(--color-primary);
-  background: var(--color-surface-elevated);
-  /* Fixed width so the row does not reflow between "Show" and "Hide", and so
-     the field beside it keeps a predictable size. */
-  min-width: 68px;
-  min-height: 44px;
-  padding: 0 10px;
-}
-
-/* Status text carries values the layout did not choose: a download filename,
-   a message forwarded from the server. Without a wrapping rule one long
-   unbroken token widens the whole page — measured at 375px, where a long
-   filename pushed the layout viewport to 921px. `anywhere` rather than
-   `break-word` so the break is allowed to count toward the intrinsic width,
-   which is what actually stops the expansion. */
-.auth-message {
-  min-height: 20px;
-  color: var(--axis-lavender);
-  font-size: 14px;
-  text-align: center;
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
+.startup-card { display: grid; gap: var(--space-md); justify-items: center; text-align: center; }
+.startup-status { color: var(--color-muted); font-size: var(--type-caption); }
+.startup-gate .startup-actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; justify-content: center; }
 
 @media (max-width: 560px) {
-  .auth-gate { padding: 14px; }
-  .auth-card { padding: 18px; }
-  /* Dev Update 1.3 dropped "Show" onto its own full-width row here, which read
-     as a second, unlabelled button under the password field. 68px + the gap
-     fits beside the input at 375px, so the row stays one row. */
+  .auth-gate { padding: var(--space-sm); }
+  .auth-card { padding: var(--space-lg) var(--space-md); }
 }
 
-/* Terms and privacy, shown on the sign-in card because that is where an account
-   is created and the agreement actually happens. */
-.auth-legal { margin-top: 0.35rem; font-size: 0.78rem; line-height: 1.5; }
-.auth-legal a { color: var(--accent, #8b9cf5); text-decoration: underline; text-underline-offset: 2px; }
-.auth-legal a:focus-visible { outline: 2px solid var(--accent, #8b9cf5); outline-offset: 3px; border-radius: 3px; }
+/* The shell keeps its layout while inert; it must not become interactive again
+   through a stray pointer event. */
+.app-shell[inert] { pointer-events: none; user-select: none; }
 
-/* ── Dev Update 1.2 :: accessible authentication gate ───────────────────────
-   Labels are separate elements associated by `for`, rather than wrapping their
-   input. A wrapping label reads its whole subtree as the accessible name, so
-   the "Show"/"Hide" button inside the password row became part of the field's
-   name — "Password Show" — for every screen reader user. */
-.auth-form > label {
-  justify-self: start;
-  margin-bottom: -6px;
-  color: var(--color-secondary);
-  font-size: 14px;
-}
-
-/* The confirm-password pair is one grid child so `hidden` still hides both. */
-#auth-confirm-wrap {
-  display: grid;
-  gap: 6px;
-}
-#auth-confirm-wrap[hidden] { display: none; }
-#auth-confirm-wrap label { color: var(--color-secondary); font-size: 14px; }
-
-/* 44px minimum for every interactive target in the gate, at every width. */
-.auth-tabs button,
-.auth-form button,
-.password-row button {
-  min-height: 44px;
-}
-
-.auth-form .linklike {
-  min-height: 44px;
-  padding: 0 8px;
-  color: var(--axis-lavender);
-  background: none;
-  border: 0;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-  font: inherit;
-}
-
-/* Privacy, Terms, and Support sit inline inside a sentence, where a 44px-tall
-   box would break the line. WCAG 2.5.8 exempts links in a block of text for
-   exactly that reason — but "exempt" is not the same as "comfortable on a
-   phone", and these are the links a person taps when they want to know what
-   happens to their birth data.
-
-   The tap area therefore grows with padding, and the LINE HEIGHT grows with
-   it. The obvious version of this trick — padding plus a cancelling negative
-   margin, to keep the sentence compact — was measured at 375px and rejected:
-   it produced 43px boxes whose tops were 19px apart, so "Terms of Use"
-   overlapped the two links on the line below it. Overlapping targets are worse
-   than small ones, because a confident tap lands on the wrong document.
-
-   So the sentence is allowed to get taller. It is four lines of small print on
-   the one screen where being unhurried is the point. */
-.auth-legal {
-  line-height: 3.8;
-}
-/* Vertical padding only. Horizontal padding is what makes a comma or a full
-   stop appear to float away from the link it follows — the target is already
-   tall enough, and these links are wide enough on their own. */
-.auth-legal a {
-  display: inline-block;
-  padding: 13px 1px;
-  border-radius: 6px;
-}
-
-/* What is collected and why, before it is asked for. */
-.auth-privacy {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background: var(--color-surface-sunken);
-}
-.auth-privacy p { margin: 0 0 8px; font-size: 0.78rem; line-height: 1.55; }
-.auth-privacy p:last-child { margin-bottom: 0; }
-
-/* The gate scrolls rather than clipping at 200% zoom, on a short phone in
-   landscape, or simply once the privacy explanation made the card taller.
-   Without this the top of the card overflows above the viewport and cannot be
-   scrolled back to — measured at 1280x720: the card was 813px tall in a 720px
-   container and its first 115px were unreachable.
-
-   BOTH properties are needed. `align-content` positions the single grid track;
-   `align-items` positions the card inside it, and left at the `place-items:
-   center` inherited from the base rule it re-centres the overflow straight
-   back off-screen. `safe` is what makes each fall back to start-alignment
-   exactly when centring would push content out of reach. */
-.auth-gate {
-  overflow-y: auto;
-  align-content: safe center;
-  align-items: safe center;
-}
-.auth-card { max-height: none; }
-
-/* The shell keeps its layout while inert; it must not become interactive
-   again through a stray pointer event. */
-.app-shell[inert] {
-  pointer-events: none;
-  user-select: none;
+@media (forced-colors: active) {
+  .auth-card, .auth-privacy { border: 1px solid CanvasText; }
 }

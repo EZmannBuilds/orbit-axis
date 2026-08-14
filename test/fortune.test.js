@@ -224,3 +224,112 @@ test("a stored fortune from before the redesign still renders", () => {
   assert.equal(present.length, 3, "the remaining readings should still be usable");
   assert.ok(asStored.factors?.length, "factors survive for Technical Sky");
 });
+
+// ── The banks themselves, exhaustively (fortune-v2) ─────────────────────────
+//
+// The composed-output tests above sample a few skies, which only ever exercise
+// the phrases those particular seeds select. Expanding the banks from a handful
+// of lines to ~130 made that gap real: a forbidden word could sit in a line
+// nobody's seed picks for months and ship without a single failing test.
+//
+// These read every authored string in the engine.
+
+import { allAuthoredPhrases, reviewPhrases } from "../lib/fortune/engine.js";
+import { oneReadingPerDate } from "../lib/fortune/service.js";
+
+test("no authored phrase anywhere uses technical wording", () => {
+  const phrases = allAuthoredPhrases();
+  assert.ok(phrases.length > 100, `expected an expanded bank, found ${phrases.length}`);
+
+  for (const phrase of phrases) {
+    for (const term of TECHNICAL_TERMS) {
+      assert.ok(!new RegExp(`\\b${term}\\b`, "i").test(phrase),
+        `"${term}" appears in an authored phrase — the plain half must not use it.\n  ${phrase}`);
+    }
+  }
+});
+
+test("every review-branch line still carries the practical advice", () => {
+  // The retrograde branch may not name the planet, so the ONLY thing making it
+  // useful is that it says what to actually do. A line that lost that would
+  // pass the no-technical-wording rule while saying nothing at all.
+  for (const phrase of reviewPhrases()) {
+    assert.match(phrase.toLowerCase(), /messages|plans|details|confirm|second look/,
+      `a review line carries no practical advice: ${phrase}`);
+  }
+});
+
+test("no authored phrase promises an outcome", () => {
+  // Rule 2 of the bank: conditions and invitations, never predictions.
+  const PROMISES = [
+    /\byou will\b/i, /\bwill definitely\b/i, /\bguaranteed\b/i,
+    /\bis certain\b/i, /\bmust happen\b/i, /\byou'll get\b/i,
+  ];
+  for (const phrase of allAuthoredPhrases()) {
+    for (const pattern of PROMISES) {
+      assert.ok(!pattern.test(phrase), `a phrase promises an outcome: ${phrase}`);
+    }
+  }
+});
+
+test("expanding the banks actually widened the output", () => {
+  // Guards against a bank that grew while composition still picks from a fixed
+  // slice of it — more copy that nobody ever sees.
+  const moods = new Set();
+  const watches = new Set();
+  // BOTH watch-out branches. The default fixture has Mercury retrograde, so
+  // sampling it alone only ever exercises the five review lines — the first
+  // version of this test asserted eight and failed for that reason, which was
+  // the test being wrong rather than the banks being narrow.
+  const skies = [SKY, { ...SKY, retrogrades: [] }];
+  for (let day = 1; day <= 28; day += 1) {
+    const localDate = `2026-09-${String(day).padStart(2, "0")}`;
+    for (const chartId of ["chart-a", "chart-b", "chart-c"]) {
+      for (const sky of skies) {
+        const f = fortune({ localDate, chartId, sky });
+        moods.add(f.mood);
+        watches.add(f.watch_out);
+      }
+    }
+  }
+  assert.ok(moods.size >= 12, `only ${moods.size} distinct moods across the sample`);
+  assert.ok(watches.size >= 8, `only ${watches.size} distinct watch-outs across the sample`);
+});
+
+// ── One reading per day, across an engine-version change ────────────────────
+
+test("history shows a date once, even when two engine versions stored it", () => {
+  // getFortune() looks up by (profile, date, VERSION); listHistory does not
+  // filter by version. So bumping the engine gives a recomposed date a second
+  // row, and History would show the same day twice with different words —
+  // which reads as the app inventing readings.
+  const rows = [
+    { fortune_date: "2026-09-02", fortune_engine_version: "fortune-v1", created_at: "2026-09-02T10:00:00Z", mood: "old" },
+    { fortune_date: "2026-09-02", fortune_engine_version: "fortune-v2", created_at: "2026-09-02T11:00:00Z", mood: "new" },
+    { fortune_date: "2026-09-01", fortune_engine_version: "fortune-v1", created_at: "2026-09-01T10:00:00Z", mood: "older" },
+  ];
+  const kept = oneReadingPerDate(rows);
+  assert.equal(kept.length, 2, "one row per date");
+  assert.equal(kept[0].fortune_date, "2026-09-02", "newest date first");
+  assert.equal(kept[0].mood, "new", "the newer row wins");
+  assert.equal(kept[1].mood, "older", "untouched dates keep their original wording");
+});
+
+test("the newer row wins by version when timestamps are missing or equal", () => {
+  const kept = oneReadingPerDate([
+    { fortune_date: "2026-09-02", fortune_engine_version: "fortune-v1", mood: "old" },
+    { fortune_date: "2026-09-02", fortune_engine_version: "fortune-v2", mood: "new" },
+  ]);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].mood, "new");
+});
+
+test("a row without a date is kept, not silently dropped", () => {
+  // Dropping it would turn a data problem into the appearance of lost history.
+  const kept = oneReadingPerDate([
+    { fortune_date: "2026-09-02", mood: "a" },
+    { mood: "orphan" },
+  ]);
+  assert.equal(kept.length, 2);
+  assert.ok(kept.some((r) => r.mood === "orphan"));
+});

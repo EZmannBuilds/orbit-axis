@@ -1,7 +1,12 @@
 /* ============================================================================
-   Orbit Design System — Base
-   Reset, root typography, and the primitive typographic helpers. Everything
-   here reads exclusively from tokens.css.
+   Orbit Axis — Base
+   ----------------------------------------------------------------------------
+   Reset, root typography, and the typographic helpers every surface composes
+   from. Reads exclusively from tokens.css.
+
+   The type helpers below ARE the hierarchy. A screen that needs a size not on
+   this ladder is a screen that has not decided what it is saying — so there is
+   no escape hatch here, on purpose.
    ========================================================================== */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -11,25 +16,32 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Radios, checkboxes, and range thumbs are painted by the browser, not by
+     this stylesheet — left alone they keep the platform's own accent (a blue
+     dot on macOS) and become the one interactive colour the system did not
+     choose. This is the only way to reach them. */
+  accent-color: var(--color-accent);
 }
 
 body {
   background: var(--color-bg);
   color: var(--color-secondary);
-  font-family: var(--font-sans);
-  font-size: var(--text-body);
-  line-height: var(--leading-normal);
+  font-family: var(--font-text);
+  font-size: var(--type-body);
+  line-height: var(--lead-body);
+  letter-spacing: var(--track-body);
   font-weight: var(--weight-regular);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Media never forces horizontal scroll. */
 img, svg, canvas { max-width: 100%; }
 
-/* Consistent, visible focus for keyboard users only. */
+/* Keyboard focus only. The ring is Focus Blue at 2px with a canvas-coloured
+   gap, so it stays visible on a card, on a tile, and over imagery alike. */
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
@@ -39,96 +51,162 @@ img, svg, canvas { max-width: 100%; }
 
 ::selection { background: var(--color-accent-soft); color: var(--color-primary); }
 
-/* Custom, unobtrusive scrollbars. */
 * { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
 *::-webkit-scrollbar { width: 10px; height: 10px; }
 *::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-pill);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
 *::-webkit-scrollbar-track { background: transparent; }
 
-/* ── Typography helpers — the Orbit type hierarchy ────────────────────────
-   Prefer these classes over ad-hoc font-size declarations so every screen
-   shares one scale. */
-.u-display {
-  font-size: var(--text-display);
-  font-weight: var(--weight-bold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
+/* ── The type ladder ──────────────────────────────────────────────────────
+   Display sizes are SF Pro Display at weight 600 with negative tracking; body
+   and below are SF Pro Text. That boundary is what makes headlines read tight
+   and paragraphs read open, and it does not bend. */
+
+.u-hero {
+  font-family: var(--font-display);
+  font-size: var(--type-hero);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lead-hero);
+  letter-spacing: var(--track-hero);
   color: var(--color-primary);
-  font-variant-numeric: tabular-nums;
+}
+.u-display {
+  font-family: var(--font-display);
+  font-size: var(--type-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lead-display);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
+}
+.u-section {
+  font-family: var(--font-display);
+  font-size: var(--type-section);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lead-display);
+  letter-spacing: var(--track-display);
+  color: var(--color-primary);
 }
 .u-title {
-  font-size: var(--text-title);
+  font-family: var(--font-display);
+  font-size: var(--type-lead);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-tight);
+  line-height: var(--lead-tight);
+  letter-spacing: var(--track-display);
   color: var(--color-primary);
 }
-.u-heading {
-  font-size: var(--text-heading);
+/* The rare weight 300. An airy lead paragraph, and nothing else. */
+.u-lead {
+  font-family: var(--font-text);
+  font-size: var(--type-lead-airy);
+  font-weight: var(--weight-light);
+  line-height: var(--lead-airy);
+  letter-spacing: var(--track-none);
+  color: var(--color-secondary);
+}
+.u-heading,
+.u-tagline {
+  font-family: var(--font-display);
+  font-size: var(--type-tagline);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
+  line-height: var(--lead-tight);
+  letter-spacing: var(--track-display);
   color: var(--color-primary);
 }
 .u-card-title {
-  font-size: var(--text-card-title);
+  font-family: var(--font-text);
+  font-size: var(--type-body);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-snug);
+  line-height: var(--lead-snug);
+  letter-spacing: var(--track-body);
   color: var(--color-primary);
 }
 .u-body {
-  font-size: var(--text-body);
+  font-size: var(--type-body);
+  line-height: var(--lead-body);
+  letter-spacing: var(--track-body);
   color: var(--color-secondary);
 }
 .u-caption {
-  font-size: var(--text-caption);
+  font-size: var(--type-caption);
+  line-height: var(--lead-body);
+  letter-spacing: var(--track-caption);
   color: var(--color-muted);
-  line-height: var(--leading-snug);
 }
 .u-meta {
-  font-size: var(--text-meta);
+  font-size: var(--type-fine);
+  line-height: var(--lead-snug);
+  letter-spacing: var(--track-fine);
   color: var(--color-muted);
 }
-/* Eyebrow — the small all-caps label above a value or section. */
-.u-eyebrow {
-  font-size: var(--text-meta);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
+.u-fine {
+  font-size: var(--type-micro);
+  line-height: 1.3;
   color: var(--color-faint);
+}
+/* Eyebrow — the small caps label above a value. Tracking opens up here because
+   all-caps at 12px is unreadable without it. */
+.u-eyebrow {
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+/* Dense link columns — the footer and utility lists. The 2.41 leading is what
+   makes a tight column of links scannable rather than a wall. */
+.u-dense-link {
+  font-size: var(--type-body);
+  line-height: var(--lead-dense-link);
+  letter-spacing: var(--track-none);
 }
 .u-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .u-strong { color: var(--color-primary); font-weight: var(--weight-semibold); }
 .u-muted { color: var(--color-muted); }
 .u-tnum { font-variant-numeric: tabular-nums; }
 
+/* Headings inherit the ladder rather than the browser's, so an <h2> with no
+   class is still on-system instead of 1.5em bold Times. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-display);
+  line-height: var(--lead-tight);
+  color: var(--color-primary);
+}
+h1 { font-size: var(--type-section); }
+h2 { font-size: var(--type-tagline); }
+h3 { font-size: var(--type-body); letter-spacing: var(--track-body); }
+h4, h5, h6 { font-size: var(--type-body); letter-spacing: var(--track-body); }
+
 a { color: var(--color-accent); text-decoration: none; }
 a:hover { color: var(--color-accent-hover); }
+/* In running prose a link has to be identifiable without colour. Standalone
+   links in the interface opt out with .o-link-plain. */
+p a:not(.o-btn) { text-decoration: underline; text-underline-offset: 0.18em; }
 
-/* Screen-reader-only utility. */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-/* Skip link — first focusable element, for keyboard/screen-reader users. */
 .skip-link {
-  position: fixed; top: var(--space-2); left: var(--space-2); z-index: 100;
+  position: fixed; top: var(--space-xs); left: var(--space-xs); z-index: 100;
   transform: translateY(-150%);
-  background: var(--color-surface-elevated);
+  background: var(--color-surface);
   color: var(--color-primary);
   border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--type-caption);
   transition: transform var(--duration-fast) var(--ease-standard);
 }
 .skip-link:focus { transform: translateY(0); }
 
-/* ── Reduced motion — honor the OS preference AND the in-app toggle. ─────── */
+/* ── Reduced motion — the OS preference AND the in-app toggle. ───────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
@@ -144,4 +222,23 @@ a:hover { color: var(--color-accent-hover); }
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
+}
+
+/* ── Display type shrinks before it wraps ─────────────────────────────────
+   A 56px headline on a 375px phone is four words and a cliff. The ladder steps
+   down at the documented breakpoints instead. */
+@media (max-width: 1068px) {
+  :root { --type-hero: 2.5rem; }
+}
+@media (max-width: 640px) {
+  :root {
+    --type-hero: 2.125rem;
+    --type-display: 2rem;
+    --type-section: 1.75rem;
+    --type-lead: 1.5rem;
+    --type-lead-airy: 1.3125rem;
+  }
+}
+@media (max-width: 419px) {
+  :root { --type-hero: 1.75rem; --type-display: 1.625rem; }
 }

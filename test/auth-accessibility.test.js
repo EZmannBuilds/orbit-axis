@@ -21,6 +21,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const html = readFileSync(join(ROOT, "public", "index.html"), "utf8");
 const appJs = readFileSync(join(ROOT, "public", "app.js"), "utf8");
 const authCss = readFileSync(join(ROOT, "public", "styles", "auth.css"), "utf8");
+const componentsCss = readFileSync(join(ROOT, "public", "styles", "components.css"), "utf8");
 
 /** The opening tag of an element by id, which is where its attributes live. */
 function openingTag(id) {
@@ -103,20 +104,39 @@ test("focus restoration has a real target when the opener is gone", () => {
   assert.match(fn, /\.workspace-panel:not\(\[hidden\]\) h1/);
 });
 
-test("the gate is opened through the shared dialog machinery, not a raw toggle", () => {
-  assert.match(appJs, /function showAuthGate/);
+test("the prompt is opened through the shared dialog machinery, not a raw toggle", () => {
+  assert.match(appJs, /function openAuthGate/);
   assert.match(appJs, /function hideAuthGate/);
-  assert.match(appJs, /openModal\(gate, \{ dismissible: false/,
-    "the gate opens as a dialog so it inherits the focus trap and inertness");
+  assert.match(appJs, /openModal\(gate, \{ dismissible: true/,
+    "the prompt opens as a dialog so it inherits the focus trap and inertness");
   // Five scattered `hidden` assignments is how three of them forget the shell.
   const raw = appJs.match(/\$\("#auth-gate"\)\.hidden\s*=/g) || [];
-  assert.equal(raw.length, 0, "no code path may toggle the gate's `hidden` directly");
+  assert.equal(raw.length, 0, "no code path may toggle the prompt's `hidden` directly");
 });
 
-test("Escape does not dismiss the gate, because there is nothing behind it", () => {
-  assert.match(appJs, /dismissible = true/, "every other dialog stays dismissible by default");
+test("opening the app never demands an account", () => {
+  // The gate used to open on boot for every signed-out visitor, with the shell
+  // marked inert behind it. Today's sky is calculated from astronomy alone and
+  // needs no account, so a boot-time prompt is asking for a password before
+  // making a promise. This is the assertion that stops it coming back.
+  const fn = appJs.slice(
+    appJs.indexOf("async function restoreSession"),
+    appJs.indexOf("async function applySignedIn"),
+  );
+  assert.ok(fn.length > 0, "restoreSession must still exist to be checked");
+  assert.doesNotMatch(fn, /openAuthGate\(/,
+    "session restore may never open the account prompt — signed out is a usable state");
+});
+
+test("the prompt is dismissible, because there is now an app behind it", () => {
+  // The inverse of the old rule. Escape was refused when the gate covered an
+  // empty shell; it is honoured now that declining returns you to a working
+  // Today. Both halves of openModal's contract still have to be present.
+  assert.match(appJs, /dismissible = true/, "dialogs stay dismissible by default");
   assert.match(appJs, /if \(!dismissible\) return;/,
-    "the non-dismissible case must be handled before preventDefault and close");
+    "the non-dismissible case is still handled before preventDefault and close");
+  assert.doesNotMatch(appJs, /openModal\(gate, \{ dismissible: false/,
+    "nothing may reinstate a prompt the visitor cannot escape");
 });
 
 test("initial focus lands inside the gate once it is actually visible", () => {
@@ -134,18 +154,31 @@ test("Tab is trapped inside the open dialog", () => {
   assert.match(appJs, /document\.activeElement === last/);
 });
 
+// These two used to slice authCss from the literal string "Dev Update 1.2" —
+// a changelog reference in a comment. When the redesign rewrote the file the
+// comment went with it, the slice returned nothing, and the assertions passed
+// or failed on whether a comment survived rather than on whether the gate is
+// usable. They now assert against the whole stylesheet, on the rules
+// themselves.
 test("interaction targets in the gate meet the 44px minimum", () => {
-  const block = authCss.slice(authCss.indexOf("Dev Update 1.2"));
-  assert.match(block, /min-height: 44px/, "buttons in the gate declare a 44px minimum");
-  assert.match(block, /\.auth-form \.linklike[\s\S]*min-height: 44px/,
+  assert.match(authCss, /\.password-row button \{[\s\S]{0,300}min-height: 44px/,
+    "the password Show/Hide toggle is a real target");
+  assert.match(authCss, /\.auth-form \.linklike \{[\s\S]{0,200}min-height: 44px/,
     "the Forgot password control is a real target, not bare text");
+  // The submit and the mode switch come from the component library rather than
+  // from auth.css, so that is where their target size is guaranteed.
+  assert.match(componentsCss, /\.o-btn \{[\s\S]{0,600}min-height: var\(--control-height\)/);
+  assert.match(componentsCss, /\.o-segment button,\s*\n\.o-segment a \{[\s\S]{0,600}min-height: 36px/,
+    "segment targets are padded to a comfortable height inside a 44px group");
 });
 
 test("the gate scrolls rather than clipping at 200% zoom", () => {
-  const block = authCss.slice(authCss.indexOf("Dev Update 1.2"));
-  assert.match(block, /overflow-y: auto/, "a zoomed gate must be scrollable");
-  assert.match(block, /align-content: safe center/,
+  const gate = authCss.slice(authCss.indexOf(".auth-gate {"), authCss.indexOf(".auth-card {"));
+  assert.match(gate, /overflow-y: auto/, "a zoomed gate must be scrollable");
+  assert.match(gate, /align-content: safe center/,
     "safe centering keeps the top of the card reachable when it overflows");
+  assert.match(gate, /align-items: safe center/,
+    "both are needed: one positions the track, the other the card inside it");
 });
 
 test("privacy, terms, and support are reachable before any data is requested", () => {

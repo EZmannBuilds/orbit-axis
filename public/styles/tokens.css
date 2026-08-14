@@ -1,262 +1,473 @@
 /* ============================================================================
-   Orbit Design System — Design Tokens
+   Orbit Axis — Design Tokens
    ----------------------------------------------------------------------------
-   The single source of truth for every visual value in Orbit. Components never
-   hardcode colors, spacing, radius, type, motion, or elevation — they reference
-   these custom properties. Change a token here and it propagates everywhere.
+   The single source of truth for every visual value in the app. Nothing below
+   this layer hardcodes a colour, size, radius, or duration.
+
+   THE DESIGN LANGUAGE. Orbit Axis is built on Apple's marketing-surface system:
+   a near-invisible interface wrapped around one thing worth looking at. Its
+   rules, and why each one is here:
+
+     · ONE accent. Every "you can act on this" signal is Orbit Violet and nothing
+       else. There is no second brand colour, no zodiac palette, no sign colours.
+       Meaning comes from words; colour only says "this is interactive".
+     · Elevation is a surface change, not a shadow. Sections separate because the
+       canvas under them changes tone. The system has exactly ONE drop shadow and
+       it is reserved for the chart wheel and the moon — the two things that are
+       photographic objects rather than interface.
+     · Type carries the hierarchy. Display sizes are weight 600 with negative
+       tracking; body is 17px, not 16px, because the extra pixel is the
+       difference between reading and scanning.
+     · The weight ladder is 300 / 400 / 600 / 700. Weight 500 is deliberately
+       absent — mid-emphasis is 600, and having both makes every decision a
+       coin-flip that drifts.
+     · Radius is a grammar, not a taste. Pill = action. 18px = card. 8px = compact
+       utility. Nothing in between.
+
+   A NIGHT-SKY PRODUCT. Apple's own surfaces are light-dominant; Orbit Axis
+   defaults to dark, because it is an app about the night sky and most people
+   open it in the evening. That changes the palette, not the system: the same
+   single accent (in its on-dark variant), the same tile alternation, the same
+   type ladder, the same one shadow. Both themes are complete and neither is a
+   filter over the other.
 
    Sections:
-     1. Primitive scales  (raw values — rarely used directly by components)
-     2. Semantic colors   (Primary, Surface, Border, Accent, Success, …)
-     3. Typography        (family, size scale, weight, leading, tracking)
-     4. Spacing / layout  (4px base scale, radii, containers)
-     5. Elevation         (subtle, layered shadows)
-     6. Motion            (durations, easings)
-     7. Breakpoints       (documented; used by media queries)
-     8. Density modes     (compact / comfortable)
-     9. Themes            (dark default, light, high-contrast)
+     1. Palette primitives
+     2. Type ladder
+     3. Radius, spacing, layout
+     4. Elevation, blur, motion
+     5. Semantic colours — dark (default)
+     6. Semantic colours — light
+     7. Contrast, density, and text-size modes
    ========================================================================== */
 
 :root {
-  /* ── 1. Primitive scales ─────────────────────────────────────────────── */
-  /* Neutral ink ramp — the observatory's grayscale foundation. */
-  --ink-950: #0a0c0f;
-  --ink-900: #0e1116;
-  --ink-850: #12161c;
-  --ink-800: #171c23;
-  --ink-750: #1d232c;
-  --ink-700: #252c37;
-  --ink-600: #333c4a;
-  --ink-500: #4a5566;
-  --ink-400: #6c7787;
-  --ink-300: #8b95a5;
-  --ink-200: #aeb6c2;
-  --ink-100: #d4d9e1;
-  --ink-050: #eef0f4;
-  --ink-000: #ffffff;
+  /* ── 1. Palette primitives ─────────────────────────────────────────────────
+     Raw values. Components reference the semantic names in §5/§6, never these. */
 
-  /* Accent — a single, calm, precise blue. No mystical purples or golds. */
-  --blue-600: #2f6bff;
-  --blue-500: #4f83ff;
-  --blue-400: #6f9bff;
-  --blue-300: #9db9ff;
+  /* Orbit Violet — the one interactive colour, in its surface variants.
+     ONE HUE (254°), two lightnesses, because a single hex cannot serve both
+     themes: #4a28b8 scores 9.2:1 on white and 2.3:1 on black, so on the dark
+     canvas it would be a link nobody can read. The dark sibling is the same
+     hue lightened to 7.3:1 on black.
 
-  /* Signal colors — muted, informational, never decorative. */
-  --green-500: #3fb27f;
-  --green-400: #5cc794;
-  --amber-500: #d99b30;
-  --amber-400: #e6b25a;
-  --red-500: #e0645f;
-  --red-400: #ec8480;
+     The trade comes at the other end: a light violet FILL cannot carry white
+     text (2.9:1), so on dark the filled button takes near-black ink instead.
+     That is the same move as a pale button with dark text on iOS — the fill is
+     the loud part, the label just has to be legible on it. */
+  --violet-action: #4a28b8;      /* on light surfaces — 9.2:1 on white         */
+  --violet-focus: #5b34d6;       /* keyboard focus ring, one step brighter     */
+  --violet-sky: #a185ff;         /* on dark surfaces — 7.3:1 on black          */
+  --violet-sky-focus: #b9a3ff;
+  --violet-ink: #16082b;         /* text ON a light violet fill — 6.6:1        */
 
-  /* ── 3. Typography ───────────────────────────────────────────────────── */
-  --font-sans: "Inter", "SF Pro Text", ui-sans-serif, system-ui, -apple-system,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, "Cascadia Code",
-    "Roboto Mono", Menlo, Consolas, monospace;
+  /* Ink — light-surface text, from Apple's near-black through its mutes. */
+  --ink: #1d1d1f;                /* headlines and body: near-black, not black,
+                                    so the page reads photographic not printed */
+  --ink-80: #333333;
+  --ink-60: #56565a;
+  --ink-48: #7a7a7a;
 
-  /* Type scale — one consistent hierarchy across the whole app.
-     Emphasis comes from weight and size, not color. */
-  --text-display: 2.125rem;   /* 34px — hero numbers, empty-state headlines   */
-  --text-title: 1.5rem;       /* 24px — page / workspace title                */
-  --text-heading: 1.125rem;   /* 18px — section heading                       */
-  --text-card-title: 0.9375rem;/* 15px — card title                          */
-  --text-body: 0.875rem;      /* 14px — body copy                             */
-  --text-caption: 0.78125rem; /* 12.5px — captions, secondary meta            */
-  --text-meta: 0.6875rem;     /* 11px — labels, eyebrows, metadata            */
+  /* Paper — light surfaces. */
+  --paper-white: #ffffff;
+  --paper-parchment: #f5f5f7;    /* the signature Apple off-white              */
+  --paper-pearl: #fafafc;        /* ghost-button fill, lighter than parchment  */
+  --paper-hairline: #e0e0e0;
+  --paper-divider: #f0f0f0;
 
-  --leading-tight: 1.2;
-  --leading-snug: 1.4;
-  --leading-normal: 1.6;
+  /* Void — dark surfaces. The three tiles are micro-steps apart on purpose:
+     that half-tone difference is what separates two dark sections without a
+     border. */
+  --void-black: #000000;
+  --void-canvas: #08080a;
+  --void-tile-1: #272729;
+  --void-tile-2: #2a2a2c;
+  --void-tile-3: #252527;
+  --void-sunken: #161618;
 
+  /* On-dark text. */
+  --moon-white: #ffffff;
+  --moon-muted: #cccccc;
+  --moon-faint: #8a8a8e;
+
+  /* Signal colours. Informational only — they never become a second accent,
+     and nothing is clickable *because* it is green. */
+  --signal-green: #30d158;
+  --signal-green-dim: #248a3d;
+  --signal-amber: #ffd60a;
+  --signal-amber-dim: #a1730a;
+  --signal-red: #ff453a;
+  --signal-red-dim: #c9251c;
+
+  /* ── 2. Type ladder ───────────────────────────────────────────────────────
+     SF Pro on Apple platforms, Inter everywhere else. Inter is the closest
+     open-source match; it tracks slightly wider than SF Pro, which the negative
+     letter-spacing below already compensates for. */
+  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter",
+    system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter",
+    system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Astrological glyphs — ♈ ☉ ☿ △ and the rest.
+     These are ordinary Unicode, and several of them ALSO have emoji
+     presentations that Apple platforms prefer: left to the body font, "♈"
+     rendered as a purple-gradient tile from Apple Color Emoji, which in an
+     interface with exactly one accent colour was the loudest thing on the page.
+     A symbol-first stack resolves them before any emoji font is reached.
+     `font-variant-emoji: text` and a U+FE0E in the string are the other two
+     halves of the fix (see symbol-atlas.css and textGlyph() in app.js) — all
+     three are needed, because each is ignored by some browser. */
+  --font-glyph: "Apple Symbols", "Segoe UI Symbol", "Noto Sans Symbols 2",
+    "STIXGeneral", var(--font-text);
+
+  /* Sizes. Each display step pairs with its own tracking below — the tracking is
+     not optional, it is what produces the tight headline cadence. */
+  --type-hero: 3.5rem;        /* 56 — hero headline                            */
+  --type-display: 2.5rem;     /* 40 — tile headline                            */
+  --type-section: 2.125rem;   /* 34 — section head                             */
+  --type-lead: 1.75rem;       /* 28 — tile subcopy                             */
+  --type-lead-airy: 1.5rem;   /* 24 — airy lead paragraph (weight 300)         */
+  --type-tagline: 1.3125rem;  /* 21 — sub-tile tagline, sub-nav category       */
+  --type-body: 1.0625rem;     /* 17 — DEFAULT paragraph. Not 16.               */
+  --type-caption: 0.875rem;   /* 14 — captions, button labels                  */
+  --type-fine: 0.75rem;       /* 12 — fine print, nav links                    */
+  --type-micro: 0.625rem;     /* 10 — legal micro-copy                         */
+
+  --weight-light: 300;        /* rare, and deliberate — large airy reads only  */
   --weight-regular: 400;
-  --weight-medium: 500;
-  --weight-semibold: 600;
-  --weight-bold: 700;
+  --weight-semibold: 600;     /* every headline, every strong inline           */
+  --weight-bold: 700;         /* the tagline, when it needs more assertion     */
 
-  --tracking-tight: -0.01em;
-  --tracking-normal: 0;
-  --tracking-wide: 0.02em;
-  --tracking-caps: 0.08em;   /* eyebrows / all-caps labels */
+  --lead-hero: 1.07;
+  --lead-display: 1.1;
+  --lead-tight: 1.19;
+  --lead-snug: 1.29;
+  --lead-body: 1.47;          /* never tighten body below this                 */
+  --lead-airy: 1.5;
+  --lead-dense-link: 2.41;    /* footer / utility link columns — not a typo    */
 
-  /* ── 4. Spacing / layout ─────────────────────────────────────────────── */
-  /* 4px base grid. --space-N tokens are re-mapped by density mode below. */
-  --space-0: 0;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
+  --track-hero: -0.028em;
+  --track-display: -0.022em;
+  --track-body: -0.022em;     /* -0.374px at 17px                              */
+  --track-caption: -0.016em;
+  --track-fine: -0.01em;
+  --track-none: 0;
+  --track-caps: 0.06em;
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-full: 999px;
+  /* ── 3. Radius, spacing, layout ──────────────────────────────────────────
+     Four radii and a pill. Mixing grammars is what makes an interface look
+     assembled rather than designed, so there is deliberately nothing between
+     these steps. */
+  --radius-none: 0;
+  --radius-xs: 5px;    /* inline chips                                        */
+  --radius-sm: 8px;    /* compact utility buttons, inline imagery             */
+  --radius-md: 11px;   /* pearl capsules, inputs                              */
+  --radius-lg: 18px;   /* THE card radius                                     */
+  --radius-xl: 26px;   /* the one step above a card: sheets and hero tiles    */
+  --radius-pill: 9999px;
+  --radius-full: 9999px;
+
+  /* 8px base. The odd 17px step is Apple's own and matches the body size, which
+     is what keeps text-adjacent padding optically aligned with the text. */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 17px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-section: 80px;
 
   --border-width: 1px;
+  --container-max: 1100px;   /* text-heavy reading width, Apple's ~980 + gutter */
+  --container-wide: 1440px;  /* card grids                                      */
+  --rail-width: 260px;
+  --rail-width-collapsed: 76px;
+  --topbar-height: 52px;     /* the frosted sub-nav                             */
+  --tabbar-height: 56px;
+  --control-height: 44px;    /* the minimum touch target, everywhere            */
 
-  --rail-width: 236px;
-  --rail-width-collapsed: 68px;
-  --topbar-height: 60px;
-  --container-max: 1240px;
+  /* ── 4. Elevation, blur, motion ───────────────────────────────────────────
+     ONE shadow. It belongs to the chart wheel and the moon — objects that rest
+     on a surface. Cards, buttons, and text never take it: they separate by
+     surface tone and hairline instead. */
+  --shadow-object: 3px 5px 30px 0 rgba(0, 0, 0, 0.22);
+  --blur-frosted: saturate(180%) blur(20px);
 
-  /* ── 6. Motion ───────────────────────────────────────────────────────── */
   --duration-instant: 90ms;
   --duration-fast: 140ms;
   --duration-base: 200ms;
-  --duration-slow: 280ms;
-  --ease-standard: cubic-bezier(0.2, 0, 0.1, 1);
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
   --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
+  /* The system-wide press. Every button shrinks by this and nothing else. */
+  --press-scale: 0.95;
 
-  /* ── 7. Breakpoints (reference — used in @media queries) ─────────────────
-     --bp-sm:  640px   phone → large phone
-     --bp-md:  900px   tablet
-     --bp-lg:  1200px  laptop
-     --bp-xl:  1440px  desktop
-     (Custom properties can't drive @media, so these are documentation.)      */
+  /* Breakpoints, for reference — custom properties cannot drive @media:
+       480  small phone      640  phone        834  tablet portrait
+       1024 small desktop   1200 desktop      1440 content lock            */
 }
 
-/* ── 2 + 9. Semantic colors — DARK theme (default) ───────────────────────── */
+/* ── 5. Semantic colours — DARK (default) ──────────────────────────────────
+   Pure black canvas with tile-tone cards. The step from #000 to #272729 is the
+   entire elevation story on this theme; no shadow is involved. */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --color-bg: var(--ink-950);
-  --color-surface: var(--ink-850);
-  --color-surface-elevated: var(--ink-800);
-  --color-surface-sunken: var(--ink-900);
-  --color-surface-hover: var(--ink-750);
+  --color-bg: var(--void-black);
+  --color-canvas: var(--void-canvas);
+  --color-surface: var(--void-tile-1);
+  --color-surface-elevated: var(--void-tile-2);
+  --color-surface-sunken: var(--void-sunken);
+  --color-surface-hover: #303032;
+  --color-surface-ghost: rgba(255, 255, 255, 0.06);
 
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.15);
-  --color-border-focus: var(--blue-500);
+  --color-border: rgba(255, 255, 255, 0.11);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+  --color-border-focus: var(--violet-sky-focus);
 
-  --color-primary: var(--ink-050);        /* highest-emphasis text          */
-  --color-secondary: var(--ink-200);       /* body text                      */
-  --color-muted: var(--ink-400);           /* secondary / metadata           */
-  --color-faint: var(--ink-500);           /* de-emphasized, placeholder     */
-  --color-on-accent: #ffffff;
+  --color-primary: var(--moon-white);     /* headlines and body                */
+  --color-secondary: var(--moon-muted);   /* secondary copy                    */
+  --color-muted: var(--moon-faint);       /* metadata                          */
+  --color-faint: #6a6a6e;                 /* disabled, placeholder             */
 
-  --color-accent: var(--blue-500);
-  --color-accent-hover: var(--blue-400);
-  --color-accent-soft: rgba(79, 131, 255, 0.14);
-  --color-accent-border: rgba(79, 131, 255, 0.4);
+  --color-accent: var(--violet-sky);
+  --color-accent-hover: #b9a3ff;
+  --color-accent-soft: rgba(161, 133, 255, 0.16);
+  --color-accent-border: rgba(161, 133, 255, 0.42);
+  /* Near-black, not white: see the note on --violet-ink above. */
+  --color-on-accent: var(--violet-ink);
 
-  --color-success: var(--green-400);
-  --color-success-soft: rgba(63, 178, 127, 0.15);
-  --color-warning: var(--amber-400);
-  --color-warning-soft: rgba(217, 155, 48, 0.15);
-  --color-error: var(--red-400);
-  --color-error-soft: rgba(224, 100, 95, 0.15);
+  --color-success: var(--signal-green);
+  --color-success-soft: rgba(48, 209, 88, 0.16);
+  --color-warning: var(--signal-amber);
+  --color-warning-soft: rgba(255, 214, 10, 0.16);
+  --color-error: var(--signal-red);
+  --color-error-soft: rgba(255, 69, 58, 0.16);
 
-  /* Glass — used sparingly, only where it improves hierarchy (topbar, rail,
-     dialogs, command palette). */
-  --glass-bg: rgba(18, 22, 28, 0.72);
-  --glass-blur: 14px;
+  /* Frosted chrome — the sub-nav and the floating action bar. Functional, not
+     decorative: it is how a bar stays legible over scrolling content. */
+  --glass-bg: rgba(22, 22, 24, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  /* Translucent chip over imagery — Apple's circular control. */
+  --chip-translucent: rgba(70, 70, 74, 0.64);
 
-  /* ── 5. Elevation — very subtle, layered ───────────────────────────────── */
-  --shadow-e1: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-e2: 0 4px 14px rgba(0, 0, 0, 0.4);
-  --shadow-e3: 0 18px 48px rgba(0, 0, 0, 0.55);
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-border-focus);
 }
 
-/* ── 2 + 9. Semantic colors — LIGHT theme ───────────────────────────────── */
+/* ── 6. Semantic colours — LIGHT ───────────────────────────────────────────
+   Apple's own daylight palette, unchanged: white canvas, parchment for the
+   alternating band, near-black ink, one blue. */
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --color-bg: #f5f6f8;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #ffffff;
-  --color-surface-sunken: #eef0f3;
-  --color-surface-hover: #f0f2f5;
+  --color-bg: var(--paper-parchment);
+  --color-canvas: var(--paper-white);
+  --color-surface: var(--paper-white);
+  --color-surface-elevated: var(--paper-white);
+  --color-surface-sunken: var(--paper-parchment);
+  --color-surface-hover: var(--paper-pearl);
+  --color-surface-ghost: rgba(0, 0, 0, 0.04);
 
-  --color-border: rgba(14, 20, 30, 0.1);
-  --color-border-strong: rgba(14, 20, 30, 0.18);
-  --color-border-focus: var(--blue-600);
+  --color-border: var(--paper-hairline);
+  --color-border-strong: #c7c7cc;
+  --color-border-focus: var(--violet-focus);
 
-  --color-primary: #12161c;
-  --color-secondary: #3a434f;
-  --color-muted: #697485;
-  --color-faint: #9aa3b0;
-  --color-on-accent: #ffffff;
+  --color-primary: var(--ink);
+  --color-secondary: var(--ink-80);
+  --color-muted: var(--ink-60);
+  --color-faint: var(--ink-48);
 
-  --color-accent: var(--blue-600);
-  --color-accent-hover: var(--blue-500);
-  --color-accent-soft: rgba(47, 107, 255, 0.1);
-  --color-accent-border: rgba(47, 107, 255, 0.35);
+  --color-accent: var(--violet-action);
+  --color-accent-hover: var(--violet-focus);
+  --color-accent-soft: rgba(74, 40, 184, 0.09);
+  --color-accent-border: rgba(74, 40, 184, 0.35);
+  /* A dark fill takes white — 9.2:1. */
+  --color-on-accent: var(--paper-white);
 
-  --color-success: var(--green-500);
-  --color-success-soft: rgba(63, 178, 127, 0.12);
-  --color-warning: var(--amber-500);
-  --color-warning-soft: rgba(217, 155, 48, 0.14);
-  --color-error: var(--red-500);
-  --color-error-soft: rgba(224, 100, 95, 0.12);
+  --color-success: var(--signal-green-dim);
+  --color-success-soft: rgba(36, 138, 61, 0.12);
+  --color-warning: var(--signal-amber-dim);
+  --color-warning-soft: rgba(161, 115, 10, 0.12);
+  --color-error: var(--signal-red-dim);
+  --color-error-soft: rgba(201, 37, 28, 0.1);
 
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-blur: 14px;
+  --glass-bg: rgba(245, 245, 247, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --chip-translucent: rgba(210, 210, 215, 0.64);
 
-  --shadow-e1: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow-e2: 0 4px 14px rgba(16, 24, 40, 0.08);
-  --shadow-e3: 0 18px 48px rgba(16, 24, 40, 0.14);
-  --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-border-focus);
+  --focus-ring: 0 0 0 2px var(--color-canvas), 0 0 0 4px var(--color-border-focus);
 }
 
-/* High-contrast preference — thicker borders, stronger text separation. */
+/* ── 7. Modes ──────────────────────────────────────────────────────────────
+   Contrast, density, and text size are user choices that remap tokens rather
+   than adding rules, so every component inherits them without knowing they
+   exist. */
+
+/* Contrast. Hairlines are the first thing to disappear for a reader who needs
+   more separation, so they are the first thing these modes strengthen. */
 @media (prefers-contrast: more) {
-  :root {
-    --color-border: rgba(255, 255, 255, 0.28);
-    --color-border-strong: rgba(255, 255, 255, 0.5);
-    --color-muted: var(--ink-200);
-  }
-  :root[data-theme="light"] {
-    --color-border: rgba(14, 20, 30, 0.28);
-    --color-border-strong: rgba(14, 20, 30, 0.5);
-    --color-muted: #4a5461;
-  }
+  :root { --color-border: rgba(255, 255, 255, 0.3); --color-border-strong: rgba(255, 255, 255, 0.55); --color-muted: #d6d6d8; }
+  :root[data-theme="light"] { --color-border: #a1a1a6; --color-border-strong: #6e6e73; --color-muted: var(--ink-80); }
 }
 :root[data-contrast="high"] {
-  --color-border: rgba(255, 255, 255, 0.32);
-  --color-border-strong: rgba(255, 255, 255, 0.55);
-  --color-muted: var(--ink-100);
+  --color-border: rgba(255, 255, 255, 0.34);
+  --color-border-strong: rgba(255, 255, 255, 0.6);
+  --color-muted: #dcdcde;
 }
 :root[data-theme="light"][data-contrast="high"] {
-  --color-border: rgba(14, 20, 30, 0.32);
-  --color-border-strong: rgba(14, 20, 30, 0.55);
-  --color-muted: #3a434f;
+  --color-border: #8e8e93;
+  --color-border-strong: #48484a;
+  --color-muted: var(--ink-80);
 }
 
-/* ── 8. Density modes — remap the spacing scale used by component padding ──
-   Components read --density-* tokens for their internal rhythm so the whole
-   app can switch between compact (professional / high information density)
-   and comfortable (default) without touching a single component. */
+/* Density. Components read --density-* for their internal rhythm, so the whole
+   app tightens from one place. */
 :root,
 :root[data-density="comfortable"] {
-  --density-card-pad: var(--space-5);
-  --density-tile-pad: var(--space-5);
-  --density-row-pad: var(--space-3);
-  --density-gap: var(--space-5);
-  --density-stack: var(--space-4);
-  --control-height: 38px;
+  --density-card-pad: var(--space-lg);
+  --density-tile-pad: var(--space-lg);
+  --density-row-pad: var(--space-sm);
+  --density-gap: var(--space-lg);
+  --density-stack: var(--space-md);
+  --density-section: var(--space-xxl);
 }
 :root[data-density="compact"] {
-  --density-card-pad: var(--space-4);
-  --density-tile-pad: var(--space-3);
-  --density-row-pad: var(--space-2);
-  --density-gap: var(--space-3);
-  --density-stack: var(--space-3);
-  --control-height: 32px;
+  --density-card-pad: var(--space-md);
+  --density-tile-pad: var(--space-sm);
+  --density-row-pad: var(--space-xs);
+  --density-gap: var(--space-md);
+  --density-stack: var(--space-sm);
+  --density-section: var(--space-xl);
+  --control-height: 38px;
 }
 
-/* Large-text preference — bumps the base font size; the rem-based scale
-   grows proportionally. */
-:root[data-text="large"] {
-  font-size: 118%;
+/* Large text scales the rem base; every size above is rem-based, so the whole
+   ladder grows in proportion and nothing has to be respecified. */
+:root[data-text="large"] { font-size: 117.5%; }
+
+/* ── Compatibility aliases ─────────────────────────────────────────────────
+   The names the pre-redesign stylesheets were written against, mapped onto the
+   system above. They exist so a single token file re-skins the entire app
+   rather than requiring ten stylesheets to change in lockstep — and so that a
+   rule nobody has revisited yet still renders in the new language instead of
+   falling back to an unset value.
+
+   These are a migration surface, not an API. New rules use the names above. */
+:root {
+  /* Type — old scale names onto the new ladder. */
+  --text-display: var(--type-section);
+  --text-title: var(--type-lead);
+  --text-heading: var(--type-tagline);
+  --text-card-title: var(--type-body);
+  --text-body: var(--type-body);
+  --text-caption: var(--type-caption);
+  --text-meta: var(--type-fine);
+  --font-sans: var(--font-text);
+
+  /* Weight 500 does not exist in this system; requests for it resolve to 600. */
+  --weight-medium: var(--weight-semibold);
+
+  --leading-tight: var(--lead-display);
+  --leading-snug: var(--lead-snug);
+  --leading-normal: var(--lead-body);
+  --tracking-tight: var(--track-body);
+  --tracking-normal: var(--track-none);
+  --tracking-wide: var(--track-none);
+  --tracking-caps: var(--track-caps);
+
+  /* Spacing — the old 4px-grid step names onto the 8px scale. */
+  --space-0: 0;
+  --space-1: var(--space-xxs);
+  --space-2: var(--space-xs);
+  --space-3: var(--space-sm);
+  --space-4: var(--space-md);
+  --space-5: var(--space-lg);
+  --space-6: var(--space-lg);
+  --space-8: var(--space-xl);
+  --space-10: var(--space-xxl);
+  --space-12: var(--space-xxl);
+  --space-16: var(--space-section);
+
+  /* Elevation. The old three-step shadow ramp is gone: this system separates by
+     surface, so e1 and e2 resolve to nothing at all and e3 — used only by
+     dialogs, which genuinely float above a scrim — takes the object shadow. */
+  --shadow-e1: none;
+  --shadow-e2: none;
+  --shadow-e3: var(--shadow-object);
+  --glass-blur: 20px;
+
+  /* The retired decorative palette. Every one of these was a second, third, and
+     fourth accent — lavender, indigo, periwinkle, pink — used for glows and
+     gradient washes. The system allows exactly one accent, so they all resolve
+     to it or to plain ink, which collapses the gradients they fed into flat
+     surfaces without needing to hunt down each rule. */
+  --axis-lavender: var(--color-accent);
+  --axis-periwinkle: var(--color-accent);
+  --axis-blue: var(--color-accent);
+  --axis-indigo: var(--color-accent);
+  --axis-pink: var(--color-accent);
+  --axis-moon: var(--color-primary);
+  --axis-glow: 0 0 0;
+  --axis-glow-soft: 0 0 0;
+  --axis-radius-lg: var(--radius-lg);
+  --axis-radius-md: var(--radius-md);
+
+  /* Short names some stylesheets were written against, always as
+     `var(--accent, #7c9cff)` with a hardcoded fallback. Those fallbacks are the
+     OLD palette, so leaving these undefined would silently keep half the app on
+     the retired colours no matter what this file says. Defined here, the
+     fallbacks become unreachable and every one of those rules joins the system. */
+  --accent: var(--color-accent);
+  --accent-strong: var(--color-accent-hover);
+  --border: var(--color-border);
+  --surface-2: var(--color-surface);
+  --text: var(--color-primary);
+  --text-muted: var(--color-muted);
+  --text-soft: var(--color-secondary);
+  --muted: var(--color-muted);
+  --dim: var(--color-faint);
+  --primary: var(--color-primary);
+  --error: var(--color-error);
+  --danger: var(--color-error);
+  --danger-border: var(--color-error);
+  --danger-surface: var(--color-error-soft);
+  --danger-text: var(--color-error);
+  --warn-border: var(--color-warning);
+  /* Gold was the pre-redesign second accent on sign glyphs and headings. */
+  --gold: var(--color-accent);
+  /* The moon scene's sky gradient. Kept as a gradient because it depicts a
+     photographic subject — a night sky — rather than decorating an interface. */
+  --moon-sky-top: #0b1020;
+  --moon-sky-bottom: #05070f;
+
+  /* Old primitive ramps, for the handful of rules that reach past the semantic
+     layer. */
+  --blue-300: var(--violet-sky);
+  --blue-400: var(--violet-sky);
+  --blue-500: var(--color-accent);
+  --blue-600: var(--violet-action);
+  --ink-000: var(--moon-white);
+  --ink-050: #f5f5f7;
+  --ink-100: #e5e5ea;
+  --ink-200: var(--moon-muted);
+  --ink-300: #aeaeb2;
+  --ink-400: var(--moon-faint);
+  --ink-500: #6a6a6e;
+  --ink-600: #48484a;
+  --ink-700: #3a3a3c;
+  --ink-750: #303032;
+  --ink-800: var(--void-tile-2);
+  --ink-850: var(--void-tile-1);
+  --ink-900: var(--void-sunken);
+  --ink-950: var(--void-black);
+  --green-400: var(--signal-green);
+  --green-500: var(--signal-green-dim);
+  --amber-400: var(--signal-amber);
+  --amber-500: var(--signal-amber-dim);
+  --red-400: var(--signal-red);
+  --red-500: var(--signal-red-dim);
 }

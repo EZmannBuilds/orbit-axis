@@ -1,168 +1,60 @@
-/* Orbit Axis primary navigation.
-   ---------------------------------------------------------------------------
+/* ============================================================================
+   Orbit Axis — Navigation states
+   ----------------------------------------------------------------------------
+   app.css owns where the navigation SITS (sidebar above 1024px, bottom tab bar
+   below it). This file owns what it SAYS: which destination you are on, and how
+   that reads without relying on colour.
+
    ONE navigation model, five destinations, rendered from one list of links:
 
-     Home · My Chart · Today's Transits · Tools · More
+     Today · Chart · Sky · Atlas · You
 
-   The phone bar and the desktop sidebar are the same DOM. That is deliberate —
-   two sets of markup are two places for the order, the labels, and the current
-   page to disagree, and they always eventually do. Only the layout changes
-   across breakpoints; the destinations never do. */
-.rail {
-  background:
-    radial-gradient(circle at 45% 0%, color-mix(in oklab, var(--axis-indigo, #8c7bff) 16%, transparent), transparent 36%),
-    color-mix(in oklab, var(--color-surface) 92%, var(--rail-tint, #080b1c) 8%);
+   The phone bar and the desktop sidebar are the same DOM. Two sets of markup
+   are two places for the order, the labels, and the current page to disagree,
+   and they always eventually do.
+   ========================================================================== */
+
+/* ── The icon weight swap ────────────────────────────────────────────────────
+   Every tab ships both Phosphor weights: the outline for the destinations you
+   are not on, the solid for the one you are. That is the iOS convention, and it
+   is the part of "you are here" that still works in greyscale, at 10px, and for
+   a reader who cannot separate the accent tint from the surface behind it.
+
+   Both glyphs are in the DOM and one is hidden, rather than swapping markup on
+   navigation — so the active state cannot desynchronise from aria-current, and
+   there is no repaint flicker on the tab you just left. */
+.rail__icon--fill { display: none; }
+.rail__link[aria-current="page"] .rail__icon--line { display: none; }
+.rail__link[aria-current="page"] .rail__icon--fill { display: block; }
+
+/* On the phone bar the label is 10px and the tint is a small area, so the
+   current tab also states itself with weight. */
+@media (max-width: 1023px) {
+  .rail__link[aria-current="page"] { color: var(--color-accent); }
+  .rail__link[aria-current="page"] .rail__label::before { font-weight: var(--weight-semibold); }
 }
 
-:root[data-theme="light"] .rail {
-  /* Light mode gets the same celestial wash at a fraction of the strength.
-     At full opacity it reads as a stain on white rather than a night sky. */
-  background:
-    radial-gradient(circle at 45% 0%, color-mix(in oklab, var(--axis-indigo, #8c7bff) 7%, transparent), transparent 40%),
-    var(--color-surface);
-}
-
-.rail__link {
-  min-height: 44px;
-  border: 1px solid transparent;
-}
-
-/* Current page is stated three ways — weight, a tinted surface, and a marker —
-   so it never depends on colour alone. */
-.rail__link[aria-current="page"] {
-  background: var(--color-accent-soft);
-  border-color: var(--color-accent-border);
-  color: var(--color-primary);
-  font-weight: var(--weight-semibold);
-}
-
-@media (min-width: 901px) and (max-width: 1200px) {
-  .app-shell { grid-template-columns: var(--rail-width) 1fr; }
-  .rail { padding: var(--space-4) var(--space-3); align-items: stretch; }
-  .rail__brand { justify-content: flex-start; padding: var(--space-2) var(--space-2) var(--space-4); }
-  .rail__wordmark,
-  .rail__label,
-  .rail__section-label {
-    display: block;
-  }
-  .rail__link { justify-content: flex-start; padding: var(--space-2) var(--space-3); }
-}
-
-@media (max-width: 900px) {
-  .app-shell { grid-template-columns: 1fr; }
-
-  .rail {
-    position: fixed;
-    top: auto;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 60;
-    height: auto;
-    display: block;
-    /* The bottom inset is the physical home indicator, not decoration: without
-       it the last row of tabs sits under the gesture bar on a modern phone. */
-    padding: 8px max(10px, env(safe-area-inset-left)) calc(8px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-right));
-    border-right: 0;
-    border-top: 1px solid color-mix(in oklab, var(--axis-lavender, #b8a7ff) 22%, var(--color-border));
-    border-bottom: 0;
-    overflow: visible;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-  }
-
-  .rail__brand,
-  .rail__section-label,
-  .rail__spacer {
-    display: none;
-  }
-
-  /* Five equal columns. Five is what fits a 375px screen with a readable word
-     under each icon; the sixth is what turns labels into ellipses. */
-  .rail__nav {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 4px;
-    align-items: stretch;
-  }
-
-  .rail__link {
-    display: grid;
-    place-items: center;
-    gap: 4px;
-    min-width: 0;
-    min-height: 52px;
-    padding: 6px 2px;
-    border-radius: 14px;
-    font-size: 11px;
-    line-height: 1.15;
-    text-align: center;
-  }
-
-  .rail__icon {
-    width: 22px;
-    height: 22px;
-  }
-
-  /* The phone shows the short form of the same name ("Transits" for "Today's
-     Transits"). Swapping the rendered text rather than the accessible name
-     keeps the link's announced name identical on every device. */
-  .rail__label {
-    display: block;
-    width: 100%;
-    font-size: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .rail__label::before {
-    content: attr(data-mobile-label);
-    font-size: 11px;
-  }
-
-  .workspace {
-    padding-bottom: calc(104px + env(safe-area-inset-bottom));
-  }
-}
-
-@media (max-width: 380px) {
-  .rail__label::before { font-size: 10px; }
-  .rail__icon { width: 20px; height: 20px; }
-  .rail__link { min-height: 50px; }
-}
-
-/* Forced-colors: the browser supplies the palette, so the current-page tint
-   disappears. A real border is what survives. */
+/* Forced colours discard the tint entirely — the filled icon and a real border
+   are what survive. */
 @media (forced-colors: active) {
   .rail__link[aria-current="page"] {
-    border-color: Highlight;
-    border-width: 2px;
+    border: 2px solid Highlight;
+    border-radius: var(--radius-md);
   }
 }
 
-/* ── Tablet: a tab bar, not a stretched phone bar ─────────────────────────
-   Five tabs spread across 768px puts 150px of empty space around each 22px
-   icon, which reads as a phone layout someone forgot to design for. Capping
-   the row and centring it keeps the targets generous without the sprawl. */
-@media (min-width: 641px) and (max-width: 900px) {
-  .rail__nav {
-    max-width: 560px;
-    margin: 0 auto;
-    gap: var(--space-2);
-  }
+/* ── Sub-navigation within a destination ────────────────────────────────────
+   Sky holds two views of the same moment (your sky, and the sky everyone
+   shares); the Atlas holds categories. Both switch with a segmented control
+   rather than a sixth tab — a destination you reach two levels down is a
+   destination nobody reaches. */
+.subnav {
+  display: flex; align-items: center; gap: var(--space-sm);
+  flex-wrap: wrap;
 }
-
-/* ── The toast must never cover the navigation ────────────────────────────
-   The bar is fixed to the bottom on phone and tablet, and the toast region is
-   also bottom-anchored — so a "Signed in" or a retired-route notice landed on
-   top of three tabs. The toast yields; the navigation does not move. */
-@media (max-width: 900px) {
-  .o-toast-region {
-    bottom: calc(84px + env(safe-area-inset-bottom));
-    left: max(var(--space-4), env(safe-area-inset-left));
-    right: max(var(--space-4), env(safe-area-inset-right));
-    transform: none;
-    justify-items: center;
-  }
+.subnav .o-segment { flex: 0 1 auto; }
+@media (max-width: 640px) {
+  .subnav { align-items: stretch; }
+  .subnav .o-segment { width: 100%; }
+  .subnav .o-segment button { flex: 1 1 0; }
 }

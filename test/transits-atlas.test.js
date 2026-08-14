@@ -28,9 +28,16 @@ test("Home offers both destinations from Technical Sky", () => {
   // "Continue exploring" section, so they are markup rather than template
   // strings now. Both destinations are still reachable from Home, which is
   // what this test has always been about.
-  assert.match(html, /href="#transits"[\s\S]{0,120}Explore Today’s Transits/);
-  assert.match(html, /href="#symbol-atlas"[\s\S]{0,120}Learn the symbols/);
-  assert.match(html, /href="#me"[\s\S]{0,120}View My Chart/);
+  // The redesign removed the "Continue exploring" card these three links lived
+  // in: all three destinations are now tabs, permanently on screen, and a
+  // duplicate list of them at the foot of Today was a second navigation to keep
+  // in step with the first. The guarantee this test is actually about — every
+  // destination stays reachable — is checked against the registry below, which
+  // is stronger than matching three link labels.
+  const primary = [...appJs.matchAll(/id: "([a-z-]+)"[^}]*primary: true/g)].map((m) => m[1]);
+  for (const id of ["transits", "symbol-atlas", "me"]) {
+    assert.ok(primary.includes(id), `#${id} must be reachable — it is a primary tab`);
+  }
   // Dev Update 1.7 built Positions, so the rule this asserted — never link a
   // route that does not exist — now permits it. Checked against the registry
   // rather than a hardcoded exclusion, so it stays true as routes are added.
@@ -58,13 +65,15 @@ test("the actions are inside Technical Sky, not above the fortune", () => {
   // the wrong body and failing for a reason that has nothing to do with layout.
   // The destinations now live in their own section BELOW the fortune, which
   // is the same guarantee stated structurally: the reading comes first.
-  const exploreAt = html.indexOf('id="today-explore"');
-  const fortuneAt = html.indexOf('id="today-fortune"');
-  assert.ok(exploreAt > fortuneAt, "Continue exploring sits below the reading");
-
+  // What this has always been about: the READING comes first, and the technical
+  // detail that explains it comes after. Still true, and now with nothing
+  // between them but the Moon and the highlights.
   const fortuneMount = html.indexOf('id="today-fortune"');
   const skyMount = html.indexOf('id="today-sky"');
-  assert.ok(fortuneMount < skyMount, "and the fortune still renders first");
+  assert.ok(fortuneMount > 0 && fortuneMount < skyMount, "the fortune renders before Technical Sky");
+  const daysAt = html.indexOf('id="today-days"');
+  assert.ok(daysAt > 0 && daysAt < fortuneMount,
+    "the week strip is the one thing above the reading — it says which day you are reading");
 });
 
 test("Dev Update 1.3 placed each destination on the correct level", () => {
@@ -76,8 +85,12 @@ test("Dev Update 1.3 placed each destination on the correct level", () => {
     assert.ok(entry, `${id} should be registered as a workspace`);
     return entry[1];
   };
-  assert.equal(level("transits"), "true", "Today's Transits is one of the five");
-  assert.equal(level("symbol-atlas"), "false", "the atlas stays secondary");
+  assert.equal(level("transits"), "true", "Sky is one of the five");
+  // The Atlas was secondary when it was three screens of stubs. It is now the
+  // deepest finished feature in the app — seven categories, ~50 authored
+  // entries — and it is what every other surface links into when a reader
+  // meets a symbol they do not know. That earns the tab Tools gave up.
+  assert.equal(level("symbol-atlas"), "true", "the Atlas is one of the five");
 });
 
 test("Tarot, Learn, and News stay gone", () => {
@@ -296,16 +309,26 @@ test("the atlas states how each symbol functions in a chart", () => {
 
 // ── Cross-linking ───────────────────────────────────────────────────────────
 
-test("transit details link to the Symbol Atlas, and the atlas links back to Tools", () => {
-  // Dev Update 1.8 moved this into the workspace's Continue-exploring section,
-  // so it is markup rather than a template string, with a label that names the
-  // destination instead of asking a question.
-  assert.match(html, /href="#symbol-atlas"[\s\S]{0,160}Open Symbol Atlas/);
-  // The way back points at where the atlas is reached from, not at Home — a
-  // back action that skips the page you came from is a dead end wearing an
-  // arrow.
-  assert.ok(html.includes('id="panel-symbol-atlas"') && html.includes('data-goto="tools"'),
-    "the atlas needs a way back to Tools");
+test("Sky points at the Atlas for the symbols it uses", () => {
+  const sky = html.slice(html.indexOf('id="panel-transits"'), html.indexOf('id="panel-positions"'));
+  assert.match(sky, /href="#symbol-atlas"[\s\S]{0,160}What these symbols mean/,
+    "a reader who meets a glyph they do not know needs one tap to the answer");
+});
+
+test("the Atlas needs no way back, because it is a destination now", () => {
+  // It used to carry an explicit "Back to Tools" button: it was reached from a
+  // directory page, and a back action that skips the page you came from is a
+  // dead end wearing an arrow.
+  //
+  // The Atlas is a primary tab now. Every other destination is one tap away in
+  // the bar that is always on screen, so a bespoke back button would be a
+  // second navigation that can disagree with the first — and it would point at
+  // a page that no longer exists.
+  const atlas = html.slice(html.indexOf('id="panel-symbol-atlas"'), html.indexOf('id="panel-me"'));
+  assert.ok(!atlas.includes('data-goto="tools"'), "it must not point at the retired Tools page");
+  assert.ok(!/Back to/i.test(atlas), "and it needs no bespoke back action at all");
+  // What it does need is its own breadcrumb, because the Atlas has depth.
+  assert.match(atlas, /id="atlas-crumbs"/, "nested atlas routes state where they are");
 });
 
 // ── Update 5.2a must survive ────────────────────────────────────────────────

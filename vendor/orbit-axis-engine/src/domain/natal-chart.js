@@ -5,7 +5,7 @@
 // unknown birth times — never fabricates a Rising sign or exact houses.
 
 import { createHash } from "node:crypto";
-import { positionsAtUT, localToUT, offsetToMinutes, SIGNS, PLANETS } from "../adapters/swiss-ephemeris/client.js";
+import { positionsAtUT, localToUT, offsetToMinutes, zoneOffsetMinutes, SIGNS, PLANETS } from "../adapters/swiss-ephemeris/client.js";
 
 export const CALCULATION_VERSION = "natal-v1";
 
@@ -152,7 +152,25 @@ export function computeNatalChart(input) {
     warnings.push("birth_time_unknown");
   }
 
-  const offsetMinutes = offsetToMinutes(input.utc_offset_at_birth);
+  // An explicit offset wins: a caller that states one has asserted a fact about
+  // this birth, and silently overriding it with a zone lookup would change
+  // charts that already exist. `timezone_name` is the better input where it is
+  // available — it knows whether daylight time was in force, which is the usual
+  // source of a one-hour error — so it is used whenever no offset was given.
+  let offsetMinutes;
+  if (input.utc_offset_at_birth != null && input.utc_offset_at_birth !== "") {
+    offsetMinutes = offsetToMinutes(input.utc_offset_at_birth);
+  } else if (input.timezone_name) {
+    offsetMinutes = zoneOffsetMinutes(input.timezone_name, {
+      year: y, month: mo, day: d, hour, minute,
+    });
+  } else {
+    // Neither given: the instant is read as UT. That is a real assumption and
+    // it moves every angle if it is wrong, so it is reported rather than made
+    // quietly.
+    offsetMinutes = 0;
+    warnings.push("utc_offset_assumed");
+  }
   const ut = localToUT({ year: y, month: mo, day: d, hour, minute, offsetMinutes });
   const houseSystem = HOUSE_SYSTEM_CODE[(input.house_system || "placidus").toLowerCase()] || "P";
 
@@ -163,9 +181,15 @@ export function computeNatalChart(input) {
 
   // planetary houses (only if we trust the time)
   const planetHouses = {};
+  const pointHouses = {};
   if (timeKnown && pos.houses.length === 12) {
     for (const name of PLANETS) {
       if (pos.planets[name]) planetHouses[name] = whichHouse(pos.planets[name].longitude, pos.houses);
+    }
+    // Kept in their own map rather than merged into planet_houses: callers
+    // iterate that expecting exactly the ten planets.
+    for (const [name, point] of Object.entries(pos.points ?? {})) {
+      pointHouses[name] = whichHouse(point.longitude, pos.houses);
     }
   } else if (!timeKnown) {
     warnings.push("houses_unavailable");
@@ -221,6 +245,11 @@ export function computeNatalChart(input) {
     time_known: timeKnown,
     time_accuracy: timeAccuracy,
     planets: pos.planets,
+    // Chiron and Lilith. Deliberately outside `planets`: they do not enter
+    // aspects, element balance, or the chart ruler, so adding them cannot
+    // change a reading that already exists.
+    points: pos.points ?? {},
+    point_houses: pointHouses,
     nodes: pos.nodes,
     angles: timeKnown ? { ascendant: pos.ascendant, midheaven: pos.midheaven } : { ascendant: null, midheaven: null },
     houses: timeKnown ? pos.houses : [],

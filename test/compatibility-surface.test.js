@@ -105,14 +105,14 @@ test("the panel ships the states the interface depends on", () => {
 });
 
 test("compatibility is reachable without a new navigation system", () => {
-  // It is a secondary destination in the existing registry, entered from
-  // Tools — the same shape as Positions, History, and Symbol Atlas.
-  assert.match(APP, /\{ id: "compatibility", label: "Compatibility"[^}]*primary: false \}/,
-    "compatibility must be a secondary workspace in the existing registry");
-  assert.match(HTML, /data-goto="compatibility"/, "Tools must offer a way in");
-  // And Tools must no longer claim it is unbuilt.
-  assert.ok(!/Compatibility between two charts[\s\S]{0,120}not built yet/.test(HTML),
-    "the Tools panel still says compatibility is not built");
+  // It is a secondary destination in the existing registry. It used to be
+  // entered from Tools; now it is entered from Chart, beside the saved charts
+  // it compares — which is where someone is standing when they want it.
+  assert.match(APP, /\{ id: "compatibility", label: "Compatibility"[^}]*primary: false, tab: "me" \}/,
+    "compatibility must be a secondary workspace that lights the Chart tab");
+  const chart = HTML.slice(HTML.indexOf('id="panel-me"'), HTML.indexOf('id="panel-compatibility"'));
+  assert.match(chart, /href="#compatibility"/, "Chart must offer a way in");
+  assert.match(chart, /Compare two charts/, "and it must say what it does");
 });
 
 test("the browser composes no interpretation of its own", () => {

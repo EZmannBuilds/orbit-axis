@@ -1,208 +1,49 @@
-.more-grid {
+/* ============================================================================
+   Orbit Axis — You, Appearance, saved charts, and chart identity
+   ----------------------------------------------------------------------------
+   The account surface used to be a two-column grid of cards, each with its own
+   heading, its own paragraph, and a row of buttons at the bottom. That reads as
+   five little brochures when what a person wants is a list of things they can
+   change.
+
+   It is now grouped inset lists — `.o-group` from the component library — with
+   one thing per row and the section name above the group. Scannable top to
+   bottom, one tap per action, and the same shape as every other list in the
+   app.
+   ========================================================================== */
+
+.more-stack { display: grid; gap: var(--space-xl); }
+.more-section { display: grid; gap: 0; }
+
+/* ── The account offer ───────────────────────────────────────────────────────
+   Stands where the signed-in account rows do, for visitors who have not made
+   one. It leads by saying what already works without an account, because the
+   panel is titled "Account" and arriving at a sales pitch under that heading
+   is what makes a free app feel like a trial. */
+.account-offer {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--density-gap);
+  gap: var(--space-sm);
+  justify-items: start;
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
 }
-
-.more-card {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 20px;
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 18%, var(--color-border));
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--color-surface-elevated) 92%, var(--axis-indigo) 8%);
-}
-
-.more-card--wide {
-  grid-column: 1 / -1;
-}
-
-.more-card h2 {
-  color: var(--color-primary);
-}
-
-.more-card p {
+.account-offer[hidden] { display: none; }
+.account-offer__lead { margin: 0; color: var(--color-primary); line-height: var(--lead-body); }
+.account-offer__sub {
+  margin: 0;
   color: var(--color-secondary);
+  font-size: var(--type-fine);
   line-height: 1.55;
 }
+.more-details { margin-top: var(--space-sm); }
+.more-disclaimer { text-align: center; padding: 0 var(--space-md); }
+.more-note { color: var(--color-secondary); font-size: var(--type-caption); line-height: var(--lead-body); }
 
-.more-note {
-  color: var(--color-secondary);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-.more-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.saved-charts-list {
-  display: grid;
-  gap: 10px;
-}
-
-.saved-chart-card {
-  display: grid;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  background: var(--color-surface-sunken);
-}
-
-.saved-chart-card[data-active="true"] {
-  border-color: color-mix(in oklab, var(--axis-blue) 50%, var(--color-border));
-  box-shadow: 0 0 22px color-mix(in oklab, var(--axis-blue) 16%, transparent);
-}
-
-.saved-chart-card__top,
-.saved-chart-card__badges,
-.saved-chart-card__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.saved-chart-card__name {
-  color: var(--color-primary);
-  font-weight: 700;
-  font-size: 17px;
-  margin-right: auto;
-}
-
-.saved-chart-card__meta,
-.saved-chart-card__summary {
-  color: var(--color-secondary);
-  font-size: 14px;
-}
-
-.saved-chart-card__actions button,
-.auth-tabs button,
-.auth-form button,
-.password-row button {
-  min-height: 44px;
-}
-
-.saved-chart-card__actions button {
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  color: var(--color-primary);
-  background: var(--color-surface-elevated);
-  padding: 8px 11px;
-  cursor: pointer;
-}
-
-@media (max-width: 760px) {
-  .more-grid { grid-template-columns: 1fr; }
-}
-
-/* ── Danger zone ───────────────────────────────────────────────────────────
-   Permanent account deletion. Visually separated from the ordinary account
-   actions so "Delete account" is never adjacent to something harmless someone
-   might be reaching for, and so the boundary is obvious at a glance rather
-   than only readable in the label. */
-.danger-zone {
-  margin-top: var(--space-4, 1.25rem);
-  padding: var(--space-3, 1rem);
-  border: 1px solid var(--danger-border, #7f2b34);
-  border-radius: var(--radius-md, 10px);
-  background: var(--danger-surface, rgba(160, 40, 52, 0.08));
-}
-
-.danger-zone__title {
-  margin: 0 0 var(--space-1, 0.35rem);
-  font-size: 0.95rem;
-  color: var(--danger-text, #f0a1aa);
-}
-
-.danger-zone__body {
-  margin: 0 0 var(--space-3, 1rem);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--text-muted, #9aa3b2);
-}
-
-.o-modal__panel--danger { border-top: 3px solid var(--danger-border, #7f2b34); }
-
-.delete-list {
-  margin: 0 0 var(--space-3, 1rem);
-  padding-left: 1.15rem;
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-muted, #9aa3b2);
-}
-
-#delete-account-confirm {
-  width: 100%;
-  margin-top: var(--space-1, 0.35rem);
-  /* Monospace so a stray space or lowercase letter is visible rather than
-     something the person has to squint at while already anxious. */
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  letter-spacing: 0.08em;
-}
-
-.field-hint {
-  margin: var(--space-1, 0.35rem) 0 0;
-  font-size: 0.78rem;
-  color: var(--text-muted, #9aa3b2);
-}
-
-/* A disabled destructive button must look unavailable, not merely dimmed —
-   this is the state it sits in until the confirmation is typed correctly. */
-.o-btn--danger:disabled { opacity: 0.45; cursor: not-allowed; }
-
-@media (prefers-reduced-motion: no-preference) {
-  .danger-zone { transition: border-color 150ms ease; }
-}
-
-/* Links to the public information pages, from inside the app. */
-.legal-links { display: flex; flex-wrap: wrap; gap: 0.4rem 0.5rem; }
-.legal-links a { color: var(--accent, #8b9cf5); text-decoration: underline; text-underline-offset: 2px; }
-.legal-links a:focus-visible { outline: 2px solid var(--accent, #8b9cf5); outline-offset: 3px; border-radius: 3px; }
-
-/* Dev Update 1.2 :: account actions. Three actions where there was one; they
-   must wrap rather than shrink below a usable target on a phone. */
-.more-actions .o-btn {
-  min-height: 44px;
-}
-#account-export-message {
-  margin-top: 8px;
-  text-align: left;
-}
-
-/* ── Tools ────────────────────────────────────────────────────────────────
-   One truthful destination. Each card opens a page that exists; the planned
-   card is prose rather than a disabled button, because a control that cannot
-   be pressed reads as broken and a sentence reads as a roadmap. */
-.tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--density-gap);
-}
-
-.tool-card {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  padding: 20px;
-  border: 1px solid color-mix(in oklab, var(--axis-lavender) 18%, var(--color-border));
-  border-radius: 18px;
-  background: color-mix(in oklab, var(--color-surface-elevated) 92%, var(--axis-indigo) 8%);
-}
-
-.tool-card h2 { color: var(--color-primary); }
-.tool-card p { color: var(--color-secondary); line-height: 1.55; }
-.tool-card .o-btn { min-height: 44px; justify-self: start; }
-
-/* Stated as future work, so it is styled as a note rather than as an action. */
-.tool-card--planned {
-  background: var(--color-surface-sunken);
-  border-style: dashed;
-}
+/* The settings groups hold rows that are label-plus-control rather than
+   label-plus-chevron, so they get padding instead of the row component. */
+.settings-group { padding: var(--space-xs) var(--space-md); }
 
 /* ── Settings rows ────────────────────────────────────────────────────────
    Label and control stack on a phone so neither is squeezed, and sit side by
@@ -212,65 +53,130 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-  padding: var(--density-row-pad) 0;
+  gap: var(--space-xs) var(--space-md);
+  padding: var(--space-sm) 0;
   border-bottom: var(--border-width) solid var(--color-border);
 }
-
 .setting-row:last-of-type { border-bottom: none; }
-
-.setting-row__label {
-  color: var(--color-secondary);
-  font-size: var(--text-body);
-}
-
+.setting-row__label { color: var(--color-primary); font-size: var(--type-body); letter-spacing: var(--track-body); }
 .setting-help {
   margin: 0;
-  padding-bottom: var(--density-row-pad);
+  padding-bottom: var(--space-sm);
   color: var(--color-muted);
-  font-size: var(--text-caption);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
 }
 
 /* The theme control carries an icon and a word. The word is what is announced
    and what survives forced-colors; the icon only speeds up recognition. */
-.o-segment--theme button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-}
+.o-segment--theme button { display: inline-flex; align-items: center; gap: var(--space-xxs); min-height: 44px; }
+.o-segment--theme .segment-icon { width: 16px; height: 16px; flex: none; display: inline-grid; place-items: center; }
+.o-segment--theme .segment-icon svg { width: 16px; height: 16px; }
 
-.o-segment--theme .segment-icon {
-  width: 16px;
-  height: 16px;
-  flex: none;
-}
-
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   /* Three 44px targets will not fit one phone row beside a label, so the
      control takes the full width below it rather than shrinking the targets. */
   .setting-row { flex-direction: column; align-items: stretch; }
-  .o-segment--theme { width: 100%; }
-  .o-segment--theme button { flex: 1; justify-content: center; }
+  .setting-row .o-segment { width: 100%; }
+  .setting-row .o-segment button { flex: 1; justify-content: center; }
 }
 
-/* Selected state must not rest on background colour alone. */
-@media (forced-colors: active) {
-  .o-segment button[aria-pressed="true"] {
-    border: 2px solid Highlight;
-    forced-color-adjust: none;
-  }
+/* ── Saved charts ────────────────────────────────────────────────────────── */
+.saved-charts-list { display: grid; gap: var(--space-sm); }
+
+.saved-chart-card {
+  display: grid;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
+}
+/* The active chart is stated by a border and by the "Active" pill inside the
+   card, never by the border alone. */
+.saved-chart-card[data-active="true"] { border-color: var(--color-accent); }
+
+.saved-chart-card__top,
+.saved-chart-card__badges,
+.saved-chart-card__actions {
+  display: flex; align-items: center; gap: var(--space-xs); flex-wrap: wrap;
+}
+.saved-chart-card__lead { display: flex; align-items: center; gap: var(--space-sm); min-width: 0; margin-right: auto; }
+.saved-chart-card__name {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  letter-spacing: var(--track-body);
+}
+.saved-chart-card__lead .saved-chart-card__name { margin-right: 0; }
+.saved-chart-card__meta,
+.saved-chart-card__summary { color: var(--color-muted); font-size: var(--type-caption); letter-spacing: var(--track-caption); }
+
+.saved-chart-card__actions button {
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+  background: var(--color-surface-ghost);
+  font-family: inherit;
+  font-size: var(--type-caption);
+  cursor: pointer;
+  transition: transform var(--duration-instant) var(--ease-standard);
+}
+.saved-chart-card__actions button:active:not(:disabled) { transform: scale(var(--press-scale)); }
+.saved-chart-card__actions button:disabled { opacity: 0.45; cursor: default; }
+
+.compat-entry { margin-top: var(--space-md); border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); }
+
+/* ── Danger zone ───────────────────────────────────────────────────────────
+   Permanent account deletion. It is its own group, at the end, with nothing
+   harmless next to it — so "Delete your account" is never adjacent to something
+   a person might have been reaching for. */
+.o-modal__panel--danger { border-top: 3px solid var(--color-error); }
+
+.delete-list {
+  margin: 0 0 var(--space-sm);
+  padding-left: 1.15rem;
+  font-size: var(--type-caption);
+  line-height: 1.6;
+  color: var(--color-secondary);
 }
 
-/* ══ Chart identity (Dev Update 1.10) ════════════════════════════════════════
+#delete-account-confirm {
+  width: 100%;
+  margin-top: var(--space-xxs);
+  /* Monospace so a stray space or a lowercase letter is visible, rather than
+     something to squint at while already anxious. */
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+
+.field-hint { margin: var(--space-xxs) 0 0; font-size: var(--type-fine); color: var(--color-muted); }
+
+/* A disabled destructive button must look unavailable, not merely dimmed —
+   this is the state it sits in until the confirmation is typed correctly. */
+.o-btn--danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Links to the public information pages, from inside the app. */
+.legal-links { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xxs) var(--space-md); }
+/* Flex items, not inline text — so the WCAG 2.5.8 exemption for links inside a
+   block of prose does not cover these, and they need real height. */
+.legal-links a {
+  display: inline-flex; align-items: center; min-height: 44px;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+
+#account-export-message { margin-top: var(--space-xs); text-align: left; }
+
+/* ══ Chart identity ══════════════════════════════════════════════════════════
    The avatar component and the identity editor.
 
    The fallback face is DETERMINISTIC BY OMISSION: one accent treatment for
    every chart, initials from chart-identity.js, nothing random and nothing
-   hashed. The design system keeps one calm blue on purpose, and identity is
-   carried by the initials plus the adjacent name and relationship text —
-   never by a colour assignment. Identical input renders identically forever. */
+   hashed. The system keeps one accent on purpose, and identity is carried by
+   the initials plus the adjacent name and relationship text — never by a colour
+   assignment. Identical input renders identically, forever. */
 
 .chart-avatar {
   --avatar-size: 40px;
@@ -282,126 +188,85 @@
   height: var(--avatar-size);
   flex: 0 0 auto;
   border-radius: var(--radius-full);
-  border: var(--border-width) solid var(--color-accent-border);
   background: var(--color-accent-soft);
   color: var(--color-accent);
   font-weight: var(--weight-semibold);
-  font-size: calc(var(--avatar-size) * 0.34);
-  letter-spacing: var(--tracking-wide);
+  font-size: calc(var(--avatar-size) * 0.36);
+  letter-spacing: 0.02em;
   overflow: hidden;
   user-select: none;
 }
-.chart-avatar--sm { --avatar-size: 26px; }
+.chart-avatar--sm { --avatar-size: 30px; }
 .chart-avatar--lg { --avatar-size: 72px; }
 
 /* The uploaded picture sits over the initials; if it fails to load it is
    removed and the fallback beneath is already painted — no layout shift. */
-.chart-avatar__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+.chart-avatar__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 @media (forced-colors: active) {
-  .chart-avatar {
-    border: 1px solid CanvasText;
-    background: Canvas;
-    color: CanvasText;
-    forced-color-adjust: none;
-  }
+  .chart-avatar { border: 1px solid CanvasText; background: Canvas; color: CanvasText; forced-color-adjust: none; }
 }
-
-/* Card layout: avatar leads the row, text keeps its own block. */
-.saved-chart-card__lead {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  margin-right: auto;
-}
-.saved-chart-card__lead .saved-chart-card__name { margin-right: 0; }
 
 /* ── Identity editor ── */
 .identity-avatar-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
-  margin: var(--space-3) 0 var(--space-4);
+  display: flex; align-items: flex-start; gap: var(--space-md);
+  margin: var(--space-sm) 0 var(--space-md);
 }
-.identity-avatar-actions {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-  flex: 1 1 auto;
-}
+.identity-avatar-actions { display: grid; gap: var(--space-xs); min-width: 0; flex: 1 1 auto; }
 /* A native file input stays keyboard-reachable and announces itself; it is
    styled, not replaced. */
-#identity-file {
-  max-width: 100%;
-  color: var(--color-secondary);
-  font-size: var(--text-caption);
-}
-#identity-file::file-selector-button {
+#identity-file, #cm-avatar-file { max-width: 100%; color: var(--color-secondary); font-size: var(--type-caption); }
+#identity-file::file-selector-button,
+#cm-avatar-file::file-selector-button {
   min-height: 44px;
-  margin-right: var(--space-2);
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-elevated);
+  margin-right: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-ghost);
   color: var(--color-primary);
+  font-family: inherit;
   cursor: pointer;
 }
 #identity-avatar-remove { justify-self: start; }
 .identity-legacy { color: var(--color-muted); }
 
-.chart-form-error { display: grid; gap: var(--space-2); justify-items: start; }
+.chart-form-error { display: grid; gap: var(--space-xs); justify-items: start; }
 
 @media (max-width: 640px) {
   .identity-avatar-row { flex-wrap: wrap; }
 }
 
-/* A <select>'s minimum width follows its LONGEST option, and identity gave
-   options real sentences ("Legacy classification: Public figure"). Without
-   min-width: 0 the chart selectors refuse to shrink below that text, and on
-   a phone the LAYOUT VIEWPORT expands to fit them — the whole page renders
-   522px wide inside a 375px screen. Found at genuine 375px, not in a media
-   query review. Constrained selects truncate long options with an ellipsis,
-   which is the compact behaviour the switcher wants anyway. */
+/* ── Intrinsic-width containment ─────────────────────────────────────────────
+   A <select>'s minimum width follows its LONGEST option, and the chart pickers
+   carry real sentences. Without min-width: 0 they refuse to shrink below that
+   text, and on a phone the LAYOUT VIEWPORT expands to fit them — the whole page
+   rendered 522px wide inside a 375px screen. Found at genuine 375px, not in a
+   media-query review.
+
+   The rest of that chain: the switchers are one-column GRIDs whose implicit
+   `auto` track max-content-sizes to the select, and grid items keep the default
+   `min-width: auto`, so one long option's intrinsic width climbed switcher →
+   section head → workspace panel → workspace track and expanded the layout
+   viewport itself. minmax(0, 1fr) caps the switcher track; min-width: 0 stops
+   the climb at every level it passed through. */
 #chart-switcher-select,
 #today-chart-select,
-#transits-chart-select {
-  min-width: 0;
-  max-width: 100%;
-}
+#transits-chart-select { min-width: 0; max-width: 100%; }
 
-/* The rest of that same chain. The switcher is a one-column GRID whose
-   implicit `auto` track max-content-sizes to the select, and the shell's
-   grid items keep the default `min-width: auto`, so one long option's
-   intrinsic width climbed switcher → section head → workspace panel →
-   workspace track and expanded the layout viewport itself. minmax(0, 1fr)
-   caps the switcher track; min-width: 0 stops the climb at every level the
-   chain passed through. */
 .chart-switcher,
-.tr-switcher {
-  grid-template-columns: minmax(0, 1fr);
-}
+.tr-switcher { grid-template-columns: minmax(0, 1fr); }
+
 .workspace-panel,
 .o-section-head,
 .o-section-head__actions,
-.me-head-actions {
-  min-width: 0;
-}
+.me-head-actions,
+.chart-chip,
+.chart-chip__text { min-width: 0; }
 
-/* The last anchor was pre-1.10: the chart-data placements TABLE, whose hard
-   min-content (~490px) expanded the mobile layout viewport long before this
-   update — 1.10's long option labels merely made the same failure obvious.
-   The table now scrolls inside its own wrapper instead of resizing the page,
-   and reading-grid items stop propagating intrinsic widths upward. */
+/* The last anchor was the chart-data placements TABLE, whose hard min-content
+   (~490px) expanded the mobile layout viewport on its own. It now scrolls
+   inside its own wrapper instead of resizing the page, and reading-grid items
+   stop propagating intrinsic widths upward. */
 .me-grid > * { min-width: 0; }
-#chart-placements {
-  overflow-x: auto;
-  min-width: 0;
-  contain: inline-size;
-}
+#chart-placements { overflow-x: auto; min-width: 0; contain: inline-size; }
