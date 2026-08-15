@@ -468,10 +468,16 @@ test("the back is local and the fronts are not", () => {
   // request for it would put a loading state inside a face-down card.
   assert.match(APP, /class="tarot-card__back" aria-hidden="true"/);
   assert.ok(!/tarot-card__back[^>]*src=/.test(APP), "the back is not an <img> from storage");
-  assert.match(TAROT_CSS, /url\("\/brand\/orbit-tarot-card-back\.jpg"\)/,
+  assert.match(TAROT_CSS, /url\("\/brand\/orbit-tarot-card-back\.svg"\)/,
     "the face-down card uses the committed local artwork");
-  assert.ok(existsSync(join(REPO_ROOT, "public", "brand", "orbit-tarot-card-back.jpg")),
+  const backPath = join(REPO_ROOT, "public", "brand", "orbit-tarot-card-back.svg");
+  assert.ok(existsSync(backPath),
     "the local back cannot be missing from the shipped bundle");
+  const back = readFileSync(backPath, "utf8");
+  assert.match(back, /<svg[^>]+viewBox="0 0 700 1200"/,
+    "the back keeps the exact 7:12 vector canvas");
+  assert.ok(!/<image\b|data:image\//.test(back),
+    "the SVG must remain native geometry, not a raster in a wrapper");
   // Fronts come from a server-resolved URL the client never constructs.
   const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
   assert.match(deck, /export function imageUrl/);

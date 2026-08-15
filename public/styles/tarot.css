@@ -107,7 +107,7 @@
      panning. pan-y keeps vertical scrolling, which is what a reader needs to
      get past the card. */
   touch-action: pan-y;
-  background: #080a12 url("/brand/orbit-tarot-card-back.jpg") center / cover no-repeat;
+  background: #080a12 url("/brand/orbit-tarot-card-back.svg") center / cover no-repeat;
 }
 .tarot-card__back {
   display: none;

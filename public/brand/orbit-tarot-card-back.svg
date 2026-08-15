@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit Axis Tarot card back</title>
+  <desc id="desc">A deep-space celestial instrument with nested violet orbits, observer points, corner stars, and an eye above a stepped pyramid.</desc>
+  <defs>
+    <filter id="paper-grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="3" seed="62" result="noise"/>
+      <feColorMatrix in="noise" type="matrix" values="
+        0 0 0 0 0.96
+        0 0 0 0 0.95
+        0 0 0 0 1
+        0 0 0 .14 0"/>
+    </filter>
+
+    <g id="small-node">
+      <circle r="5.4" fill="#7657e8" stroke="#f4f2fa" stroke-width="1.1"/>
+      <circle r="8.8" fill="none" stroke="#b9a7ff" stroke-width="0.7" opacity="0.55"/>
+    </g>
+
+    <g id="large-node">
+      <circle r="17" fill="#7657e8" stroke="#b9a7ff" stroke-width="1.5"/>
+      <circle r="24" fill="none" stroke="#f4f2fa" stroke-width="1" opacity="0.82"/>
+      <circle r="30" fill="none" stroke="#7657e8" stroke-width="0.9" opacity="0.55"/>
+    </g>
+
+    <g id="corner-instrument">
+      <circle r="23" fill="none" stroke="#b9a7ff" stroke-width="0.8" stroke-dasharray="2 4" opacity="0.72"/>
+      <circle r="13" fill="none" stroke="#7657e8" stroke-width="0.9" opacity="0.82"/>
+      <path d="M0-18 3-5 13-3 4 2 0 18-3 5-13 3-4-2Z" fill="#f4f2fa" stroke="#b9a7ff" stroke-width="0.5"/>
+      <path d="M0-31V-22M0 22V31M-31 0H-22M22 0H31" fill="none" stroke="#b9a7ff" stroke-width="1"/>
+    </g>
+
+    <line id="inner-ray" x1="350" y1="472" x2="350" y2="500" stroke="#b9a7ff" stroke-width="0.75" opacity="0.72"/>
+    <line id="outer-tick" x1="350" y1="246" x2="350" y2="264" stroke="#b9a7ff" stroke-width="0.75" opacity="0.6"/>
+    <line id="node-ray" x1="350" y1="269" x2="350" y2="216" stroke="#b9a7ff" stroke-width="0.75" opacity="0.72"/>
+
+    <clipPath id="pyramid-clip">
+      <path d="M350 590 314 651H386Z"/>
+    </clipPath>
+  </defs>
+
+  <rect width="700" height="1200" fill="#080a12"/>
+  <rect x="10" y="10" width="680" height="1180" fill="none" stroke="#b9a7ff" stroke-width="1.35"/>
+  <rect x="16" y="16" width="668" height="1168" fill="none" stroke="#7657e8" stroke-width="0.8" opacity="0.9"/>
+  <path d="M26 28H332M368 28H674M26 1172H332M368 1172H674" fill="none" stroke="#b9a7ff" stroke-width="0.55" opacity="0.35"/>
+
+  <!-- Corner calibration marks. -->
+  <g fill="none" stroke="#7657e8" stroke-width="1" opacity="0.72">
+    <path d="M35 133H82M119 39V78M618 133H665M581 39V78"/>
+    <path d="M35 1067H82M119 1122V1161M618 1067H665M581 1122V1161"/>
+  </g>
+  <g transform="translate(69 70)"><use href="#corner-instrument"/></g>
+  <g transform="translate(631 70)"><use href="#corner-instrument"/></g>
+  <g transform="translate(69 1130)"><use href="#corner-instrument"/></g>
+  <g transform="translate(631 1130)"><use href="#corner-instrument"/></g>
+
+  <!-- Primary instrument axes and outer paths. -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M350 20V1180" stroke="#b9a7ff" stroke-width="0.75" opacity="0.48"/>
+    <path d="M16 600H684" stroke="#b9a7ff" stroke-width="0.75" opacity="0.48"/>
+    <ellipse cx="350" cy="600" rx="315" ry="548" stroke="#b9a7ff" stroke-width="0.8" stroke-dasharray="1 5" opacity="0.46"/>
+    <ellipse cx="350" cy="600" rx="302" ry="522" stroke="#b9a7ff" stroke-width="1.05" opacity="0.73"/>
+    <ellipse cx="350" cy="600" rx="286" ry="462" stroke="#7657e8" stroke-width="1.25" opacity="0.86"/>
+    <ellipse cx="350" cy="600" rx="274" ry="445" stroke="#b9a7ff" stroke-width="0.7" stroke-dasharray="2 6" opacity="0.58"/>
+    <ellipse cx="350" cy="600" rx="252" ry="365" stroke="#b9a7ff" stroke-width="0.7" opacity="0.52"/>
+    <ellipse cx="350" cy="600" rx="230" ry="280" stroke="#7657e8" stroke-width="2.5" stroke-dasharray="0.1 9" opacity="0.95"/>
+    <ellipse cx="350" cy="600" rx="195" ry="205" stroke="#b9a7ff" stroke-width="0.75" opacity="0.6"/>
+    <ellipse cx="350" cy="600" rx="142" ry="155" stroke="#7657e8" stroke-width="0.8" stroke-dasharray="2 5" opacity="0.72"/>
+  </g>
+
+  <!-- Measured diagonal paths. -->
+  <g fill="none" stroke-linecap="round">
+    <path d="M108 126 350 460 592 126" stroke="#7657e8" stroke-width="1.35" opacity="0.84"/>
+    <path d="M108 1074 350 740 592 1074" stroke="#7657e8" stroke-width="1.35" opacity="0.84"/>
+    <path d="M108 126 350 460M592 126 350 460M108 1074 350 740M592 1074 350 740" stroke="#b9a7ff" stroke-width="0.75" stroke-dasharray="1 5" opacity="0.44"/>
+    <path d="M136 170 350 462M564 170 350 462M136 1030 350 738M564 1030 350 738" stroke="#7657e8" stroke-width="0.65" stroke-dasharray="8 3 1 3" opacity="0.52"/>
+    <path d="M150 188 166 210M550 188 534 210M150 1012 166 990M550 1012 534 990" stroke="#b9a7ff" stroke-width="1" opacity="0.62"/>
+  </g>
+
+  <!-- Radial calibration ticks. -->
+  <g>
+    <use href="#outer-tick"/>
+    <use href="#outer-tick" transform="rotate(5 350 600)"/>
+    <use href="#outer-tick" transform="rotate(10 350 600)"/>
+    <use href="#outer-tick" transform="rotate(15 350 600)"/>
+    <use href="#outer-tick" transform="rotate(20 350 600)"/>
+    <use href="#outer-tick" transform="rotate(25 350 600)"/>
+    <use href="#outer-tick" transform="rotate(30 350 600)"/>
+    <use href="#outer-tick" transform="rotate(35 350 600)"/>
+    <use href="#outer-tick" transform="rotate(40 350 600)"/>
+    <use href="#outer-tick" transform="rotate(45 350 600)"/>
+    <use href="#outer-tick" transform="rotate(50 350 600)"/>
+    <use href="#outer-tick" transform="rotate(55 350 600)"/>
+    <use href="#outer-tick" transform="rotate(60 350 600)"/>
+    <use href="#outer-tick" transform="rotate(65 350 600)"/>
+    <use href="#outer-tick" transform="rotate(70 350 600)"/>
+    <use href="#outer-tick" transform="rotate(75 350 600)"/>
+    <use href="#outer-tick" transform="rotate(80 350 600)"/>
+    <use href="#outer-tick" transform="rotate(85 350 600)"/>
+    <use href="#outer-tick" transform="rotate(90 350 600)"/>
+    <use href="#outer-tick" transform="rotate(95 350 600)"/>
+    <use href="#outer-tick" transform="rotate(100 350 600)"/>
+    <use href="#outer-tick" transform="rotate(105 350 600)"/>
+    <use href="#outer-tick" transform="rotate(110 350 600)"/>
+    <use href="#outer-tick" transform="rotate(115 350 600)"/>
+    <use href="#outer-tick" transform="rotate(120 350 600)"/>
+    <use href="#outer-tick" transform="rotate(125 350 600)"/>
+    <use href="#outer-tick" transform="rotate(130 350 600)"/>
+    <use href="#outer-tick" transform="rotate(135 350 600)"/>
+    <use href="#outer-tick" transform="rotate(140 350 600)"/>
+    <use href="#outer-tick" transform="rotate(145 350 600)"/>
+    <use href="#outer-tick" transform="rotate(150 350 600)"/>
+    <use href="#outer-tick" transform="rotate(155 350 600)"/>
+    <use href="#outer-tick" transform="rotate(160 350 600)"/>
+    <use href="#outer-tick" transform="rotate(165 350 600)"/>
+    <use href="#outer-tick" transform="rotate(170 350 600)"/>
+    <use href="#outer-tick" transform="rotate(175 350 600)"/>
+    <use href="#outer-tick" transform="rotate(180 350 600)"/>
+    <use href="#outer-tick" transform="rotate(185 350 600)"/>
+    <use href="#outer-tick" transform="rotate(190 350 600)"/>
+    <use href="#outer-tick" transform="rotate(195 350 600)"/>
+    <use href="#outer-tick" transform="rotate(200 350 600)"/>
+    <use href="#outer-tick" transform="rotate(205 350 600)"/>
+    <use href="#outer-tick" transform="rotate(210 350 600)"/>
+    <use href="#outer-tick" transform="rotate(215 350 600)"/>
+    <use href="#outer-tick" transform="rotate(220 350 600)"/>
+    <use href="#outer-tick" transform="rotate(225 350 600)"/>
+    <use href="#outer-tick" transform="rotate(230 350 600)"/>
+    <use href="#outer-tick" transform="rotate(235 350 600)"/>
+    <use href="#outer-tick" transform="rotate(240 350 600)"/>
+    <use href="#outer-tick" transform="rotate(245 350 600)"/>
+    <use href="#outer-tick" transform="rotate(250 350 600)"/>
+    <use href="#outer-tick" transform="rotate(255 350 600)"/>
+    <use href="#outer-tick" transform="rotate(260 350 600)"/>
+    <use href="#outer-tick" transform="rotate(265 350 600)"/>
+    <use href="#outer-tick" transform="rotate(270 350 600)"/>
+    <use href="#outer-tick" transform="rotate(275 350 600)"/>
+    <use href="#outer-tick" transform="rotate(280 350 600)"/>
+    <use href="#outer-tick" transform="rotate(285 350 600)"/>
+    <use href="#outer-tick" transform="rotate(290 350 600)"/>
+    <use href="#outer-tick" transform="rotate(295 350 600)"/>
+    <use href="#outer-tick" transform="rotate(300 350 600)"/>
+    <use href="#outer-tick" transform="rotate(305 350 600)"/>
+    <use href="#outer-tick" transform="rotate(310 350 600)"/>
+    <use href="#outer-tick" transform="rotate(315 350 600)"/>
+    <use href="#outer-tick" transform="rotate(320 350 600)"/>
+    <use href="#outer-tick" transform="rotate(325 350 600)"/>
+    <use href="#outer-tick" transform="rotate(330 350 600)"/>
+    <use href="#outer-tick" transform="rotate(335 350 600)"/>
+    <use href="#outer-tick" transform="rotate(340 350 600)"/>
+    <use href="#outer-tick" transform="rotate(345 350 600)"/>
+    <use href="#outer-tick" transform="rotate(350 350 600)"/>
+    <use href="#outer-tick" transform="rotate(355 350 600)"/>
+  </g>
+
+  <g>
+    <use href="#inner-ray"/>
+    <use href="#inner-ray" transform="rotate(10 350 600)"/>
+    <use href="#inner-ray" transform="rotate(20 350 600)"/>
+    <use href="#inner-ray" transform="rotate(30 350 600)"/>
+    <use href="#inner-ray" transform="rotate(40 350 600)"/>
+    <use href="#inner-ray" transform="rotate(50 350 600)"/>
+    <use href="#inner-ray" transform="rotate(60 350 600)"/>
+    <use href="#inner-ray" transform="rotate(70 350 600)"/>
+    <use href="#inner-ray" transform="rotate(80 350 600)"/>
+    <use href="#inner-ray" transform="rotate(90 350 600)"/>
+    <use href="#inner-ray" transform="rotate(100 350 600)"/>
+    <use href="#inner-ray" transform="rotate(110 350 600)"/>
+    <use href="#inner-ray" transform="rotate(120 350 600)"/>
+    <use href="#inner-ray" transform="rotate(130 350 600)"/>
+    <use href="#inner-ray" transform="rotate(140 350 600)"/>
+    <use href="#inner-ray" transform="rotate(150 350 600)"/>
+    <use href="#inner-ray" transform="rotate(160 350 600)"/>
+    <use href="#inner-ray" transform="rotate(170 350 600)"/>
+    <use href="#inner-ray" transform="rotate(180 350 600)"/>
+    <use href="#inner-ray" transform="rotate(190 350 600)"/>
+    <use href="#inner-ray" transform="rotate(200 350 600)"/>
+    <use href="#inner-ray" transform="rotate(210 350 600)"/>
+    <use href="#inner-ray" transform="rotate(220 350 600)"/>
+    <use href="#inner-ray" transform="rotate(230 350 600)"/>
+    <use href="#inner-ray" transform="rotate(240 350 600)"/>
+    <use href="#inner-ray" transform="rotate(250 350 600)"/>
+    <use href="#inner-ray" transform="rotate(260 350 600)"/>
+    <use href="#inner-ray" transform="rotate(270 350 600)"/>
+    <use href="#inner-ray" transform="rotate(280 350 600)"/>
+    <use href="#inner-ray" transform="rotate(290 350 600)"/>
+    <use href="#inner-ray" transform="rotate(300 350 600)"/>
+    <use href="#inner-ray" transform="rotate(310 350 600)"/>
+    <use href="#inner-ray" transform="rotate(320 350 600)"/>
+    <use href="#inner-ray" transform="rotate(330 350 600)"/>
+    <use href="#inner-ray" transform="rotate(340 350 600)"/>
+    <use href="#inner-ray" transform="rotate(350 350 600)"/>
+  </g>
+
+  <!-- Top and bottom observer bursts. -->
+  <g>
+    <use href="#node-ray" transform="rotate(-60 350 270)"/>
+    <use href="#node-ray" transform="rotate(-50 350 270)"/>
+    <use href="#node-ray" transform="rotate(-40 350 270)"/>
+    <use href="#node-ray" transform="rotate(-30 350 270)"/>
+    <use href="#node-ray" transform="rotate(-20 350 270)"/>
+    <use href="#node-ray" transform="rotate(-10 350 270)"/>
+    <use href="#node-ray"/>
+    <use href="#node-ray" transform="rotate(10 350 270)"/>
+    <use href="#node-ray" transform="rotate(20 350 270)"/>
+    <use href="#node-ray" transform="rotate(30 350 270)"/>
+    <use href="#node-ray" transform="rotate(40 350 270)"/>
+    <use href="#node-ray" transform="rotate(50 350 270)"/>
+    <use href="#node-ray" transform="rotate(60 350 270)"/>
+  </g>
+  <g transform="rotate(180 350 600)">
+    <use href="#node-ray" transform="rotate(-60 350 270)"/>
+    <use href="#node-ray" transform="rotate(-50 350 270)"/>
+    <use href="#node-ray" transform="rotate(-40 350 270)"/>
+    <use href="#node-ray" transform="rotate(-30 350 270)"/>
+    <use href="#node-ray" transform="rotate(-20 350 270)"/>
+    <use href="#node-ray" transform="rotate(-10 350 270)"/>
+    <use href="#node-ray"/>
+    <use href="#node-ray" transform="rotate(10 350 270)"/>
+    <use href="#node-ray" transform="rotate(20 350 270)"/>
+    <use href="#node-ray" transform="rotate(30 350 270)"/>
+    <use href="#node-ray" transform="rotate(40 350 270)"/>
+    <use href="#node-ray" transform="rotate(50 350 270)"/>
+    <use href="#node-ray" transform="rotate(60 350 270)"/>
+  </g>
+
+  <!-- Orbital points. -->
+  <g>
+    <g transform="translate(350 55)"><use href="#small-node"/></g>
+    <g transform="translate(350 132)"><use href="#small-node"/></g>
+    <g transform="translate(350 460)"><use href="#small-node"/></g>
+    <g transform="translate(350 740)"><use href="#small-node"/></g>
+    <g transform="translate(350 1068)"><use href="#small-node"/></g>
+    <g transform="translate(350 1145)"><use href="#small-node"/></g>
+    <g transform="translate(108 126)"><use href="#small-node"/></g>
+    <g transform="translate(592 126)"><use href="#small-node"/></g>
+    <g transform="translate(108 1074)"><use href="#small-node"/></g>
+    <g transform="translate(592 1074)"><use href="#small-node"/></g>
+    <g transform="translate(131 338)"><use href="#small-node"/></g>
+    <g transform="translate(569 338)"><use href="#small-node"/></g>
+    <g transform="translate(131 862)"><use href="#small-node"/></g>
+    <g transform="translate(569 862)"><use href="#small-node"/></g>
+    <g transform="translate(226 460)"><use href="#small-node"/></g>
+    <g transform="translate(474 460)"><use href="#small-node"/></g>
+    <g transform="translate(226 740)"><use href="#small-node"/></g>
+    <g transform="translate(474 740)"><use href="#small-node"/></g>
+    <g transform="translate(88 600)"><use href="#small-node"/></g>
+    <g transform="translate(612 600)"><use href="#small-node"/></g>
+  </g>
+
+  <g transform="translate(350 270)"><use href="#large-node"/></g>
+  <g transform="translate(350 930)"><use href="#large-node"/></g>
+  <g transform="translate(55 600)"><use href="#large-node"/></g>
+  <g transform="translate(645 600)"><use href="#large-node"/></g>
+
+  <!-- Central observer medallion, eye, and stepped pyramid. -->
+  <g>
+    <circle cx="350" cy="600" r="88" fill="#080a12" stroke="#b9a7ff" stroke-width="4"/>
+    <circle cx="350" cy="600" r="82" fill="none" stroke="#7657e8" stroke-width="1.2" opacity="0.75"/>
+    <circle cx="350" cy="578" r="34" fill="none" stroke="#b9a7ff" stroke-width="0.85" opacity="0.72"/>
+    <circle cx="350" cy="578" r="18" fill="none" stroke="#7657e8" stroke-width="0.8" opacity="0.72"/>
+    <path d="M331 578Q350 562 369 578Q350 594 331 578Z" fill="#f4f2fa" stroke="#b9a7ff" stroke-width="0.8"/>
+    <circle cx="350" cy="578" r="5.5" fill="#080a12" stroke="#7657e8" stroke-width="1.4"/>
+    <circle cx="350" cy="578" r="1.8" fill="#b9a7ff"/>
+    <path d="M350 592 314 651H386Z" fill="none" stroke="#b9a7ff" stroke-width="1.1"/>
+    <g clip-path="url(#pyramid-clip)" fill="none" stroke="#7657e8" stroke-width="1">
+      <path d="M308 606H392M308 617H392M308 628H392M308 639H392M308 650H392"/>
+    </g>
+    <path d="M302 648 398 552" fill="none" stroke="#7657e8" stroke-width="0.9" opacity="0.62"/>
+  </g>
+
+  <!-- Printed-card grain, intentionally subtle and non-semantic. -->
+  <rect x="1" y="1" width="698" height="1198" fill="#f4f2fa" filter="url(#paper-grain)" opacity="0.16" pointer-events="none"/>
+</svg>
