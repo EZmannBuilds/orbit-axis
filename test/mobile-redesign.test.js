@@ -118,6 +118,27 @@ test("signed out, the chart offers one primary create action", () => {
   assert.equal(ctas.length, 1, "exactly one primary CTA in the signed-out state");
 });
 
+test("the empty chart page does not offer the same action twice", () => {
+  // This one shipped to production before it was caught, because the test
+  // above only ever read renderSavedCharts. The signed-out Chart page is built
+  // by renderChartPlaceholder, and it rendered the header's Add chart AND the
+  // empty state's Create your chart — two primary buttons for one task, under
+  // "No active chart yet" printed twice. Assert the header stands down.
+  const fn = APP.slice(APP.indexOf("function renderChartPlaceholder"));
+  const body = fn.slice(0, fn.indexOf("\n}"));
+  assert.match(body, /const isEmpty = kind !== "loading" && kind !== "error"/);
+  assert.match(body, /add\.hidden = isEmpty/,
+    "the header Add chart must yield to the empty state's single CTA");
+  assert.match(body, /isEmpty \? "" :/,
+    "and the header must not repeat the empty state's heading text");
+  // Exactly one primary button in the empty markup itself.
+  const empty = body.slice(body.lastIndexOf("me-empty"));
+  assert.equal((empty.match(/o-btn--primary/g) || []).length, 1);
+  // And it comes back the moment a chart is actually being loaded.
+  assert.match(APP, /addChart\.hidden = false/,
+    "with a chart present, adding another is a real action again");
+});
+
 // ── Responsive width ────────────────────────────────────────────────────────
 
 test("the universal search cannot widen the document", () => {

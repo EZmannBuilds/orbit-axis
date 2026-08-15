@@ -5115,8 +5115,16 @@ function renderChartPlaceholder(kind, { message = "", retry = false } = {}) {
   const status = $("#me-status");
   const nameEl = $("#mychart-name");
   const edit = $("#me-edit-chart");
+  const add = $("#me-add-chart");
   if (edit) edit.hidden = true;
-  if (nameEl) nameEl.textContent = kind === "loading" ? "Loading your chart…" : "No active chart yet";
+  // With no chart to read, the empty state below is the whole page, and it
+  // already carries the one primary action. Leaving the header's Add chart in
+  // place put two primary buttons for the same task on one signed-out screen —
+  // and made the header say "No active chart yet" directly above a heading
+  // saying it again. The header goes quiet and the empty state speaks.
+  const isEmpty = kind !== "loading" && kind !== "error";
+  if (add) add.hidden = isEmpty;
+  if (nameEl) nameEl.textContent = kind === "loading" ? "Loading your chart…" : isEmpty ? "" : "No active chart yet";
   $("#me-active-badge")?.setAttribute("hidden", "");
   if (status) status.textContent = message || "";
   if (!target) return;
@@ -5156,6 +5164,8 @@ async function loadChartReading(chartProfile) {
   renderChartPlaceholder("loading", { message: `Loading ${chartProfile.nickname || "your chart"}…` });
   const nameEl = $("#mychart-name");
   if (nameEl) nameEl.textContent = chartProfile.nickname || "My Chart";
+  const addChart = $("#me-add-chart");
+  if (addChart) addChart.hidden = false;   // a chart exists: adding another is a real action again
 
   let data;
   try {
