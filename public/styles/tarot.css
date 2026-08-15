@@ -90,8 +90,9 @@
   letter-spacing: 0.04em;
 }
 
-/* The back. One hairline frame and nothing else: a face-down card should read
-   as "not yet turned over", which is a state, not an illustration. */
+/* The back is one local Orbit asset: it appears before every front, so it must
+   never wait on Storage. Its instrument pattern is 180-degree symmetric — a
+   reversed draw cannot be identified before the card is turned. */
 .tarot-card--down {
   display: grid;
   place-items: center;
@@ -106,10 +107,10 @@
      panning. pan-y keeps vertical scrolling, which is what a reader needs to
      get past the card. */
   touch-action: pan-y;
-  background:
-    linear-gradient(160deg, var(--color-surface-elevated), var(--color-surface));
+  background: #080a12 url("/brand/orbit-tarot-card-back.jpg") center / cover no-repeat;
 }
 .tarot-card__back {
+  display: none;
   width: 58%;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -270,7 +271,7 @@
     background: Canvas;
     color: CanvasText;
   }
-  .tarot-card__back { border-color: CanvasText; background: none; }
+  .tarot-card__back { display: block; border-color: CanvasText; background: none; }
   .tarot-meaning__position { color: CanvasText; }
 }
 

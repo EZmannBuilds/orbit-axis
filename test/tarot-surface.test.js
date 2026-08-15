@@ -37,6 +37,7 @@ const PANEL = PANEL_RAW.replace(/<!--[\s\S]*?-->/g, "");
 const ICONS = readFileSync(join(REPO_ROOT, "public", "icons.js"), "utf8");
 const PRIVACY = readFileSync(join(REPO_ROOT, "public", "privacy.html"), "utf8");
 const SERVER = readFileSync(join(REPO_ROOT, "lib", "server", "create-app.js"), "utf8");
+const TAROT_CSS = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
 
 /* ── The five-tab ceiling ─────────────────────────────────────────────────── */
 
@@ -467,6 +468,10 @@ test("the back is local and the fronts are not", () => {
   // request for it would put a loading state inside a face-down card.
   assert.match(APP, /class="tarot-card__back" aria-hidden="true"/);
   assert.ok(!/tarot-card__back[^>]*src=/.test(APP), "the back is not an <img> from storage");
+  assert.match(TAROT_CSS, /url\("\/brand\/orbit-tarot-card-back\.jpg"\)/,
+    "the face-down card uses the committed local artwork");
+  assert.ok(existsSync(join(REPO_ROOT, "public", "brand", "orbit-tarot-card-back.jpg")),
+    "the local back cannot be missing from the shipped bundle");
   // Fronts come from a server-resolved URL the client never constructs.
   const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
   assert.match(deck, /export function imageUrl/);
