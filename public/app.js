@@ -4484,6 +4484,11 @@ function tarotPositionSet() {
   return tarotPref("tarotPositions", "reflective") === "timeline" ? "timeline" : "reflective";
 }
 
+/** Does this reader want reversed cards? Off by default. */
+function tarotReversalsOn() {
+  return tarotPref("tarotReversed", "off") === "on";
+}
+
 /** Does the meaning appear with the card, or on request? */
 function tarotMeaningOnRequest() {
   return tarotPref("tarotMeaning", "ask") !== "always";
@@ -4580,8 +4585,9 @@ function tarotCardFaceHtml(card, { faceDown = false, label = "Turn over today's 
   // bytes land and nothing shifts when they do. onerror drops the art class
   // and the text face underneath shows through, rather than leaving a broken
   // image frame inside the card.
+  const reversed = card.orientation === "reversed";
   if (card.image?.url) {
-    return `<div class="tarot-card o-object tarot-card--up tarot-card--art" aria-hidden="true">
+    return `<div class="tarot-card o-object tarot-card--up tarot-card--art${reversed ? " tarot-card--reversed" : ""}" aria-hidden="true">
       <img class="tarot-card__art" src="${esc(card.image.url)}" alt=""
            width="${esc(String(card.image.width))}" height="${esc(String(card.image.height))}"
            decoding="async"
@@ -4596,7 +4602,7 @@ function tarotCardFaceHtml(card, { faceDown = false, label = "Turn over today's 
   const suit = card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana";
   // The face is decorative: every word on it is repeated as real text beside
   // the card, so a screen reader is never asked to read a layout.
-  return `<div class="tarot-card o-object tarot-card--up" aria-hidden="true">
+  return `<div class="tarot-card o-object tarot-card--up${reversed ? " tarot-card--reversed" : ""}" aria-hidden="true">
     <span class="tarot-card__rank">${esc(rank)}</span>
     <span class="tarot-card__name">${esc(card.name)}</span>
     <span class="tarot-card__suit">${esc(suit)}</span>
@@ -4664,7 +4670,8 @@ function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step =
         step ? ` <span class="tarot-meaning__step">· ${esc(step)}</span>` : ""}</p>` : ""}
       <${H} class="tarot-meaning__name" tabindex="-1">${esc(card.name)}</${H}>
       <p class="u-meta tarot-meaning__kind">${esc(card.suit
-        ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana")}</p>
+        ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana")}${
+        card.orientation === "reversed" ? ` · <span class="tarot-meaning__reversed">Reversed</span>` : ""}</p>
       <button type="button" class="o-btn o-btn--secondary tarot-meaning__ask"
         data-tarot-action="show-meaning"${index === null ? "" : ` data-tarot-index="${index}"`}
         aria-expanded="false">What does this card mean?</button>
@@ -4686,7 +4693,8 @@ function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step =
   return `<div class="tarot-meaning tarot-meaning--shown">
     ${position}
     <${H} class="tarot-meaning__name" tabindex="-1">${esc(card.name)}</${H}>
-    <p class="u-meta tarot-meaning__kind">${suit}</p>
+    <p class="u-meta tarot-meaning__kind">${suit}${
+      entry.card.orientation === "reversed" ? ` · <span class="tarot-meaning__reversed">Reversed</span>` : ""}</p>
     <p class="tarot-meaning__body" tabindex="-1">${esc(card.upright_meaning)}</p>
     <p class="tarot-meaning__prompt"><span class="tarot-meaning__prompt-label">To reflect on</span>
       ${esc(card.reflection_prompt)}</p>
@@ -4740,7 +4748,8 @@ async function loadTarotDaily() {
 
   try {
     const timezone = axisResolveTimezone();
-    const data = await get(`/api/tarot/daily?timezone=${encodeURIComponent(timezone)}`);
+    const data = await get(`/api/tarot/daily?timezone=${encodeURIComponent(timezone)}`
+      + `&reversals=${tarotReversalsOn() ? "on" : "off"}`);
     tarotState.reading = data.reading;
     // Known now, turned over later — which is exactly the gap the front loads in.
     preloadTarotFronts(data.reading?.cards);
@@ -4886,6 +4895,7 @@ async function drawTarotSpread(spreadType) {
     const data = await post("/api/tarot/draw", {
       spread_type: spreadType,
       timezone: axisResolveTimezone(),
+      reversals: tarotReversalsOn(),
     });
     tarotState.manual = data.reading;
     preloadTarotFronts(data.reading?.cards);
@@ -5128,7 +5138,9 @@ async function saveTarotReading(which) {
         question: reading.question,
         // Slugs only. The server re-resolves each card from its own deck, so a
         // client cannot save a meaning the deck does not contain.
-        cards: reading.cards.map((entry) => entry.card.slug),
+        // Slug AND orientation: a reversed card saved as upright would be the
+        // same card saying something it did not say.
+        cards: reading.cards.map((entry) => ({ slug: entry.card.slug, orientation: entry.card.orientation })),
         draw: reading.draw,
       },
     });
@@ -5341,7 +5353,8 @@ const settings = {
     // Reflect into the segmented control, so the selected state is visible,
     // announced, and never communicated by colour alone.
     const seg = { theme: "#set-theme", density: "#set-density", text: "#set-text", contrast: "#set-contrast", motion: "#set-motion",
-      tarot: "#set-tarot", tarotPositions: "#set-tarot-positions", tarotMeaning: "#set-tarot-meaning" }[key];
+      tarot: "#set-tarot", tarotPositions: "#set-tarot-positions", tarotMeaning: "#set-tarot-meaning",
+      tarotReversed: "#set-tarot-reversed" }[key];
     // Switching Tarot off has to take effect immediately, not on next load:
     // the rail, the Today switch, and the route all read availability.
     if (key === "tarot") { buildRail(); syncTodayViews(currentWorkspace()); }
@@ -5356,7 +5369,8 @@ const settings = {
 
 function wireSettings() {
   const map = { "#set-theme": "theme", "#set-density": "density", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
-    "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning" };
+    "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning",
+    "#set-tarot-reversed": "tarotReversed" };
   for (const [sel, key] of Object.entries(map)) {
     $(sel)?.addEventListener("click", e => {
       const btn = e.target.closest("button");

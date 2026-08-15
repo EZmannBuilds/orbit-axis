@@ -45,7 +45,16 @@
   aspect-ratio: 7 / 12;
   width: 100%;
   max-width: 200px;
-  border-radius: var(--radius-lg);
+  /* The curve of a printed card, not the curve of a UI surface.
+     18px is the radius of a CARD in this design system — an interface tile —
+     and it made the tarot card read as a tile with a picture in it. Square was
+     the other extreme: the 1909 plates have their own rounded corners printed
+     in, so a square frame left four white square corners standing proud of the
+     artwork's curve.
+     A physical tarot card is about 3.2mm radius on a 70mm width — roughly 4.5%
+     — which at this card's 200px is 9px. The frame now follows the plate. */
+  --tarot-radius: 9px;
+  border-radius: var(--tarot-radius);
   border: var(--border-width) solid var(--color-border);
   background: var(--color-surface);
   display: grid;
@@ -118,7 +127,8 @@
   aspect-ratio: 7 / 12;
   width: 100%;
   max-width: 200px;
-  border-radius: var(--radius-lg);
+  /* Matches the card it stands in for, or the corners visibly change on load. */
+  border-radius: 9px;
 }
 
 /* ── The reveal ────────────────────────────────────────────────────────────
@@ -455,4 +465,16 @@
 @media (prefers-reduced-motion: reduce) {
   .tarot-meaning--shown .tarot-meaning__body,
   .tarot-meaning--shown .tarot-meaning__prompt { animation: none; }
+}
+
+/* ── Reversed ─────────────────────────────────────────────────────────────
+   The card is turned, which is what a reversed card looks like on a table.
+   The rotation is NEVER the only signal: "Reversed" is stated in text beside
+   the card, because an upside-down illustration is not something a screen
+   reader can report and not something everyone will notice. */
+.tarot-card--reversed { transform: rotate(180deg); }
+.tarot-meaning__reversed { font-weight: 600; color: var(--color-secondary); }
+
+@media (forced-colors: active) {
+  .tarot-meaning__reversed { color: CanvasText; }
 }

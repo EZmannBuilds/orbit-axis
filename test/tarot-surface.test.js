@@ -17,7 +17,8 @@ import { join } from "node:path";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 
 import { featureEnabled, workspaceBlocked } from "../lib/features.js";
-import { DECK_VERSION, PRODUCTION_CARDS, deckStatus, validateCard, validateDeck } from "../lib/tarot/deck.js";
+import { DECK_VERSION, PRODUCTION_CARDS, deckStatus, deckSupportsReversals, validateCard, validateDeck } from "../lib/tarot/deck.js";
+import { DRAFT_CARDS } from "../lib/tarot/draft-deck.js";
 import { FIXTURE_DECK_REVIEWED } from "./fixtures/tarot-deck.js";
 import {
   EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, EXPORT_TAROT_FIELDS,
@@ -162,7 +163,9 @@ test("a card's meaning never depends on its artwork", () => {
   assert.match(APP, /label = "Turn over today's card"/);
   assert.match(APP, /label: `Turn over \$\{entry\.position\}`/);
   assert.match(APP, /tarot-card__back" aria-hidden="true"/);
-  assert.match(APP, /class="tarot-card o-object tarot-card--up" aria-hidden="true"/);
+  // The class list now carries a conditional reversed modifier, so this
+  // matches the stable prefix rather than an exact string.
+  assert.match(APP, /class="tarot-card o-object tarot-card--up\$\{reversed \? " tarot-card--reversed" : ""\}" aria-hidden="true"/);
   assert.match(APP, /function tarotMeaningHtml/);
   assert.match(APP, /tarot-meaning__name"[^>]*>\$\{esc\(card\.name\)\}/);
   // The heading is a focus target after a reveal, which needs tabindex="-1" —
@@ -613,4 +616,82 @@ test("the fronts are not in the shipped artifact", () => {
   assert.ok(existsSync(staged), "the staging directory should exist");
   assert.ok(!existsSync(join(REPO_ROOT, "public", "images", "tarot")),
     "card fronts must not live under public/");
+});
+
+
+/* ── Reversals ────────────────────────────────────────────────────────────── */
+
+test("reversals are opt-in and off by default", () => {
+  assert.match(HTML, /id="set-tarot-reversed"/);
+  assert.match(APP, /tarotPref\("tarotReversed", "off"\)/);
+  // The copy states what a reversal means here, because "reversed" is read
+  // several different ways and the deck only implements one of them.
+  assert.match(HTML, /same\s*\n?\s*idea turned inward, blocked, or overdone/);
+  assert.match(HTML, /not as its opposite/);
+});
+
+test("turning reversals on never changes which card was drawn", () => {
+  // The orientation runs off its own labelled stream. If it shared the draw
+  // stream, toggling the setting would hand the reader a different card
+  // halfway through their day.
+  const draw = readFileSync(join(REPO_ROOT, "lib", "tarot", "draw.js"), "utf8");
+  assert.match(draw, /orientation-\$\{position\}/);
+  assert.match(draw, /draw-\$\{position\}/);
+  assert.notEqual(draw.indexOf("orientation-"), draw.indexOf("draw-"));
+});
+
+test("orientation is decided where the draw is, not by the client", () => {
+  const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
+  // presentCard resolves ONE meaning from the orientation. A client choosing
+  // between two fields would eventually disagree with what was saved.
+  assert.match(deck, /upright_meaning: reversed \? card\.reversed_meaning : card\.upright_meaning/);
+  assert.match(deck, /reflection_prompt: reversed \? card\.reversed_prompt : card\.reflection_prompt/);
+  // The client never picks reversed text for itself.
+  assert.ok(!/reversed_meaning/.test(APP), "the browser must not hold two meanings per card");
+});
+
+test("a reversal is stated in words, never by rotation alone", () => {
+  // An upside-down illustration is not something a screen reader can report
+  // and not something every reader will notice.
+  assert.match(APP, /tarot-meaning__reversed">Reversed/);
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /\.tarot-card--reversed \{ transform: rotate\(180deg\); \}/);
+});
+
+test("a saved reading keeps the orientation it was drawn at", () => {
+  // Saving a reversed card as upright would be the same card saying something
+  // it did not say.
+  assert.match(APP, /orientation: entry\.card\.orientation/);
+  const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
+  assert.match(service, /entry\?\.orientation === "reversed"/);
+  assert.match(service, /presentCard\(card, \{ orientation \}\)/);
+});
+
+test("every draft card carries both halves of a reversal", () => {
+  // A reversed meaning with no prompt leaves a paragraph and no question,
+  // which is the one shape this feature is not.
+  for (const card of DRAFT_CARDS) {
+    assert.ok(card.reversed_meaning, `${card.slug}: no reversed meaning`);
+    assert.ok(card.reversed_prompt?.trim().endsWith("?"), `${card.slug}: reversed prompt is not a question`);
+  }
+  assert.equal(deckSupportsReversals(DRAFT_CARDS), true);
+});
+
+test("reversed content obeys the same language rules as upright", () => {
+  for (const card of DRAFT_CARDS) {
+    assert.deepEqual(validateCard(card), [], `${card.slug} failed content review`);
+  }
+});
+
+/* ── The card frame ───────────────────────────────────────────────────────── */
+
+test("the card takes a printed-card corner, not a UI tile corner", () => {
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  // 18px is this design system's CARD radius — an interface surface — and it
+  // made a tarot card read as a tile with a picture in it. Square left the
+  // scan's own white corners standing proud of the plate's printed curve.
+  assert.match(css, /--tarot-radius: 9px/);
+  assert.ok(!/border-radius: var\(--radius-lg\)/.test(css));
+  // The shimmer matches, or the corners visibly change on load.
+  assert.match(css, /\.tarot-card-shimmer \{[\s\S]{0,300}border-radius: 9px/);
 });
