@@ -75,6 +75,7 @@ test("brand motion is finite and withdraws under reduced motion", () => {
   const css = read("public", "styles", "orbit-mark.css");
   const loader = read("public", "brand", "orbit-axis-loader.svg");
   const lineLoader = read("public", "brand", "orbit-axis-line-loader.svg");
+  const lineDotLoader = read("public", "brand", "orbit-axis-line-dot-loader.svg");
   assert.match(css, /orbit-mark-arrive var\(--duration-brand-reveal\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
   assert.ok(!/infinite/.test(css), "identity reveal motion may not loop indefinitely");
@@ -90,6 +91,12 @@ test("brand motion is finite and withdraws under reduced motion", () => {
     "the alternate axis sweeps around the observer");
   assert.match(lineLoader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
     "the alternate loader becomes static when reduced motion is requested");
+  assert.match(lineDotLoader, /class="orbit-line-dot-loader__moving-group"[\s\S]*<path d="M37 115 91 13"[\s\S]*<circle cx="89" cy="40"/,
+    "the axis and orbital point share one moving group");
+  assert.match(lineDotLoader, /animation: orbit-line-dot-loader-sweep 1\.4s linear infinite/,
+    "the axis and point sweep continuously together");
+  assert.match(lineDotLoader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
+    "the combined loader becomes static when reduced motion is requested");
 });
 
 test("the desktop lockup does not become a sixth row in the mobile tab bar", () => {

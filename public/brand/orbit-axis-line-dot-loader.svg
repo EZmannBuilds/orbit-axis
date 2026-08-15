@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit axis and point loading</title>
+  <desc id="desc">The Pure Orbit mark with its axis and orbital point sweeping together around a fixed ring and observer.</desc>
+  <style>
+    .orbit-line-dot-loader__moving-group {
+      transform-box: view-box;
+      transform-origin: 64px 64px;
+      animation: orbit-line-dot-loader-sweep 1.4s linear infinite;
+    }
+
+    @keyframes orbit-line-dot-loader-sweep {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orbit-line-dot-loader__moving-group { animation: none; }
+    }
+  </style>
+  <circle cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8"/>
+  <g class="orbit-line-dot-loader__moving-group">
+    <path d="M37 115 91 13" fill="none" stroke="#7657e8" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+  </g>
+  <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+</svg>
