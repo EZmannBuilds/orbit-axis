@@ -283,10 +283,14 @@ test("the unfinished markup is not anywhere in the static output", { skip: !buil
 
 test("the future implementations are still preserved in the repository", () => {
   // A flag is pretending if the work it gates has been deleted.
-  for (const id of ["tarot", "learn", "news"]) {
+  for (const id of ["learn", "news"]) {
     assert.ok(existsSync(new URL(`../features/panels/${id}.html`, import.meta.url)),
       `the ${id} panel must be preserved for future work`);
   }
+  // Tarot's panel is deliberately NOT here: it graduated into
+  // public/index.html when the feature finished, and a second copy left in
+  // features/panels/ would be a stale fork of a shipping surface.
+  assert.ok(!existsSync(new URL("../features/panels/tarot.html", import.meta.url)));
 });
 
 test("every public page ships in the built output", { skip: !built ? "no build output" : false }, () => {

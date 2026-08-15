@@ -93,8 +93,8 @@ test("Dev Update 1.3 placed each destination on the correct level", () => {
   assert.equal(level("symbol-atlas"), "true", "the Atlas is one of the five");
 });
 
-test("Tarot, Learn, and News stay gone", () => {
-  for (const id of ["tarot", "learn", "news"]) {
+test("Learn and News stay gone", () => {
+  for (const id of ["learn", "news"]) {
     assert.ok(!html.includes(`id="panel-${id}"`), `panel-${id} must not be in the shipped markup`);
   }
 });

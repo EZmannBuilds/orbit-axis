@@ -793,6 +793,79 @@
           <div id="history-body"><div class="axis-shimmer" style="height:120px"></div></div>
         </section>
 
+        <!-- ══ DAILY CARD (TAROT) ══════════════════════════════════════════
+             A finished surface, so it lives in the document like every other
+             panel. It spent its unfinished life in features/panels/ precisely
+             so an incomplete version could not reach the production artifact;
+             that is over, and what gates it now is the deck's own readiness.
+
+             role="region" labelled by the visible h1 — not role="tabpanel".
+             The panel is reached by a link, and a tab panel with no tablist is
+             a promise the markup does not keep. -->
+        <section class="workspace-panel" id="panel-tarot" role="region" aria-labelledby="tarot-title" hidden>
+          <div class="axis-today-head">
+            <div class="axis-today-head__main">
+              <p class="axis-today-date" id="tarot-date"></p>
+              <h1 class="u-title" id="tarot-title" tabindex="-1">Your card today</h1>
+              <!-- The lead sentence. Stated once, in the place a reader cannot
+                   miss it, rather than repeated as a disclaimer under every
+                   card where it would read as a legal notice. -->
+              <p class="axis-subtitle">A prompt, not a prediction. Tarot here is a
+                reflection tool — it is not calculated from the sky, and it does not
+                tell you what will happen.</p>
+            </div>
+          </div>
+
+          <div class="subnav" id="tarot-views">
+            <nav class="o-segment o-segment--block" aria-label="Today views">
+              <a href="#home" data-today-view="home">Daily sky</a>
+              <a href="#tarot" data-today-view="tarot" aria-current="page">Daily card</a>
+            </nav>
+          </div>
+
+          <!-- One live region for the whole panel. Loading, refusals, save
+               confirmations and errors all announce through it, so a screen
+               reader hears one voice rather than four competing ones. -->
+          <p class="tarot-status" id="tarot-status" role="status" aria-live="polite"></p>
+
+          <!-- ── Daily card ─────────────────────────────────────────────────
+               Begins face down. Revealing is an explicit act, and the card is
+               derived from the local date, so returning later the same day
+               shows the same card rather than drawing a new one. -->
+          <section class="o-section tarot-daily" id="tarot-daily" aria-labelledby="tarot-daily-title">
+            <h2 class="axis-section-title" id="tarot-daily-title">Today's card</h2>
+            <p class="tarot-hint" id="tarot-daily-hint" hidden>Tap the card to turn it over.</p>
+            <div class="tarot-layout" id="tarot-daily-layout">
+              <div class="tarot-card-slot" id="tarot-daily-slot"></div>
+              <div class="tarot-reading" id="tarot-daily-reading"></div>
+            </div>
+            <!-- A drawn spread takes over this surface. Empty until then. -->
+            <div class="tarot-spread" id="tarot-spread" hidden></div>
+            <div class="tarot-save" id="tarot-save"></div>
+          </section>
+
+          <!-- ── Reflections ────────────────────────────────────────────────
+               A manual draw, unlike the daily card: asking for one is asking to
+               draw, so it is genuinely random and says so.
+
+               A draw REPLACES the card above rather than appearing beneath it.
+               Two live readings on one screen would leave a reader working out
+               which one is "theirs" today; there is one card surface, and the
+               daily card is what it holds until something is drawn. -->
+          <section class="o-section tarot-manual" id="tarot-manual" aria-labelledby="tarot-manual-title">
+            <h2 class="axis-section-title" id="tarot-manual-title">A reflection</h2>
+            <p class="axis-section-help">Draw one card, or three to read as a sequence.
+              A drawn reading replaces today's card until you come back to it.</p>
+
+            <form class="tarot-form" id="tarot-form">
+              <div class="tarot-form__actions">
+                <button class="o-btn o-btn--primary" type="submit" data-spread="one_card">Draw one card</button>
+                <button class="o-btn o-btn--secondary" type="submit" data-spread="three_card">Draw three cards</button>
+              </div>
+            </form>
+          </section>
+        </section>
+
         <!-- ══ APPEARANCE ══════════════════════════════════════════════════ -->
         <section class="workspace-panel" id="panel-settings" role="region" aria-labelledby="settings-title" hidden>
           <div class="o-section-head">

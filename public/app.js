@@ -478,7 +478,7 @@ const WORKSPACES = [
   // ritual — a reflection surface beside the calculated sky — and filing it
   // under account settings said it was a preference. `tab: "home"` keeps Today
   // marked current on #tarot, so arriving there still says where you are.
-  { id: "tarot", label: "Daily card", crumb: "A prompt, not a prediction", icon: "star", primary: false, tab: "home", feature: "tarot" },
+  { id: "tarot", label: "Daily card", crumb: "A prompt, not a prediction", icon: "star", primary: false, tab: "home" },
   { id: "learn", label: "Learn", crumb: "Courses", icon: "book-open-text", primary: false, tab: "symbol-atlas", feature: "learn" },
   { id: "news", label: "News", crumb: "Verified articles", icon: "file-text", primary: false, tab: "more", feature: "news" },
 ];
@@ -1535,7 +1535,7 @@ function atlasHouseLinkHtml(houseNumber, { label } = {}) {
    that a failed or slow /api/features never briefly reveals a feature that
    should be hidden. Failing open here would show an unfinished page for exactly
    as long as the request took, which is the one moment nobody is watching. */
-const featureState = { tarot: false, learn: false, news: false };
+const featureState = { learn: false, news: false };
 
 async function loadFeatureFlags() {
   try {
@@ -1904,7 +1904,9 @@ function renderRoute() {
     const section = $("#settings-tarot");
     // Present only when the feature exists on this instance at all — a setting
     // for something that is not here is a setting nobody can act on.
-    if (section) section.hidden = !(featureState.tarot === true);
+    // Tarot is always present now; the reader's own switch decides whether it
+    // appears in navigation. The settings for it are therefore always shown.
+    if (section) section.hidden = false;
   }
   // Today's two views. The switch is rendered in both panels, so whichever is
   // on screen has to say where you are — and it stays hidden entirely while

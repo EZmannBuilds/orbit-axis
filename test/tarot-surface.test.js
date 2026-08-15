@@ -28,7 +28,14 @@ import { USER_OWNED_TABLES } from "../lib/account/deletion.js";
 
 const APP = readFileSync(join(REPO_ROOT, "public", "app.js"), "utf8");
 const HTML = readFileSync(join(REPO_ROOT, "public", "index.html"), "utf8");
-const PANEL_RAW = readFileSync(join(REPO_ROOT, "features", "panels", "tarot.html"), "utf8");
+// The panel graduated into public/index.html when Tarot stopped being gated.
+// It is sliced out of the document so every assertion below still reads the
+// panel rather than the whole page.
+const DOC = readFileSync(join(REPO_ROOT, "public", "index.html"), "utf8");
+const PANEL_RAW = DOC.slice(
+  DOC.indexOf('<section class="workspace-panel" id="panel-tarot"'),
+  DOC.indexOf('<!-- ══ APPEARANCE ══'),
+);
 // What the browser actually receives. The comments in this fragment discuss
 // role="tabpanel" and predictive language in order to explain why neither is
 // used — so a naive scan of the raw file finds both and fails on the
@@ -52,7 +59,10 @@ test("Tarot is a secondary destination that lights Today", () => {
   const entry = APP.match(/\{ id: "tarot",[^}]*\}/)[0];
   assert.match(entry, /primary: false/, "Tarot must not become a sixth tab");
   assert.match(entry, /tab: "home"/, "#tarot must keep Today current, not You");
-  assert.match(entry, /feature: "tarot"/, "and it stays behind its flag");
+  // No `feature:` key any more — it graduated. What decides whether it appears
+  // is the reader's own setting, and what decides whether it can serve a card
+  // is the deck.
+  assert.ok(!/feature:/.test(entry), "tarot is no longer flag-gated");
 });
 
 /* ── The Today switch ─────────────────────────────────────────────────────── */
@@ -320,10 +330,16 @@ test("account deletion still verifies tarot readings are gone", () => {
 
 /* ── The production gate, from three directions ───────────────────────────── */
 
-test("production cannot enable Tarot with an environment variable", () => {
-  const production = { VERCEL_ENV: "production", ORBIT_ENVIRONMENT: "production", ORBIT_FEATURE_TAROT: "true" };
-  assert.equal(featureEnabled("tarot", production), false);
-  assert.equal(workspaceBlocked("tarot", production), true);
+test("Tarot is no longer flag-gated, and the content gate is what remains", () => {
+  const production = { VERCEL_ENV: "production", ORBIT_ENVIRONMENT: "production" };
+  // The readiness flag graduated with the feature. Asserted rather than
+  // deleted, so removing a gate stays a deliberate act with a test behind it.
+  assert.equal(workspaceBlocked("tarot", production), false);
+  assert.equal(featureEnabled("tarot", production), false, "unknown feature, not a gated one");
+  // The content gate is still the gate — it now passes, because the deck was
+  // approved. That it CAN refuse is proved against fixtures in
+  // tarot-deck.test.js rather than by keeping production broken.
+  assert.equal(deckStatus(PRODUCTION_CARDS).ready, true);
 });
 
 test("production cannot serve the Tarot API even if the flag were on", () => {
@@ -332,19 +348,26 @@ test("production cannot serve the Tarot API even if the flag were on", () => {
   assert.match(SERVER, /Unknown Orbit endpoint/);
 });
 
-test("production cannot expose an incomplete deck even with the routes open", () => {
-  // The third and last gate: content readiness, independent of both flags.
-  assert.equal(PRODUCTION_CARDS.length, 0);
-  const status = deckStatus();
+test("an incomplete deck could still not be exposed", () => {
+  // The gate that held Tarot back for the whole build, still armed. Proved
+  // against a partial deck rather than by leaving production empty.
+  const partial = PRODUCTION_CARDS.slice(0, 9);
+  const status = deckStatus(partial);
   assert.equal(status.ready, false);
-  assert.equal(DECK_VERSION, "0.0.0-empty");
+  assert.equal(status.reason, "incomplete_deck");
+  assert.equal(deckStatus([]).reason, "empty_deck");
+  // And what production actually ships is complete.
+  assert.equal(PRODUCTION_CARDS.length, 78);
+  assert.equal(DECK_VERSION, "1.0.0");
 });
 
-test("the panel markup cannot reach the production artifact", () => {
-  // It lives outside public/, so the deployed static output has nothing to
-  // serve — the gate is the filesystem, not a client-side removal.
-  assert.ok(!HTML.includes("panel-tarot"),
-    "the tarot panel must not be inlined into the shipped document");
+test("the panel ships in the document, like every other finished surface", () => {
+  // It spent its unfinished life outside public/ so an incomplete version
+  // could not reach the production artifact. That gate was about READINESS and
+  // has done its job; what gates Tarot now is the deck's own state.
+  assert.ok(HTML.includes('id="panel-tarot"'));
+  assert.ok(!existsSync(join(REPO_ROOT, "features", "panels", "tarot.html")),
+    "and no stale copy is left behind to drift from the one that ships");
 });
 
 /* ── Privacy copy ─────────────────────────────────────────────────────────── */

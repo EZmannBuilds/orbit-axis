@@ -25,20 +25,23 @@ import { resolveDeck } from "../lib/tarot/service.js";
 
 /* ── The production gate ──────────────────────────────────────────────────── */
 
-test("production ships no deck, and says so honestly", () => {
-  assert.equal(PRODUCTION_CARDS.length, 0,
-    "the production deck is empty until real content is authored and reviewed");
+test("production ships a complete, reviewed deck", () => {
+  // This asserted an EMPTY deck for the whole build, and that was the honest
+  // state until the owner approved the content on 2026-08-15. The guard has
+  // not moved — an empty, incomplete or unreviewed deck is still refused, and
+  // the tests below prove it with fixtures. What changed is that the
+  // production deck now passes it.
+  assert.equal(PRODUCTION_CARDS.length, FULL_DECK_SIZE);
   const status = deckStatus();
-  assert.equal(status.ready, false);
-  assert.equal(status.reason, "empty_deck");
-  assert.ok(status.message, "an unavailable feature must be able to explain itself");
+  assert.equal(status.ready, true, status.findings.join("; "));
+  assert.equal(status.count, FULL_DECK_SIZE);
 });
 
-test("the deck version admits the deck is empty", () => {
-  // These two facts move together. A real version string beside an empty deck
-  // would be the first step toward shipping one.
-  assert.equal(DECK_VERSION, "0.0.0-empty");
-  assert.equal(PRODUCTION_CARDS.length, 0);
+test("the deck version and the deck move together", () => {
+  // A real version beside an empty deck would be the first step toward
+  // shipping one, so the two are asserted as a pair in both directions.
+  assert.match(DECK_VERSION, /^\d+\.\d+\.\d+$/);
+  assert.equal(PRODUCTION_CARDS.length, FULL_DECK_SIZE);
 });
 
 test("a partial deck is refused, not served", () => {
@@ -227,43 +230,54 @@ test("every draft card carries a meaning and a prompt that is a question", () =>
   }
 });
 
-test("the draft states its provenance instead of claiming originality", () => {
+test("the deck states its provenance instead of claiming originality", () => {
   for (const card of DRAFT_CARDS) {
-    // "public-domain-derived" is the honest description: the prose is written
-    // for Orbit, the tradition it draws on is Waite-Smith, and both facts are
-    // recorded rather than one being implied.
+    // Approval did not turn derived prose into original prose. The licence is
+    // unchanged and still says what this content actually is.
     assert.equal(card.provenance.license, "public-domain-derived");
     assert.match(card.provenance.source, /public domain/i);
-    assert.equal(card.provenance.reviewed, false, `${card.slug} must not claim review`);
+    // And the review records WHICH KIND of review it was, rather than letting
+    // a bare `true` imply somebody read all seventy-eight line by line.
+    assert.equal(card.provenance.reviewed, true);
+    assert.equal(card.provenance.review_kind, "owner_approval");
+    assert.ok(card.provenance.reviewed_by, "an approval needs a name against it");
+    assert.match(card.provenance.reviewed_at, /^\d{4}-\d{2}-\d{2}$/);
   }
 });
 
-test("the draft deck cannot ship, and says why", () => {
-  // Structurally perfect and still refused, because review has not happened.
-  assert.equal(validateDeck(DRAFT_CARDS).ok, true);
-  const status = deckStatus(DRAFT_CARDS);
+test("an unreviewed deck still cannot ship, whatever else is true of it", () => {
+  // The guard that held the deck back for the whole build, proved against a
+  // fixture now that the real deck has passed it. Structurally perfect and
+  // still refused, because review is a human act.
+  const unreviewed = DRAFT_CARDS.map((c) => ({ ...c, provenance: { ...c.provenance, reviewed: false } }));
+  assert.equal(validateDeck(unreviewed).ok, true, "well-formed");
+  const status = deckStatus(unreviewed);
   assert.equal(status.ready, false);
   assert.equal(status.reason, "unreviewed_deck");
-  // And it is readable where content can be reviewed and argued with.
-  assert.equal(deckStatus(DRAFT_CARDS, { allowUnreviewed: true }).ready, true);
+  // Readable where content can be reviewed and argued with.
+  assert.equal(deckStatus(unreviewed, { allowUnreviewed: true }).ready, true);
 });
 
-test("production reads the empty deck; everywhere else reads the draft", () => {
+test("every environment now reads the same approved deck", () => {
+  // Production and preview diverged while the deck was unapproved: production
+  // read an empty array, everywhere else read the draft. With one approved
+  // deck there is nothing to diverge about, and a reader on the web sees the
+  // same cards as a reader on a preview.
   const production = { VERCEL_ENV: "production", ORBIT_ENVIRONMENT: "production" };
   const preview = { VERCEL_ENV: "preview", ORBIT_ENVIRONMENT: "preview" };
 
-  assert.equal(resolveDeck({ env: production }).deck.length, 0,
-    "production must never resolve to the draft");
-  assert.equal(resolveDeck({ env: production }).deckVersion, DECK_VERSION);
-
-  assert.equal(resolveDeck({ env: preview }).deck.length, FULL_DECK_SIZE);
-  assert.equal(resolveDeck({ env: preview }).deckVersion, DRAFT_DECK_VERSION);
-  assert.equal(resolveDeck({ env: {} }).deckVersion, DRAFT_DECK_VERSION);
+  for (const env of [production, preview, {}]) {
+    const resolved = resolveDeck({ env });
+    assert.equal(resolved.deck.length, FULL_DECK_SIZE);
+    assert.equal(resolved.deckVersion, DECK_VERSION);
+  }
+  assert.equal(DRAFT_DECK_VERSION, DECK_VERSION, "one deck, one version");
 });
 
-test("the draft draws under its own version, so replacing it changes the draw", () => {
-  // A reader should not be handed the same "today's card" from two different
-  // decks. The version is in the seed, so a replacement is visibly a new draw.
-  assert.notEqual(DRAFT_DECK_VERSION, DECK_VERSION);
-  assert.match(DRAFT_DECK_VERSION, /-draft$/);
+test("the deck version is recorded on a reading, so a replacement is visible", () => {
+  // A saved reflection says which deck it was drawn from. When commissioned
+  // meanings replace these, an old reading still reports the version it
+  // actually came from rather than silently claiming the new one.
+  assert.match(DECK_VERSION, /^1\.\d+\.\d+$/);
+  assert.ok(!/draft|empty/.test(DECK_VERSION), "an approved deck is not a draft");
 });

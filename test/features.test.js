@@ -1,6 +1,6 @@
 // Orbit Axis :: version-one feature flags.
 //
-// Tarot, Learn, and News are built but unfinished. These tests exist because
+// Learn and News are built but unfinished. These tests exist because
 // the failure mode is asymmetric: a feature wrongly OFF means someone in
 // development sets a variable, while a feature wrongly ON means a stranger
 // finds a broken page in production. Everything below leans on that asymmetry.
@@ -28,7 +28,13 @@ test("every gated feature is off when nothing is configured", () => {
 });
 
 test("the three unfinished features are exactly the ones gated", () => {
-  assert.deepEqual([...FEATURE_IDS].sort(), ["learn", "news", "tarot"]);
+  assert.deepEqual([...FEATURE_IDS].sort(), ["learn", "news"]);
+  // Tarot USED to be here. It graduated when it became a finished surface with
+  // an authored deck; what gates it now is deckStatus(), which refuses an
+  // empty, incomplete or unreviewed deck wherever it runs. A feature leaving
+  // this registry should be a deliberate act, so it is asserted rather than
+  // noticed later.
+  assert.ok(!FEATURE_IDS.includes("tarot"), "tarot is no longer flag-gated");
 });
 
 // ── Production is absolute ──────────────────────────────────────────────────
@@ -42,12 +48,12 @@ test("production cannot enable an unfinished feature, whatever the environment s
 });
 
 test("production is detected from either ORBIT_ENVIRONMENT or a real Vercel deployment", () => {
-  assert.equal(featureEnabled("tarot", { ORBIT_ENVIRONMENT: "production", ORBIT_FEATURE_TAROT: "true" }), false);
+  assert.equal(featureEnabled("learn", { ORBIT_ENVIRONMENT: "production", ORBIT_FEATURE_LEARN: "true" }), false);
   // VERCEL=1 alongside VERCEL_ENV is what an actual deployment carries. The
   // resolver requires both, and rightly so: VERCEL_ENV alone is a variable
   // anyone can set locally, and it should not be able to reclassify a machine.
-  assert.equal(featureEnabled("tarot", { VERCEL: "1", VERCEL_ENV: "production", ORBIT_FEATURE_TAROT: "true" }), false);
-  assert.equal(featureEnabled("tarot", { VERCEL: "1", VERCEL_ENV: "preview", ORBIT_FEATURE_TAROT: "true" }), true,
+  assert.equal(featureEnabled("learn", { VERCEL: "1", VERCEL_ENV: "production", ORBIT_FEATURE_LEARN: "true" }), false);
+  assert.equal(featureEnabled("learn", { VERCEL: "1", VERCEL_ENV: "preview", ORBIT_FEATURE_LEARN: "true" }), true,
     "a preview deployment may show the work for review");
 });
 
@@ -57,8 +63,8 @@ test("an unset environment resolves to local, where flags may be set", () => {
   // and the startup guard refuses to run a deployed instance without an
   // explicit environment. Treating unset as production would sound safer while
   // simply making local development impossible.
-  assert.equal(featureEnabled("tarot", { ORBIT_FEATURE_TAROT: "true" }), true);
-  assert.equal(featureEnabled("tarot", {}), false, "but still off unless asked for");
+  assert.equal(featureEnabled("learn", { ORBIT_FEATURE_LEARN: "true" }), true);
+  assert.equal(featureEnabled("learn", {}), false, "but still off unless asked for");
 });
 
 test("the flag agrees with the application's own environment resolver", () => {
@@ -72,7 +78,7 @@ test("the flag agrees with the application's own environment resolver", () => {
 // ── Deliberate enabling ─────────────────────────────────────────────────────
 
 test("local development can enable a feature deliberately", () => {
-  assert.equal(featureEnabled("tarot", { ...LOCAL, ORBIT_FEATURE_TAROT: "true" }), true);
+  assert.equal(featureEnabled("learn", { ...LOCAL, ORBIT_FEATURE_LEARN: "true" }), true);
 });
 
 test("a Vercel preview can enable a feature so the work can be reviewed", () => {
@@ -80,9 +86,11 @@ test("a Vercel preview can enable a feature so the work can be reviewed", () => 
 });
 
 test("enabling one feature does not enable the others", () => {
-  const env = { ...LOCAL, ORBIT_FEATURE_TAROT: "true" };
-  assert.deepEqual(enabledFeatureIds(env), ["tarot"]);
-  assert.equal(featureEnabled("learn", env), false);
+  // The specimen used to be tarot, with learn and news as the untouched pair.
+  // Tarot graduated, so learn is the specimen and news is what must stay off.
+  const env = { ...LOCAL, ORBIT_FEATURE_LEARN: "true" };
+  assert.deepEqual(enabledFeatureIds(env), ["learn"]);
+  assert.equal(featureEnabled("learn", env), true);
   assert.equal(featureEnabled("news", env), false);
 });
 
@@ -93,20 +101,20 @@ test("ambiguous flag values fail safe", () => {
   // a flag that guesses eventually guesses wrong, and here wrong means exposing
   // an unfinished feature.
   for (const value of ["1", "yes", "on", "TRUE!", "", "  ", "false", "no", "0", "disabled", "undefined"]) {
-    assert.equal(featureEnabled("tarot", { ...LOCAL, ORBIT_FEATURE_TAROT: value }), false,
+    assert.equal(featureEnabled("learn", { ...LOCAL, ORBIT_FEATURE_LEARN: value }), false,
       `"${value}" must not enable a feature`);
   }
 });
 
 test("the accepted values are recognised regardless of case or padding", () => {
   for (const value of ["true", "TRUE", " True ", "enabled", "ENABLED"]) {
-    assert.equal(featureEnabled("tarot", { ...LOCAL, ORBIT_FEATURE_TAROT: value }), true, value);
+    assert.equal(featureEnabled("learn", { ...LOCAL, ORBIT_FEATURE_LEARN: value }), true, value);
   }
 });
 
 test("a non-string value cannot enable a feature", () => {
   for (const value of [true, 1, {}, [], null, undefined]) {
-    assert.equal(featureEnabled("tarot", { ...LOCAL, ORBIT_FEATURE_TAROT: value }), false);
+    assert.equal(featureEnabled("learn", { ...LOCAL, ORBIT_FEATURE_LEARN: value }), false);
   }
 });
 
@@ -134,9 +142,8 @@ test("unfinished workspaces are blocked in production and open when enabled", ()
 
 test("featureFlags reports every feature, not only the enabled ones", () => {
   const flags = featureFlags({ ...LOCAL, ORBIT_FEATURE_NEWS: "true" });
-  assert.deepEqual(Object.keys(flags).sort(), ["learn", "news", "tarot"]);
+  assert.deepEqual(Object.keys(flags).sort(), ["learn", "news"]);
   assert.equal(flags.news, true);
-  assert.equal(flags.tarot, false);
 });
 
 // ── The client agrees with the server ───────────────────────────────────────
@@ -146,7 +153,7 @@ const APP_JS = readFileSync(new URL("../public/app.js", import.meta.url), "utf8"
 test("the client defaults every flag to off before asking the server", () => {
   // A flag that defaults to on would reveal the feature for as long as the
   // request took — the one moment nobody is watching.
-  assert.match(APP_JS, /const featureState = \{ tarot: false, learn: false, news: false \}/);
+  assert.match(APP_JS, /const featureState = \{ learn: false, news: false \}/);
 });
 
 test("the client only accepts a strict true from the server", () => {

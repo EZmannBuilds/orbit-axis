@@ -167,8 +167,8 @@ test("an unknown route recovers instead of showing a blank surface", () => {
   assert.match(appJs, /workspaceAvailable\(hash\) \? hash : "home"/, "and must still land on a real page");
 });
 
-test("Tarot, Learn, and News remain absent from the shipped markup", () => {
-  for (const id of ["tarot", "learn", "news"]) {
+test("Learn and News remain absent from the shipped markup", () => {
+  for (const id of ["learn", "news"]) {
     assert.ok(!html.includes(`id="panel-${id}"`), `panel-${id} must not ship`);
     assert.ok(!new RegExp(`id: "${id}"[^}]*primary: true`).test(appJs), `${id} must not be primary navigation`);
   }
