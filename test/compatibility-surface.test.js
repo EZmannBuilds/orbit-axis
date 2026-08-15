@@ -112,7 +112,11 @@ test("compatibility is reachable without a new navigation system", () => {
     "compatibility must be a secondary workspace that lights the Chart tab");
   const chart = HTML.slice(HTML.indexOf('id="panel-me"'), HTML.indexOf('id="panel-compatibility"'));
   assert.match(chart, /href="#compatibility"/, "Chart must offer a way in");
-  assert.match(chart, /Compare two charts/, "and it must say what it does");
+  // The way in was once a "Compare two charts" row at the very bottom of the
+  // reading — eleven thousand pixels down at a phone width. It is now the
+  // Compare link in the chart-views nav, directly under the page heading,
+  // which is the same guarantee honoured somewhere it can actually be seen.
+  assert.match(chart, /data-chart-view="compatibility">Compare</, "and it must say what it does");
 });
 
 test("the browser composes no interpretation of its own", () => {

@@ -314,7 +314,7 @@
           <div class="o-section-head">
             <div class="o-section-head__text">
               <nav class="atlas-crumbs" id="atlas-crumbs" aria-label="Atlas location"></nav>
-              <h1 class="u-title" id="symbol-atlas-title" tabindex="-1">Atlas</h1>
+              <h1 class="u-title sr-only-mobile" id="symbol-atlas-title" tabindex="-1">Atlas</h1>
               <p class="u-caption" id="atlas-subtitle">Every symbol Orbit Axis uses, in plain language.</p>
             </div>
           </div>
@@ -357,6 +357,22 @@
               <button type="button" class="o-btn o-btn--primary" id="me-add-chart">Add chart</button>
             </div>
           </div>
+
+          <!-- ── Chart views ─────────────────────────────────────────────
+               Reading, Saved charts, Compare: three tasks, three routes, one
+               tap apart. These are navigation links, not a tablist — each one
+               changes the URL, and calling URL navigation "tabs" hands a
+               screen reader semantics the controls do not honour. The current
+               view carries aria-current="page", set by updateChartSubnav().
+
+               Before this existed, Compare lived ~11,000px down the Chart
+               document at a phone width: thirteen screens of scrolling to
+               reach a feature, which is the same as hiding it. -->
+          <nav class="chart-subnav" aria-label="Chart views">
+            <a href="#me" data-chart-view="me">Reading</a>
+            <a href="#saved-charts" data-chart-view="saved-charts">Saved charts</a>
+            <a href="#compatibility" data-chart-view="compatibility">Compare</a>
+          </nav>
 
           <div class="me-status" id="me-status" role="status" aria-live="polite">Loading your chart…</div>
 
@@ -426,26 +442,38 @@
                  page. They belong here: both are about the charts you keep, and
                  comparing two of them is something you do while looking at
                  them. -->
-            <section class="me-panel me-panel--wide" aria-labelledby="me-saved-charts-title">
-              <div class="me-section-head me-section-head--actions">
-                <div>
-                  <h2 id="me-saved-charts-title">Saved charts</h2>
-                  <p>The people and launch moments Orbit Axis remembers for you.</p>
-                </div>
-                <button type="button" class="o-btn o-btn--utility" id="me-saved-chart-add">Add chart</button>
-              </div>
-              <div id="me-saved-charts-status" class="more-note">Restoring your session…</div>
-              <div id="me-saved-charts-list" class="saved-charts-list me-saved-charts-list"></div>
-
-              <a class="o-row o-row--link compat-entry" href="#compatibility">
-                <span class="o-row__icon" data-icon="users"></span>
-                <span class="o-row__main">
-                  <span class="o-row__title">Compare two charts</span>
-                  <span class="o-row__sub">How your chart meets another, read for the relationship you saved it as.</span>
-                </span>
-              </a>
-            </section>
           </div>
+        </section>
+
+        <!-- ══ SAVED CHARTS ════════════════════════════════════════════════
+             The charts you keep, as their own destination. This used to be the
+             last section of the Reading document, which meant managing charts
+             required scrolling past the entire natal reading to reach them —
+             and Compare, nested below even that, was effectively unfindable.
+             A secondary workspace under the Chart tab, like Compatibility.
+
+             No outer card. The section heading does the naming, the rows do
+             the structure, and the dividers do the separating: a collection
+             can have a container, or its items can be cards, never both. -->
+        <section class="workspace-panel" id="panel-saved-charts" role="region" aria-labelledby="saved-charts-title" hidden>
+          <div class="o-section-head me-page-head">
+            <div class="o-section-head__text">
+              <h1 class="u-title sr-only-mobile" id="saved-charts-title" tabindex="-1">Saved charts</h1>
+              <p class="u-caption">The people and launch moments Orbit Axis remembers for you.</p>
+            </div>
+            <div class="o-section-head__actions">
+              <button type="button" class="o-btn o-btn--primary" id="me-saved-chart-add">Add chart</button>
+            </div>
+          </div>
+
+          <nav class="chart-subnav" aria-label="Chart views">
+            <a href="#me" data-chart-view="me">Reading</a>
+            <a href="#saved-charts" data-chart-view="saved-charts">Saved charts</a>
+            <a href="#compatibility" data-chart-view="compatibility">Compare</a>
+          </nav>
+
+          <div id="me-saved-charts-status" class="more-note" role="status" aria-live="polite">Restoring your session…</div>
+          <div id="me-saved-charts-list" class="saved-charts-list"></div>
         </section>
 
         <!-- ══ COMPATIBILITY ═══════════════════════════════════════════════
@@ -457,15 +485,23 @@
              renders sentences it was handed and writes none of its own, which
              is the rule the reading and the transits follow too. -->
         <section class="workspace-panel" id="panel-compatibility" role="region" aria-labelledby="compatibility-title" hidden>
+          <!-- The sticky bar already says "Compatibility", so on a phone the
+               H1 yields its pixels and keeps its semantics (.sr-only-mobile).
+               The old "Back to your chart" button is gone with it: the subnav
+               below states where you are and where else you can be, which is
+               what that button was groping toward. -->
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="compatibility-title" tabindex="-1">Compatibility</h1>
+              <h1 class="u-title sr-only-mobile" id="compatibility-title" tabindex="-1">Compatibility</h1>
               <p class="u-caption" id="compat-subtitle">How two saved charts meet.</p>
             </div>
-            <div class="o-section-head__actions">
-              <a class="o-btn o-btn--utility" href="#me">Back to your chart</a>
-            </div>
           </div>
+
+          <nav class="chart-subnav" aria-label="Chart views">
+            <a href="#me" data-chart-view="me">Reading</a>
+            <a href="#saved-charts" data-chart-view="saved-charts">Saved charts</a>
+            <a href="#compatibility" data-chart-view="compatibility">Compare</a>
+          </nav>
 
           <div class="compat-pickers" id="compat-pickers" hidden>
             <div class="compat-picker">
@@ -502,7 +538,7 @@
         <section class="workspace-panel" id="panel-more" role="region" aria-labelledby="more-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <h1 class="u-title" id="more-title" tabindex="-1">You</h1>
+              <h1 class="u-title sr-only-mobile" id="more-title" tabindex="-1">You</h1>
               <p class="u-caption">Your account, what Orbit Axis stores, and how it looks.</p>
             </div>
           </div>

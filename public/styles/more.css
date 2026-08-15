@@ -329,3 +329,22 @@
   min-block-size: 44px;
   accent-color: var(--accent, #a185ff);
 }
+
+/* ── Mobile: You as divided rows, not stacked boxes ─────────────────────────
+   Every settings group was another rounded rectangle; the rows inside already
+   carry the structure. Section labels + hairlines between rows say everything
+   the boxes said, in less height. Danger zone is exempt on purpose: its border
+   is a warning, not decoration, and a consequence that different deserves
+   chrome that different. */
+@media (max-width: 640px) {
+  .more-section .o-group {
+    border: 0; background: none; border-radius: 0; padding: 0;
+  }
+  .more-section .o-group > * + * { border-top: var(--border-width) solid var(--color-border); }
+  .more-section .o-row { padding-left: 0; padding-right: 0; }
+  #danger-zone .o-group {
+    border: var(--border-width) solid var(--color-error);
+    border-radius: var(--radius-lg);
+    padding: var(--space-sm) var(--space-md);
+  }
+}

@@ -88,7 +88,12 @@
   /* On-dark text. */
   --moon-white: #ffffff;
   --moon-muted: #cccccc;
-  --moon-faint: #8a8a8e;
+  /* 14px metadata sat at 4.34:1 on a tile — measured, just under AA's 4.5 for
+     normal text. This step reads 5.1:1 on the brightest tile and 4.7:1 even on
+     the hover surface, a margin rather than a graze, while staying two visual
+     steps away from --moon-muted above it and from the #6a6a6e disabled tone
+     below it — quieter than copy, but never a squint. */
+  --moon-faint: #9a9aa0;
 
   /* Signal colours. Informational only — they never become a second accent,
      and nothing is clickable *because* it is green. */

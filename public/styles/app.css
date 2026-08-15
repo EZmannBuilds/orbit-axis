@@ -282,7 +282,19 @@
 
   .topnav { padding-left: var(--space-md); padding-right: var(--space-md); }
   .workspace {
-    padding: var(--space-lg) var(--space-md) calc(var(--space-section) + env(safe-area-inset-bottom));
+    /* Clearance for the fixed tab bar, stated in the tab bar's own terms.
+       The old value cleared it only because --space-section happened to be
+       larger than the bar — a coincidence, and one that a taller bar, larger
+       text, or browser zoom would have broken. Deriving from --tabbar-height
+       means the last control always scrolls fully above the navigation, and
+       the extra space-lg is breathing room, not the mechanism. */
+    padding: var(--space-lg) var(--space-md)
+      calc(var(--tabbar-height) + var(--space-lg) + var(--space-md) + env(safe-area-inset-bottom));
+  }
+  /* Anchor jumps and keyboard focus near the bottom must not land under the
+     bar. scroll-padding is the browser's own mechanism for exactly this. */
+  html {
+    scroll-padding-bottom: calc(var(--tabbar-height) + var(--space-lg) + env(safe-area-inset-bottom));
   }
   .grid-split, .grid-2 { grid-template-columns: 1fr; }
 
@@ -299,9 +311,45 @@
 
 @media (max-width: 640px) {
   .topnav__crumb, .topnav__date { display: none; }
-  .o-find__field { width: 44px; }
-  /* Focused, the field earns the room it needs. */
-  .o-find__field:focus-within { width: min(100%, 320px); }
+  .o-find__field { width: 44px; min-width: 0; }
+  /* Collapsed, the control IS the icon — there is no visible text to inset, and
+     the icon-clearing padding is what was holding the input at 62px inside a
+     44px wrapper. `min-width: 0` alone cannot fix that: with border-box the
+     padding and border are a floor the box cannot shrink past. Dropping the
+     inset while collapsed lets it genuinely fit, rather than overflow and be
+     hidden by something further up the tree. */
+  .o-find__field:not(:focus-within) .o-input {
+    padding-left: 0;
+    padding-right: 0;
+    /* Collapsed to the icon, the field shows no text — without this the first
+       characters of the placeholder peek out from under the magnifier. */
+    color: transparent;
+  }
+  .o-find__field:not(:focus-within) .o-input::placeholder { color: transparent; }
+  /* Focused, the field earns the room it needs — but only the room that exists.
+     `100%` resolves against the header track, which does not account for the
+     gutters, so it could still reach past the right edge. Measuring from the
+     viewport and subtracting the gutters keeps the expanded field inside it at
+     every width. */
+  /* Expanded, the field takes the bar rather than growing rightward off it.
+     Growing in place pushed its right edge past the viewport, because it starts
+     at the far end of a flex row that has a title in it. Anchoring to both
+     gutters is the deliberate full-width state: it cannot overflow at any width,
+     and the title it covers is redundant while someone is typing a query. */
+  .o-find { position: static; }
+  .o-find__field:focus-within {
+    position: absolute;
+    left: var(--space-xl);
+    right: var(--space-xl);
+    width: auto;
+    z-index: 2;
+  }
+  /* Expanded, the icon is back and the text must clear it again. */
+  .o-find__field:focus-within .o-input { padding-left: calc(var(--space-md) + 26px); }
+  /* The panel anchors to the bar, not to a field that has just been repositioned. */
+  .o-find__panel { left: var(--space-xl); right: var(--space-xl); width: auto; }
+  /* The results panel hangs off the field, so it needs the same ceiling. */
+  .o-find__panel { max-width: calc(100vw - var(--space-xl) * 2); }
 }
 
 @media (max-width: 380px) {

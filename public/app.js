@@ -464,6 +464,10 @@ const WORKSPACES = [
   // Secondary destinations. Real pages with real headings; they simply do not
   // earn a sixth tab, and each one lights the primary tab it belongs to.
   { id: "positions", label: "Current Positions", crumb: "The sky everyone shares", icon: "globe-hemisphere-west", primary: false, tab: "transits" },
+  // Saved charts left the bottom of the Reading document to become a route.
+  // Managing charts is a task, not a paragraph of the natal reading — and at a
+  // phone width it sat eleven thousand pixels down, past every placement.
+  { id: "saved-charts", label: "Saved charts", crumb: "The charts you keep", icon: "users", primary: false, tab: "me" },
   { id: "compatibility", label: "Compatibility", crumb: "Two charts compared", icon: "users", primary: false, tab: "me" },
   { id: "history", label: "History", crumb: "Past readings", icon: "clock-counter-clockwise", primary: false, tab: "more" },
   { id: "settings", label: "Appearance", crumb: "How Orbit Axis looks", icon: "gear", primary: false, tab: "more" },
@@ -807,20 +811,20 @@ function renderTransitsWorkspace(data, chart) {
 
   const all = data.all || [];
   body.innerHTML = `
-    ${data.summary ? `<section class="o-card tr-summary" aria-labelledby="tr-summary-title">
+    ${data.summary ? `<section class="o-section tr-summary" aria-labelledby="tr-summary-title">
       <h2 class="axis-section-title" id="tr-summary-title">Your transit summary</h2>
       <p class="tr-summary__text">${esc(data.summary.text)}</p>
     </section>` : ""}
 
     ${data.limitation ? transitLimitationHtml(data.limitation) : ""}
 
-    ${immediate.length ? `<section class="o-card" aria-labelledby="tr-immediate-title">
+    ${immediate.length ? `<section class="o-section" aria-labelledby="tr-immediate-title">
       <h2 class="axis-section-title" id="tr-immediate-title">Most active today</h2>
       <p class="axis-section-help">Faster-moving contacts — these are what changed recently.</p>
       <div class="tr-list">${immediate.map((t) => transitCardHtml(t)).join("")}</div>
     </section>` : ""}
 
-    ${background.length ? `<section class="o-card" aria-labelledby="tr-background-title">
+    ${background.length ? `<section class="o-section" aria-labelledby="tr-background-title">
       <h2 class="axis-section-title" id="tr-background-title">Background influences</h2>
       <p class="axis-section-help">Slower contacts. These move gradually and stay relevant far longer — quieter day to day, not less significant.${
         data.summary && data.summary.backgroundCount > background.length
@@ -829,7 +833,7 @@ function renderTransitsWorkspace(data, chart) {
       <div class="tr-list tr-list--background">${background.map((t) => transitCardHtml(t, { background: true })).join("")}</div>
     </section>` : ""}
 
-    <section class="o-card" aria-labelledby="tr-technical-title">
+    <section class="o-section" aria-labelledby="tr-technical-title">
       <h2 class="axis-section-title" id="tr-technical-title">Complete technical details</h2>
       <details class="chart-details">
         <summary>All ${all.length} contact${all.length === 1 ? "" : "s"} within orb</summary>
@@ -1879,7 +1883,15 @@ function renderRoute() {
     if (authSignedIn()) $("#positions-title")?.focus({ preventScroll: true });
   }
   if (id === "compatibility") { wireCompatibility(); loadCompatibility(); }
+  if (id === "saved-charts") loadSavedCharts();
   if (id === "history") axisLoadHistory($("#history-scope")?.value || "active");
+  // The Chart views nav appears in each of its three panels; whichever is
+  // visible must say where you are. aria-current="page" is the entire
+  // mechanism — links, not tabs, because these controls navigate.
+  document.querySelectorAll(".chart-subnav a").forEach((a) => {
+    if (a.dataset.chartView === id) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
   const ws = WORKSPACES.find(w => w.id === id);
 
   // A disabled feature's panel is normally never in the document at all: the
@@ -3784,6 +3796,10 @@ async function handleSavedChartAction(button, chart) {
       await loadSavedCharts();
       await refreshActiveExperience();
       toast(`${chart.nickname} is active`);
+      // The list just re-rendered under the finger that pressed the menu.
+      // Handing focus back to this row's trigger keeps a keyboard user where
+      // they were instead of at the top of the document.
+      $(`[data-menu-trigger][data-id="${id}"]`)?.focus();
     } catch (error) {
       state.activeChartId = previousId;
       renderSavedCharts();
@@ -3953,44 +3969,94 @@ function renderSavedCharts() {
     return;
   }
   setStatus(`${state.charts.length} saved chart${state.charts.length === 1 ? "" : "s"}`);
-  setLists(state.charts.map(savedChartCardHtml).join(""));
+  setLists(`<div class="o-flat-list">${state.charts.map(savedChartCardHtml).join("")}</div>`);
+}
+
+/**
+ * Open/close behaviour for row overflow menus (the "Actions for …" triggers).
+ *
+ * A disclosure, not an ARIA menu: aria-expanded on the trigger, ordinary
+ * buttons inside, Tab to move between them. Full menu semantics demand arrow
+ * keys, wrapping, and typeahead — implementing half of that grammar is worse
+ * than not claiming it. Escape closes and returns focus to the trigger;
+ * clicking elsewhere closes; opening one closes any other.
+ */
+function wireRowMenus() {
+  const closeAll = (except = null) => {
+    document.querySelectorAll("[data-menu-trigger][aria-expanded='true']").forEach((t) => {
+      if (t === except) return;
+      t.setAttribute("aria-expanded", "false");
+      t.nextElementSibling?.setAttribute("hidden", "");
+    });
+  };
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-menu-trigger]");
+    if (trigger) {
+      const open = trigger.getAttribute("aria-expanded") === "true";
+      closeAll(trigger);
+      trigger.setAttribute("aria-expanded", String(!open));
+      trigger.nextElementSibling?.toggleAttribute("hidden", open);
+      return;
+    }
+    // An action inside the menu runs through the list's own delegation; the
+    // menu just needs to get out of the way.
+    if (event.target.closest(".o-rowmenu__item")) { closeAll(); return; }
+    if (!event.target.closest(".o-rowmenu")) closeAll();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const openTrigger = document.querySelector("[data-menu-trigger][aria-expanded='true']");
+    if (!openTrigger) return;
+    closeAll();
+    openTrigger.focus();
+  });
 }
 
 function savedChartCardHtml(chart) {
   const summary = chart.summary || {};
   const rising = summary.time_known === false || !summary.rising ? "Rising needs birth time" : `Rising ${esc(summary.rising)}`;
-  const legalName = [chart.first_name, chart.last_name].filter(Boolean).join(" ");
+  // The collapsed row carries identity, not the full birth record — the legal
+  // name, birth date and birthplace live in the editors this row opens.
   // relationshipDisplay is the one honest namer of stored values: the four
   // current ones by label, 'other'/NULL as "Relationship not set", and
   // 'public_figure' as its legacy classification — never silently remapped.
-  const meta = [
-    relationshipDisplay(chart.relationship_type ?? null).label,
-    legalName,
-    chart.birth_date ? formatBirthDate(chart.birth_date) : "",
-    chart.birthplace_name,
-  ].filter(Boolean).join(" · ");
   const timeInfo = timeAccuracyInfo(chart.time_accuracy || (summary.time_known === false ? "unknown" : "exact"));
-  return `<article class="saved-chart-card" data-active="${chart.is_active}">
-    <div class="saved-chart-card__top">
-      <div class="saved-chart-card__lead">
-        ${chartAvatarHtml(chart)}
-        <div class="saved-chart-card__name">${esc(chart.nickname || "Untitled Chart")}</div>
-      </div>
-      <div class="saved-chart-card__badges">
-        ${chart.is_active ? '<span class="o-pill o-pill--success">Active</span>' : ""}
-        ${chart.is_primary ? '<span class="o-badge">Primary</span>' : ""}
-        <span class="o-badge">${esc(timeInfo.label)}</span>
+  // A row, not a card, and one visible action instead of four. Five charts as
+  // cards with four buttons each was ~1,800px of controls nobody was using at
+  // that moment; the same five charts as rows is one screen. Set active is the
+  // visible action because selecting a chart is why anyone is here; the rest —
+  // identity, birth data, delete — live behind one labelled trigger. The
+  // active row states its state in text ("Active"), never colour alone, and
+  // its menu simply omits Set active rather than disabling it.
+  const nickname = chart.nickname || "Untitled Chart";
+  const subline = [
+    relationshipDisplay(chart.relationship_type ?? null).label,
+    timeInfo.label,
+  ].filter(Boolean).join(" · ");
+  return `<div class="saved-chart-row" data-active="${chart.is_active}">
+    <span class="o-flat-row__lead">${chartAvatarHtml(chart)}</span>
+    <div class="o-flat-row__main">
+      <span class="o-flat-row__title">${esc(nickname)}${chart.is_active ? ' <span class="saved-chart-row__state">· Active</span>' : ""}</span>
+      <span class="o-flat-row__sub">${esc(subline)}</span>
+      <span class="o-flat-row__sub">Sun ${esc(summary.sun || "—")} · Moon ${esc(summary.moon || "—")} · ${rising}</span>
+    </div>
+    <div class="saved-chart-actions">
+      ${chart.is_active
+        ? ""
+        : `<button type="button" class="o-btn o-btn--utility" data-action="activate" data-id="${esc(chart.id)}">Set active</button>`}
+      <div class="o-rowmenu">
+        <button type="button" class="o-icon-btn saved-chart-row__menu" data-menu-trigger data-id="${esc(chart.id)}"
+                aria-haspopup="true" aria-expanded="false"
+                aria-label="Actions for ${esc(nickname)}"><span aria-hidden="true">⋯</span></button>
+        <div class="o-rowmenu__list" hidden>
+          ${chart.is_active ? "" : `<button type="button" class="o-rowmenu__item" data-action="activate" data-id="${esc(chart.id)}">Set active</button>`}
+          <button type="button" class="o-rowmenu__item" data-action="identity" data-id="${esc(chart.id)}">Identity</button>
+          <button type="button" class="o-rowmenu__item" data-action="edit" data-id="${esc(chart.id)}">Edit birth data</button>
+          <button type="button" class="o-rowmenu__item o-rowmenu__item--danger" data-action="delete" data-id="${esc(chart.id)}">Delete…</button>
+        </div>
       </div>
     </div>
-    <div class="saved-chart-card__meta">${esc(meta)}</div>
-    <div class="saved-chart-card__summary">Sun ${esc(summary.sun || "—")} · Moon ${esc(summary.moon || "—")} · ${rising}</div>
-    <div class="saved-chart-card__actions">
-      <button type="button" data-action="activate" data-id="${esc(chart.id)}" ${chart.is_active ? "disabled" : ""}>${chart.is_active ? "Active" : "Set active"}</button>
-      <button type="button" data-action="identity" data-id="${esc(chart.id)}">Identity</button>
-      <button type="button" data-action="edit" data-id="${esc(chart.id)}">Edit birth data</button>
-      <button type="button" data-action="delete" data-id="${esc(chart.id)}">Delete</button>
-    </div>
-  </article>`;
+  </div>`;
 }
 
 async function refreshActiveExperience() {
@@ -4487,6 +4553,7 @@ async function boot() {
   setupPlaceSearch("ob");
   setupPlaceSearch("cm");
   wireSavedCharts();
+  wireRowMenus();
   wireChartModal();
   wireIdentityEditor();
   wireChartReading();
@@ -4637,6 +4704,11 @@ function renderChartHeader(profile, chart, name, context) {
       <dt>${esc(row.label)}</dt>
       <dd>${esc(row.value)}${row.help ? `<span class="me-facts__help">${esc(row.help)}</span>` : ""}</dd>
     </div>`).join("");
+  // The summary is what identifies the chart: name, when, where, how sure.
+  // The zodiac-system explanation, house-system explanation, timezone, and
+  // calculation metadata are reference, not identity — they moved behind one
+  // "Chart details" disclosure, which took this surface from ~506px of card to
+  // a handful of lines. Nothing was removed; it is one tap further away.
   target.innerHTML = `
     <div class="me-overview__top">
       <div>
@@ -4644,13 +4716,17 @@ function renderChartHeader(profile, chart, name, context) {
         <h2>${esc(name || profile?.nickname || "My Chart")}</h2>
       </div>
     </div>
-    <dl class="me-facts">
+    <dl class="me-facts me-facts--compact">
       <div><dt>Birth date</dt><dd>${esc(formatBirthDate(profile?.birth_date))}</dd></div>
       <div><dt>Birthplace</dt><dd>${esc(profile?.birthplace_name || "Location not set")}</dd></div>
       <div><dt>Birth time</dt><dd>${esc(formatBirthTime(profile))}</dd></div>
       <div><dt>Time certainty</dt><dd>${esc(timeInfo.label)}</dd></div>
-      ${contextRows}
-    </dl>`;
+    </dl>
+    ${contextRows ? `<details class="o-disclosure-row" data-desktop-open>
+      <summary><span class="o-flat-row__title">Chart details</span></summary>
+      <div class="o-disclosure-row__body"><dl class="me-facts">${contextRows}</dl></div>
+    </details>` : ""}`;
+  applyDisclosureDefaults(target);
 }
 
 // ── 7. Birth-time limitations (one page-level notice) ───────────────────────
@@ -4785,6 +4861,71 @@ function renderPatterns(patterns) {
 
 // ── 4. Planet placements ────────────────────────────────────────────────────
 
+/**
+ * One placement as an expandable flat row.
+ *
+ * Collapsed, the row is the fact: name, sign, degree, house, retrograde —
+ * legible without the glyph, which is decoration here, not information. Open,
+ * it is everything the old card held: summary, atlas links, the full read.
+ *
+ * Native details/summary on purpose. The expanded state is real browser
+ * semantics — keyboard, screen reader, find-in-page on some engines — rather
+ * than a class that only the mouse knows about.
+ */
+function placementRowHtml(placement) {
+  if (!placement) return "";
+  if (placement.unavailable) {
+    return `<div class="o-flat-row reading-row reading-row--unavailable">
+      <span class="o-flat-row__lead">${glyphHtml(placement.key)}</span>
+      <span class="o-flat-row__main">
+        <span class="o-flat-row__title">${esc(placement.planet)} unavailable</span>
+        <span class="o-flat-row__sub">${esc(placement.reason || "Birth time needed")}</span>
+      </span>
+    </div>`;
+  }
+  const meta = [esc(placement.position || ""),
+                placement.house ? `House ${placement.house}` : "",
+                placement.retrograde ? "Retrograde" : ""].filter(Boolean).join(" · ");
+  const body = (placement.detail || []).map((p) => `<p>${esc(p)}</p>`).join("");
+  const extras = [
+    placement.strength ? `<div class="reading-card__aside"><h4>Where this tends to work well</h4><p>${esc(placement.strength)}</p></div>` : "",
+    placement.growth ? `<div class="reading-card__aside"><h4>A growing edge</h4><p>${esc(placement.growth)}</p></div>` : "",
+    placement.retrogradeNote ? `<p class="reading-card__note">${esc(placement.retrogradeNote)}</p>` : "",
+  ].join("");
+  const atlas = placement.sign
+    ? (atlasCombinationLinkHtml("planet-in-sign", [placement.planet, placement.sign],
+        `What ${placement.planet} in ${placement.sign} means`) || "")
+    : "";
+  return `<details class="o-disclosure-row reading-row" data-desktop-open>
+    <summary>
+      <span class="o-flat-row__lead">${glyphHtml(placement.key)}</span>
+      <span class="o-flat-row__main">
+        <span class="o-flat-row__title">${esc(placement.planet)}${placement.sign ? ` in ${esc(placement.sign)}` : ""}</span>
+        <span class="o-flat-row__sub">${meta}</span>
+      </span>
+    </summary>
+    <div class="o-disclosure-row__body">
+      <p>${esc(placement.summary)}</p>
+      ${placement.sign ? `<p class="reading-card__atlas">${atlasBodyLinkHtml(placement.planet)} · ${atlasLinkHtml("signs", placement.sign)}${placement.house ? ` · ${atlasHouseLinkHtml(placement.house, { label: `House ${placement.house}` })}` : ""}</p>` : ""}
+      ${atlas ? `<p class="reading-card__atlas">${atlas}</p>` : ""}
+      ${body}${extras}
+    </div>
+  </details>`;
+}
+
+/**
+ * Desktop keeps reading everything at once; a phone starts folded.
+ *
+ * Rows marked data-desktop-open get their open attribute at render time when
+ * the viewport is past the mobile breakpoint. Set per render rather than by a
+ * resize listener: someone rotating a tablet mid-read should not have their
+ * open placements slammed shut under their finger.
+ */
+function applyDisclosureDefaults(scope) {
+  if (!window.matchMedia || !window.matchMedia("(min-width: 641px)").matches) return;
+  scope?.querySelectorAll("details[data-desktop-open]").forEach((d) => { d.open = true; });
+}
+
 function renderPlacements(placements, points = []) {
   const target = $("#key-placements");
   if (!target) return;
@@ -4793,8 +4934,9 @@ function renderPlacements(placements, points = []) {
     return;
   }
   // Points follow the planets and carry their own names and functions, so they
-  // identify themselves without a divider being injected into the grid.
-  target.innerHTML = [...placements, ...points].map((p) => readingCardHtml(p)).join("");
+  // identify themselves without a divider being injected into the list.
+  target.innerHTML = `<div class="o-flat-list">${[...placements, ...points].map((p) => placementRowHtml(p)).join("")}</div>`;
+  applyDisclosureDefaults(target);
 }
 
 // ── 5. Major aspects ────────────────────────────────────────────────────────
@@ -4907,10 +5049,15 @@ function renderChartData(chart, readingPayload) {
     .join("");
   const rows = planetRows + pointRows;
   const retro = readingPayload?.retrogrades?.length ? readingPayload.retrogrades.join(", ") : "None";
+  // Open on desktop, folded on a phone. This table alone added ~900px to the
+  // mobile document, and it is the most technical thing on the page — the
+  // reader who wants degrees can ask; the reader who does not never scrolls
+  // past a table to finish the page. data-desktop-open + the shared
+  // applyDisclosureDefaults() decide, at render time, which reader this is.
   target.innerHTML = `
-    <details class="chart-details" open>
+    <details class="chart-details" data-desktop-open>
       <summary>Calculated positions</summary>
-      <div class="table-scroll">
+      <div class="table-scroll" role="region" aria-label="Calculated positions table" tabindex="0">
         <table class="placements">
           <thead><tr><th>Body</th><th>Sign</th><th>Degree</th><th>Motion</th><th>House</th></tr></thead>
           <tbody>${rows}</tbody>
@@ -4924,6 +5071,7 @@ function renderChartData(chart, readingPayload) {
       <div><dt>Interpretation content</dt><dd>${esc(readingPayload?.contentVersion || "—")}</dd></div>
     </dl>
     <p class="me-muted">Orbit Axis writes these readings from your calculated chart using text written and reviewed in advance. Nothing on this page is generated by an AI model, and your birth details are never sent to one.</p>`;
+  applyDisclosureDefaults(target);
 }
 
 // ── Composition ─────────────────────────────────────────────────────────────

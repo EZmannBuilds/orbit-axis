@@ -800,3 +800,105 @@
   .tr-card { border: 1px solid CanvasText; }
   .tr-badge { border: 1px solid CanvasText; background: Canvas; }
 }
+
+/* ── Chart views nav (Reading · Saved charts · Compare) ─────────────────────
+   Links styled as a segmented row. The current view is marked by weight and an
+   underline as well as tone — state is never colour alone — and by
+   aria-current="page" for anything that reads rather than looks. */
+.chart-subnav {
+  display: flex; gap: var(--space-xs);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.chart-subnav a {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  color: var(--color-secondary);
+  text-decoration: none;
+  font-size: var(--type-body);
+  border-bottom: 2px solid transparent;
+  margin-bottom: calc(var(--border-width) * -1);
+}
+.chart-subnav a:hover { color: var(--color-primary); }
+.chart-subnav a:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-xs); }
+.chart-subnav a[aria-current="page"] {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+  border-bottom-color: var(--color-accent);
+}
+@media (max-width: 640px) {
+  .chart-subnav { position: sticky; top: var(--topbar-height); z-index: 20;
+    background: var(--color-bg); }
+  .chart-subnav a { flex: 1 1 0; padding: 0 var(--space-xs); }
+}
+
+/* ── Reading rows (placements as expandable flat rows) ──────────────────────
+   The Placements section alone was ~3,600px of the mobile Chart document as
+   always-open cards. As rows: eleven collapsed lines a thumb can scan, each
+   opening into everything the card used to show. Desktop renders the same
+   markup with every row open (data-desktop-open), so nothing was taken from
+   the large screen to pay for the small one. */
+.reading-row > summary .o-flat-row__lead { font-size: 1.25rem; width: 32px; justify-content: center; }
+.reading-row .o-disclosure-row__body { padding-left: calc(32px + var(--space-md)); }
+.reading-row--unavailable { opacity: 0.75; }
+@media (max-width: 640px) {
+  .reading-row .o-disclosure-row__body { padding-left: 0; }
+}
+
+/* ── Mobile: one containment level for the Chart reading ────────────────────
+   Below 640px the me-panel boxes give up their chrome: border, fill, and the
+   padding that existed to hold the border away from the text. Sections divide
+   with a hairline and breathe with rhythm instead. This is the structural
+   change, not a disguise — the paddings genuinely go, and with them roughly a
+   third of the document's height. Desktop keeps its panels untouched. */
+@media (max-width: 640px) {
+  #panel-me .me-panel,
+  #panel-me .me-panel--overview {
+    border: 0;
+    background: none;
+    border-radius: 0;
+    padding: 0 0 var(--space-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  #panel-me .me-grid { gap: var(--space-lg); }
+  /* Big Three: a reading stack divided by hairlines, not three cards in a box. */
+  #panel-me .reading-grid--keys { display: block; }
+  #panel-me .reading-grid--keys .reading-card {
+    border: 0; background: none; border-radius: 0;
+    padding: var(--space-sm) 0;
+  }
+  #panel-me .reading-grid--keys .reading-card + .reading-card {
+    border-top: var(--border-width) solid var(--color-border);
+  }
+  /* Patterns: the bars stand on the page, not in a second box. */
+  #panel-me .pattern-block { border: 0; background: none; border-radius: 0; padding: 0; }
+  /* Aspects and houses: divided rows, same rule as everything else here. */
+  #panel-me .aspect-card {
+    border: 0; background: none; border-radius: 0;
+    padding: var(--space-sm) 0;
+  }
+  #panel-me .aspect-card + .aspect-card { border-top: var(--border-width) solid var(--color-border); }
+  #panel-me .houses-table article,
+  #panel-me .house-card {
+    border: 0; background: none; border-radius: 0; padding: var(--space-sm) 0;
+  }
+}
+
+/* ── Saved chart rows ───────────────────────────────────────────────────────
+   The dense list the Saved charts view is made of. Geometry from the flat-row
+   grammar; the only chrome is the divider the .o-flat-list parent draws. */
+.saved-chart-row {
+  display: flex; align-items: center; gap: var(--space-md);
+  min-height: 44px;
+  padding: var(--space-sm) 0;
+}
+.saved-chart-row .o-flat-row__lead { align-self: flex-start; padding-top: 2px; }
+.saved-chart-row__state { color: var(--color-secondary); font-weight: var(--weight-regular); }
+.saved-chart-actions { flex: none; display: flex; align-items: center; gap: var(--space-xs); }
+@media (max-width: 359px) {
+  /* Only at the very narrowest widths does the visible Set active yield to the
+     menu, which still contains it. At 390 and 375 — the widths phones actually
+     are — the row keeps its one obvious action. */
+  .saved-chart-actions > .o-btn { display: none; }
+}
+.saved-chart-row__menu span { font-size: 1.4rem; line-height: 1; letter-spacing: 1px; }

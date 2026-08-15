@@ -200,6 +200,18 @@ p a:not(.o-btn) { text-decoration: underline; text-underline-offset: 0.18em; }
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
+/* Same treatment, but only where the sticky bar already shows the identical
+   title. A phone displaying "Compatibility" twice in its first hundred pixels
+   is spending its scarcest resource saying nothing; the H1 stays in the
+   document for assistive technology and for desktop, where the bar and the
+   heading are far enough apart to stop being an echo. */
+@media (max-width: 640px) {
+  .sr-only-mobile {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+}
+
 .skip-link {
   position: fixed; top: var(--space-xs); left: var(--space-xs); z-index: 100;
   transform: translateY(-150%);

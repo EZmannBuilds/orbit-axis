@@ -382,3 +382,23 @@ a.atlas-chip:focus-visible { box-shadow: var(--focus-ring); }
   color: var(--color-muted);
   overflow-wrap: anywhere;
 }
+
+/* ── Mobile: categories as reference rows ───────────────────────────────────
+   A reference wants density: at 375px the carded grid showed barely three
+   categories before the fold. As rows — glyph, name, count, a line of
+   description, divided by hairlines — the whole reference fits in the first
+   two screens and reads like the index it is. Desktop keeps the card grid. */
+@media (max-width: 640px) {
+  .atlas-category-grid { display: block; }
+  .atlas-category-grid > * + * { border-top: var(--border-width) solid var(--color-border); }
+  .atlas-category-card {
+    grid-template-areas: "glyph name count" "glyph desc desc";
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    border: 0; background: none; border-radius: 0;
+    padding: var(--space-sm) 0;
+    min-height: 44px;
+  }
+  .atlas-category-card:hover { background: none; border-color: transparent; }
+  .atlas-category-card__glyph { font-size: 1.3rem; width: 36px; }
+  .atlas-category-card__count { justify-self: end; }
+}

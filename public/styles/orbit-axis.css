@@ -293,3 +293,20 @@
 @media (forced-colors: active) {
   .axis-wordmark { color: CanvasText; }
 }
+
+/* ── Mobile: Today keeps its featured surfaces, sheds the incidental boxes ──
+   The Moon scene and the swipeable reading deck stay carded: one is a featured
+   visual object, the other uses the card boundary to say "swipe me". The
+   highlights list, the technical sky block, and the seven-day strip were boxes
+   out of habit, and on a phone each box is padding the reader pays for. */
+@media (max-width: 640px) {
+  #today-highlights.axis-card,
+  #today-sky.axis-card {
+    border: 0; background: none; border-radius: 0;
+    padding: 0 0 var(--space-lg);
+    border-bottom: var(--border-width) solid var(--color-border);
+  }
+  /* The strip loses its box; the selected day keeps its strong containment —
+     that fill is the one piece of chrome doing real work here. */
+  .day-strip { background: none; border: 0; padding: 0; }
+}
