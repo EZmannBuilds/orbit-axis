@@ -40,6 +40,7 @@
   <link rel="stylesheet" href="/styles/history.css" />
   <link rel="stylesheet" href="/styles/compatibility.css" />
   <link rel="stylesheet" href="/styles/symbol-atlas.css" />
+  <link rel="stylesheet" href="/styles/tarot.css" />
   <link rel="stylesheet" href="/styles/motion.css" />
   <!-- Last, so its container corrections win over the base primitives. -->
   <link rel="stylesheet" href="/styles/native.css" />
@@ -125,6 +126,21 @@
               <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
               <p class="axis-timezone" id="today-timezone" hidden></p>
             </div>
+          </div>
+
+          <!-- Two halves of one day. Real anchors with real hrefs, so Back,
+               Forward, refresh and copy-link all work; aria-current carries the
+               current view (aria-selected would be wrong — these are links, not
+               tabs in a tablist).
+
+               The switch is rendered only when Tarot is available: an unfinished
+               feature must not appear in navigation, and a segmented control
+               with one reachable half is worse than no control at all. -->
+          <div class="subnav" id="today-views" hidden>
+            <nav class="o-segment o-segment--block" aria-label="Today views">
+              <a href="#home" data-today-view="home" aria-current="page">Daily sky</a>
+              <a href="#tarot" data-today-view="tarot">Daily card</a>
+            </nav>
           </div>
 
           <!-- Which chart this reading belongs to. A picture, a name, and the
@@ -753,6 +769,20 @@
               <a class="o-btn o-btn--utility" href="#more">Back to You</a>
             </div>
           </div>
+          <!-- Two kinds of reading, named rather than mixed. The astrology
+               history and the Tarot history answer different questions and
+               carry different evidence, so they are separate views rather than
+               one merged list with a badge on each row.
+
+               Rendered only when Tarot is available; with the feature off this
+               stays hidden and History is exactly what it was. -->
+          <div class="subnav" id="history-kinds" hidden>
+            <nav class="o-segment o-segment--block" aria-label="History views">
+              <a href="#history" data-history-kind="astrology" aria-current="page">Astrology</a>
+              <a href="#history?kind=tarot" data-history-kind="tarot">Tarot</a>
+            </nav>
+          </div>
+
           <div class="history-controls">
             <label for="history-scope">Show</label>
             <select id="history-scope" aria-label="History scope">

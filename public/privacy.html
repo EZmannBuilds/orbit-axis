@@ -91,6 +91,12 @@
       <li><strong>Request identifiers</strong> — a random per-request id used to trace an error you report. It is not linked to you.</li>
       <li><strong>Error information</strong> — the error code and route. <strong>Request bodies are never logged</strong>, so your birth details do not appear in Orbit's logs.</li>
       <li><strong>Standard server request data</strong> handled by the hosting provider.</li>
+      <li><strong>Kept in your browser, not on Orbit's servers</strong> — your theme and
+        display preferences, and whether you have turned over today's Tarot card. The
+        Tarot marker records only that you revealed the card and for which date; the card
+        itself is worked out from the date each time, so it is the same card whatever
+        device you open. Nothing in this group is sent to Orbit, and clearing your browser
+        storage removes it.</li>
     </ul>
     <p>
       <strong>There is no analytics, no advertising, no tracking pixel, and no third-party
@@ -125,6 +131,7 @@
           <tr><td>Signing you in</td><td>Email, password, session</td></tr>
           <tr><td>Calculating a chart</td><td>Birth date, time, place, coordinates, time zone</td></tr>
           <tr><td>Keeping charts across devices</td><td>Saved charts, active chart</td></tr>
+          <tr><td>Keeping the Tarot reflections you choose to save</td><td>Saved Tarot readings — the cards drawn, any question you wrote, and the date</td></tr>
           <tr><td>Daily readings and history</td><td>Active chart, calculated placements</td></tr>
           <tr><td>Ask Orbit</td><td>Your question, active chart, conversation history</td></tr>
           <tr><td>Security</td><td>Session information, request ids</td></tr>
@@ -151,6 +158,14 @@
       Orbit's hosting and database providers may retain their own operational backups for
       a short period under their standard practice. Orbit does not control those and
       cannot delete from them on request, so this page does not claim otherwise.
+    </p>
+
+    <p>
+      <strong>Tarot reflections</strong> are kept only when you choose to save one. A
+      saved reflection holds the cards drawn, the question you wrote if you wrote one,
+      and the date — nothing else. Tarot in Orbit Axis is a reflection prompt, not a
+      prediction, and it is not calculated from your chart or from the sky. Saved
+      reflections are included in your data export and are deleted with your account.
     </p>
 
     <h2 id="deletion">Deleting your account</h2>

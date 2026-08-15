@@ -1,0 +1,268 @@
+/* Orbit Axis :: Tarot.
+ *
+ * The card is the only object on this surface. Everything around it — the
+ * sections, the form, the meaning text — is interface, and interface in this
+ * design system is flat: elevation is a surface change, not a shadow, and the
+ * system has exactly ONE drop shadow, which belongs to objects resting on a
+ * surface. The chart wheel and the Moon already carry it. A tarot card is the
+ * same kind of thing, so `.o-object` is reused rather than a second shadow
+ * being invented for it.
+ *
+ * No second palette. Tarot is the surface most likely to attract gold foil,
+ * deep purples, and star fields; it gets the same Orbit Violet accent as
+ * everything else, and the same rule that colour only ever means "you can act
+ * on this". The card faces are typographic because there is no artwork — and
+ * inventing decorative symbolism would imply an authored deck that does not
+ * exist yet.
+ */
+
+/* ── Layout ────────────────────────────────────────────────────────────────
+   Phone first: the card and its meaning stack. From 768px they sit side by
+   side, because the card is the object and the text is what it means — the
+   pairing reads better across than down once there is room for both. */
+.tarot-layout {
+  display: grid;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+@media (min-width: 768px) {
+  .tarot-layout {
+    grid-template-columns: minmax(0, 200px) minmax(0, 1fr);
+    gap: var(--space-xl);
+  }
+}
+
+.tarot-card-slot { min-width: 0; }
+.tarot-reading { min-width: 0; }
+
+/* ── The card face ─────────────────────────────────────────────────────────
+   A real 2:3, the proportion every physical deck uses. `aspect-ratio` rather
+   than a fixed height so it scales with the column without ever going oval. */
+.tarot-card {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 200px;
+  border-radius: var(--radius-lg);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  text-align: center;
+  /* The one object shadow. .o-object already applies it; naming it here would
+     be a second definition of the same fact. */
+}
+
+.tarot-card__rank {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
+.tarot-card__name {
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 1.6vw + 0.7rem, 1.4rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.tarot-card__suit {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+}
+
+/* The back. One hairline frame and nothing else: a face-down card should read
+   as "not yet turned over", which is a state, not an illustration. */
+.tarot-card--down {
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(160deg, var(--color-surface-elevated), var(--color-surface));
+}
+.tarot-card__back {
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--color-border-strong, var(--color-border));
+  /* One line across the circle — the minimal celestial mark the brief allows,
+     drawn in CSS so it needs no asset and inherits the theme. */
+  background:
+    linear-gradient(to bottom, transparent calc(50% - 0.5px),
+      var(--color-border-strong, var(--color-border)) calc(50% - 0.5px),
+      var(--color-border-strong, var(--color-border)) calc(50% + 0.5px),
+      transparent calc(50% + 0.5px));
+}
+
+.tarot-card-shimmer {
+  aspect-ratio: 2 / 3;
+  width: 100%;
+  max-width: 200px;
+  border-radius: var(--radius-lg);
+}
+
+/* ── The reveal ────────────────────────────────────────────────────────────
+   A short fade-and-lift. The card is replaced rather than flipped, because a
+   real flip needs both faces in the DOM at once and a face-down card that
+   already contains today's card in its markup is not face down in any sense a
+   reader would accept. */
+@keyframes tarot-reveal {
+  from { opacity: 0; transform: translateY(6px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.tarot-card--up {
+  animation: tarot-reveal var(--duration-slow, 320ms) var(--ease-standard, ease-out);
+}
+
+/* Reduced motion shows the final state immediately — the card is still
+   revealed, the status line still announces it, and nothing about the
+   feedback is lost. Only the movement goes. */
+@media (prefers-reduced-motion: reduce) {
+  .tarot-card--up { animation: none; }
+}
+
+/* ── Meaning ───────────────────────────────────────────────────────────── */
+.tarot-meaning { display: grid; gap: var(--space-xs); }
+
+.tarot-meaning__position {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin: 0;
+}
+
+.tarot-meaning__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2vw + 0.8rem, 1.6rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+/* The heading takes focus after a reveal, so it needs a focus ring of its own
+   — it is not otherwise interactive. */
+.tarot-meaning__name:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+.tarot-meaning__kind { margin: 0; }
+.tarot-meaning__body { margin: 0; }
+
+.tarot-meaning__prompt {
+  margin: var(--space-xs) 0 0;
+  padding-top: var(--space-sm);
+  border-top: var(--border-width) solid var(--color-border);
+}
+.tarot-meaning__prompt-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* ── States ───────────────────────────────────────────────────────────────
+   Face-down, empty, and error are all flat blocks, not cards. A bordered box
+   around "the deck is not ready" would be a card containing an apology. */
+.tarot-facedown,
+.tarot-empty,
+.tarot-error { display: grid; gap: var(--space-sm); justify-items: start; }
+
+.tarot-facedown h3,
+.tarot-empty h3,
+.tarot-error h3 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 0;
+}
+.tarot-facedown p, .tarot-empty p, .tarot-error p { margin: 0; }
+
+.tarot-status:empty { display: none; }
+.tarot-status { margin: 0 0 var(--space-md); color: var(--color-secondary); }
+
+.tarot-actions { margin-top: var(--space-md); display: grid; gap: var(--space-xs); justify-items: start; }
+.tarot-saved { margin: 0; color: var(--color-secondary); }
+
+/* ── The form ─────────────────────────────────────────────────────────────
+   One column at every width, per the phone-form rule. The two draw buttons
+   sit side by side where there is room and stack below 420px rather than
+   shrinking under the 44px minimum. */
+.tarot-form { display: grid; gap: var(--space-md); margin-bottom: var(--space-lg); }
+.tarot-form__field { display: grid; gap: var(--space-xxs); }
+.tarot-form__label { font-weight: 600; }
+
+.tarot-form__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+.tarot-form__actions .o-btn { min-height: 44px; }
+
+@media (max-width: 420px) {
+  .tarot-form__actions { display: grid; }
+  .tarot-form__actions .o-btn { width: 100%; }
+}
+
+/* ── Spreads ──────────────────────────────────────────────────────────────
+   Three cards are a vertical reading sequence, always. Compressing three full
+   faces into one narrow row is what the brief rules out, and it is also just
+   unreadable: at 375px each card would be under a hundred pixels wide. */
+.tarot-spread__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-xl);
+}
+.tarot-spread__item { min-width: 0; }
+.tarot-spread--three .tarot-spread__item + .tarot-spread__item {
+  padding-top: var(--space-xl);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.tarot-question-echo {
+  margin: 0 0 var(--space-lg);
+  padding-bottom: var(--space-sm);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+.tarot-question-echo .u-meta { display: block; }
+
+.tarot-manual-result { margin-top: var(--space-lg); }
+.tarot-save { margin-top: var(--space-lg); }
+
+/* ── Forced colors ────────────────────────────────────────────────────────
+   In forced-colors mode every background and shadow is discarded, so the card
+   would dissolve into the page. A real border keeps it an object, and the
+   accent-coloured position label keeps its meaning through weight rather than
+   through a colour that no longer exists. */
+@media (forced-colors: active) {
+  .tarot-card {
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .tarot-card__back { border-color: CanvasText; background: none; }
+  .tarot-meaning__position { color: CanvasText; }
+}
+
+/* ── Tarot history ────────────────────────────────────────────────────────
+   Divided rows, like every other collection in the app. A saved reflection is
+   a record, not an object, so it gets no card treatment and no shadow. */
+.tarot-history__row { padding: var(--space-md) 0; display: grid; gap: var(--space-xxs); }
+.tarot-history__head {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: baseline;
+  justify-content: space-between;
+}
+.tarot-history__kind { font-weight: 600; }
+.tarot-history__question { margin: 0; color: var(--color-secondary); }
+.tarot-history__cards { margin: 0; }

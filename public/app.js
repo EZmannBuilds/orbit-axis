@@ -474,7 +474,11 @@ const WORKSPACES = [
 
   // Unfinished features. Absent from production entirely; a flag alone is not
   // enough, the markup has to be present too (see availableWorkspaces).
-  { id: "tarot", label: "Tarot", crumb: "Daily cards", icon: "star", primary: false, tab: "more", feature: "tarot" },
+  // Tarot belongs to Today, not to You. It is the other half of the daily
+  // ritual — a reflection surface beside the calculated sky — and filing it
+  // under account settings said it was a preference. `tab: "home"` keeps Today
+  // marked current on #tarot, so arriving there still says where you are.
+  { id: "tarot", label: "Daily card", crumb: "A prompt, not a prediction", icon: "star", primary: false, tab: "home", feature: "tarot" },
   { id: "learn", label: "Learn", crumb: "Courses", icon: "book-open-text", primary: false, tab: "symbol-atlas", feature: "learn" },
   { id: "news", label: "News", crumb: "Verified articles", icon: "file-text", primary: false, tab: "more", feature: "news" },
 ];
@@ -1884,7 +1888,17 @@ function renderRoute() {
   }
   if (id === "compatibility") { wireCompatibility(); loadCompatibility(); }
   if (id === "saved-charts") loadSavedCharts();
-  if (id === "history") axisLoadHistory($("#history-scope")?.value || "active");
+  if (id === "history") {
+    const kind = historyKind();
+    syncHistoryKinds(kind);
+    if (kind === "tarot") axisLoadTarotHistory();
+    else axisLoadHistory($("#history-scope")?.value || "active");
+  }
+  if (id === "tarot") enterTarot();
+  // Today's two views. The switch is rendered in both panels, so whichever is
+  // on screen has to say where you are — and it stays hidden entirely while
+  // Tarot is unavailable.
+  syncTodayViews(id);
   // The Chart views nav appears in each of its three panels; whichever is
   // visible must say where you are. aria-current="page" is the entire
   // mechanism — links, not tabs, because these controls navigate.
@@ -4386,6 +4400,470 @@ function wireCompatibility() {
   $("#compat-run")?.addEventListener("click", runCompatibility);
 }
 
+/* ── Tarot ────────────────────────────────────────────────────────────────
+   A reflection surface that sits beside the calculated sky and is careful
+   never to borrow its authority. Two things keep that boundary honest here:
+   the panel says what it is in its own lead sentence, and nothing in this
+   module ever draws a card. Every card comes from the server.
+
+   That last point is the whole architecture. The daily card is DERIVED from
+   the local date rather than stored, so it is the same card on a refresh, on
+   a second device, and after the tab has been closed all afternoon. If this
+   file picked the card, "today's card" would mean "whatever this browser
+   happened to roll", and the two devices would disagree forever.
+
+   What IS local is whether the card has been turned over. A reveal is an act,
+   not a fact about the day — and for a signed-out visitor there is nowhere
+   else to keep it. See tarotRevealKey(). */
+
+const TAROT_REVEAL_PREFIX = "orbit.tarot.revealed";
+
+const tarotState = {
+  status: "idle",      // idle | loading | ready | unavailable | error
+  reading: null,       // the daily reading as the server returned it
+  revealed: false,
+  manual: null,        // the current manual draw, if any
+  manualBusy: false,
+  saving: false,
+  saved: false,
+  error: null,
+  unavailable: null,   // { code, message } when the deck is not ready
+};
+
+/**
+ * Where a revealed day is remembered.
+ *
+ * Keyed by the local date so it expires on its own: yesterday's key is simply
+ * never read again, which is a cheaper and more reliable expiry than a
+ * timestamp somebody has to compare. Nothing about the CARD is stored — only
+ * that the reader turned it over — so this cannot drift out of step with the
+ * server's answer, and clearing it costs the reader nothing but one tap.
+ */
+function tarotRevealKey(localDate) {
+  return `${TAROT_REVEAL_PREFIX}.${localDate}`;
+}
+
+function tarotWasRevealed(localDate) {
+  if (!localDate) return false;
+  try { return localStorage.getItem(tarotRevealKey(localDate)) === "1"; }
+  catch { return false; }   // private mode: the card simply starts face down
+}
+
+function tarotRememberReveal(localDate) {
+  if (!localDate) return;
+  try {
+    localStorage.setItem(tarotRevealKey(localDate), "1");
+    // Yesterday's markers are dropped on the way past. Left alone they would
+    // accumulate one key per day forever, which is untidy rather than harmful
+    // — but a storage quota error on a reflection app would be absurd.
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(TAROT_REVEAL_PREFIX) && key !== tarotRevealKey(localDate)) {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch { /* private mode: the reveal lasts for this page view only */ }
+}
+
+/** The card face. Typographic, because there is no artwork and none is implied. */
+function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
+  if (faceDown) {
+    return `<div class="tarot-card o-object tarot-card--down" aria-hidden="true">
+      <span class="tarot-card__back"></span>
+    </div>`;
+  }
+  if (!card) return "";
+  const rank = Number.isInteger(card.number)
+    ? (card.arcana === "major" ? romanNumeral(card.number) : String(card.number))
+    : "";
+  const suit = card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana";
+  // The face is decorative: every word on it is repeated as real text beside
+  // the card, so a screen reader is never asked to read a layout.
+  return `<div class="tarot-card o-object tarot-card--up" aria-hidden="true">
+    <span class="tarot-card__rank">${esc(rank)}</span>
+    <span class="tarot-card__name">${esc(card.name)}</span>
+    <span class="tarot-card__suit">${esc(suit)}</span>
+  </div>`;
+}
+
+/** Majors are numbered in roman on every deck anyone has ever printed. */
+function romanNumeral(value) {
+  if (!Number.isInteger(value) || value < 0 || value > 3999) return String(value ?? "");
+  if (value === 0) return "0";
+  const table = [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],
+                 [50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];
+  let out = "", n = value;
+  for (const [num, sym] of table) while (n >= num) { out += sym; n -= num; }
+  return out;
+}
+
+/** The authored text for one card. Never depends on the artwork. */
+function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true } = {}) {
+  const card = entry?.card;
+  if (!card) return "";
+  const H = `h${headingLevel}`;
+  // A position label is the meaning in a three-card spread — "What shaped this"
+  // says how to read the card under it. On a single card it is only the
+  // section heading repeated a line lower in a louder colour, so it is dropped
+  // rather than styled down.
+  const position = showPosition && entry.position
+    ? `<p class="tarot-meaning__position">${esc(entry.position)}</p>` : "";
+  const suit = card.suit
+    ? `${esc(card.suit.charAt(0).toUpperCase() + card.suit.slice(1))}`
+    : "Major Arcana";
+  return `<div class="tarot-meaning">
+    ${position}
+    <${H} class="tarot-meaning__name" tabindex="-1">${esc(card.name)}</${H}>
+    <p class="u-meta tarot-meaning__kind">${suit}</p>
+    <p class="tarot-meaning__body">${esc(card.upright_meaning)}</p>
+    <p class="tarot-meaning__prompt"><span class="tarot-meaning__prompt-label">To reflect on</span>
+      ${esc(card.reflection_prompt)}</p>
+  </div>`;
+}
+
+function tarotSay(message, { assertive = false } = {}) {
+  const el = $("#tarot-status");
+  if (!el) return;
+  el.textContent = message || "";
+  el.setAttribute("aria-live", assertive ? "assertive" : "polite");
+  el.hidden = !message;
+}
+
+/* ── Daily card ─────────────────────────────────────────────────────────── */
+
+async function loadTarotDaily() {
+  const slot = $("#tarot-daily-slot");
+  const reading = $("#tarot-daily-reading");
+  if (!slot || !reading) return;
+
+  tarotState.status = "loading";
+  tarotSay("Loading today's card…");
+  // A shimmer rather than an empty bordered shell — an empty card outline that
+  // may never fill is a promise the page might not keep.
+  slot.innerHTML = `<div class="axis-shimmer tarot-card-shimmer"></div>`;
+  reading.innerHTML = "";
+
+  try {
+    const timezone = axisResolveTimezone();
+    const data = await get(`/api/tarot/daily?timezone=${encodeURIComponent(timezone)}`);
+    tarotState.reading = data.reading;
+    tarotState.status = "ready";
+    tarotState.unavailable = null;
+    tarotState.revealed = tarotWasRevealed(data.reading?.draw?.local_date);
+    renderTarotDaily();
+  } catch (error) {
+    // A deck that is not ready is a STATE, not a failure: it has a real
+    // explanation and no retry would help, so it must not be dressed as one.
+    const code = error?.data?.code;
+    if (code === "empty_deck" || code === "incomplete_deck" || code === "unreviewed_deck") {
+      tarotState.status = "unavailable";
+      tarotState.unavailable = { code, message: error.message };
+      renderTarotUnavailable();
+      return;
+    }
+    tarotState.status = "error";
+    tarotState.error = error.message || "Today's card could not be loaded.";
+    renderTarotDailyError();
+  }
+}
+
+function renderTarotUnavailable() {
+  const slot = $("#tarot-daily-slot");
+  const reading = $("#tarot-daily-reading");
+  const manual = $("#tarot-manual");
+  if (slot) slot.innerHTML = "";
+  if (reading) {
+    reading.innerHTML = `<div class="tarot-empty">
+      <h3>The deck is not ready yet</h3>
+      <p>${esc(tarotState.unavailable?.message || "The Tarot deck has not been authored yet.")}</p>
+      <p class="u-meta">Orbit Axis will not show cards it has not written. Nothing here is
+        generated automatically, and nothing is copied from a published guidebook.</p>
+    </div>`;
+  }
+  // Controls that cannot succeed are removed, not disabled. A greyed-out
+  // "Draw one card" still says we think it might work.
+  if (manual) manual.hidden = true;
+  tarotSay("Tarot is not available yet on this instance.");
+}
+
+function renderTarotDailyError() {
+  const slot = $("#tarot-daily-slot");
+  const reading = $("#tarot-daily-reading");
+  if (slot) slot.innerHTML = "";
+  if (reading) {
+    reading.innerHTML = `<div class="tarot-error" role="alert">
+      <h3>Today's card could not be loaded</h3>
+      <p>${esc(tarotState.error)}</p>
+      <button class="o-btn o-btn--secondary" type="button" data-tarot-action="retry-daily">Try again</button>
+    </div>`;
+  }
+  tarotSay("Today's card could not be loaded.", { assertive: true });
+}
+
+function renderTarotDaily() {
+  const slot = $("#tarot-daily-slot");
+  const reading = $("#tarot-daily-reading");
+  const entry = tarotState.reading?.cards?.[0];
+  if (!slot || !reading || !entry) return;
+
+  // The load is over by the time anything renders, so the loading line goes
+  // here rather than in each branch below. Returning to an ALREADY-REVEALED
+  // card otherwise left "Loading today's card…" sitting under the header
+  // permanently — the card was right there and the page still claimed to be
+  // fetching it. The reveal handler sets its own announcement after this runs.
+  tarotSay("");
+
+  const dateEl = $("#tarot-date");
+  if (dateEl && tarotState.reading?.draw?.local_date) {
+    dateEl.textContent = formatLocalDateKey(tarotState.reading.draw.local_date);
+  }
+
+  if (!tarotState.revealed) {
+    slot.innerHTML = tarotCardFaceHtml(null, { faceDown: true });
+    reading.innerHTML = `<div class="tarot-facedown">
+      <h3>Your card is face down</h3>
+      <p>One card, drawn for today. It stays the same card until tomorrow —
+        refreshing will not change it.</p>
+      <button class="o-btn o-btn--primary" type="button" data-tarot-action="reveal">Reveal today's card</button>
+    </div>`;
+    return;
+  }
+
+  slot.innerHTML = tarotCardFaceHtml(entry.card);
+  reading.innerHTML = `${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false })}
+    <div class="tarot-actions" id="tarot-daily-actions"></div>`;
+  renderTarotDailySave();
+}
+
+/** Save is offered to everyone; the account is asked for only on the press. */
+function renderTarotDailySave() {
+  const holder = $("#tarot-daily-actions");
+  if (!holder) return;
+  if (tarotState.saved) {
+    holder.innerHTML = `<p class="tarot-saved" role="status">Saved to your reflections.
+      <a href="#history">See your history</a></p>`;
+    return;
+  }
+  const busy = tarotState.saving;
+  holder.innerHTML = `<button class="o-btn o-btn--secondary" type="button"
+      data-tarot-action="save-daily" ${busy ? "disabled" : ""}>
+      ${busy ? "Saving…" : "Save this reflection"}</button>
+    ${authSignedIn() ? "" : `<p class="u-meta">Saving keeps a reflection to your account.
+      Today's card itself needs no account — it is already yours for the day.</p>`}`;
+}
+
+/* ── Manual reflections ─────────────────────────────────────────────────── */
+
+async function drawTarotSpread(spreadType) {
+  if (tarotState.manualBusy) return;
+  tarotState.manualBusy = true;
+  tarotState.saved = false;
+
+  const result = $("#tarot-manual-result");
+  const spread = $("#tarot-spread");
+  const save = $("#tarot-save");
+  if (result) result.hidden = false;
+  if (save) save.innerHTML = "";
+  if (spread) {
+    const count = spreadType === "three_card" ? 3 : 1;
+    spread.innerHTML = Array.from({ length: count },
+      () => `<div class="axis-shimmer tarot-card-shimmer"></div>`).join("");
+  }
+  tarotSay(spreadType === "three_card" ? "Drawing three cards…" : "Drawing a card…");
+  setTarotFormBusy(true);
+
+  try {
+    const question = $("#tarot-question")?.value ?? "";
+    const data = await post("/api/tarot/draw", {
+      spread_type: spreadType,
+      question,
+      timezone: axisResolveTimezone(),
+    });
+    tarotState.manual = data.reading;
+    renderTarotManual();
+    tarotSay(spreadType === "three_card" ? "Three cards drawn." : "One card drawn.");
+  } catch (error) {
+    const code = error?.data?.code;
+    if (code === "empty_deck" || code === "incomplete_deck" || code === "unreviewed_deck") {
+      tarotState.unavailable = { code, message: error.message };
+      renderTarotUnavailable();
+      return;
+    }
+    if (spread) {
+      spread.innerHTML = `<div class="tarot-error" role="alert">
+        <h3>That draw did not complete</h3>
+        <p>${esc(error.message || "Please try again.")}</p>
+        <button class="o-btn o-btn--secondary" type="button"
+          data-tarot-action="retry-draw" data-spread="${esc(spreadType)}">Try again</button>
+      </div>`;
+    }
+    tarotSay("That draw did not complete.", { assertive: true });
+  } finally {
+    tarotState.manualBusy = false;
+    setTarotFormBusy(false);
+  }
+}
+
+function setTarotFormBusy(busy) {
+  for (const button of document.querySelectorAll("#tarot-form button[type=submit]")) {
+    button.disabled = busy;
+  }
+}
+
+function renderTarotManual() {
+  const spread = $("#tarot-spread");
+  const reading = tarotState.manual;
+  if (!spread || !reading) return;
+
+  const multi = reading.cards.length > 1;
+  spread.className = `tarot-spread${multi ? " tarot-spread--three" : ""}`;
+  // Three cards render as a vertical reading sequence on a phone: an ordered
+  // list, because the order is the meaning. "What shaped this" before "What is
+  // present" is not a layout preference.
+  spread.innerHTML = `<${multi ? "ol" : "div"} class="tarot-spread__list">
+    ${reading.cards.map((entry) => `<${multi ? "li" : "div"} class="tarot-spread__item">
+        <div class="tarot-layout">
+          <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
+          <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 4, showPosition: multi })}</div>
+        </div>
+      </${multi ? "li" : "div"}>`).join("")}
+  </${multi ? "ol" : "div"}>`;
+
+  if (reading.question) {
+    spread.insertAdjacentHTML("afterbegin",
+      `<p class="tarot-question-echo"><span class="u-meta">You asked</span> ${esc(reading.question)}</p>`);
+  }
+  renderTarotManualSave();
+}
+
+function renderTarotManualSave() {
+  const holder = $("#tarot-save");
+  if (!holder) return;
+  if (tarotState.saved) {
+    holder.innerHTML = `<p class="tarot-saved" role="status">Saved to your reflections.
+      <a href="#history">See your history</a></p>`;
+    return;
+  }
+  holder.innerHTML = `<button class="o-btn o-btn--secondary" type="button"
+      data-tarot-action="save-manual" ${tarotState.saving ? "disabled" : ""}>
+      ${tarotState.saving ? "Saving…" : "Save this reflection"}</button>`;
+}
+
+/* ── Saving ─────────────────────────────────────────────────────────────── */
+
+/**
+ * Save a reading, asking for an account only at the moment it is needed.
+ *
+ * This is the [[Signed-Out Experience]] rule applied exactly: the card was
+ * free, keeping it is what costs an account. The guard runs BEFORE the request
+ * so nobody meets a 401 under a button they just pressed.
+ */
+async function saveTarotReading(which) {
+  const reading = which === "daily" ? tarotState.reading : tarotState.manual;
+  if (!reading || tarotState.saving) return;
+  if (!authSignedIn()) { requireAccount("history"); return; }
+
+  tarotState.saving = true;
+  which === "daily" ? renderTarotDailySave() : renderTarotManualSave();
+  tarotSay("Saving your reflection…");
+
+  try {
+    await post("/api/tarot/readings", {
+      reading: {
+        spread_type: reading.spread_type,
+        question: reading.question,
+        // Slugs only. The server re-resolves each card from its own deck, so a
+        // client cannot save a meaning the deck does not contain.
+        cards: reading.cards.map((entry) => entry.card.slug),
+        draw: reading.draw,
+      },
+    });
+    tarotState.saved = true;
+    tarotSay("Saved to your reflections.");
+    toast("Reflection saved");
+  } catch (error) {
+    tarotSay(error.message || "That reflection could not be saved.", { assertive: true });
+  } finally {
+    tarotState.saving = false;
+    which === "daily" ? renderTarotDailySave() : renderTarotManualSave();
+  }
+}
+
+/* ── Wiring ─────────────────────────────────────────────────────────────── */
+
+let tarotWired = false;
+
+function wireTarot() {
+  if (tarotWired) return;
+  tarotWired = true;
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-tarot-action]");
+    if (!trigger) return;
+    const action = trigger.dataset.tarotAction;
+
+    if (action === "reveal") {
+      tarotState.revealed = true;
+      tarotRememberReveal(tarotState.reading?.draw?.local_date);
+      renderTarotDaily();
+      // Announced rather than left to the artwork, and focus is moved to the
+      // card's name so a keyboard reader lands on what just appeared.
+      const name = tarotState.reading?.cards?.[0]?.card?.name;
+      tarotSay(name ? `Today's card is ${name}.` : "Card revealed.");
+      // The heading carries tabindex="-1" so this actually lands. Without it
+      // focus() on an <h3> silently does nothing, and a keyboard reader is
+      // left on the button that just disappeared — which is how a reveal
+      // announces itself to everyone except the people who need it most.
+      $("#tarot-daily-reading .tarot-meaning__name")?.focus({ preventScroll: true });
+      return;
+    }
+    if (action === "retry-daily") { loadTarotDaily(); return; }
+    if (action === "retry-draw") { drawTarotSpread(trigger.dataset.spread || "one_card"); return; }
+    if (action === "save-daily") { saveTarotReading("daily"); return; }
+    if (action === "save-manual") { saveTarotReading("manual"); return; }
+    if (action === "signin") { requireAccount("history"); return; }
+    if (action === "retry-history") { axisLoadTarotHistory(); return; }
+  });
+
+  const form = $("#tarot-form");
+  if (form) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      // Which button submitted decides the spread. `submitter` is the honest
+      // source; reading a stored "last clicked" value drifts the moment
+      // somebody submits with the keyboard.
+      const spread = event.submitter?.dataset?.spread || "one_card";
+      drawTarotSpread(spread);
+    });
+  }
+}
+
+/** Called by the router when #tarot is entered. */
+function enterTarot() {
+  wireTarot();
+  const manual = $("#tarot-manual");
+  if (manual) manual.hidden = false;
+  tarotState.saved = false;
+  loadTarotDaily();
+}
+
+/**
+ * Show the Today switch only when Tarot is genuinely available.
+ *
+ * "Available" means the flag is on AND the panel markup loaded — the same test
+ * the router uses. A segmented control whose second half 404s is worse than no
+ * control, and an unfinished feature must not appear in navigation at all.
+ */
+function syncTodayViews(currentId) {
+  const holder = $("#today-views");
+  const available = workspaceAvailable("tarot");
+  if (holder) holder.hidden = !available;
+  for (const link of document.querySelectorAll("[data-today-view]")) {
+    if (link.dataset.todayView === currentId) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+}
+
 /* ── Toasts ────────────────────────────────────────────────────────────── */
 function toast(message) {
   const el = document.createElement("div");
@@ -6215,6 +6693,86 @@ function openPendingHistoryEntry() {
 }
 
 // ── History ──────────────────────────────────────────────────────────────────
+/* ── History: two kinds of reading ────────────────────────────────────────
+   Astrology history and Tarot history answer different questions from
+   different evidence, so they are separate views rather than one merged list.
+   The seven-day strip is deliberately untouched: it makes a specific promise
+   about saved daily SKY readings, and mixing Tarot completion markers into it
+   would quietly change what a filled dot means. */
+
+/** Which history view the hash asks for. Astrology unless Tarot is named. */
+function historyKind() {
+  const query = location.hash.split("?")[1] || "";
+  const kind = new URLSearchParams(query).get("kind");
+  return kind === "tarot" && workspaceAvailable("tarot") ? "tarot" : "astrology";
+}
+
+function syncHistoryKinds(kind) {
+  const holder = $("#history-kinds");
+  if (holder) holder.hidden = !workspaceAvailable("tarot");
+  for (const link of document.querySelectorAll("[data-history-kind]")) {
+    if (link.dataset.historyKind === kind) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
+  }
+  // The chart-scope select belongs to the astrology history; a Tarot
+  // reflection is not cast for a chart, so offering to filter it by one would
+  // be a control that cannot do anything.
+  const controls = $(".history-controls");
+  if (controls) controls.hidden = kind === "tarot";
+}
+
+async function axisLoadTarotHistory() {
+  const body = $("#history-body");
+  if (!body) return;
+  body.innerHTML = `<div class="axis-shimmer" style="height:120px"></div>`;
+
+  if (!authSignedIn()) {
+    body.innerHTML = `<div class="history-empty">
+      <h2>Your saved reflections live here</h2>
+      <p>Tarot reflections are kept to an account, so there is nothing to show yet.
+        Today's card needs no account — only saving one does.</p>
+      <button class="o-btn o-btn--primary" type="button" data-tarot-action="signin">Create an account</button>
+    </div>`;
+    return;
+  }
+
+  try {
+    const data = await get("/api/tarot/readings?limit=50");
+    const readings = data.readings || [];
+    if (readings.length === 0) {
+      body.innerHTML = `<div class="history-empty">
+        <h2>No saved reflections yet</h2>
+        <p>When you save a card or a spread, it will be kept here with the question
+          you asked and the date you drew it.</p>
+        <a class="o-btn o-btn--primary" href="#tarot">Draw a card</a>
+      </div>`;
+      return;
+    }
+    body.innerHTML = `<ul class="o-flat-list tarot-history">
+      ${readings.map(tarotHistoryRowHtml).join("")}
+    </ul>`;
+  } catch (error) {
+    body.innerHTML = `<div class="tarot-error" role="alert">
+      <h2>Your reflections could not be loaded</h2>
+      <p>${esc(error.message || "Please try again.")}</p>
+      <button class="o-btn o-btn--secondary" type="button" data-tarot-action="retry-history">Try again</button>
+    </div>`;
+  }
+}
+
+function tarotHistoryRowHtml(reading) {
+  const when = reading.created_at ? formatLocalDateKey(String(reading.created_at).slice(0, 10)) : "";
+  const label = reading.spread_type === "three_card" ? "Three cards"
+    : reading.spread_type === "daily" ? "Daily card" : "One card";
+  const names = (reading.cards || []).map((entry) => entry.card?.name).filter(Boolean);
+  return `<li class="tarot-history__row">
+    <p class="tarot-history__head"><span class="tarot-history__kind">${esc(label)}</span>
+      <span class="u-meta">${esc(when)}</span></p>
+    ${reading.question ? `<p class="tarot-history__question">${esc(reading.question)}</p>` : ""}
+    <p class="tarot-history__cards">${esc(names.join(" · "))}</p>
+  </li>`;
+}
+
 async function axisLoadHistory(scope = "active") {
   const body = $("#history-body");
   if (!body) return;

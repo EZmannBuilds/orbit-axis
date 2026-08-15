@@ -1,35 +1,79 @@
-<!-- Orbit Axis :: Tarot panel — NOT part of version one.
-     Kept out of public/ on purpose. Everything under public/ is copied verbatim
-     into the production static output, so markup that lives there ships whether
-     or not the app renders it. Holding this fragment outside public/ means the
-     production artifact cannot contain it, rather than relying on the client to
-     remove it after the page has already been served.
-     Loaded at runtime only when ORBIT_FEATURE_TAROT enables it. -->
-<section class="workspace-panel" id="panel-tarot" role="tabpanel" aria-labelledby="tab-tarot" hidden>
-          <div class="o-section-head">
-            <div class="o-section-head__text">
-              <h1 class="u-title">Tarot</h1>
-              <p class="u-caption">A separate tarot space for daily cards, reflections, and readings.</p>
+<!-- Orbit Axis :: Tarot panel — gated, and kept out of public/ on purpose.
+     Everything under public/ is copied verbatim into the production static
+     output, so markup that lives there ships whether or not the app renders it.
+     Holding this fragment outside public/ means the production artifact cannot
+     contain it, rather than relying on the client to remove it after the page
+     has already been served. Loaded at runtime only when ORBIT_FEATURE_TAROT
+     enables it, AND only served when the deck passes its readiness gate.
+
+     role="region" labelled by the visible h1 — not role="tabpanel". The panel
+     is reached by a link, and a tab panel with no tablist is a promise the
+     markup does not keep. -->
+<section class="workspace-panel" id="panel-tarot" role="region" aria-labelledby="tarot-title" hidden>
+          <div class="axis-today-head">
+            <div class="axis-today-head__main">
+              <p class="axis-today-date" id="tarot-date"></p>
+              <h1 class="u-title" id="tarot-title" tabindex="-1">Your card today</h1>
+              <!-- The lead sentence. Stated once, in the place a reader cannot
+                   miss it, rather than repeated as a disclaimer under every
+                   card where it would read as a legal notice. -->
+              <p class="axis-subtitle">A prompt, not a prediction. Tarot here is a
+                reflection tool — it is not calculated from the sky, and it does not
+                tell you what will happen.</p>
             </div>
           </div>
 
-          <div class="tarot-hero">
-            <div class="tarot-card-art" aria-hidden="true">
-              <span class="tarot-card-art__moon"></span>
-              <span class="tarot-card-art__line"></span>
-              <span class="tarot-card-art__star"></span>
-            </div>
-            <div class="tarot-hero__body">
-              <div class="u-eyebrow">Today's Card</div>
-              <h2>Tarot readings are coming soon</h2>
-              <p>The daily tarot system is not wired yet. When it is, the daily card will stay stable for the whole day instead of changing on refresh.</p>
-              <button class="o-btn o-btn--primary" type="button" data-chat-prompt="Ask about this tarot reading">Ask About This Reading</button>
-            </div>
+          <div class="subnav" id="tarot-views">
+            <nav class="o-segment o-segment--block" aria-label="Today views">
+              <a href="#home" data-today-view="home">Daily sky</a>
+              <a href="#tarot" data-today-view="tarot" aria-current="page">Daily card</a>
+            </nav>
           </div>
 
-          <div class="tarot-modes">
-            <article class="tarot-mode" aria-disabled="true"><h3>Daily Reading</h3><p>Coming soon.</p></article>
-            <article class="tarot-mode" aria-disabled="true"><h3>One Card</h3><p>Coming soon.</p></article>
-            <article class="tarot-mode" aria-disabled="true"><h3>Three Card</h3><p>Coming soon.</p></article>
-          </div>
+          <!-- One live region for the whole panel. Loading, refusals, save
+               confirmations and errors all announce through it, so a screen
+               reader hears one voice rather than four competing ones. -->
+          <p class="tarot-status" id="tarot-status" role="status" aria-live="polite"></p>
+
+          <!-- ── Daily card ─────────────────────────────────────────────────
+               Begins face down. Revealing is an explicit act, and the card is
+               derived from the local date, so returning later the same day
+               shows the same card rather than drawing a new one. -->
+          <section class="o-section tarot-daily" id="tarot-daily" aria-labelledby="tarot-daily-title">
+            <h2 class="axis-section-title" id="tarot-daily-title">Today's card</h2>
+            <div class="tarot-layout" id="tarot-daily-layout">
+              <div class="tarot-card-slot" id="tarot-daily-slot"></div>
+              <div class="tarot-reading" id="tarot-daily-reading"></div>
+            </div>
+          </section>
+
+          <!-- ── Reflections ────────────────────────────────────────────────
+               A manual draw, unlike the daily card: asking for one is asking to
+               draw, so it is genuinely random and says so. -->
+          <section class="o-section tarot-manual" id="tarot-manual" aria-labelledby="tarot-manual-title">
+            <h2 class="axis-section-title" id="tarot-manual-title">A reflection</h2>
+            <p class="axis-section-help">Draw one card, or three for a sequence. You
+              can hold a question in mind and write it down — it is kept with the
+              reflection if you save it.</p>
+
+            <form class="tarot-form" id="tarot-form">
+              <div class="tarot-form__field">
+                <label class="tarot-form__label" for="tarot-question">Your question (optional)</label>
+                <input class="o-input" type="text" id="tarot-question" name="question"
+                       maxlength="280" autocomplete="off"
+                       placeholder="What would you like to reflect on?"
+                       aria-describedby="tarot-question-help" />
+                <p class="u-meta" id="tarot-question-help">Up to 280 characters. Leave it blank to simply draw.</p>
+              </div>
+              <div class="tarot-form__actions">
+                <button class="o-btn o-btn--primary" type="submit" data-spread="one_card">Draw one card</button>
+                <button class="o-btn o-btn--secondary" type="submit" data-spread="three_card">Draw three cards</button>
+              </div>
+            </form>
+
+            <div class="tarot-manual-result" id="tarot-manual-result" hidden>
+              <div class="tarot-spread" id="tarot-spread"></div>
+              <div class="tarot-save" id="tarot-save"></div>
+            </div>
+          </section>
         </section>

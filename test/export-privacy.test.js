@@ -357,10 +357,16 @@ test("an empty account exports a valid, reference-consistent document", async ()
 
 // ── Version and compatibility ───────────────────────────────────────────────
 
-test("the schema version was raised, because a reader must understand refs", () => {
-  assert.equal(EXPORT_SCHEMA_VERSION, "1.2.0");
+test("every schema version bump is explained where it happened", () => {
+  // 1.3.0 added saved Tarot reflections — a whole category a consumer has to
+  // understand, so MINOR rather than patch. The guarantee this test has always
+  // carried is unchanged: the constant and the changelog in the file move
+  // together, so a version can never be raised silently.
+  assert.equal(EXPORT_SCHEMA_VERSION, "1.3.0");
   const src = readFileSync(join(ROOT, "lib", "account", "export.js"), "utf8");
-  assert.match(src, /1\.2\.0: export privacy/, "the bump is explained in the file");
+  for (const version of ["1.1.0", "1.2.0", "1.3.0"]) {
+    assert.ok(src.includes(`${version}:`), `the ${version} bump is explained in the file`);
+  }
 });
 
 test("no import or restore reader exists, so nothing in this repo can break", () => {
