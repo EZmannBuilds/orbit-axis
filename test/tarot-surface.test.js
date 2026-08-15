@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 
@@ -620,13 +620,24 @@ test("every card in the draft deck has public-domain artwork", () => {
   }
 });
 
-test("the fronts are not in the shipped artifact", () => {
-  // 78 images the app serves from storage must not also be copied into
-  // public/, which is deployed verbatim.
-  const staged = join(REPO_ROOT, "assets", "tarot-cards");
-  assert.ok(existsSync(staged), "the staging directory should exist");
-  assert.ok(!existsSync(join(REPO_ROOT, "public", "images", "tarot")),
-    "card fronts must not live under public/");
+test("the fronts ship with the app", () => {
+  // Capacitor bundles public/ into the iOS binary, so cards under public/ are
+  // local files on a phone: instant, available with no signal, no egress.
+  // They were briefly served from object storage, which made the phone fetch
+  // over the network something it could simply have carried.
+  const cards = join(REPO_ROOT, "public", "images", "tarot", "cards");
+  assert.ok(existsSync(cards), "card artwork must ship with the app");
+  assert.equal(readdirSync(cards).filter((f) => f.endsWith(".jpg")).length, 78);
+  // And no staging copy left behind to go stale beside it.
+  assert.ok(!existsSync(join(REPO_ROOT, "assets", "tarot-cards")));
+});
+
+test("a card image resolves to the app's own origin by default", () => {
+  const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
+  assert.match(deck, /\/images\/tarot\/cards\//);
+  // An explicit base still wins, so the artwork can move to a CDN later
+  // without a client release.
+  assert.match(deck, /ORBIT_TAROT_IMAGE_BASE_URL/);
 });
 
 

@@ -20,7 +20,7 @@
 //   node scripts/tarot-images.mjs            download, resize, write manifest
 //   node scripts/tarot-images.mjs --verify   check the manifest matches disk
 //
-// Output: assets/tarot-cards/<slug>.jpg  (staging only — never shipped)
+// Output: public/images/tarot/cards/<slug>.jpg  (ships with the app)
 //         lib/tarot/image-manifest.json
 
 import { mkdirSync, writeFileSync, existsSync, readFileSync, statSync } from "node:fs";
@@ -29,11 +29,11 @@ import { execFileSync } from "node:child_process";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 import { DRAFT_CARDS } from "../lib/tarot/draft-deck.js";
 
-// NOT under public/. Everything in public/ is copied verbatim into the
-// deployment artifact, and 78 card fronts are 6.4MB of images the app serves
-// from storage rather than from its own origin. This directory is a staging
-// area for the upload script and never ships.
-const OUT_DIR = join(REPO_ROOT, "assets", "tarot-cards");
+// UNDER public/, deliberately. Capacitor bundles public/ into the iOS binary,
+// so the cards travel with the app: on a phone they are local files that need
+// no network, work with no signal, and cost no egress. On the web they are
+// ordinary static assets.
+const OUT_DIR = join(REPO_ROOT, "public", "images", "tarot", "cards");
 const MANIFEST = join(REPO_ROOT, "lib", "tarot", "image-manifest.json");
 
 /** Target height. The card renders at ~200 CSS px, so this covers 2-3x DPR. */
