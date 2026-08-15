@@ -3107,6 +3107,11 @@ function chartFormPayload() {
   const relationshipChoice = $("#cm-relationship").value || "";
   if (chartForm.mode === "first") payload.relationship_type = DEFAULT_FIRST_CHART_RELATIONSHIP;
   else if (relationshipChoice) payload.relationship_type = relationshipChoice;
+
+  // A real calculation input, not a display preference: it is part of the
+  // chart's input hash, so saving a different one recomputes the chart.
+  const houseSystem = $("#cm-house-system")?.value;
+  if (houseSystem) payload.house_system = houseSystem;
   return payload;
 }
 
@@ -3172,11 +3177,20 @@ function openChartForm(mode, chart = null) {
     const place = chartPlace(chart);
     if (place) setPlaceSelection("cm", place, { existing: true });
     else clearPlaceSelection("cm");
+    const house = $("#cm-house-system");
+    // An unrecognised stored value falls back to the visible default rather
+    // than leaving the control blank — the chart was computed with something,
+    // and the control should say which.
+    if (house) {
+      const stored = String(chart.house_system || "placidus").toLowerCase();
+      house.value = [...house.options].some((o) => o.value === stored) ? stored : "placidus";
+    }
   } else {
     $("#cm-nickname").value = config.defaultName;
     // "first" pre-answers Self (the field is hidden there); "add" starts at
     // the empty non-choice — no default Friend, no resurrected "other".
     $("#cm-relationship").value = mode === "first" ? "self" : "";
+    if ($("#cm-house-system")) $("#cm-house-system").value = "placidus";
     clearPlaceSelection("cm");
   }
 
@@ -4126,20 +4140,37 @@ function renderCompatPickers() {
   const other = $("#compat-other");
   if (!data || !subject || !other) return;
 
-  const selves = data.options.filter((o) => o.relationship_type === "self");
-  subject.innerHTML = selves.map((o) =>
-    `<option value="${esc(o.id)}"${o.id === data.subject_id ? " selected" : ""}>${esc(o.name)}</option>`
+  // EVERY saved chart is offered on both sides. The first selector used to
+  // list only charts saved as Self, which meant two friends could never be
+  // compared with each other — the geometry between two charts does not
+  // require the reader to be one of them.
+  //
+  // What does change is what the result may CLAIM. relationship_type records
+  // how someone relates to the account holder, so a comparison between two
+  // other people is read as a general Chart Comparison rather than as partner
+  // or friend compatibility. The server decides that; this only stops hiding
+  // the charts.
+  const label = (o) => {
+    const kind = o.relationship_type === "self" ? "Self" : o.relationship_type;
+    return kind ? `${o.name} — ${kind}` : o.name;
+  };
+  subject.innerHTML = data.options.map((o) =>
+    `<option value="${esc(o.id)}"${o.id === data.subject_id ? " selected" : ""}>${esc(label(o))}</option>`
   ).join("");
 
   const chosenSubject = subject.value || data.subject_id;
+  const subjectIsSelf = data.options.find((o) => o.id === chosenSubject)?.relationship_type === "self";
   other.innerHTML = data.options
     .filter((o) => o.id !== chosenSubject)
     .map((o) => {
-      const blocked = o.unavailable_reason === "relationship_required";
+      // A missing relationship only blocks a comparison read OUTWARD from the
+      // owner. Between two other charts there is no relationship to read, so
+      // the chart is perfectly comparable and must not be disabled.
+      const blocked = subjectIsSelf && o.unavailable_reason === "relationship_required";
       const suffix = blocked
         ? " — needs a relationship type"
         : o.relationship_type === "self" ? " — another Self chart"
-          : ` — ${o.relationship_type}`;
+          : o.relationship_type ? ` — ${o.relationship_type}` : "";
       return `<option value="${esc(o.id)}"${blocked ? " disabled" : ""}>${esc(o.name)}${esc(suffix)}</option>`;
     }).join("");
 
@@ -4468,9 +4499,18 @@ function tarotRememberReveal(localDate) {
 /** The card face. Typographic, because there is no artwork and none is implied. */
 function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
   if (faceDown) {
-    return `<div class="tarot-card o-object tarot-card--down" aria-hidden="true">
-      <span class="tarot-card__back"></span>
-    </div>`;
+    // The card IS the control. No separate reveal button: tapping or swiping
+    // the card turns it over, which is what a physical card affords.
+    //
+    // It is a real <button>, so Enter and Space work, it takes focus in tab
+    // order, and it carries an accessible name — "no reveal button" is about
+    // the interface, not about excluding anyone who cannot tap. The face stays
+    // aria-hidden inside it, because the button's own label says what pressing
+    // it does and the artwork says nothing a screen reader can use.
+    return `<button type="button" class="tarot-card o-object tarot-card--down"
+        data-tarot-action="reveal" aria-label="Turn over today's card">
+      <span class="tarot-card__back" aria-hidden="true"></span>
+    </button>`;
   }
   if (!card) return "";
   // Majors take roman numerals, as every printed deck does. Minor pips take
@@ -4510,7 +4550,7 @@ function romanNumeral(value) {
 }
 
 /** The authored text for one card. Never depends on the artwork. */
-function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true } = {}) {
+function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step = null } = {}) {
   const card = entry?.card;
   if (!card) return "";
   const H = `h${headingLevel}`;
@@ -4518,8 +4558,12 @@ function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true } = {})
   // says how to read the card under it. On a single card it is only the
   // section heading repeated a line lower in a louder colour, so it is dropped
   // rather than styled down.
+  // In a carousel the position label also carries the reader's place in the
+  // sequence, because only one card is on screen at a time and "2 of 3" is the
+  // only thing that says the other two exist.
   const position = showPosition && entry.position
-    ? `<p class="tarot-meaning__position">${esc(entry.position)}</p>` : "";
+    ? `<p class="tarot-meaning__position">${esc(entry.position)}${
+        step ? ` <span class="tarot-meaning__step">· ${esc(step)}</span>` : ""}</p>` : "";
   const suit = card.suit
     ? `${esc(card.suit.charAt(0).toUpperCase() + card.suit.slice(1))}`
     : "Major Arcana";
@@ -4531,6 +4575,29 @@ function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true } = {})
     <p class="tarot-meaning__prompt"><span class="tarot-meaning__prompt-label">To reflect on</span>
       ${esc(card.reflection_prompt)}</p>
   </div>`;
+}
+
+/**
+ * Turn today's card over.
+ *
+ * One path, reached by tapping the card, swiping across it, or pressing Enter
+ * or Space while it has focus — the card is a real button, so the keyboard
+ * case costs nothing. Idempotent: a swipe that also registers as a click
+ * cannot reveal twice.
+ */
+function revealTarotDaily() {
+  if (tarotState.revealed || !tarotState.reading) return;
+  tarotState.revealed = true;
+  tarotRememberReveal(tarotState.reading?.draw?.local_date);
+  renderTarotDaily();
+  // Announced rather than left to the artwork, and focus moves to the card's
+  // name so a keyboard reader lands on what just appeared. The heading carries
+  // tabindex="-1" so this actually lands: focus() on a bare <h3> silently does
+  // nothing, which announces a reveal to everyone except the people who need
+  // it most.
+  const name = tarotState.reading?.cards?.[0]?.card?.name;
+  tarotSay(name ? `Today's card is ${name}.` : "Card revealed.");
+  $("#tarot-daily-reading .tarot-meaning__name")?.focus({ preventScroll: true });
 }
 
 function tarotSay(message, { assertive = false } = {}) {
@@ -4636,7 +4703,7 @@ function renderTarotDaily() {
       <h3>Your card is face down</h3>
       <p>One card, drawn for today. It stays the same card until tomorrow —
         refreshing will not change it.</p>
-      <button class="o-btn o-btn--primary" type="button" data-tarot-action="reveal">Reveal today's card</button>
+      <p class="u-meta">Tap the card, or swipe across it, to turn it over.</p>
     </div>`;
     return;
   }
@@ -4671,29 +4738,38 @@ async function drawTarotSpread(spreadType) {
   tarotState.manualBusy = true;
   tarotState.saved = false;
 
-  const result = $("#tarot-manual-result");
   const spread = $("#tarot-spread");
   const save = $("#tarot-save");
-  if (result) result.hidden = false;
+  // The drawn reading takes over the card surface. The daily card is not
+  // destroyed — it is derived, so returning to it costs one request — but two
+  // live readings on one screen would leave the reader deciding which is
+  // today's, and that is not a decision worth handing them.
+  setTarotDailyHidden(true);
   if (save) save.innerHTML = "";
   if (spread) {
+    spread.hidden = false;
     const count = spreadType === "three_card" ? 3 : 1;
-    spread.innerHTML = Array.from({ length: count },
-      () => `<div class="axis-shimmer tarot-card-shimmer"></div>`).join("");
+    spread.innerHTML = `<div class="tarot-spread__loading">${Array.from({ length: count },
+      () => `<div class="axis-shimmer tarot-card-shimmer"></div>`).join("")}</div>`;
   }
   tarotSay(spreadType === "three_card" ? "Drawing three cards…" : "Drawing a card…");
   setTarotFormBusy(true);
 
   try {
-    const question = $("#tarot-question")?.value ?? "";
+    // No question is sent. The field was removed from this surface — a written
+    // question belongs to Ask Orbit, not to a card draw — and the endpoint
+    // keeps accepting an optional one so that feature can supply it later
+    // without a second contract.
     const data = await post("/api/tarot/draw", {
       spread_type: spreadType,
-      question,
       timezone: axisResolveTimezone(),
     });
     tarotState.manual = data.reading;
     renderTarotManual();
-    tarotSay(spreadType === "three_card" ? "Three cards drawn." : "One card drawn.");
+    // The rendered spread states what it is in its own label, so the status
+    // line stands down rather than saying it a second time three lines above.
+    // The "Drawing…" message it replaces did the announcing.
+    tarotSay("");
   } catch (error) {
     const code = error?.data?.code;
     if (code === "empty_deck" || code === "incomplete_deck" || code === "unreviewed_deck") {
@@ -4722,30 +4798,123 @@ function setTarotFormBusy(busy) {
   }
 }
 
+/**
+ * A drawn reading, in the surface the daily card was using.
+ *
+ * Three cards are a CAROUSEL: one card at a time, swipeable, with the next
+ * partially visible. That is a deliberate departure from the vertical stack —
+ * see the note on the carousel below — and it is why every card keeps a
+ * position label and a number ("2 of 3"), so the sequence survives being shown
+ * one at a time.
+ */
 function renderTarotManual() {
   const spread = $("#tarot-spread");
   const reading = tarotState.manual;
   if (!spread || !reading) return;
 
   const multi = reading.cards.length > 1;
-  spread.className = `tarot-spread${multi ? " tarot-spread--three" : ""}`;
-  // Three cards render as a vertical reading sequence on a phone: an ordered
-  // list, because the order is the meaning. "What shaped this" before "What is
-  // present" is not a layout preference.
-  spread.innerHTML = `<${multi ? "ol" : "div"} class="tarot-spread__list">
-    ${reading.cards.map((entry) => `<${multi ? "li" : "div"} class="tarot-spread__item">
-        <div class="tarot-layout">
-          <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
-          <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 4, showPosition: multi })}</div>
-        </div>
-      </${multi ? "li" : "div"}>`).join("")}
-  </${multi ? "ol" : "div"}>`;
+  spread.hidden = false;
+  spread.className = `tarot-spread${multi ? " tarot-spread--carousel" : ""}`;
 
-  if (reading.question) {
-    spread.insertAdjacentHTML("afterbegin",
-      `<p class="tarot-question-echo"><span class="u-meta">You asked</span> ${esc(reading.question)}</p>`);
+  const back = `<div class="tarot-spread__head">
+      <p class="tarot-spread__label">${multi ? "Three cards drawn" : "One card drawn"}</p>
+      <button type="button" class="o-btn o-btn--utility" data-tarot-action="back-to-daily">Back to today's card</button>
+    </div>`;
+
+  if (!multi) {
+    const entry = reading.cards[0];
+    spread.innerHTML = `${back}
+      <div class="tarot-layout">
+        <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
+        <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false })}</div>
+      </div>`;
+    renderTarotManualSave();
+    return;
   }
+
+  // The carousel. An ordered list underneath, because the order IS the meaning
+  // — "What shaped this" before "What is present" is not a layout preference —
+  // and CSS scroll-snap does the swiping, so there is no gesture handler, no
+  // threshold, and no drag state to get wrong. Keyboard and screen-reader users
+  // scroll it like any other list; the dots below are real buttons.
+  spread.innerHTML = `${back}
+    <ol class="tarot-carousel" id="tarot-carousel" tabindex="0"
+        aria-label="Three cards, in reading order">
+      ${reading.cards.map((entry, i) => `<li class="tarot-carousel__item" id="tarot-card-${i}">
+          <p class="tarot-carousel__step" aria-hidden="true">${i + 1} of ${reading.cards.length}</p>
+          <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
+          <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 4, showPosition: true, step: `${i + 1} of ${reading.cards.length}` })}</div>
+        </li>`).join("")}
+    </ol>
+    <div class="tarot-carousel__dots" role="group" aria-label="Go to card">
+      ${reading.cards.map((entry, i) =>
+        `<button type="button" class="tarot-carousel__dot${i === 0 ? " is-current" : ""}"
+           data-tarot-card-index="${i}" aria-label="Card ${i + 1}: ${esc(entry.position)}"></button>`).join("")}
+    </div>`;
+
+  wireTarotCarousel();
   renderTarotManualSave();
+}
+
+/**
+ * Keep the dots in step with the scroll position.
+ *
+ * IntersectionObserver rather than a scroll handler: the question is "which
+ * card is on screen", which is exactly what it answers, and it does not fire
+ * sixty times a second while a finger is moving.
+ */
+function wireTarotCarousel() {
+  const track = $("#tarot-carousel");
+  if (!track || !window.IntersectionObserver) return;
+  const dots = [...document.querySelectorAll(".tarot-carousel__dot")];
+
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const index = [...track.children].indexOf(entry.target);
+      dots.forEach((dot, i) => dot.classList.toggle("is-current", i === index));
+    }
+  }, { root: track, threshold: 0.6 });
+
+  for (const item of track.children) observer.observe(item);
+
+  for (const dot of dots) {
+    dot.addEventListener("click", () => {
+      const index = Number(dot.dataset.tarotCardIndex);
+      track.children[index]?.scrollIntoView({
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+        block: "nearest", inline: "start",
+      });
+    });
+  }
+}
+
+/** Respect the system preference rather than animating and apologising. */
+function prefersReducedMotion() {
+  return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+}
+
+/** Show or hide the daily card surface without discarding its state. */
+function setTarotDailyHidden(hidden) {
+  const layout = $("#tarot-daily-layout");
+  const hint = $("#tarot-daily-hint");
+  const title = $("#tarot-daily-title");
+  if (layout) layout.hidden = hidden;
+  if (hint) hint.hidden = true;
+  if (title) title.hidden = hidden;
+}
+
+/** Return to today's card, discarding the drawn reading. */
+function backToTarotDaily() {
+  const spread = $("#tarot-spread");
+  const save = $("#tarot-save");
+  if (spread) { spread.hidden = true; spread.innerHTML = ""; }
+  if (save) save.innerHTML = "";
+  tarotState.manual = null;
+  tarotState.saved = false;
+  setTarotDailyHidden(false);
+  renderTarotDaily();
+  $("#tarot-daily-title")?.focus?.({ preventScroll: true });
 }
 
 function renderTarotManualSave() {
@@ -4814,27 +4983,35 @@ function wireTarot() {
     if (!trigger) return;
     const action = trigger.dataset.tarotAction;
 
-    if (action === "reveal") {
-      tarotState.revealed = true;
-      tarotRememberReveal(tarotState.reading?.draw?.local_date);
-      renderTarotDaily();
-      // Announced rather than left to the artwork, and focus is moved to the
-      // card's name so a keyboard reader lands on what just appeared.
-      const name = tarotState.reading?.cards?.[0]?.card?.name;
-      tarotSay(name ? `Today's card is ${name}.` : "Card revealed.");
-      // The heading carries tabindex="-1" so this actually lands. Without it
-      // focus() on an <h3> silently does nothing, and a keyboard reader is
-      // left on the button that just disappeared — which is how a reveal
-      // announces itself to everyone except the people who need it most.
-      $("#tarot-daily-reading .tarot-meaning__name")?.focus({ preventScroll: true });
-      return;
-    }
+    if (action === "reveal") { revealTarotDaily(); return; }
+    if (action === "back-to-daily") { backToTarotDaily(); return; }
     if (action === "retry-daily") { loadTarotDaily(); return; }
     if (action === "retry-draw") { drawTarotSpread(trigger.dataset.spread || "one_card"); return; }
     if (action === "save-daily") { saveTarotReading("daily"); return; }
     if (action === "save-manual") { saveTarotReading("manual"); return; }
     if (action === "signin") { requireAccount("history"); return; }
     if (action === "retry-history") { axisLoadTarotHistory(); return; }
+  });
+
+  // Swipe across a face-down card to turn it over. Pointer events rather than
+  // touch events, so a trackpad drag and a stylus work too; the threshold is
+  // generous because this is a reveal, not a carousel, and there is nothing to
+  // scroll past. A plain tap is handled by the click listener above — the
+  // card is a real button, so this only has to add the gesture.
+  let swipeStart = null;
+  document.addEventListener("pointerdown", (event) => {
+    const card = event.target.closest(".tarot-card--down");
+    swipeStart = card ? { x: event.clientX, y: event.clientY, card } : null;
+  });
+  document.addEventListener("pointerup", (event) => {
+    if (!swipeStart) return;
+    const { x, y, card } = swipeStart;
+    swipeStart = null;
+    const dx = Math.abs(event.clientX - x);
+    const dy = Math.abs(event.clientY - y);
+    // A horizontal movement of any real distance counts. A tap (dx and dy both
+    // tiny) is left to the click handler so a reveal never fires twice.
+    if (dx > 24 && dx > dy && card.isConnected) revealTarotDaily();
   });
 
   const form = $("#tarot-form");

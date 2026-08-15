@@ -84,6 +84,17 @@
 .tarot-card--down {
   display: grid;
   place-items: center;
+  /* It is a <button> now, so the UA's own chrome has to go before the card
+     reads as a card. Everything else about it — the border, the 2:3, the one
+     object shadow — is unchanged. */
+  appearance: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  /* The gesture is a horizontal swipe, so the browser must not claim it for
+     panning. pan-y keeps vertical scrolling, which is what a reader needs to
+     get past the card. */
+  touch-action: pan-y;
   background:
     linear-gradient(160deg, var(--color-surface-elevated), var(--color-surface));
 }
@@ -266,3 +277,127 @@
 .tarot-history__kind { font-weight: 600; }
 .tarot-history__question { margin: 0; color: var(--color-secondary); }
 .tarot-history__cards { margin: 0; }
+
+
+/* The face-down card is interactive, so it needs the states an interactive
+   thing has. Hover and active are deliberately small: it is a card being
+   turned, not a button being pressed. */
+.tarot-card--down:hover { border-color: var(--color-border-strong, var(--color-border)); }
+.tarot-card--down:active { transform: scale(0.99); }
+.tarot-card--down:focus-visible { box-shadow: var(--focus-ring); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tarot-card--down:active { transform: none; }
+}
+
+.tarot-hint { margin: 0 0 var(--space-sm); color: var(--color-secondary); }
+
+/* ── The three-card carousel ──────────────────────────────────────────────
+   One card at a time, the next partially visible, swiped horizontally.
+
+   Scroll-snap rather than a gesture handler: the browser owns the physics,
+   momentum and rubber-banding, and there is no drag threshold to tune or drag
+   state to leave stuck. It is also keyboard-scrollable and screen-reader
+   navigable for free, which a JS drag implementation is not.
+
+   The list stays an <ol> underneath, because the order is the meaning. */
+.tarot-spread__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+}
+.tarot-spread__label { margin: 0; font-weight: 600; }
+.tarot-spread__loading { display: grid; gap: var(--space-md); grid-auto-flow: column; overflow: hidden; }
+
+.tarot-carousel {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 var(--space-sm);
+  display: grid;
+  grid-auto-flow: column;
+  /* 86% leaves the next card's edge showing, which is what says "there is
+     more" without a row of dots having to carry that alone. */
+  grid-auto-columns: 86%;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.tarot-carousel::-webkit-scrollbar { display: none; }
+.tarot-carousel:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+.tarot-carousel__item {
+  scroll-snap-align: start;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+}
+
+.tarot-carousel__step {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.tarot-meaning__step { font-weight: 400; color: var(--color-muted); }
+
+/* Dots are real buttons with real names, and they are 44px targets even though
+   the painted dot is small — the hit area is the control, not the ink. */
+.tarot-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xxs);
+  margin-top: var(--space-xs);
+}
+.tarot-carousel__dot {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.tarot-carousel__dot::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border-strong, var(--color-border));
+  transition: background var(--duration-fast, 150ms) var(--ease-standard, ease);
+}
+.tarot-carousel__dot.is-current::before { background: var(--color-accent); }
+.tarot-carousel__dot:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tarot-carousel { scroll-behavior: auto; }
+  .tarot-carousel__dot::before { transition: none; }
+}
+
+/* Above the phone width there is room for all three side by side, and a
+   carousel that fits entirely on screen is just a list with extra steps. */
+@media (min-width: 900px) {
+  .tarot-carousel {
+    grid-auto-columns: minmax(0, 1fr);
+    overflow-x: visible;
+    scroll-snap-type: none;
+  }
+  .tarot-carousel__dots { display: none; }
+}
+
+/* Forced colors: the current dot cannot rely on the accent, which is discarded. */
+@media (forced-colors: active) {
+  .tarot-carousel__dot::before { background: CanvasText; }
+  .tarot-carousel__dot.is-current::before {
+    background: Highlight;
+    outline: 1px solid CanvasText;
+  }
+}

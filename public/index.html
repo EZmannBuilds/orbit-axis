@@ -521,11 +521,11 @@
 
           <div class="compat-pickers" id="compat-pickers" hidden>
             <div class="compat-picker">
-              <label class="compat-picker__label" for="compat-subject">Your chart</label>
+              <label class="compat-picker__label" for="compat-subject">First chart</label>
               <select class="compat-picker__select" id="compat-subject"></select>
             </div>
             <div class="compat-picker">
-              <label class="compat-picker__label" for="compat-other">Compare with</label>
+              <label class="compat-picker__label" for="compat-other">Second chart</label>
               <select class="compat-picker__select" id="compat-other"></select>
             </div>
             <div class="compat-picker compat-picker--action">
@@ -1171,6 +1171,35 @@
             <p class="chart-field__help" id="cm-relationship-help">How this chart relates to you. Only you can see it. Relationship type decides which questions Compatibility asks.</p>
             <p class="chart-field__error" id="cm-relationship-error" role="alert" hidden></p>
           </div>
+
+          <!-- How the houses are divided. A real calculation setting: the
+               engine maps this to the Swiss Ephemeris house code, and it is
+               part of the chart's input hash, so changing it recomputes the
+               chart rather than relabelling it.
+
+               Deliberately NOT offered here: a tropical/sidereal switch. The
+               engine computes tropical only — its own type declaration says
+               `zodiac_system?: "tropical"` — so a sidereal option would return
+               tropical positions under a sidereal heading, which is worse than
+               not offering it. -->
+          <details class="chart-field chart-field--advanced">
+            <summary>Calculation settings</summary>
+            <div class="chart-field__advanced-body">
+              <label class="chart-field__label" for="cm-house-system">House system</label>
+              <select id="cm-house-system" class="chart-field__select" aria-describedby="cm-house-system-help">
+                <option value="placidus">Placidus — the common default</option>
+                <option value="whole">Whole Sign — one sign, one house</option>
+                <option value="equal">Equal — twelve equal arcs from the Ascendant</option>
+                <option value="koch">Koch</option>
+                <option value="campanus">Campanus</option>
+                <option value="regiomontanus">Regiomontanus</option>
+                <option value="porphyry">Porphyry</option>
+              </select>
+              <p class="chart-field__help" id="cm-house-system-help">Changes which house each
+                placement falls in. Sun, Moon and the planets' signs and degrees do not change.
+                Placidus is the usual choice; Whole Sign is the usual alternative.</p>
+            </div>
+          </details>
 
           <!-- Optional picture, create modes only: the chart is saved first,
                then the picture uploads — a failed upload keeps the valid chart

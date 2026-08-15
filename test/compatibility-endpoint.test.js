@@ -384,15 +384,33 @@ test("self mode requires two distinct self charts", async (t) => {
   assert.equal(mine.json.options.self_comparison_available, true);
 });
 
-test("the subject must be a chart saved as self", async (t) => {
+test("two charts that are not the owner compare, without claiming a relationship", async (t) => {
   if (skipped(t)) return;
-  // "partner" means "this person is my partner" — relative to the owner. A
-  // friend-vs-partner comparison would describe a relationship between two
-  // other people that nobody claimed exists.
+  // This used to be a 409. Comparing a friend with a partner is a real and
+  // reasonable thing to want — the geometry between two charts does not
+  // require the reader to be one of them — so it now returns a comparison.
+  //
+  // What it must NOT do is keep the relationship label. "partner" means "this
+  // person is my partner", relative to the owner; carrying it into a
+  // comparison between two other people would assert a relationship between
+  // them that nobody has claimed exists. General mode is the answer: it
+  // compares the charts and says plainly that it is not reading a bond.
   const res = await call("GET", `/api/compatibility/compare?a=${friendA.id}&b=${partnerA.id}`, { user: userA });
-  assert.equal(res.status, 409);
-  assert.equal(res.json.code, "subject_must_be_self");
-  assert.equal(res.json.chart_id, friendA.id);
+  assert.equal(res.status, 200);
+  assert.equal(res.json.comparison.mode, "general");
+  assert.equal(res.json.comparison.framing.title, "Chart Comparison");
+  assert.match(res.json.comparison.framing.subtitle, /without assuming a relationship/);
+  // The stored relationship may still be ECHOED — that chart genuinely is the
+  // owner's partner, and hiding it would be its own kind of dishonesty. What
+  // must not happen is the READING describing a partnership between two people
+  // who never claimed one, so the assertion is on the authored copy.
+  const copy = JSON.stringify({
+    framing: res.json.comparison.framing,
+    categories: res.json.comparison.categories,
+    summary: res.json.comparison.summary,
+  });
+  assert.ok(!/\bpartner|\bfriendship|\bfamily member/i.test(copy),
+    "a general comparison must not describe a relationship in its reading");
 });
 
 // ── Privacy and persistence ─────────────────────────────────────────────────

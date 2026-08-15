@@ -150,7 +150,11 @@ test("the panel announces through one live region", () => {
 test("a card's meaning never depends on its artwork", () => {
   // The face is aria-hidden decoration; every word on it is repeated as real
   // text beside the card. A screen reader must never be asked to read a layout.
-  assert.match(APP, /class="tarot-card o-object tarot-card--down" aria-hidden="true"/);
+  // Face down, the card IS the control: a real button with an accessible name,
+  // and the artwork inside it aria-hidden. "No reveal button" is about the
+  // interface, not about excluding anyone who cannot tap.
+  assert.match(APP, /class="tarot-card o-object tarot-card--down"\s*\n?\s*data-tarot-action="reveal" aria-label="Turn over today's card"/);
+  assert.match(APP, /tarot-card__back" aria-hidden="true"/);
   assert.match(APP, /class="tarot-card o-object tarot-card--up" aria-hidden="true"/);
   assert.match(APP, /function tarotMeaningHtml/);
   assert.match(APP, /tarot-meaning__name"[^>]*>\$\{esc\(card\.name\)\}/);
@@ -170,8 +174,9 @@ test("the card is the one object allowed a shadow", () => {
   const shadows = declarations.filter((value) => !value.startsWith("var(--focus-ring"));
   assert.deepEqual(shadows, [],
     "cards, panels, buttons and rows around the object stay shadowless");
-  // And the guard is not vacuous: the focus ring is present and was allowed.
-  assert.equal(declarations.length, 1);
+  // And the guard is not vacuous: every box-shadow here is a focus ring, and
+  // there are several (the card button, the carousel, its dots).
+  assert.ok(declarations.length >= 1);
   assert.match(css, /aspect-ratio:\s*2\s*\/\s*3/, "a tarot card is 2:3");
 });
 
@@ -339,4 +344,80 @@ test("privacy copy matches what the feature actually stores", () => {
   // The local marker is disclosed, and described as what it is.
   assert.match(PRIVACY, /whether you have turned over today's Tarot card/);
   assert.match(PRIVACY, /included in your data export and are deleted with your account/);
+});
+
+
+/* ── Reveal by gesture, and the carousel ──────────────────────────────────── */
+
+test("the card is the control; there is no separate reveal button", () => {
+  assert.ok(!/Reveal today's card<\/button>/.test(APP),
+    "the standalone reveal button is gone");
+  // But it is still a real button, so Enter and Space reveal it and it takes
+  // focus in tab order. Removing the button was a visual decision, not a
+  // decision to make the feature pointer-only.
+  assert.match(APP, /<button type="button" class="tarot-card o-object tarot-card--down"/);
+  assert.match(APP, /aria-label="Turn over today's card"/);
+});
+
+test("a swipe across the face-down card reveals it, without stealing the scroll", () => {
+  assert.match(APP, /pointerdown[\s\S]{0,200}tarot-card--down/);
+  assert.match(APP, /dx > 24 && dx > dy/, "horizontal intent only");
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /touch-action: pan-y/,
+    "vertical scrolling must survive, or the card traps the page");
+});
+
+test("revealing twice is impossible", () => {
+  // A swipe that also registers as a click would otherwise fire both paths.
+  const fn = APP.slice(APP.indexOf("function revealTarotDaily"));
+  assert.match(fn.slice(0, 400), /if \(tarotState\.revealed \|\| !tarotState\.reading\) return;/);
+});
+
+test("a drawn reading replaces today's card rather than stacking beneath it", () => {
+  assert.match(APP, /function setTarotDailyHidden/);
+  assert.match(APP, /setTarotDailyHidden\(true\)/, "drawing hides the daily card");
+  assert.match(APP, /function backToTarotDaily/, "and there is a way back");
+  assert.match(APP, /data-tarot-action="back-to-daily"/);
+});
+
+test("three cards render as a carousel that keeps its reading order", () => {
+  assert.match(APP, /<ol class="tarot-carousel"/, "still an ordered list underneath");
+  assert.match(APP, /aria-label="Three cards, in reading order"/);
+  // Each card says where it sits, because only one is on screen at a time.
+  assert.match(APP, /\$\{i \+ 1\} of \$\{reading\.cards\.length\}/);
+  // The dots are real buttons with real names, not decorative spans.
+  assert.match(APP, /class="tarot-carousel__dot[^"]*"[\s\S]{0,120}aria-label="Card \$\{i \+ 1\}/);
+});
+
+test("the carousel is swiped by the browser, not by a drag handler", () => {
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /scroll-snap-type: x mandatory/);
+  assert.match(css, /scroll-snap-align: start/);
+  // No threshold, no drag state, no pointermove bookkeeping for the carousel.
+  const carousel = APP.slice(APP.indexOf("function wireTarotCarousel"));
+  assert.ok(!/pointermove/.test(carousel.slice(0, 1200)));
+  assert.match(carousel.slice(0, 800), /IntersectionObserver/);
+});
+
+test("the carousel dots keep a 44px target even with an 8px dot", () => {
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  const dot = css.slice(css.indexOf(".tarot-carousel__dot {"), css.indexOf(".tarot-carousel__dot::before"));
+  assert.match(dot, /width: 44px/);
+  assert.match(dot, /height: 44px/);
+});
+
+test("the question field is gone, and nothing still reads it", () => {
+  // Reserved for Ask Orbit. A field the client no longer renders but still
+  // reads would send undefined and look like a bug in the API.
+  assert.ok(!/tarot-question/.test(PANEL), "the field is out of the markup");
+  assert.ok(!/\$\("#tarot-question"\)/.test(APP), "and out of the client");
+});
+
+test("the server still accepts an optional question, because the API is public", () => {
+  // Removing the FIELD is an interface decision. The endpoint keeps accepting
+  // and validating a question, so Ask Orbit can supply one later without a
+  // second contract — and so a stray client cannot bypass the length check.
+  const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
+  assert.match(service, /export function validateQuestion/);
+  assert.match(service, /MAX_QUESTION_LENGTH/);
 });
