@@ -45,6 +45,18 @@
   /* ── 1. Palette primitives ─────────────────────────────────────────────────
      Raw values. Components reference the semantic names in §5/§6, never these. */
 
+  /* Orbit Axis brand constants. The 62deg angle belongs to the identity, not
+     to an individual drawing; every brand asset uses this same observer axis. */
+  --brand-deep-space: #080a12;
+  --brand-surface: #101321;
+  --brand-orbit-purple: #4a28b8;
+  --brand-active-violet: #7657e8;
+  --brand-celestial-highlight: #b9a7ff;
+  --brand-star-white: #f4f2fa;
+  --brand-muted-starlight: #8e93a8;
+  --brand-axis-angle: 62deg;
+  --brand-wordmark-tracking: 0.18em;
+
   /* Orbit Violet — the one interactive colour, in its surface variants.
      ONE HUE (254°), two lightnesses, because a single hex cannot serve both
      themes: #4a28b8 scores 9.2:1 on white and 2.3:1 on black, so on the dark
@@ -55,11 +67,11 @@
      text (2.9:1), so on dark the filled button takes near-black ink instead.
      That is the same move as a pale button with dark text on iOS — the fill is
      the loud part, the label just has to be legible on it. */
-  --violet-action: #4a28b8;      /* on light surfaces — 9.2:1 on white         */
-  --violet-focus: #5b34d6;       /* keyboard focus ring, one step brighter     */
-  --violet-sky: #a185ff;         /* on dark surfaces — 7.3:1 on black          */
-  --violet-sky-focus: #b9a3ff;
-  --violet-ink: #16082b;         /* text ON a light violet fill — 6.6:1        */
+  --violet-action: var(--brand-orbit-purple);
+  --violet-focus: var(--brand-active-violet);
+  --violet-sky: var(--brand-celestial-highlight);
+  --violet-sky-focus: var(--brand-celestial-highlight);
+  --violet-ink: var(--brand-deep-space);
 
   /* Ink — light-surface text, from Apple's near-black through its mutes. */
   --ink: #1d1d1f;                /* headlines and body: near-black, not black,
@@ -78,22 +90,22 @@
   /* Void — dark surfaces. The three tiles are micro-steps apart on purpose:
      that half-tone difference is what separates two dark sections without a
      border. */
-  --void-black: #000000;
-  --void-canvas: #08080a;
-  --void-tile-1: #272729;
-  --void-tile-2: #2a2a2c;
-  --void-tile-3: #252527;
-  --void-sunken: #161618;
+  --void-black: var(--brand-deep-space);
+  --void-canvas: #0b0e19;
+  --void-tile-1: var(--brand-surface);
+  --void-tile-2: #171b2d;
+  --void-tile-3: #0d101c;
+  --void-sunken: #0b0d18;
 
   /* On-dark text. */
-  --moon-white: #ffffff;
-  --moon-muted: #cccccc;
+  --moon-white: var(--brand-star-white);
+  --moon-muted: #c9c5d6;
   /* 14px metadata sat at 4.34:1 on a tile — measured, just under AA's 4.5 for
      normal text. This step reads 5.1:1 on the brightest tile and 4.7:1 even on
      the hover surface, a margin rather than a graze, while staying two visual
      steps away from --moon-muted above it and from the #6a6a6e disabled tone
      below it — quieter than copy, but never a squint. */
-  --moon-faint: #9a9aa0;
+  --moon-faint: var(--brand-muted-starlight);
 
   /* Signal colours. Informational only — they never become a second accent,
      and nothing is clickable *because* it is green. */
@@ -105,14 +117,13 @@
   --signal-red-dim: #c9251c;
 
   /* ── 2. Type ladder ───────────────────────────────────────────────────────
-     SF Pro on Apple platforms, Inter everywhere else. Inter is the closest
-     open-source match; it tracks slightly wider than SF Pro, which the negative
-     letter-spacing below already compensates for. */
-  --font-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Inter",
+     Inter is the brand target; the existing platform stack remains the local,
+     zero-request fallback. IBM Plex Mono leads technical and coordinate data. */
+  --font-display: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont,
     system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter",
+  --font-text: "Inter", "SF Pro Text", -apple-system, BlinkMacSystemFont,
     system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  --font-mono: "IBM Plex Mono", "SF Mono", ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
 
   /* Astrological glyphs — ♈ ☉ ☿ △ and the rest.
      These are ordinary Unicode, and several of them ALSO have emoji
@@ -204,6 +215,7 @@
   --duration-fast: 140ms;
   --duration-base: 200ms;
   --duration-slow: 320ms;
+  --duration-brand-reveal: 420ms;
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
   --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
@@ -216,8 +228,8 @@
 }
 
 /* ── 5. Semantic colours — DARK (default) ──────────────────────────────────
-   Pure black canvas with tile-tone cards. The step from #000 to #272729 is the
-   entire elevation story on this theme; no shadow is involved. */
+   Deep Space canvas with blue-black instrument surfaces. The tone step is the
+   elevation story on this theme; no interface shadow is involved. */
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -227,22 +239,22 @@
   --color-surface: var(--void-tile-1);
   --color-surface-elevated: var(--void-tile-2);
   --color-surface-sunken: var(--void-sunken);
-  --color-surface-hover: #303032;
+  --color-surface-hover: #1c2136;
   --color-surface-ghost: rgba(255, 255, 255, 0.06);
 
-  --color-border: rgba(255, 255, 255, 0.11);
-  --color-border-strong: rgba(255, 255, 255, 0.22);
-  --color-border-focus: var(--violet-sky-focus);
+  --color-border: rgba(185, 167, 255, 0.14);
+  --color-border-strong: rgba(185, 167, 255, 0.28);
+  --color-border-focus: var(--brand-active-violet);
 
   --color-primary: var(--moon-white);     /* headlines and body                */
   --color-secondary: var(--moon-muted);   /* secondary copy                    */
   --color-muted: var(--moon-faint);       /* metadata                          */
-  --color-faint: #6a6a6e;                 /* disabled, placeholder             */
+  --color-faint: #70758b;                 /* disabled, placeholder             */
 
   --color-accent: var(--violet-sky);
-  --color-accent-hover: #b9a3ff;
-  --color-accent-soft: rgba(161, 133, 255, 0.16);
-  --color-accent-border: rgba(161, 133, 255, 0.42);
+  --color-accent-hover: var(--brand-star-white);
+  --color-accent-soft: rgba(118, 87, 232, 0.18);
+  --color-accent-border: rgba(185, 167, 255, 0.42);
   /* Near-black, not white: see the note on --violet-ink above. */
   --color-on-accent: var(--violet-ink);
 
@@ -255,10 +267,10 @@
 
   /* Frosted chrome — the sub-nav and the floating action bar. Functional, not
      decorative: it is how a bar stays legible over scrolling content. */
-  --glass-bg: rgba(22, 22, 24, 0.72);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-bg: rgba(16, 19, 33, 0.78);
+  --glass-border: rgba(185, 167, 255, 0.12);
   /* Translucent chip over imagery — Apple's circular control. */
-  --chip-translucent: rgba(70, 70, 74, 0.64);
+  --chip-translucent: rgba(36, 40, 65, 0.72);
 
   --focus-ring: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-border-focus);
 }

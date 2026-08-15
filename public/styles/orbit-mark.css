@@ -1,60 +1,86 @@
 /* ============================================================================
-   Orbit Axis — the brand mark
+   Orbit Axis — brand primitives (Update 4.0.6)
    ----------------------------------------------------------------------------
-   A ring with a body on it. The app is named after an orbit, so the logo is
-   simply one: two shapes, one colour, no gradient and no glow.
-
-   ONE definition, three places. The rail draws it small, the sign-in gate and
-   the password-reset page draw it large. `.chat-orbit` is the name the
-   standalone pages were written against and `.auth-mark` is the name the app
-   uses; they are the same mark and are defined together so they cannot drift
-   into being two logos.
+   Pure Orbit is the everyday mark. The Instrument variant is reserved for
+   technical contexts; both are committed SVGs so the shell, auth, recovery,
+   favicon, and native source cannot drift into separate logos.
    ========================================================================== */
 
-.auth-mark,
-.chat-orbit {
-  position: relative;
+.brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+}
+
+.brand-lockup--center { justify-content: center; }
+
+.orbit-mark {
+  display: block;
   width: 48px;
   height: 48px;
   flex: none;
-  border-radius: 50%;
-  border: 3px solid var(--color-accent);
-  /* The pages that use it centre it above a heading. */
-  margin-inline: auto;
 }
 
-/* The body on the ring. `.chat-orbit` carries an empty <span> for it;
-   `.auth-mark` does too, so one rule serves both. */
-.auth-mark span,
-.chat-orbit span {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  /* The cut-out is the page behind it, so the body reads as a separate object
-     rather than a bump welded to the ring. */
-  border: 3px solid var(--color-bg);
+.orbit-mark--rail { width: 24px; height: 24px; }
+.orbit-mark--auth { width: 56px; height: 56px; }
+
+.brand-wordmark,
+.rail__wordmark {
+  color: var(--color-primary);
+  font-family: var(--font-display);
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--brand-wordmark-tracking);
+  line-height: 1;
+  white-space: nowrap;
 }
 
-/* Inside a card, the cut-out has to match the CARD rather than the page.
-   Left at the page colour it renders as a black ring on a grey card — which is
-   exactly what shipped, because this override named only `.auth-mark` and the
-   password-reset page uses the older `.chat-orbit`. Both names, always
-   together; that is the whole reason they are defined as one mark above. */
-.auth-card .auth-mark span,
-.auth-card .chat-orbit span,
-.startup-card .auth-mark span,
-.startup-card .chat-orbit span { border-color: var(--color-surface); }
+.brand-tagline {
+  margin: calc(var(--space-xs) * -1) 0 0;
+  color: var(--color-muted) !important;
+  font-size: var(--type-caption) !important;
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caption);
+}
+
+.orbit-instrument {
+  display: block;
+  width: clamp(112px, 15vw, 172px);
+  height: auto;
+  flex: none;
+  opacity: 0.82;
+}
+
+.tech-sky__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.tech-sky__heading { min-width: 0; }
+
+@keyframes orbit-mark-arrive {
+  from { opacity: 0; transform: translateY(5px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.startup-card .brand-lockup {
+  animation: orbit-mark-arrive var(--duration-brand-reveal) var(--ease-decelerate) both;
+}
 
 @media (max-width: 560px) {
-  .auth-mark, .chat-orbit { width: 40px; height: 40px; }
-  .auth-mark span, .chat-orbit span { width: 15px; height: 15px; top: -4px; right: -4px; }
+  .orbit-mark--auth { width: 48px; height: 48px; }
+  .orbit-instrument { width: 96px; }
+  .tech-sky__head { align-items: flex-start; gap: var(--space-sm); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startup-card .brand-lockup { animation: none; }
 }
 
 @media (forced-colors: active) {
-  .auth-mark, .chat-orbit { border-color: CanvasText; }
-  .auth-mark span, .chat-orbit span { background: Highlight; border-color: Canvas; }
+  .orbit-mark, .orbit-instrument { forced-color-adjust: none; }
+  .brand-wordmark, .rail__wordmark { color: CanvasText; }
 }

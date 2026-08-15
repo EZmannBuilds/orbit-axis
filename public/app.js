@@ -4902,7 +4902,7 @@ function toast(message) {
    module takes over afterwards, and must agree with it exactly. */
 const THEME_CHOICES = ["system", "light", "dark"];
 const THEME_STORAGE_KEY = "orbit.theme";
-const THEME_COLORS = { light: "#f5f6f8", dark: "#0a0c0f" };
+const THEME_COLORS = { light: "#f5f5f7", dark: "#080a12" };
 
 /** Storage can throw in private mode. A theme is never worth an exception. */
 function readStoredTheme() {
@@ -6523,8 +6523,13 @@ function axisRenderTechnicalSky(sky) {
   const retro = (sky.retrogrades || []).filter(Boolean);
   el.innerHTML = `
     <section class="tech-sky" aria-labelledby="tech-sky-title">
-      <h2 class="axis-section-title" id="tech-sky-title">Technical Sky</h2>
-      <p class="tech-sky__summary">${[sun, moon].filter(Boolean).map(esc).join(" · ")}</p>
+      <div class="tech-sky__head">
+        <div class="tech-sky__heading">
+          <h2 class="axis-section-title" id="tech-sky-title">Technical Sky</h2>
+          <p class="tech-sky__summary">${[sun, moon].filter(Boolean).map(esc).join(" · ")}</p>
+        </div>
+        <img class="orbit-instrument" src="/brand/orbit-axis-instrument.svg" alt="" aria-hidden="true" />
+      </div>
       <details class="tech-sky__more">
         <summary><span>How this was calculated</span></summary>
         <div class="tech-sky__body">

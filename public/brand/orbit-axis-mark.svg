@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit Axis</title>
+  <desc id="desc">A circular orbit crossed by a sixty-two degree axis, with an observer at the center and a smaller point on the orbit.</desc>
+  <g fill="none" stroke="#7657e8" stroke-linecap="round">
+    <circle cx="64" cy="64" r="35" stroke-width="8"/>
+    <path d="M37 115 91 13" stroke-width="7"/>
+  </g>
+  <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+  <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+</svg>

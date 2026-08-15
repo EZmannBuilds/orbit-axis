@@ -327,7 +327,7 @@
 .avatar-crop__controls input[type="range"] {
   inline-size: 100%;
   min-block-size: 44px;
-  accent-color: var(--accent, #a185ff);
+  accent-color: var(--accent, #b9a7ff);
 }
 
 /* ── Mobile: You as divided rows, not stacked boxes ─────────────────────────

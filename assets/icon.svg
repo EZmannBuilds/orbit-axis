@@ -1,18 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Orbit Axis">
-  <!-- The home-screen icon: the same mark the rail and the sign-in card draw,
-       at icon scale. A ring with a body on it — the app is named after an orbit.
-
-       OPAQUE on purpose. iOS composites a transparent icon onto black and masks
-       the corners itself, so the artwork ships square and solid and lets the
-       platform do the rounding.
-
-       Everything sits inside the middle 80%, which is the safe zone a maskable
-       icon is cropped to on Android. Nothing important is near an edge. -->
-  <rect width="1024" height="1024" fill="#08080a"/>
-  <circle cx="512" cy="512" r="250" fill="none" stroke="#a185ff" stroke-width="64"/>
-  <!-- The body. Its cut-out is the background colour, so it reads as a separate
-       object rather than a bump welded to the ring — the same relationship the
-       mark has everywhere else in the app. -->
-  <circle cx="689" cy="335" r="128" fill="#08080a"/>
-  <circle cx="689" cy="335" r="96" fill="#a185ff"/>
+  <!-- Pure Orbit (A2.1.1), on the fixed Orbit Axis 62deg brand angle.
+       The artwork is opaque and square; iOS applies its own corner mask. -->
+  <rect width="1024" height="1024" fill="#080a12"/>
+  <!-- A limited halo belongs only to the observer point at icon scale. -->
+  <circle cx="512" cy="512" r="94" fill="#b9a7ff" opacity=".14"/>
+  <circle cx="512" cy="512" r="250" fill="none" stroke="#7657e8" stroke-width="56"/>
+  <path d="M300 910 724 114" fill="none" stroke="#7657e8" stroke-width="48" stroke-linecap="round"/>
+  <circle cx="512" cy="512" r="54" fill="#f4f2fa"/>
+  <circle cx="689" cy="335" r="64" fill="#b9a7ff"/>
 </svg>

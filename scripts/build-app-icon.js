@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Orbit Axis :: render the iOS app icon and launch image from assets/icon.svg.
 //
-// WHY NOT A CONVERTER. The icon is four shapes on a flat field, and every
+// WHY NOT A CONVERTER. The icon is a few vector primitives on a flat field, and every
 // conversion path available on a Mac had a problem worth avoiding:
 //
 //   · `qlmanage` renders it correctly but emits an ALPHA CHANNEL, and an App
@@ -30,29 +30,35 @@ import { dirname, join } from "node:path";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 /* ── The mark ───────────────────────────────────────────────────────────────
-   A ring with a body on it, on the app's own near-black canvas. Coordinates are
-   on the same 1024 grid as assets/icon.svg.
-
-   The body's cut-out is the background colour, so it reads as a separate object
-   rather than a bump welded to the ring — the same relationship the mark has in
-   the rail and on the sign-in card. */
+   Pure Orbit (A2.1.1): orbit, 62deg axis, observer, and orbital point. The
+   observer gets the system's only icon-scale halo. Coordinates are on the same
+   1024 grid as assets/icon.svg. */
 const CANVAS = 1024;
-const BG = [0x08, 0x08, 0x0a];        // --void-canvas
-const ACCENT = [0xa1, 0x85, 0xff];    // --violet-sky, the on-dark accent
+const BG = [0x08, 0x0a, 0x12];        // Deep Space
+const ACTIVE = [0x76, 0x57, 0xe8];    // Active Violet
+const HIGHLIGHT = [0xb9, 0xa7, 0xff]; // Celestial Highlight
+const STAR = [0xf4, 0xf2, 0xfa];      // Star White
 
-const RING = { x: 512, y: 512, r: 250, stroke: 64 };
-const BODY = { x: 689, y: 335, r: 96, cut: 128 };
+const RING = { x: 512, y: 512, r: 250, stroke: 56 };
+const AXIS = { x1: 300, y1: 910, x2: 724, y2: 114, stroke: 48 };
+const OBSERVER = { x: 512, y: 512, r: 54, halo: 94, haloAlpha: 0.14 };
+const ORBITAL = { x: 689, y: 335, r: 64 };
 
 /** Guard: the SVG and this file must describe the same mark. */
 function assertSourceMatches() {
   const svg = readFileSync(join(ROOT, "assets", "icon.svg"), "utf8");
   const expected = [
     `fill="#${BG.map((c) => c.toString(16).padStart(2, "0")).join("")}"`,
-    `stroke="#${ACCENT.map((c) => c.toString(16).padStart(2, "0")).join("")}"`,
+    `stroke="#${ACTIVE.map((c) => c.toString(16).padStart(2, "0")).join("")}"`,
+    `fill="#${HIGHLIGHT.map((c) => c.toString(16).padStart(2, "0")).join("")}"`,
+    `fill="#${STAR.map((c) => c.toString(16).padStart(2, "0")).join("")}"`,
     `cx="${RING.x}" cy="${RING.y}" r="${RING.r}"`,
     `stroke-width="${RING.stroke}"`,
-    `cx="${BODY.x}" cy="${BODY.y}" r="${BODY.cut}"`,
-    `cx="${BODY.x}" cy="${BODY.y}" r="${BODY.r}"`,
+    `M${AXIS.x1} ${AXIS.y1} ${AXIS.x2} ${AXIS.y2}`,
+    `stroke-width="${AXIS.stroke}"`,
+    `cx="${OBSERVER.x}" cy="${OBSERVER.y}" r="${OBSERVER.halo}"`,
+    `cx="${OBSERVER.x}" cy="${OBSERVER.y}" r="${OBSERVER.r}"`,
+    `cx="${ORBITAL.x}" cy="${ORBITAL.y}" r="${ORBITAL.r}"`,
   ];
   for (const fragment of expected) {
     if (!svg.includes(fragment)) {
@@ -63,14 +69,29 @@ function assertSourceMatches() {
   }
 }
 
-/** Colour at a point, in paint order: canvas, ring, the body's cut, the body. */
+function blend(over, under, alpha) {
+  return over.map((channel, i) => Math.round(channel * alpha + under[i] * (1 - alpha)));
+}
+
+function distanceToSegment(x, y, { x1, y1, x2, y2 }) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lengthSquared = dx * dx + dy * dy;
+  const t = Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lengthSquared));
+  return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy));
+}
+
+/** Colour at a point, in the same paint order as assets/icon.svg. */
 function sample(x, y) {
   const dRing = Math.hypot(x - RING.x, y - RING.y);
-  const dBody = Math.hypot(x - BODY.x, y - BODY.y);
-  if (dBody <= BODY.r) return ACCENT;
-  if (dBody <= BODY.cut) return BG;
+  const dObserver = Math.hypot(x - OBSERVER.x, y - OBSERVER.y);
+  const dOrbital = Math.hypot(x - ORBITAL.x, y - ORBITAL.y);
+  if (dOrbital <= ORBITAL.r) return HIGHLIGHT;
+  if (dObserver <= OBSERVER.r) return STAR;
+  if (distanceToSegment(x, y, AXIS) <= AXIS.stroke / 2) return ACTIVE;
   const half = RING.stroke / 2;
-  if (dRing >= RING.r - half && dRing <= RING.r + half) return ACCENT;
+  if (dRing >= RING.r - half && dRing <= RING.r + half) return ACTIVE;
+  if (dObserver <= OBSERVER.halo) return blend(HIGHLIGHT, BG, OBSERVER.haloAlpha);
   return BG;
 }
 

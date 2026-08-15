@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit Axis technical instrument</title>
+  <desc id="desc">The Orbit Axis mark within faint measurement rings, orbit paths, and degree ticks.</desc>
+  <g fill="none" stroke="#b9a7ff" stroke-linecap="round">
+    <circle cx="160" cy="110" r="89" opacity=".1"/>
+    <circle cx="160" cy="110" r="72" opacity=".16" stroke-dasharray="3 9"/>
+    <path d="M39 110h18m206 0h18M160 8v18m0 168v18" opacity=".24" stroke-width="2"/>
+    <path d="M69 44l12 12m158 108 12 12M69 176l12-12M239 56l12-12" opacity=".18"/>
+    <path d="M86 146c22 31 61 49 100 42 29-5 53-22 68-46" opacity=".12" stroke-dasharray="7 10"/>
+  </g>
+  <g transform="translate(96 46)">
+    <g fill="none" stroke="#7657e8" stroke-linecap="round">
+      <circle cx="64" cy="64" r="35" stroke-width="8"/>
+      <path d="M37 115 91 13" stroke-width="7"/>
+    </g>
+    <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+    <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+  </g>
+</svg>
