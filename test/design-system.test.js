@@ -429,3 +429,34 @@ test("the reset-password page's controls carry the button grammar", () => {
   assert.match(page, /href="\/styles\/components\.css"/,
     "o-btn is defined in components.css; without it the classes are inert");
 });
+
+// ── One page, one vertical rhythm ───────────────────────────────────────────
+//
+// The workspace panels are grids with their own gap, and a margin on a child
+// does NOT collapse into a grid gap — it adds to it. Sky read 24, 24, 24, 36,
+// 32, 24, 24 because two children each set a margin-bottom on top of the
+// container's 24. Nobody chose 36; it was arithmetic.
+//
+// Reported as "spacing is off", which is how this class of bug always arrives:
+// visible as wrongness, invisible as a cause.
+
+test("Sky's panel children do not add margins on top of the grid gap", () => {
+  const features = read("public", "styles", "features.css");
+  for (const selector of ["tr-switcher", "tr-status"]) {
+    const rule = new RegExp(`\\.${selector} \\{([^}]*)\\}`).exec(features)?.[1] || "";
+    assert.ok(rule.length > 0, `.${selector} must exist to be checked`);
+    const margin = /margin:\s*([^;]+);/.exec(rule)?.[1] || "0";
+    assert.ok(!/\d+px/.test(margin.replace(/^0(\s|$)/, "")) || /^0(\s+0)*$/.test(margin.trim()),
+      `.${selector} sets "margin: ${margin}" — the panel grid owns the rhythm`);
+  }
+});
+
+test("the Atlas uses the same rhythm as the page around it", () => {
+  // --space-xl here made the Atlas the one surface with its own spacing scale,
+  // which read as a void between the search field and the category shelf.
+  const atlas = read("public", "styles", "symbol-atlas.css");
+  const rule = /#atlas-root \{([^}]*)\}/.exec(atlas)?.[1] || "";
+  assert.ok(rule.includes("gap: var(--space-lg)"),
+    "#atlas-root must use --space-lg, matching the workspace panel");
+  assert.ok(!rule.includes("--space-xl"), "no bespoke rhythm for one surface");
+});

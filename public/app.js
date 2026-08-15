@@ -12,9 +12,11 @@ import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
   relationshipDisplay, chartInitials, validateName,
 } from "./chart-identity.js";
-import { normalizeAvatar, previewFor } from "./avatar-normalize.js";
+import { normalizeAvatar, previewFor, decodeImage, releaseImage } from "./avatar-normalize.js";
+import { validateSourceFile, validateSourceDimensions } from "./chart-avatar-limits.js";
+import { createCropEditor } from "./avatar-crop.js";
 import {
-  starField, sceneInputs, illuminationLabel, moonPositionLabel,
+  starField, sceneInputs, illuminationLabel,
   SHOOTING_STAR_KEY, ORIENTATION_NOTE,
 } from "./moon-scene.js";
 import { decideStartupView, STARTUP_VIEW } from "./startup-state.js";
@@ -3188,6 +3190,9 @@ const identityForm = {
   chart: null, openedBy: null, submitting: false,
   pendingBlob: null, preview: null, removeRequested: false,
   textDone: false,
+  // The crop editor and the decoded source it is framing. Held so the image is
+  // decoded once per chosen file rather than once per slider move.
+  cropEditor: null, sourceImage: null, sourceFile: null,
 };
 
 function identityAvatarNote(text) {
@@ -3264,6 +3269,8 @@ function renderIdentityLegacy(value) {
 }
 
 function resetIdentityWorkingState() {
+  releaseIdentitySource();
+  showIdentityCrop(false);
   identityForm.preview?.release();
   identityForm.preview = null;
   identityForm.pendingBlob = null;
@@ -3319,18 +3326,85 @@ async function onIdentityFileChosen(event) {
   hideIdentityError();
   identityAvatarNote("Preparing image…");
   try {
-    const blob = await normalizeAvatar(file);
+    // The file is decoded ONCE and handed to the editor, which keeps it for
+    // live framing. Re-decoding on every slider move would make a 12 MP photo
+    // stutter on a phone, and re-decoding on save could produce a different
+    // result from the one being previewed.
+    validateSourceFile({ size: file.size, type: file.type });
+    const image = await decodeImage(file);
+    validateSourceDimensions(image.width, image.height);
+
+    releaseIdentitySource();
+    identityForm.sourceFile = file;
+    identityForm.sourceImage = image;
+    ensureIdentityCropEditor();
+    identityForm.cropEditor?.setImage(image);
+    showIdentityCrop(true);
+    await refreshIdentityCropPreview();
+  } catch (error) {
+    identityAvatarNote("");
+    showIdentityCrop(false);
+    releaseIdentitySource();
+    renderIdentityAvatar();
+    showIdentityError(error?.message || "Orbit couldn't prepare that image.", { retry: false });
+  }
+}
+
+/** Build the editor once, lazily — the dialog exists before any photo does. */
+function ensureIdentityCropEditor() {
+  if (identityForm.cropEditor) return;
+  const stage = $("#identity-crop-stage");
+  const canvas = $("#identity-crop-canvas");
+  const zoom = $("#identity-crop-zoom");
+  if (!stage || !canvas || !zoom) return;
+  identityForm.cropEditor = createCropEditor({
+    stage, canvas, zoom,
+    // Debounced, because onChange fires on every pointer move and encoding a
+    // 512 square per frame would fight the drag it is trying to preview.
+    onChange: () => scheduleIdentityCropPreview(),
+  });
+}
+
+function showIdentityCrop(visible) {
+  const crop = $("#identity-crop");
+  if (crop) crop.hidden = !visible;
+}
+
+let identityCropTimer = null;
+function scheduleIdentityCropPreview() {
+  clearTimeout(identityCropTimer);
+  identityCropTimer = setTimeout(() => { refreshIdentityCropPreview(); }, 180);
+}
+
+/**
+ * Encode what the circle currently shows, and make it the pending upload.
+ *
+ * The SAME crop rectangle the editor is drawing is what gets encoded, so the
+ * preview and the saved picture cannot disagree.
+ */
+async function refreshIdentityCropPreview() {
+  const file = identityForm.sourceFile;
+  const editor = identityForm.cropEditor;
+  if (!file || !editor) return;
+  try {
+    const blob = await normalizeAvatar(file, { crop: editor.cropRect() });
     identityForm.preview?.release();
     identityForm.pendingBlob = blob;
     identityForm.preview = previewFor(blob);
     identityForm.removeRequested = false;
     renderIdentityAvatar();
-    identityAvatarNote(`Preview, ${Math.max(1, Math.round(blob.size / 1024))} KB — saved when you press Save.`);
+    identityAvatarNote(`${Math.max(1, Math.round(blob.size / 1024))} KB — saved when you press Save.`);
   } catch (error) {
     identityAvatarNote("");
-    renderIdentityAvatar();
     showIdentityError(error?.message || "Orbit couldn't prepare that image.", { retry: false });
   }
+}
+
+/** Release the decoded source. The editor never closes a bitmap it was given. */
+function releaseIdentitySource() {
+  if (identityForm.sourceImage) releaseImage(identityForm.sourceImage);
+  identityForm.sourceImage = null;
+  identityForm.sourceFile = null;
 }
 
 function onIdentityRemoveClicked() {
@@ -3355,7 +3429,11 @@ async function uploadChartAvatar(chart, blob) {
     response = await fetch(apiUrl(`/api/charts/${encodeURIComponent(chart.id)}/avatar?expectedVersion=${Number(chart.avatar_version) || 0}`), {
       method: "POST",
       credentials: "same-origin",
-      headers: { "content-type": "image/webp", ...authHeaders() },
+      // The BLOB's type, not a hardcoded one. The normalizer prefers WebP but
+      // falls back to PNG on browsers that cannot encode it — and the server
+      // refuses any upload whose declared type disagrees with its bytes, so a
+      // hardcoded "image/webp" would turn that fallback into a rejection.
+      headers: { "content-type": blob.type || "image/webp", ...authHeaders() },
       body: blob,
     });
     rememberSession(response);
@@ -3628,8 +3706,6 @@ async function afterChartSaved(mode, chart) {
 
 // Home-level chart actions: add (+), manage, and retry after a load failure.
 function wireHomeChartActions() {
-  $("#today-chart-add")?.addEventListener("click", () => openChartModal(null));
-  $("#today-chart-manage")?.addEventListener("click", () => navigate("me"));
   $("#today-chart-retry")?.addEventListener("click", () => retryLoadSavedCharts());
   $("#moon-refresh")?.addEventListener("click", () => moonRefreshSky());
   // One listener, no loop: a hidden tab pauses the ambient scene rather than
@@ -3791,7 +3867,6 @@ function axisRenderChartPicker() {
   const picker = $("#today-chart-picker");
   const select = $("#today-chart-select");
   const label = picker?.querySelector('label[for="today-chart-select"]');
-  const manage = $("#today-chart-manage");
   if (!picker || !select) return;
 
   // Signed-out (local preview) keeps the picker out of the way entirely.
@@ -3806,14 +3881,12 @@ function axisRenderChartPicker() {
     picker.hidden = state.chartsStatus !== "ready";
     select.hidden = true;
     if (label) label.hidden = true;
-    if (manage) manage.hidden = true;
     return;
   }
 
   picker.hidden = false;
   select.hidden = false;
   if (label) label.hidden = false;
-  if (manage) manage.hidden = false;
   select.innerHTML = state.charts.map(chart =>
     `<option value="${esc(chart.id)}" ${chart.id === state.activeChartId ? "selected" : ""}>${esc(chartOptionLabel(chart))}</option>`
   ).join("");
@@ -5325,8 +5398,11 @@ function axisRenderSkyError(message) {
 }
 
 function axisShowReadingFor(name) {
-  const el = $("#today-reading-for");
-  if (el) { el.hidden = false; $("#today-chart-name").textContent = name; }
+  // The visible "Reading for" eyebrow is gone — the select beneath the reading
+  // already names the chart. The screen-reader label stays, because the select
+  // is the only thing naming it and a bare combobox announces nothing useful.
+  const el = $("#today-chart-name");
+  if (el) el.textContent = name;
   setActiveChartName(name);
 }
 
@@ -5386,19 +5462,118 @@ function axisRenderFortune(F) {
       <p class="fortune-head__note">Symbolic reflection, never prediction.</p>
     </header>`;
 
-  const grid = cards.map((card) => `
-    <article class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}">
+  const slides = cards.map((card, index) => `
+    <article class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
+             id="fortune-card-${esc(card.id)}"
+             role="group"
+             aria-roledescription="card"
+             aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}">
+      <!-- Reserved for the artwork that is coming. Empty and zero-height until
+           there is something to put in it, so the deck does not sit on a band
+           of nothing in the meantime. -->
+      <div class="fortune-card2__art" data-card="${esc(card.id)}" aria-hidden="true"></div>
       <h3 class="fortune-card2__label">${esc(card.label)}</h3>
       <p class="fortune-card2__lede">${esc(card.lede)}</p>
       <p class="fortune-card2__body">${esc(card.body)}</p>
     </article>`).join("");
 
+  const dots = cards.map((card, index) => `
+    <button type="button" class="fortune-dot${index === 0 ? " is-current" : ""}"
+            data-goto="${index}" aria-label="${esc(card.label)}"></button>`).join("");
+
   $("#today-fortune").innerHTML = `
     <section class="fortune" aria-labelledby="fortune-title">
       ${heading.replace('class="fortune-head__title"', 'class="fortune-head__title" id="fortune-title"')}
-      <div class="fortune-grid">${grid}</div>
+      <div class="fortune-deck">
+        <div class="fortune-deck__track" id="fortune-track"
+             tabindex="0" role="region" aria-label="Your reading, ${cards.length} cards. Scroll sideways, or use the left and right arrow keys.">
+          ${slides}
+        </div>
+        <div class="fortune-deck__dots" id="fortune-dots" role="tablist" aria-label="Reading cards">${dots}</div>
+      </div>
       ${closing ? `<p class="fortune-closing">${esc(closing)}</p>` : ""}
     </section>`;
+
+  wireFortuneDeck(cards.length);
+}
+
+/* ── The reading deck ──────────────────────────────────────────────────────
+   Built on CSS scroll-snap rather than a JS drag implementation. That is not
+   laziness: scroll-snap gets native momentum and rubber-banding on iOS, works
+   with a trackpad, a mouse wheel, a screen reader's own scrolling, and the
+   keyboard, all without a pointer handler that can drop a touch mid-gesture.
+
+   THE OBJECTION THIS HAS TO ANSWER. A carousel lived here before and was
+   removed for a stated reason: it "hid four of five readings behind a swipe
+   nobody discovers, and on a phone the only affordance was a row of dots".
+   That is a real failure and this is the same shape, so it is answered
+   deliberately:
+
+     · every card is REAL CONTENT in the DOM, always — nothing is created on
+       demand, so find-in-page, a screen reader, and Reader-style tooling all
+       still reach every word
+     · the track shows a PEEK of the next card at every width, so the fact
+       that there is more is visible rather than implied by dots
+     · the dots are a secondary affordance, not the only one, and they are
+       real buttons that move the track
+
+   If the peek is ever removed, the objection comes straight back. */
+function wireFortuneDeck(count) {
+  const track = $("#fortune-track");
+  const dots = $("#fortune-dots");
+  if (!track || !dots || count <= 0) return;
+
+  const cards = [...track.querySelectorAll(".fortune-card2")];
+
+  const markCurrent = (index) => {
+    [...dots.querySelectorAll(".fortune-dot")].forEach((dot, i) => {
+      dot.classList.toggle("is-current", i === index);
+      dot.setAttribute("aria-current", i === index ? "true" : "false");
+    });
+  };
+
+  const scrollTo = (index) => {
+    const card = cards[Math.min(Math.max(index, 0), cards.length - 1)];
+    if (!card) return;
+    // scrollIntoView would also scroll the PAGE to bring the deck into view,
+    // which yanks the reader somewhere they did not ask to go. Setting
+    // scrollLeft moves only the track.
+    track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: "smooth" });
+  };
+
+  dots.addEventListener("click", (event) => {
+    const dot = event.target.closest("[data-goto]");
+    if (dot) scrollTo(Number(dot.dataset.goto));
+  });
+
+  // Which card is current follows the SCROLL rather than the taps, so a swipe,
+  // a wheel, and a dot press all keep the dots honest.
+  //
+  // Computed synchronously rather than inside requestAnimationFrame. Orbit
+  // bans rAF in the client outright — animation is CSS, paused by a class,
+  // never JavaScript doing frame work — and a scroll throttle is close enough
+  // to that shape to be worth not arguing about. It costs nothing: the loop is
+  // four cards of arithmetic, and the browser already rate-limits scroll.
+  track.addEventListener("scroll", () => {
+    const middle = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let best = Infinity;
+    cards.forEach((card, i) => {
+      const centre = card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
+      const distance = Math.abs(centre - middle);
+      if (distance < best) { best = distance; nearest = i; }
+    });
+    markCurrent(nearest);
+  }, { passive: true });
+
+  track.addEventListener("keydown", (event) => {
+    const current = [...dots.querySelectorAll(".fortune-dot")]
+      .findIndex((dot) => dot.classList.contains("is-current"));
+    if (event.key === "ArrowRight") { scrollTo(current + 1); event.preventDefault(); }
+    if (event.key === "ArrowLeft") { scrollTo(current - 1); event.preventDefault(); }
+  });
+
+  markCurrent(0);
 }
 
 /** A human date, falling back to the raw value rather than showing nothing. */
@@ -5479,7 +5654,6 @@ function axisRenderMoon(moon, sky) {
   const visual = scene ? moonSceneHtml(scene) : moonSceneUnavailableHtml();
 
   const illum = illuminationLabel(moon.illumination);
-  const position = moonPositionLabel(moon);
   const next = moon.nextEvent
     ? `<p class="moon-state__next">Next ${esc(moon.nextEvent.kind)} ${esc(moon.nextEvent.when)}.</p>`
     : `<p class="moon-state__next">The next lunar event isn’t available right now.</p>`;
@@ -5499,14 +5673,16 @@ function axisRenderMoon(moon, sky) {
         <p class="moon-state__facts">${
           [illum, moon.direction].filter(Boolean).map(esc).join(" · ")
         }</p>
-        ${position ? `<p class="moon-state__position">${esc(position)}</p>` : ""}
         <p class="moon-state__meaning">${esc(moon.meaning)}</p>
         ${next}
-        <p class="moon-state__note">This is the Moon in the sky right now — not the Moon in your birth chart.</p>
-        <p class="moon-state__orientation">${esc(ORIENTATION_NOTE)}</p>
+        <!-- Both caveats, in ONE line of small print rather than two
+             paragraphs. Trimmed on request, but not dropped: the drawing shows
+             a Moon that is not oriented the way you would actually see it, and
+             saying so is the difference between a simplification and a picture
+             that quietly misleads. -->
+        <p class="moon-state__note">Not your birth chart's Moon. ${esc(ORIENTATION_NOTE)}</p>
         <div class="moon-state__actions">
           <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">View Current Positions</a>
-          <a class="o-btn o-btn--secondary o-btn--sm" href="#transits">See the transit details</a>
         </div>
       </div>
     </div>`;

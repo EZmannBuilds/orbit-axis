@@ -270,3 +270,62 @@
    stop propagating intrinsic widths upward. */
 .me-grid > * { min-width: 0; }
 #chart-placements { overflow-x: auto; min-width: 0; contain: inline-size; }
+
+/* ── Avatar crop editor ─────────────────────────────────────────────────────
+   A square stage showing exactly what will be saved, with a circular mask over
+   it. The circle is a mask, not a crop: the picture is saved square, and the
+   ring only shows where the avatar's rounded frame will fall. */
+.avatar-crop {
+  display: grid;
+  gap: var(--space-sm);
+  margin-block: var(--space-sm);
+}
+
+.avatar-crop__stage {
+  position: relative;
+  inline-size: 100%;
+  max-inline-size: 320px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  border-radius: var(--radius-card, 18px);
+  overflow: hidden;
+  background: var(--surface-2, #161618);
+  /* grab, then grabbing, so the affordance is visible before the drag and the
+     state is visible during it. */
+  cursor: grab;
+  /* The stage handles horizontal drag itself; without this the browser claims
+     the gesture for scrolling and the picture never moves on a phone. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.avatar-crop__stage:active { cursor: grabbing; }
+
+.avatar-crop__stage canvas {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  /* The drag target is the stage. Without this the canvas swallows the pointer
+     events on some engines and the picture cannot be moved. */
+  pointer-events: none;
+}
+
+/* The circular guide. A ring drawn with a huge spread shadow rather than an
+   overlay element, so nothing sits between the pointer and the stage. */
+.avatar-crop__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.45);
+  pointer-events: none;
+}
+
+.avatar-crop__controls { display: grid; gap: var(--space-xxs); }
+
+/* Full width and a real touch target: a hairline range slider is unusable with
+   a thumb, which is the only input this screen gets on a phone. */
+.avatar-crop__controls input[type="range"] {
+  inline-size: 100%;
+  min-block-size: 44px;
+  accent-color: var(--accent, #a185ff);
+}

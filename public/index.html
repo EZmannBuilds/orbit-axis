@@ -130,17 +130,12 @@
           <!-- Which chart this reading belongs to. A picture, a name, and the
                way to change it — one control instead of a label, a select, and
                two buttons competing for the same row. -->
-          <div class="chart-chip" id="today-chart-picker" hidden>
-            <span class="chart-avatar chart-avatar--sm" id="today-chart-avatar" aria-hidden="true" hidden></span>
-            <div class="chart-chip__text">
-              <span class="chart-chip__eyebrow" id="today-reading-for" hidden>Reading for</span>
-              <label class="sr-only" for="today-chart-select">Viewing chart</label>
-              <select id="today-chart-select" class="chart-chip__select"></select>
-              <span class="sr-only" id="today-chart-name">My Chart</span>
-            </div>
-            <button type="button" class="o-icon-btn axis-chart-add" id="today-chart-add" aria-label="Add a chart" data-icon="plus"></button>
-            <button type="button" class="o-btn o-btn--utility axis-chart-manage" id="today-chart-manage">Manage</button>
-          </div>
+          <!-- The chart picker now lives BELOW the reading — see further down.
+               It sat here, above everything, when the first question on the
+               screen was "whose chart is this?". It isn't: the reading is what
+               the page is for, and the picker only matters once you have read
+               something and want it for someone else. -->
+
 
           <!-- Recoverable saved-chart error. Never mistaken for "you have no
                chart" — that distinction is why this element exists at all. -->
@@ -161,6 +156,20 @@
 
           <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
+
+          <!-- Whose chart the reading above belongs to.
+               Just the picker: the "Reading for" label repeated what the select
+               already says, and Manage and + were two routes to a screen the
+               Chart tab is one tap away from — three controls competing for
+               attention with the reading they sit under. -->
+          <div class="chart-chip chart-chip--under" id="today-chart-picker" hidden>
+            <span class="chart-avatar chart-avatar--sm" id="today-chart-avatar" aria-hidden="true" hidden></span>
+            <div class="chart-chip__text">
+              <label class="sr-only" for="today-chart-select">Viewing chart</label>
+              <select id="today-chart-select" class="chart-chip__select"></select>
+              <span class="sr-only" id="today-chart-name">My Chart</span>
+            </div>
+          </div>
 
           <!-- The Moon. The scene shell is always present so the layout does
                not shift when canonical data arrives. The drawing is decorative;
@@ -1096,7 +1105,7 @@
             <div class="identity-avatar-row">
               <span class="chart-avatar chart-avatar--lg" id="cm-avatar" aria-hidden="true"></span>
               <div class="identity-avatar-actions">
-                <input type="file" id="cm-avatar-file" accept="image/jpeg,image/png,image/webp" aria-describedby="cm-avatar-note" />
+                <input type="file" id="cm-avatar-file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*" aria-describedby="cm-avatar-note" />
                 <p class="chart-field__help" id="cm-avatar-note" role="status" aria-live="polite"></p>
                 <button type="button" class="o-btn o-btn--utility" id="cm-avatar-discard" hidden>Discard picture</button>
               </div>
@@ -1144,10 +1153,35 @@
           <span class="chart-avatar chart-avatar--lg" id="identity-avatar" aria-hidden="true"></span>
           <div class="identity-avatar-actions">
             <label class="chart-field__label" for="identity-file" id="identity-file-label">Chart picture (optional)</label>
-            <input type="file" id="identity-file" accept="image/jpeg,image/png,image/webp"
+            <input type="file" id="identity-file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/*"
               aria-describedby="identity-avatar-note" />
             <p class="chart-field__help" id="identity-avatar-note" role="status" aria-live="polite"></p>
             <button type="button" class="o-btn o-btn--utility" id="identity-avatar-remove" hidden>Remove picture</button>
+          </div>
+        </div>
+
+        <!-- ── Crop editor ──────────────────────────────────────────────────
+             Appears only once a photo is chosen. Drag the picture to move it,
+             use the slider to zoom; the circle is exactly what gets saved, so
+             there is no gap between the preview and the result.
+
+             The keyboard controls are not decoration: dragging is the only way
+             to frame a photo otherwise, and drag is unavailable to anyone not
+             using a pointer. -->
+        <div class="avatar-crop" id="identity-crop" hidden>
+          <div class="avatar-crop__stage" id="identity-crop-stage"
+               role="application" tabindex="0"
+               aria-label="Position the picture. Drag, or use the arrow keys to move and the slider to zoom.">
+            <canvas id="identity-crop-canvas" width="320" height="320" aria-hidden="true"></canvas>
+            <div class="avatar-crop__ring" aria-hidden="true"></div>
+          </div>
+          <div class="avatar-crop__controls">
+            <label class="chart-field__label" for="identity-crop-zoom">Zoom</label>
+            <input type="range" id="identity-crop-zoom" min="100" max="300" value="100" step="1"
+                   aria-describedby="identity-crop-help" />
+            <p class="chart-field__help" id="identity-crop-help">
+              Drag the picture to move it. The circle is what gets saved.
+            </p>
           </div>
         </div>
 

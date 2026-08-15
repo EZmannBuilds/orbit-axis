@@ -277,7 +277,13 @@ test("a payload without a usable Moon renders the frame, never a default phase",
 test("one missing optional field does not destroy the scene", () => {
   const render = block(APP, "function axisRenderMoon", "function moonSceneHtml");
   // Each optional line is guarded independently rather than sharing one branch.
-  assert.match(render, /position \? `<p class="moon-state__position"/);
+  //
+  // The "Moon at 15 degrees Gemini" line was REMOVED on 2026-08-08 when the
+  // section was trimmed: the sign is already in the heading above it, and the
+  // exact degree belongs to Technical Sky. What this test is really about —
+  // that one absent field drops its own fragment and not the whole panel —
+  // is still covered by the two assertions below.
+  assert.ok(!render.includes('moon-state__position'), "the degree line is gone");
   assert.match(render, /moon\.nextEvent\s*\?/);
   assert.match(render, /\[illum, moon\.direction\]\.filter\(Boolean\)/,
     "an absent illumination drops its own fragment, not the whole line");

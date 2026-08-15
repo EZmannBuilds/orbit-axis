@@ -124,10 +124,28 @@ test("an image below the minimum is refused rather than upscaled", async () => {
   assert.ok(!canvas.calls.some((c) => c.kind === "draw"), "and never reaches the canvas");
 });
 
-test("a browser that cannot produce WebP fails loudly, not silently", async () => {
-  // Encoding to PNG instead would send bytes the server refuses. Saying so
-  // here beats failing after the upload.
+test("a browser that cannot produce WebP falls back to PNG", async () => {
+  // REVERSED on 2026-08-08, and the old comment here was wrong on its facts.
+  // It said PNG "would send bytes the server refuses" — the server has always
+  // accepted PNG (AVATAR_CONTENT_TYPES lists it, lib/charts/avatar.js sniffs
+  // and allows it, and the Storage bucket permits it). Only the client
+  // insisted, so on Safari — which has historically substituted PNG for a
+  // requested WebP — every photo was refused with "this browser couldn't
+  // prepare the image". Zero avatars had ever been uploaded in Production.
   const canvas = stubCanvas({ blobType: "image/png" });
+  const blob = await withBitmap(800, 800, () =>
+    normalizeAvatar(file(), { createCanvas: canvas.create }));
+  assert.equal(blob.type, "image/png", "PNG is an acceptable result, not a failure");
+
+  // WebP is still ASKED FOR first — it is several times smaller at this
+  // quality, so falling back must stay a fallback rather than becoming default.
+  assert.equal(canvas.calls.filter((c) => c.kind === "encode")[0].type, "image/webp");
+});
+
+test("a browser that can produce neither format still fails loudly", async () => {
+  // The loud failure this test originally protected is still here; it just
+  // belongs one format later than it used to.
+  const canvas = stubCanvas({ blobType: "image/gif" });
   const code = await withBitmap(800, 800, () =>
     threw(() => normalizeAvatar(file(), { createCanvas: canvas.create })));
   assert.equal(code, "avatar_encode_failed");

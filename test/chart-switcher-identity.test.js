@@ -53,7 +53,14 @@ test("no selector requests an avatar for a chart outside the owner's list", () =
 
 test("the form's picture is optional, create-only, and absent from birth-data edits", () => {
   assert.match(HTML, /id="cm-avatar-field"/);
-  assert.match(HTML, /id="cm-avatar-file"[^>]*accept="image\/jpeg,image\/png,image\/webp"/s);
+  // The accept list was widened to include HEIC/HEIF on 2026-08-08 — an
+  // iPhone photo is HEIC, and the old list refused the format the device Orbit
+  // ships to actually produces. Matched loosely so adding another format is
+  // not a test change, but the three originals must all survive.
+  const accept = /id="cm-avatar-file"[^>]*accept="([^"]+)"/s.exec(HTML)?.[1] || "";
+  for (const type of ["image/jpeg", "image/png", "image/webp", "image/heic"]) {
+    assert.ok(accept.includes(type), `the picker must accept ${type}`);
+  }
   const modes = section(APP, "const CHART_MODES", "\n};");
   assert.match(section(modes, "first:", "add:"), /showAvatar: true/);
   assert.match(section(modes, "add:", "edit:"), /showAvatar: true/);
