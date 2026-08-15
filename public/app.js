@@ -1590,6 +1590,11 @@ async function loadFeaturePanels() {
  */
 function availableWorkspaces() {
   return WORKSPACES.filter(ws => {
+    // A reader who turned Tarot off gets an app without it: no tab entry, no
+    // Today switch, no search result, and #tarot falls back to Home like any
+    // other unavailable route. The server still serves it — this is a display
+    // preference, not an entitlement — and nothing saved is touched.
+    if (ws.id === "tarot" && typeof tarotEnabled === "function" && !tarotEnabled()) return false;
     if (!ws.feature) return true;
     return featureState[ws.feature] === true && Boolean(document.getElementById(`panel-${ws.id}`));
   });
@@ -1895,6 +1900,12 @@ function renderRoute() {
     else axisLoadHistory($("#history-scope")?.value || "active");
   }
   if (id === "tarot") enterTarot();
+  if (id === "settings") {
+    const section = $("#settings-tarot");
+    // Present only when the feature exists on this instance at all — a setting
+    // for something that is not here is a setting nobody can act on.
+    if (section) section.hidden = !(featureState.tarot === true);
+  }
   // Today's two views. The switch is rendered in both panels, so whichever is
   // on screen has to say where you are — and it stays hidden entirely while
   // Tarot is unavailable.
@@ -4449,11 +4460,53 @@ function wireCompatibility() {
 
 const TAROT_REVEAL_PREFIX = "orbit.tarot.revealed";
 
+/**
+ * Tarot preferences.
+ *
+ * Local, like the other appearance settings: they change how this device
+ * presents the feature, not what the account owns. Switching Tarot off does
+ * not delete a single saved reflection — turning it back on finds them all
+ * where they were, which is why "off" is a display choice rather than a
+ * destructive one.
+ */
+function tarotPref(key, fallback) {
+  try { return localStorage.getItem(`orbit.${key}`) ?? fallback; }
+  catch { return fallback; }
+}
+
+/** Is the reader showing Tarot at all? */
+function tarotEnabled() {
+  return tarotPref("tarot", "on") !== "off";
+}
+
+/** Which three-card labels this reader chose. */
+function tarotPositionSet() {
+  return tarotPref("tarotPositions", "reflective") === "timeline" ? "timeline" : "reflective";
+}
+
+/** Does the meaning appear with the card, or on request? */
+function tarotMeaningOnRequest() {
+  return tarotPref("tarotMeaning", "ask") !== "always";
+}
+
+/** The labels for a three-card spread under this reader's setting. */
+const TAROT_POSITION_SETS = {
+  reflective: ["What shaped this", "What is present", "What to consider next"],
+  timeline: ["Past", "Present", "Future"],
+};
+
+function tarotPositionLabel(index, total) {
+  if (total !== 3) return null;
+  return TAROT_POSITION_SETS[tarotPositionSet()][index] ?? null;
+}
+
+
 const tarotState = {
   status: "idle",      // idle | loading | ready | unavailable | error
   reading: null,       // the daily reading as the server returned it
   revealed: false,
   manual: null,        // the current manual draw, if any
+  meaningShown: {},    // slug -> the reader asked to see this one
   manualBusy: false,
   saving: false,
   saved: false,
@@ -4593,10 +4646,30 @@ function romanNumeral(value) {
 }
 
 /** The authored text for one card. Never depends on the artwork. */
-function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step = null } = {}) {
+function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step = null, index = null, shown = true } = {}) {
   const card = entry?.card;
   if (!card) return "";
   const H = `h${headingLevel}`;
+
+  // The meaning is offered rather than pushed. Turning a card over shows the
+  // card; reading what it is usually taken to mean is a second, separate
+  // choice — which is the difference between a prompt and an answer, and it
+  // gives the image a moment to be looked at before it is explained.
+  //
+  // The card name and position always show: those identify what is on the
+  // table, and hiding them would make the button a guessing game.
+  if (!shown) {
+    return `<div class="tarot-meaning">
+      ${showPosition && entry.position ? `<p class="tarot-meaning__position">${esc(entry.position)}${
+        step ? ` <span class="tarot-meaning__step">· ${esc(step)}</span>` : ""}</p>` : ""}
+      <${H} class="tarot-meaning__name" tabindex="-1">${esc(card.name)}</${H}>
+      <p class="u-meta tarot-meaning__kind">${esc(card.suit
+        ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana")}</p>
+      <button type="button" class="o-btn o-btn--secondary tarot-meaning__ask"
+        data-tarot-action="show-meaning"${index === null ? "" : ` data-tarot-index="${index}"`}
+        aria-expanded="false">What does this card mean?</button>
+    </div>`;
+  }
   // A position label is the meaning in a three-card spread — "What shaped this"
   // says how to read the card under it. On a single card it is only the
   // section heading repeated a line lower in a louder colour, so it is dropped
@@ -4610,11 +4683,11 @@ function tarotMeaningHtml(entry, { headingLevel = 3, showPosition = true, step =
   const suit = card.suit
     ? `${esc(card.suit.charAt(0).toUpperCase() + card.suit.slice(1))}`
     : "Major Arcana";
-  return `<div class="tarot-meaning">
+  return `<div class="tarot-meaning tarot-meaning--shown">
     ${position}
     <${H} class="tarot-meaning__name" tabindex="-1">${esc(card.name)}</${H}>
     <p class="u-meta tarot-meaning__kind">${suit}</p>
-    <p class="tarot-meaning__body">${esc(card.upright_meaning)}</p>
+    <p class="tarot-meaning__body" tabindex="-1">${esc(card.upright_meaning)}</p>
     <p class="tarot-meaning__prompt"><span class="tarot-meaning__prompt-label">To reflect on</span>
       ${esc(card.reflection_prompt)}</p>
   </div>`;
@@ -4754,7 +4827,12 @@ function renderTarotDaily() {
   }
 
   slot.innerHTML = tarotCardFaceHtml(entry.card);
-  reading.innerHTML = `${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false })}
+  // Boolean(), not the raw expression: `false || undefined` is undefined, and
+  // a default parameter treats undefined as "not passed" — so `shown:
+  // undefined` fell back to the default of true and every meaning showed
+  // immediately regardless of the setting.
+  const showMeaning = Boolean(!tarotMeaningOnRequest() || tarotState.meaningShown[entry.card.slug]);
+  reading.innerHTML = `${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false, shown: showMeaning })}
     <div class="tarot-actions" id="tarot-daily-actions"></div>`;
   renderTarotDailySave();
 }
@@ -4872,6 +4950,16 @@ function renderTarotManual() {
       <button type="button" class="o-btn o-btn--utility" data-tarot-action="back-to-daily">Back to today's card</button>
     </div>`;
 
+  // Position labels follow the reader's setting. This is presentation only:
+  // the server records its own labels when a reading is saved, because the
+  // stored reading is what Orbit means by those three cards, not how one
+  // device happened to word it.
+  const total = reading.cards.length;
+  reading.cards.forEach((entry, i) => {
+    const label = tarotPositionLabel(i, total);
+    if (label) entry.position = label;
+  });
+
   const revealed = tarotState.manualRevealed || [];
   const cardHtml = (entry, i) => revealed[i]
     ? tarotCardFaceHtml(entry.card)
@@ -4880,7 +4968,8 @@ function renderTarotManual() {
   // interpretation beside a face-down card would answer the question the
   // gesture exists to ask.
   const meaningHtml = (entry, i, opts) => revealed[i]
-    ? tarotMeaningHtml(entry, opts)
+    ? tarotMeaningHtml(entry, { ...opts, index: i,
+        shown: Boolean(!tarotMeaningOnRequest() || tarotState.meaningShown[entry.card.slug]) })
     : `<p class="tarot-meaning__position">${esc(entry.position)}${
         opts.step ? ` <span class="tarot-meaning__step">· ${esc(opts.step)}</span>` : ""}</p>
        <p class="u-meta">Tap the card to turn it over.</p>`;
@@ -5073,6 +5162,21 @@ function wireTarot() {
       else revealTarotSpreadCard(Number(index));
       return;
     }
+    if (action === "show-meaning") {
+      const index = trigger.dataset.tarotIndex;
+      const entry = index === undefined
+        ? tarotState.reading?.cards?.[0]
+        : tarotState.manual?.cards?.[Number(index)];
+      if (!entry) return;
+      tarotState.meaningShown[entry.card.slug] = true;
+      if (index === undefined) renderTarotDaily(); else renderTarotManual();
+      // Focus the text that just appeared, so a keyboard reader is taken to
+      // the answer rather than left on a button that is now gone.
+      const scope = index === undefined ? "#tarot-daily-reading" : "#tarot-spread";
+      $(`${scope} .tarot-meaning__body`)?.focus?.({ preventScroll: true });
+      tarotSay(`${entry.card.name}: meaning shown.`);
+      return;
+    }
     if (action === "back-to-daily") { backToTarotDaily(); return; }
     if (action === "retry-daily") { loadTarotDaily(); return; }
     if (action === "retry-draw") { drawTarotSpread(trigger.dataset.spread || "one_card"); return; }
@@ -5236,7 +5340,11 @@ const settings = {
     }
     // Reflect into the segmented control, so the selected state is visible,
     // announced, and never communicated by colour alone.
-    const seg = { theme: "#set-theme", density: "#set-density", text: "#set-text", contrast: "#set-contrast", motion: "#set-motion" }[key];
+    const seg = { theme: "#set-theme", density: "#set-density", text: "#set-text", contrast: "#set-contrast", motion: "#set-motion",
+      tarot: "#set-tarot", tarotPositions: "#set-tarot-positions", tarotMeaning: "#set-tarot-meaning" }[key];
+    // Switching Tarot off has to take effect immediately, not on next load:
+    // the rail, the Today switch, and the route all read availability.
+    if (key === "tarot") { buildRail(); syncTodayViews(currentWorkspace()); }
     if (seg) $$(`${seg} button`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === val)));
   },
   set(key, val) {
@@ -5247,7 +5355,8 @@ const settings = {
 };
 
 function wireSettings() {
-  const map = { "#set-theme": "theme", "#set-density": "density", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion" };
+  const map = { "#set-theme": "theme", "#set-density": "density", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
+    "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning" };
   for (const [sel, key] of Object.entries(map)) {
     $(sel)?.addEventListener("click", e => {
       const btn = e.target.closest("button");

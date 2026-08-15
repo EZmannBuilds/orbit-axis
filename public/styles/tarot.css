@@ -40,7 +40,9 @@
    A real 2:3, the proportion every physical deck uses. `aspect-ratio` rather
    than a fixed height so it scales with the column without ever going oval. */
 .tarot-card {
-  aspect-ratio: 2 / 3;
+  /* 7:12 — the proportion of an actual tarot card (70x120mm). The frame
+     was 2:3 before there was artwork to put in it; the scans disagreed. */
+  aspect-ratio: 7 / 12;
   width: 100%;
   max-width: 200px;
   border-radius: var(--radius-lg);
@@ -113,7 +115,7 @@
 }
 
 .tarot-card-shimmer {
-  aspect-ratio: 2 / 3;
+  aspect-ratio: 7 / 12;
   width: 100%;
   max-width: 200px;
   border-radius: var(--radius-lg);
@@ -425,3 +427,32 @@
 .tarot-card--art .tarot-card__rank,
 .tarot-card--art .tarot-card__name,
 .tarot-card--art .tarot-card__suit { display: none; }
+
+/* ── The meaning, offered rather than pushed ──────────────────────────────
+   The text animates in when the reader asks for it: a short rise and fade,
+   which reads as the answer arriving rather than the page redrawing. Only the
+   revealed state animates — the button that requested it is already gone. */
+@keyframes tarot-meaning-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.tarot-meaning--shown .tarot-meaning__body,
+.tarot-meaning--shown .tarot-meaning__prompt {
+  animation: tarot-meaning-in var(--duration-slow, 320ms) var(--ease-standard, ease-out) both;
+}
+/* The prompt follows the meaning rather than arriving with it, so the two read
+   in order instead of as one block appearing. */
+.tarot-meaning--shown .tarot-meaning__prompt { animation-delay: 90ms; }
+
+.tarot-meaning__body:focus-visible,
+.tarot-meaning__prompt:focus-visible { box-shadow: var(--focus-ring); border-radius: var(--radius-sm); }
+
+.tarot-meaning__ask { margin-top: var(--space-xs); min-height: 44px; }
+
+/* Reduced motion shows the text immediately. The state change is carried by
+   the text being there and by the live region, not by the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .tarot-meaning--shown .tarot-meaning__body,
+  .tarot-meaning--shown .tarot-meaning__prompt { animation: none; }
+}

@@ -12,7 +12,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 
@@ -184,7 +184,7 @@ test("the card is the one object allowed a shadow", () => {
   // And the guard is not vacuous: every box-shadow here is a focus ring, and
   // there are several (the card button, the carousel, its dots).
   assert.ok(declarations.length >= 1);
-  assert.match(css, /aspect-ratio:\s*2\s*\/\s*3/, "a tarot card is 2:3");
+  assert.match(css, /aspect-ratio:\s*7\s*\/\s*12/, "a tarot card is 7:12 (70x120mm)");
 });
 
 test("reduced motion shows the final state without losing feedback", () => {
@@ -492,13 +492,18 @@ test("the image contract refuses what would make a card jump or go stale", () =>
 
   // Dimensions are required — they reserve the layout before the bytes land.
   assert.ok(withImage({ path: "a/b.webp", license: "public-domain" }).length > 0);
-  // And must be 2:3, or the frame and the file disagree.
+  // And must be card-shaped. A square is refused, and so is 2:3 — which the
+  // frame was originally specified as, before the scans showed that a real
+  // tarot card is 70x120mm.
   assert.ok(withImage({ path: "a/b.webp", license: "public-domain", width: 600, height: 600 }).length > 0);
+  assert.ok(withImage({ path: "a/b.webp", license: "public-domain", width: 600, height: 900 }).length > 0);
+  assert.ok(withImage({ path: "a/b.webp", license: "public-domain", width: 800, height: 464 }).length > 0,
+    "landscape is not a card");
   // A URL in the deck would hardcode the bucket into content.
   assert.ok(withImage({ path: "https://cdn.example/b.webp", license: "public-domain", width: 600, height: 900 }).length > 0);
   assert.ok(withImage({ path: "a/b.webp", width: 600, height: 900 }).length > 0, "licence required");
   // A well-formed block passes.
-  assert.deepEqual(withImage({ path: "waite-smith/1.0.0/x.webp", license: "public-domain", width: 600, height: 900 }), []);
+  assert.deepEqual(withImage({ path: "waite-smith/1909/x.jpg", license: "public-domain", width: 464, height: 800 }), []);
   // And imagery stays optional: the deck today has none and is still valid.
   assert.deepEqual(validateCard(base), []);
 });
@@ -506,7 +511,106 @@ test("the image contract refuses what would make a card jump or go stale", () =>
 test("two cards cannot share an image path", () => {
   // A reused path means overwritten artwork, which a one-year immutable cache
   // serves stale for up to a year. New artwork is a new path.
-  const image = { path: "waite-smith/1.0.0/same.webp", license: "public-domain", width: 600, height: 900 };
+  const image = { path: "waite-smith/1909/same.jpg", license: "public-domain", width: 464, height: 800 };
   const deck = FIXTURE_DECK_REVIEWED.map((c, i) => (i < 2 ? { ...c, image } : c));
   assert.ok(validateDeck(deck).findings.some((f) => f.includes("image.path")));
+});
+
+
+/* ── Settings ─────────────────────────────────────────────────────────────── */
+
+test("Tarot can be turned off, and turning it off is not destructive", () => {
+  assert.match(HTML, /id="set-tarot"[\s\S]{0,200}data-value="off"/);
+  assert.match(APP, /function tarotEnabled/);
+  // Off removes it from navigation the same way an unavailable feature is
+  // removed, so #tarot falls back to Home like any other absent route.
+  assert.match(APP, /ws\.id === "tarot"[\s\S]{0,120}!tarotEnabled\(\)\) return false/);
+  // And it says plainly that nothing is deleted.
+  assert.match(HTML, /Saved reflections are kept/);
+});
+
+test("the timeline labels are opt-in, and change only the labels", () => {
+  const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
+  assert.match(deck, /timeline: Object\.freeze\(\["Past", "Present", "Future"\]\)/);
+  // Reflective is the default — "Future" makes a claim the rest of the feature
+  // is careful not to make, so it is chosen rather than arrived at.
+  assert.match(deck, /export const DEFAULT_POSITION_SET = "reflective"/);
+  assert.match(APP, /tarotPref\("tarotPositions", "reflective"\)/);
+  // The copy says the reading itself does not change.
+  assert.match(HTML, /cards and their\s*\n?\s*meanings are identical either way/);
+});
+
+test("the reader's labels are presentation, not what gets stored", () => {
+  // A saved reading records Orbit's own labels. A device preference must not
+  // rewrite what the account holds.
+  const render = APP.slice(APP.indexOf("function renderTarotManual"));
+  assert.match(render.slice(0, 1200), /presentation only/i);
+  const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
+  assert.match(service, /positions\[index\]/,
+    "the server still writes its own position labels on save");
+});
+
+/* ── The meaning, on request ──────────────────────────────────────────────── */
+
+test("the meaning waits behind a button, but the card still names itself", () => {
+  assert.match(APP, /data-tarot-action="show-meaning"/);
+  assert.match(APP, /What does this card mean\?/);
+  // Name and position always show: hiding them would make the button a
+  // guessing game rather than an offer.
+  const start = APP.indexOf("if (!shown) {");
+  const hidden = APP.slice(start, APP.indexOf('data-tarot-action="show-meaning"', start) + 200);
+  assert.match(hidden, /tarot-meaning__name/);
+  assert.match(hidden, /tarot-meaning__position/);
+  assert.ok(!/tarot-meaning__body/.test(hidden), "the meaning itself is what waits");
+});
+
+test("shown is passed as a real boolean", () => {
+  // `false || undefined` is undefined, and a default parameter treats
+  // undefined as "not passed" — so `shown: undefined` fell back to true and
+  // every meaning displayed regardless of the setting. Found by looking at the
+  // page, not by reading the code.
+  assert.match(APP, /const showMeaning = Boolean\(/);
+  assert.match(APP, /shown: Boolean\(/);
+});
+
+test("the meaning animates in, and reduced motion still shows it", () => {
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /@keyframes tarot-meaning-in/);
+  assert.match(css, /\.tarot-meaning--shown \.tarot-meaning__body[\s\S]{0,200}animation: tarot-meaning-in/);
+  const reduced = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
+  assert.match(reduced, /tarot-meaning__body[\s\S]{0,120}animation: none/);
+});
+
+/* ── Artwork ──────────────────────────────────────────────────────────────── */
+
+test("a tarot card is 7:12, not 2:3", () => {
+  // The frame was specified as 2:3 before there was artwork to put in it. A
+  // physical card is 70x120mm, and the scans agreed with the card rather than
+  // with the spec.
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /aspect-ratio: 7 \/ 12/);
+  assert.ok(!/aspect-ratio: 2 \/ 3/.test(css));
+});
+
+test("every card in the draft deck has public-domain artwork", () => {
+  const manifest = JSON.parse(readFileSync(join(REPO_ROOT, "lib", "tarot", "image-manifest.json"), "utf8"));
+  assert.equal(Object.keys(manifest).length, 78);
+  for (const [slug, meta] of Object.entries(manifest)) {
+    assert.equal(meta.license, "public-domain", `${slug} is not public domain`);
+    assert.match(meta.source, /Wikimedia Commons/);
+    assert.match(meta.source_licence_as_stated, /public domain/i,
+      `${slug}: Commons does not state public domain`);
+    // The ratio band, per card: portrait and card-shaped.
+    const ratio = meta.width / meta.height;
+    assert.ok(ratio > 0.52 && ratio < 0.65, `${slug}: ${meta.width}x${meta.height} is not card-shaped`);
+  }
+});
+
+test("the fronts are not in the shipped artifact", () => {
+  // 78 images the app serves from storage must not also be copied into
+  // public/, which is deployed verbatim.
+  const staged = join(REPO_ROOT, "assets", "tarot-cards");
+  assert.ok(existsSync(staged), "the staging directory should exist");
+  assert.ok(!existsSync(join(REPO_ROOT, "public", "images", "tarot")),
+    "card fronts must not live under public/");
 });

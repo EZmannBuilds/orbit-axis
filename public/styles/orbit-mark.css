@@ -25,6 +25,13 @@
 .orbit-mark--rail { width: 24px; height: 24px; }
 .orbit-mark--auth { width: 56px; height: 56px; }
 
+.orbit-loader {
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex: none;
+}
+
 .brand-wordmark,
 .rail__wordmark {
   color: var(--color-primary);
@@ -72,6 +79,7 @@
 
 @media (max-width: 560px) {
   .orbit-mark--auth { width: 48px; height: 48px; }
+  .orbit-loader { width: 48px; height: 48px; }
   .orbit-instrument { width: 96px; }
   .tech-sky__head { align-items: flex-start; gap: var(--space-sm); }
 }
@@ -81,6 +89,6 @@
 }
 
 @media (forced-colors: active) {
-  .orbit-mark, .orbit-instrument { forced-color-adjust: none; }
+  .orbit-mark, .orbit-loader, .orbit-instrument { forced-color-adjust: none; }
   .brand-wordmark, .rail__wordmark { color: CanvasText; }
 }

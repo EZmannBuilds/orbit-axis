@@ -1,0 +1,704 @@
+{
+  "the-fool": {
+    "file": "the-fool.jpg",
+    "width": 477,
+    "height": 800,
+    "bytes": 86320,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_00_Fool.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-magician": {
+    "file": "the-magician.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 78524,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_01_Magician.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-high-priestess": {
+    "file": "the-high-priestess.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 85938,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_02_High_Priestess.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-empress": {
+    "file": "the-empress.jpg",
+    "width": 468,
+    "height": 800,
+    "bytes": 105497,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_03_Empress.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-emperor": {
+    "file": "the-emperor.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 87793,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_04_Emperor.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-hierophant": {
+    "file": "the-hierophant.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 91247,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_05_Hierophant.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-lovers": {
+    "file": "the-lovers.jpg",
+    "width": 467,
+    "height": 800,
+    "bytes": 96751,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_06_Lovers.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-chariot": {
+    "file": "the-chariot.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 89175,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_07_Chariot.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "strength": {
+    "file": "strength.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 72806,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_08_Strength.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-hermit": {
+    "file": "the-hermit.jpg",
+    "width": 468,
+    "height": 800,
+    "bytes": 67716,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_09_Hermit.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "wheel-of-fortune": {
+    "file": "wheel-of-fortune.jpg",
+    "width": 460,
+    "height": 800,
+    "bytes": 97677,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_10_Wheel_of_Fortune.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "justice": {
+    "file": "justice.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 87082,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_11_Justice.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-hanged-one": {
+    "file": "the-hanged-one.jpg",
+    "width": 455,
+    "height": 800,
+    "bytes": 90179,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_12_Hanged_Man.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "death": {
+    "file": "death.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 94923,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_13_Death.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "temperance": {
+    "file": "temperance.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 103216,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_14_Temperance.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-devil": {
+    "file": "the-devil.jpg",
+    "width": 454,
+    "height": 800,
+    "bytes": 74816,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_15_Devil.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-tower": {
+    "file": "the-tower.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 77904,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_16_Tower.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-star": {
+    "file": "the-star.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 79770,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_17_Star.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-moon": {
+    "file": "the-moon.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 82821,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_18_Moon.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-sun": {
+    "file": "the-sun.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 93601,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_19_Sun.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "judgement": {
+    "file": "judgement.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 92428,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_20_Judgement.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "the-world": {
+    "file": "the-world.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 91920,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:RWS_Tarot_21_World.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ace-of-wands": {
+    "file": "ace-of-wands.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 83475,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands01.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "two-of-wands": {
+    "file": "two-of-wands.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 73737,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands02.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "three-of-wands": {
+    "file": "three-of-wands.jpg",
+    "width": 459,
+    "height": 800,
+    "bytes": 76353,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands03.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "four-of-wands": {
+    "file": "four-of-wands.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 74250,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands04.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "five-of-wands": {
+    "file": "five-of-wands.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 73955,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands05.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "six-of-wands": {
+    "file": "six-of-wands.jpg",
+    "width": 466,
+    "height": 800,
+    "bytes": 87303,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands06.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "seven-of-wands": {
+    "file": "seven-of-wands.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 67607,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands07.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "eight-of-wands": {
+    "file": "eight-of-wands.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 69044,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands08.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "nine-of-wands": {
+    "file": "nine-of-wands.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 80121,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands09.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ten-of-wands": {
+    "file": "ten-of-wands.jpg",
+    "width": 458,
+    "height": 800,
+    "bytes": 70702,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands10.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "page-of-wands": {
+    "file": "page-of-wands.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 84676,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands11.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "knight-of-wands": {
+    "file": "knight-of-wands.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 88057,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands12.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "queen-of-wands": {
+    "file": "queen-of-wands.jpg",
+    "width": 466,
+    "height": 800,
+    "bytes": 101758,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands13.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "king-of-wands": {
+    "file": "king-of-wands.jpg",
+    "width": 460,
+    "height": 800,
+    "bytes": 102336,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Wands14.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ace-of-cups": {
+    "file": "ace-of-cups.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 85957,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups01.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "two-of-cups": {
+    "file": "two-of-cups.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 82541,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups02.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "three-of-cups": {
+    "file": "three-of-cups.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 83036,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups03.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "four-of-cups": {
+    "file": "four-of-cups.jpg",
+    "width": 466,
+    "height": 800,
+    "bytes": 80104,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups04.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "five-of-cups": {
+    "file": "five-of-cups.jpg",
+    "width": 467,
+    "height": 800,
+    "bytes": 57972,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups05.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "six-of-cups": {
+    "file": "six-of-cups.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 91226,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups06.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "seven-of-cups": {
+    "file": "seven-of-cups.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 82030,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups07.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "eight-of-cups": {
+    "file": "eight-of-cups.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 68104,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups08.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "nine-of-cups": {
+    "file": "nine-of-cups.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 81889,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups09.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ten-of-cups": {
+    "file": "ten-of-cups.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 85421,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups10.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "page-of-cups": {
+    "file": "page-of-cups.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 80633,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups11.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "knight-of-cups": {
+    "file": "knight-of-cups.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 84260,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups12.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "queen-of-cups": {
+    "file": "queen-of-cups.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 83872,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups13.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "king-of-cups": {
+    "file": "king-of-cups.jpg",
+    "width": 467,
+    "height": 800,
+    "bytes": 88175,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Cups14.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ace-of-swords": {
+    "file": "ace-of-swords.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 78299,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords01.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "two-of-swords": {
+    "file": "two-of-swords.jpg",
+    "width": 467,
+    "height": 800,
+    "bytes": 69451,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords02.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "three-of-swords": {
+    "file": "three-of-swords.jpg",
+    "width": 459,
+    "height": 800,
+    "bytes": 62061,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords03.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "four-of-swords": {
+    "file": "four-of-swords.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 74252,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords04.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "five-of-swords": {
+    "file": "five-of-swords.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 82637,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords05.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "six-of-swords": {
+    "file": "six-of-swords.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 80335,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords06.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "seven-of-swords": {
+    "file": "seven-of-swords.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 71225,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords07.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "eight-of-swords": {
+    "file": "eight-of-swords.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 80428,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords08.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "nine-of-swords": {
+    "file": "nine-of-swords.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 74410,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords09.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ten-of-swords": {
+    "file": "ten-of-swords.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 70971,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords10.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "page-of-swords": {
+    "file": "page-of-swords.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 77835,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords11.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "knight-of-swords": {
+    "file": "knight-of-swords.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 84757,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords12.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "queen-of-swords": {
+    "file": "queen-of-swords.jpg",
+    "width": 460,
+    "height": 800,
+    "bytes": 83556,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords13.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "king-of-swords": {
+    "file": "king-of-swords.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 83456,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Swords14.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ace-of-pentacles": {
+    "file": "ace-of-pentacles.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 81014,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents01.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "two-of-pentacles": {
+    "file": "two-of-pentacles.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 75773,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents02.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "three-of-pentacles": {
+    "file": "three-of-pentacles.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 89670,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents03.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "four-of-pentacles": {
+    "file": "four-of-pentacles.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 66548,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents04.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "five-of-pentacles": {
+    "file": "five-of-pentacles.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 98902,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents05.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "six-of-pentacles": {
+    "file": "six-of-pentacles.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 80530,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents06.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "seven-of-pentacles": {
+    "file": "seven-of-pentacles.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 85076,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents07.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "eight-of-pentacles": {
+    "file": "eight-of-pentacles.jpg",
+    "width": 465,
+    "height": 800,
+    "bytes": 77070,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents08.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "nine-of-pentacles": {
+    "file": "nine-of-pentacles.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 81598,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents09.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "ten-of-pentacles": {
+    "file": "ten-of-pentacles.jpg",
+    "width": 464,
+    "height": 800,
+    "bytes": 96334,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents10.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "page-of-pentacles": {
+    "file": "page-of-pentacles.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 70349,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents11.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "knight-of-pentacles": {
+    "file": "knight-of-pentacles.jpg",
+    "width": 463,
+    "height": 800,
+    "bytes": 66176,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents12.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "queen-of-pentacles": {
+    "file": "queen-of-pentacles.jpg",
+    "width": 462,
+    "height": 800,
+    "bytes": 102633,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents13.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  },
+  "king-of-pentacles": {
+    "file": "king-of-pentacles.jpg",
+    "width": 461,
+    "height": 800,
+    "bytes": 87715,
+    "license": "public-domain",
+    "source": "Wikimedia Commons, File:Pents14.jpg — Waite-Smith deck (1909)",
+    "source_licence_as_stated": "Public domain"
+  }
+}

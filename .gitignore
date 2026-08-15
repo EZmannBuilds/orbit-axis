@@ -52,3 +52,8 @@ public/qa-local-session.json
 # writing), and one careless `git add .claude/` would commit all of them.
 .claude/*
 !.claude/launch.json
+
+# Tarot card fronts are staged here and uploaded to Supabase Storage.
+# They are not committed: 6.4MB of images the app serves from storage.
+# Regenerate with: node scripts/tarot-images.mjs
+assets/tarot-cards/

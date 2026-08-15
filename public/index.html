@@ -862,6 +862,47 @@
               </div>
             </section>
 
+            <!-- Tarot. Rendered only when the feature is available, so an
+                 instance without it shows no settings for it. -->
+            <section class="more-section" id="settings-tarot" aria-labelledby="settings-tarot-title" hidden>
+              <h2 class="u-subtitle" id="settings-tarot-title">Tarot</h2>
+              <div class="o-group">
+                <div class="setting-row">
+                  <span class="setting-row__label" id="set-tarot-label">Daily card</span>
+                  <div class="o-segment" id="set-tarot" role="group" aria-labelledby="set-tarot-label">
+                    <button type="button" data-value="on" aria-pressed="true">On</button>
+                    <button type="button" data-value="off" aria-pressed="false">Off</button>
+                  </div>
+                </div>
+                <p class="setting-row__help">Turning Tarot off removes the Daily card
+                  from Today and hides it from search. Saved reflections are kept, and
+                  turning it back on restores them.</p>
+
+                <div class="setting-row">
+                  <span class="setting-row__label" id="set-tarot-positions-label">Three-card labels</span>
+                  <div class="o-segment" id="set-tarot-positions" role="group" aria-labelledby="set-tarot-positions-label">
+                    <button type="button" data-value="reflective" aria-pressed="true">Reflective</button>
+                    <button type="button" data-value="timeline" aria-pressed="false">Past · Present · Future</button>
+                  </div>
+                </div>
+                <p class="setting-row__help">Reflective reads the three cards as
+                  <em>What shaped this · What is present · What to consider next</em>.
+                  Past · Present · Future is the traditional wording. The cards and their
+                  meanings are identical either way — only the labels change.</p>
+
+                <div class="setting-row">
+                  <span class="setting-row__label" id="set-tarot-meaning-label">Card meanings</span>
+                  <div class="o-segment" id="set-tarot-meaning" role="group" aria-labelledby="set-tarot-meaning-label">
+                    <button type="button" data-value="ask" aria-pressed="true">Ask first</button>
+                    <button type="button" data-value="always" aria-pressed="false">Always show</button>
+                  </div>
+                </div>
+                <p class="setting-row__help">Ask first turns the card over and waits,
+                  so you can sit with the image before reading what it is usually taken
+                  to mean.</p>
+              </div>
+            </section>
+
             <section class="more-section" aria-labelledby="settings-about-title">
               <h2 class="o-group__label" id="settings-about-title">About Orbit Axis</h2>
               <div class="o-group">
@@ -904,7 +945,7 @@
        aria-labelledby="auth-gate-title" aria-describedby="auth-gate-description">
     <div class="auth-card">
       <div class="brand-lockup brand-lockup--center" aria-label="Orbit Axis">
-        <img class="orbit-mark orbit-mark--auth auth-mark" src="/brand/orbit-axis-mark.svg" alt="" />
+        <img class="orbit-loader" src="/brand/orbit-axis-loader.svg" alt="" />
         <span class="brand-wordmark">ORBIT AXIS</span>
       </div>
       <p class="brand-tagline">Your access to the sky.</p>

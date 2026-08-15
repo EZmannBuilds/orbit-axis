@@ -42,8 +42,10 @@ test("Pure Orbit carries the four required geometric elements", () => {
 test("the Instrument motif is technical and the Pure Orbit mark is universal", () => {
   const html = read("public", "index.html");
   const app = read("public", "app.js");
-  assert.ok((html.match(/\/brand\/orbit-axis-mark\.svg/g) || []).length >= 3,
-    "shell, auth, and startup reuse the primary mark");
+  assert.ok((html.match(/\/brand\/orbit-axis-mark\.svg/g) || []).length >= 2,
+    "shell and auth reuse the primary mark");
+  assert.equal((html.match(/\/brand\/orbit-axis-loader\.svg/g) || []).length, 1,
+    "startup uses the functional Pure Orbit loader");
   assert.equal((app.match(/\/brand\/orbit-axis-instrument\.svg/g) || []).length, 1,
     "the technical motif has one deliberate app placement");
   assert.ok(!html.includes("rail__orb"), "the retired ring-and-dot mark is gone");
@@ -71,9 +73,16 @@ test("the native icon is opaque RGB and derived from Pure Orbit", () => {
 
 test("brand motion is finite and withdraws under reduced motion", () => {
   const css = read("public", "styles", "orbit-mark.css");
+  const loader = read("public", "brand", "orbit-axis-loader.svg");
   assert.match(css, /orbit-mark-arrive var\(--duration-brand-reveal\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
-  assert.ok(!/infinite/.test(css), "brand motion may not loop indefinitely");
+  assert.ok(!/infinite/.test(css), "identity reveal motion may not loop indefinitely");
+  assert.match(loader, /animation: orbit-loader-travel 1\.4s linear infinite/,
+    "the functional loader moves continuously at a constant rate");
+  assert.match(loader, /transform-origin: 64px 64px/,
+    "the satellite travels around the orbit center");
+  assert.match(loader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
+    "the functional loader becomes static when reduced motion is requested");
 });
 
 test("the desktop lockup does not become a sixth row in the mobile tab bar", () => {

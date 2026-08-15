@@ -134,7 +134,24 @@ export function chartInputHash(input) {
   return createHash("sha256").update(JSON.stringify(norm)).digest("hex");
 }
 
-const HOUSE_SYSTEM_CODE = { placidus: "P", whole: "W", koch: "K", equal: "E", "whole-sign": "W" };
+// Name -> Swiss Ephemeris house code. exec.js already accepts the full set
+// (P K O R C E W B M); this map is what the application's own vocabulary
+// resolves to, and it was short — so a chart asking for Campanus fell through
+// the `|| "P"` below and was quietly computed as Placidus instead. A house
+// system that silently becomes a different house system is worse than one that
+// is not offered, because the chart looks right.
+const HOUSE_SYSTEM_CODE = {
+  placidus: "P",
+  koch: "K",
+  porphyry: "O",
+  regiomontanus: "R",
+  campanus: "C",
+  equal: "E",
+  whole: "W",
+  "whole-sign": "W",
+  alcabitius: "B",
+  morinus: "M",
+};
 
 // Main entry. input uses birth_profile field names.
 export function computeNatalChart(input) {
