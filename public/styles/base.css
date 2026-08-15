@@ -24,6 +24,13 @@ html {
 }
 
 body {
+  /* Double-tap-to-zoom off. It fires on ordinary taps in a list — two quick
+     presses on adjacent rows read as one double-tap — and it costs every tap a
+     300ms wait while the browser decides which it was.
+     `manipulation` and not `user-scalable=no`: pinch-to-zoom survives, so
+     anyone who needs to magnify the page still can. Removing that is an
+     accessibility decision, and not one this is asking for. */
+  touch-action: manipulation;
   background: var(--color-bg);
   color: var(--color-secondary);
   font-family: var(--font-text);

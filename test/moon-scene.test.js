@@ -238,10 +238,29 @@ test("the Earth turn is bound to a real request and cannot stick", () => {
   assert.match(finallyBlock, /MOON\.refreshing = false/);
   assert.match(finallyBlock, /classList\.remove\("is-turning"\)/,
     "a failed refresh cannot leave the Earth turning");
-  assert.match(finallyBlock, /button\.disabled = false/, "the control always re-enables");
+  // The Refresh button is gone — "right now" keeps itself current instead of
+  // asking to be pressed — so there is no control left to re-enable. The thing
+  // that could still stick is the in-flight flag, and it is cleared above:
+  // leaving it set would block every later refresh silently.
+  assert.ok(!fn.includes("#moon-refresh"), "no reference to the removed control");
   // Motion is evidence of a request, so it must not start on ordinary entry.
   const entry = block(APP, "AXIS.loadedOnce = true", "// Fortune:");
   assert.ok(!entry.includes("is-turning"), "Home entry does not spin the Earth");
+});
+
+test("the Moon keeps itself current, quietly and without hammering", () => {
+  // Replacing the button only helps if returning to the app actually re-reads
+  // the sky. Both paths matter: a browser reports a return as a visibility
+  // change, and an iOS WebView does not always, which is why native-shell.js
+  // dispatches its own event.
+  assert.match(APP, /visibilitychange/, "a return to the tab re-reads the sky");
+  assert.match(APP, /orbit:resumed/, "a native resume re-reads the sky");
+  assert.ok(!HTML.includes('id="moon-refresh"'), "the manual control is gone");
+
+  const guard = block(APP, "function moonRefreshIfStale", "async function moonRefreshSky");
+  assert.match(guard, /MOON_STALE_AFTER_MS/, "refetching is bounded by age, not fired on every switch");
+  assert.match(guard, /if \(MOON\.refreshing\) return/, "a refresh already running is not duplicated");
+  assert.match(guard, /quiet: true/, "an unrequested refresh does not announce itself");
 });
 
 test("the Earth turn is a single partial turn, not a spinner", () => {

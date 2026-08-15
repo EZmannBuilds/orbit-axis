@@ -175,9 +175,12 @@
                not shift when canonical data arrives. The drawing is decorative;
                every fact it depicts is also written beside it. -->
           <section class="axis-card axis-rise-3" id="today-moon" aria-labelledby="today-moon-title" hidden>
+            <!-- No Refresh control: "right now" is a promise the panel should
+                 keep by itself. It re-reads the sky whenever the app is opened
+                 or returned to, so the only way to see a stale Moon is to
+                 watch this screen for long enough that it stops being now. -->
             <div class="moon-head">
               <h2 class="axis-section-title" id="today-moon-title">The Moon right now</h2>
-              <button type="button" class="o-btn o-btn--utility" id="moon-refresh">Refresh</button>
             </div>
             <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
             <div id="today-moon-body"></div>
@@ -1141,6 +1144,12 @@
         <h2 id="identity-modal-title">Chart identity</h2>
         <button type="button" class="o-modal__close" id="identity-modal-close" aria-label="Close" data-icon="x"></button>
       </header>
+      <!-- The scroll container is not optional on a --form panel: that panel is
+           `overflow: hidden` so its header can stay put while the body moves.
+           Without this wrapper the content below the fold is simply clipped,
+           which is what put Save out of reach once the crop editor appeared and
+           made the form taller. Same structure the chart modal uses. -->
+      <div class="o-modal__scroll">
       <form id="identity-form" novalidate>
         <p class="chart-form__intro" id="identity-modal-intro">
           The name, picture, and relationship for this saved chart.
@@ -1219,6 +1228,7 @@
           <button type="button" class="o-btn o-btn--utility" id="identity-retry" hidden>Retry</button>
         </div>
       </form>
+      </div>
     </div>
   </div>
 

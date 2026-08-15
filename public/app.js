@@ -3707,11 +3707,27 @@ async function afterChartSaved(mode, chart) {
 // Home-level chart actions: add (+), manage, and retry after a load failure.
 function wireHomeChartActions() {
   $("#today-chart-retry")?.addEventListener("click", () => retryLoadSavedCharts());
-  $("#moon-refresh")?.addEventListener("click", () => moonRefreshSky());
   // One listener, no loop: a hidden tab pauses the ambient scene rather than
   // compositing a sky nobody is looking at.
   document.addEventListener("visibilitychange", moonSyncPaused);
   moonSyncPaused();
+
+  // "Right now" has to stay true without being asked. Coming back to the app is
+  // the moment it stops being true — a phone can hold this screen for a day —
+  // so returning is what re-reads the sky, rather than a button the reader has
+  // to notice and think to press.
+  //
+  // Guarded by age rather than fired on every visibility change: flicking
+  // between tabs would otherwise refetch constantly, and the Moon moves about
+  // half a degree an hour, so anything fresher than a few minutes is already
+  // the same answer.
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    moonRefreshIfStale();
+  });
+  // Dispatched by native-shell.js when iOS resumes the app, which a WebView
+  // does not always report as a visibility change.
+  document.addEventListener("orbit:resumed", () => moonRefreshIfStale());
 }
 
 function moonSyncPaused() {
@@ -5764,14 +5780,30 @@ function moonMaybeShootingStar() {
  */
 const MOON = { refreshing: false };
 
-async function moonRefreshSky() {
+/** Milliseconds after which a rendered sky is worth re-reading on return. */
+const MOON_STALE_AFTER_MS = 5 * 60 * 1000;
+
+/**
+ * Re-read the sky if what is on screen has had time to stop being "now".
+ *
+ * Silent by design: this is not something the reader asked for, so it must not
+ * announce itself, and a failure leaves the previous Moon in place — it is
+ * still true as of its own timestamp.
+ */
+function moonRefreshIfStale() {
   if (MOON.refreshing) return;
-  const button = $("#moon-refresh");
+  if ($("#today-moon")?.hidden) return;
+  const age = Date.now() - (MOON.syncedAt || 0);
+  if (age < MOON_STALE_AFTER_MS) return;
+  void moonRefreshSky({ quiet: true });
+}
+
+async function moonRefreshSky({ quiet = false } = {}) {
+  if (MOON.refreshing) return;
   const earth = $("#moon-earth");
   MOON.refreshing = true;
-  if (button) { button.disabled = true; button.setAttribute("aria-busy", "true"); }
   earth?.classList.add("is-turning");
-  moonStatus("Refreshing the current sky…");
+  if (!quiet) moonStatus("Refreshing the current sky…");
   try {
     const tz = axisResolveTimezone();
     const r = await get(`/api/sky/current?tz=${encodeURIComponent(tz)}`);
@@ -5779,15 +5811,16 @@ async function moonRefreshSky() {
     AXIS.lastHighlights = r.highlights || [];
     AXIS.lastMoon = r.moon || null;
     axisRenderSky(r.sky, { highlights: r.highlights, moon: r.moon });
-    moonStatus("The current sky is up to date.");
+    MOON.syncedAt = Date.now();
+    if (!quiet) moonStatus("The current sky is up to date.");
+    else moonStatus("");
   } catch {
     // The previously rendered Moon is still on screen and still true as of its
     // own timestamp, so it stays. Replacing it with an error would throw away
     // good data because a later request failed.
-    moonStatus("We couldn't refresh the sky just now. The Moon shown above is from the last successful reading.");
+    if (!quiet) moonStatus("We couldn't refresh the sky just now. The Moon shown above is from the last successful reading.");
   } finally {
     MOON.refreshing = false;
-    if (button) { button.disabled = false; button.removeAttribute("aria-busy"); }
     // Re-read: axisRenderSky replaces the scene, so the element may be new.
     $("#moon-earth")?.classList.remove("is-turning");
     earth?.classList.remove("is-turning");
