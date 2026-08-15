@@ -18,6 +18,8 @@ const HTML = readFileSync(join(REPO_ROOT, "public", "index.html"), "utf8");
 const APP = readFileSync(join(REPO_ROOT, "public", "app.js"), "utf8");
 const APP_CSS = readFileSync(join(REPO_ROOT, "public", "styles", "app.css"), "utf8");
 const COMPONENTS_CSS = readFileSync(join(REPO_ROOT, "public", "styles", "components.css"), "utf8");
+const FEATURES_CSS = readFileSync(join(REPO_ROOT, "public", "styles", "features.css"), "utf8");
+const ATLAS_CSS = readFileSync(join(REPO_ROOT, "public", "styles", "symbol-atlas.css"), "utf8");
 
 // ── Chart navigation ────────────────────────────────────────────────────────
 
@@ -145,4 +147,28 @@ test("no page says its own name twice on a phone", () => {
   }
   // Context headings that differ from the bar title survive everywhere.
   assert.ok(HTML.includes(">Your sky today</h1>"), "Today keeps its contextual headline");
+});
+
+// ── One containment level, where the parent card was not the whole story ────
+
+test("flattened collections put their override after the card rule they undo", () => {
+  // Removing Sky's outer card left a section full of bordered transit boxes:
+  // the letter of "one containment level" with none of the benefit. The rows
+  // are dividers now — but only because the override sits BELOW the base rule
+  // in the same stylesheet. Equal specificity, so source order decides, and an
+  // earlier version of this change silently did nothing for exactly that
+  // reason. These assertions pin the ordering, not just the declaration.
+  for (const [css, base, override, name] of [
+    [FEATURES_CSS, "\n.tr-card {", ".tr-card + .tr-card", "Sky transit rows"],
+    [ATLAS_CSS, "\n.atlas-card {", ".atlas-card + .atlas-card", "Atlas featured rows"],
+  ]) {
+    const basePos = css.indexOf(base);
+    const overridePos = css.indexOf(override);
+    assert.ok(basePos > -1, `${name}: base rule missing`);
+    assert.ok(overridePos > basePos,
+      `${name}: the mobile override must come after the card rule it overrides, or it loses on source order`);
+    // And it must be scoped to mobile, so the desktop grid keeps its edges.
+    const media = css.lastIndexOf("@media (max-width: 640px)", overridePos);
+    assert.ok(media > basePos, `${name}: the override must sit inside the 640px block`);
+  }
 });

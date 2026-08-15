@@ -902,3 +902,20 @@
   .saved-chart-actions > .o-btn { display: none; }
 }
 .saved-chart-row__menu span { font-size: 1.4rem; line-height: 1; letter-spacing: 1px; }
+
+/* Sky's transit rows, flattened.
+   Removing the "Most active today" parent card left a section full of bordered
+   boxes — one containment level satisfied on a technicality. On a phone the
+   rows become divided rows like every other collection; the card metaphor is
+   kept for the things that earn it, which a transit in a vertical list is not.
+   Above 640px the cards stand, because a multi-column grid needs its edges. */
+@media (max-width: 640px) {
+  .tr-list { gap: 0; }
+  .tr-card {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: var(--space-md) 0;
+  }
+  .tr-card + .tr-card { border-top: var(--border-width) solid var(--color-border); }
+}

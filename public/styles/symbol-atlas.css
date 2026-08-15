@@ -402,3 +402,19 @@ a.atlas-chip:focus-visible { box-shadow: var(--focus-ring); }
   .atlas-category-card__glyph { font-size: 1.3rem; width: 36px; }
   .atlas-category-card__count { justify-self: end; }
 }
+
+/* "Good places to start" reads as a list on a phone, not a stack of cards —
+   the same flat language as the category list directly above it. The grid
+   collapses to one column at this width anyway, so the borders were drawing
+   boxes around what was already a single file of rows. */
+@media (max-width: 640px) {
+  .atlas-card-grid { display: block; }
+  .atlas-card {
+    border: 0;
+    border-radius: 0;
+    background: none;
+    padding: var(--space-md) 0;
+  }
+  .atlas-card + .atlas-card { border-top: var(--border-width) solid var(--color-border); }
+  .atlas-card:hover { background: none; }
+}
