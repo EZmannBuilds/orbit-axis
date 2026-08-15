@@ -4696,14 +4696,16 @@ function renderPatterns(patterns) {
 
 // ── 4. Planet placements ────────────────────────────────────────────────────
 
-function renderPlacements(placements) {
+function renderPlacements(placements, points = []) {
   const target = $("#key-placements");
   if (!target) return;
   if (!placements?.length) {
     target.innerHTML = `<p class="me-muted">No planet placements are available for this chart.</p>`;
     return;
   }
-  target.innerHTML = placements.map((p) => readingCardHtml(p)).join("");
+  // Points follow the planets and carry their own names and functions, so they
+  // identify themselves without a divider being injected into the grid.
+  target.innerHTML = [...placements, ...points].map((p) => readingCardHtml(p)).join("");
 }
 
 // ── 5. Major aspects ────────────────────────────────────────────────────────
@@ -4855,7 +4857,7 @@ function renderChart(chart, name, profile = null, readingPayload = null) {
   renderLimitation(readingPayload.limitation);
   renderBigThree(readingPayload.bigThree);
   renderPatterns(readingPayload.patterns);
-  renderPlacements(readingPayload.remainingPlacements);
+  renderPlacements(readingPayload.remainingPlacements, readingPayload.pointPlacements);
   renderAspects(readingPayload.aspects);
   renderHouses(chart, readingPayload.bigThree, readingPayload.midheaven);
   renderChartData(chart, readingPayload);

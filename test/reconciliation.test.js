@@ -120,13 +120,20 @@ test("reconciled: Sun, Moon, Rising, and every planet still reach the reader", (
   const compose = readFileSync(join(ROOT, "lib", "interpretation", "compose.js"), "utf8");
   assert.match(compose, /composeBigThree/, "the Big Three are still composed as a set");
   assert.match(compose, /PLANET_ORDER\.map/, "every planet is composed, in a stable order");
-  assert.ok(html.includes("Sun, Moon, and Rising") && html.includes(">Planet placements<"));
+  // The heading dropped the word "Planet" when Chiron and Lilith joined the
+  // section — they are points, and calling them planets would be wrong. The
+  // guarantee being checked is that the section still reaches the reader.
+  assert.ok(html.includes("Sun, Moon, and Rising") && html.includes(">Placements<"));
 });
 
 test("reconciled: unknown birth time still hides Rising/houses (no fabrication)", () => {
   // Same guarantee, now enforced in the composer rather than a label helper.
   const compose = readFileSync(join(ROOT, "lib", "interpretation", "compose.js"), "utf8");
-  assert.match(compose, /const houseNumber = chart\?\.planet_houses\?\.\[planetName\]/);
+  // Houses are read from the chart's own house maps and never inferred. The
+  // line became a ternary when points arrived (point_houses vs planet_houses);
+  // what matters is that both branches read a map the chart supplied.
+  assert.match(compose, /houseNumber = .*planet_houses\?\.\[planetName\]/);
+  assert.match(compose, /houseNumber = .*point_houses\?\.\[planetName\]/);
   assert.match(compose, /unavailable: true/, "Rising is withheld, not estimated");
   assert.match(appJs, /!chart\?\.time_known \|\| !chart\?\.houses\?\.length/,
     "the houses section refuses to render without a usable time");
@@ -137,8 +144,10 @@ test("reconciled: every planet renders, with no hidden detail mode", () => {
   // nothing may be gated behind a detail level any more.
   assert.ok(!appJs.includes("placement-card__tech advanced-only"),
     "the old advanced-only gating is gone");
-  assert.match(appJs, /renderPlacements\(readingPayload\.remainingPlacements\)/,
-    "the planet section renders the composed placements");
+  assert.match(appJs, /renderPlacements\(readingPayload\.remainingPlacements/,
+    "the placements section renders the composed placements");
+  assert.match(appJs, /renderPlacements\(readingPayload\.remainingPlacements, readingPayload\.pointPlacements\)/,
+    "Chiron and Lilith reach the reader too, and are not composed then dropped");
   // Sun and Moon are not dropped — they lead the page in the Big Three, and
   // the complete ten still appear in Chart Data.
   const compose = readFileSync(join(ROOT, "lib", "interpretation", "compose.js"), "utf8");
