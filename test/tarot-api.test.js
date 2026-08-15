@@ -52,17 +52,14 @@ function stubFetch(response = []) {
 test("an unauthored deck refuses every read path", async () => {
   // 503, not 500 and not an empty success. The panel renders this as a state,
   // so it has to be distinguishable from a failure that retrying would fix.
-  for (const call of [
-    () => dailyCard({ deck: [] }),
-    () => manualReading({ deck: [], spreadType: "one_card" }),
-  ]) {
-    assert.throws(call, (error) => {
-      assert.ok(error instanceof TarotError);
-      assert.equal(error.status, 503);
-      assert.equal(error.code, "empty_deck");
-      return true;
-    });
-  }
+  const check = (error) => {
+    assert.ok(error instanceof TarotError);
+    assert.equal(error.status, 503);
+    assert.equal(error.code, "empty_deck");
+    return true;
+  };
+  await assert.rejects(() => dailyCard({ deck: [] }), check);
+  assert.throws(() => manualReading({ deck: [], spreadType: "one_card" }), check);
 });
 
 test("the HTTP surface reports an unavailable deck rather than improvising", async () => {
@@ -170,22 +167,50 @@ test("the deck version recorded is the server's, not the client's claim", () => 
 
 /* ── Draw paths ───────────────────────────────────────────────────────────── */
 
-test("the daily card is stable across requests and local-day aware", () => {
-  const at = (iso) => dailyCard(ctx({ timezone: "America/New_York", now: new Date(iso) }));
-  const morning = at("2026-08-15T14:00:00Z");   // 10:00 in New York
-  const evening = at("2026-08-15T22:00:00Z");   // 18:00, same local day
-  assert.equal(morning.cards[0].card.slug, evening.cards[0].card.slug);
-  assert.equal(morning.draw.local_date, "2026-08-15");
+test("today's card is drawn once and then remembered", async () => {
+  // Stability used to be arithmetic — recompute and get the same answer. It is
+  // now a stored fact, so the test is about the store: draw once, and every
+  // later request that day returns that card rather than a fresh one.
+  const first = await dailyCard(ctx({ now: new Date("2026-08-15T14:00:00Z") }));
+  const held = first.remember;
+  assert.equal(first.source, "drawn_local", "no account, so the browser remembers it");
+  assert.equal(held.local_date, "2026-08-15");
 
-  // 2026-08-16T03:00Z is 23:00 on the 15th in New York — still the same day
-  // there, and the card must not have turned over at UTC midnight.
-  const beforeLocalMidnight = at("2026-08-16T03:00:00Z");
-  assert.equal(beforeLocalMidnight.draw.local_date, "2026-08-15");
-  assert.equal(beforeLocalMidnight.cards[0].card.slug, morning.cards[0].card.slug);
+  // Handing the remembered card back returns the same card, not a new draw.
+  for (let i = 0; i < 20; i += 1) {
+    const again = await dailyCard(ctx({ now: new Date("2026-08-15T22:00:00Z"), remembered: held }));
+    assert.equal(again.cards[0].card.slug, first.cards[0].card.slug);
+    assert.equal(again.source, "remembered");
+  }
+});
 
-  // 05:00Z is 01:00 on the 16th in New York: a new local day.
-  const afterLocalMidnight = at("2026-08-16T05:00:00Z");
-  assert.equal(afterLocalMidnight.draw.local_date, "2026-08-16");
+test("the day belongs to the reader, and yesterday's card does not carry over", async () => {
+  const held = { local_date: "2026-08-15", card_slug: "the-star", orientation: "upright" };
+
+  // 2026-08-16T03:00Z is still the 15th in New York, so the card holds.
+  const sameDay = await dailyCard(ctx({
+    timezone: "America/New_York", now: new Date("2026-08-16T03:00:00Z"), remembered: held,
+  }));
+  assert.equal(sameDay.draw.local_date, "2026-08-15");
+  assert.equal(sameDay.cards[0].card.name, "The Star");
+
+  // 05:00Z is the 16th there: a new local day, so a fresh draw regardless of
+  // what the browser is still holding.
+  const nextDay = await dailyCard(ctx({
+    timezone: "America/New_York", now: new Date("2026-08-16T05:00:00Z"), remembered: held,
+  }));
+  assert.equal(nextDay.draw.local_date, "2026-08-16");
+  assert.notEqual(nextDay.source, "remembered");
+});
+
+test("a remembered card that is no longer in the deck yields a fresh draw", async () => {
+  // The deck changed under the reader. Better a new card than an error page
+  // about one that no longer exists.
+  const reading = await dailyCard(ctx({
+    remembered: { local_date: "2026-08-15", card_slug: "a-card-that-was-removed", orientation: "upright" },
+  }));
+  assert.notEqual(reading.source, "remembered");
+  assert.ok(reading.cards[0].card.slug);
 });
 
 test("the daily card cannot be requested as a manual draw", () => {
@@ -313,13 +338,18 @@ test("the daily route answers a signed-out visitor", async () => {
   assert.equal(res.body.reading.draw.timezone, "Europe/Berlin");
 });
 
-test("two accounts receive different daily cards on the same day", async () => {
-  const forOwner = async (ownerId) => {
+test("each account draws its own card, and nothing ties it to who they are", async () => {
+  // This used to be guaranteed: the account id was in the seed, so two people
+  // could never share a card. It is now simply a draw — two accounts usually
+  // differ, sometimes match, and neither outcome is arranged.
+  const draws = [];
+  for (let i = 0; i < 40; i += 1) {
     const res = await handleTarotRoute("GET", "/api/tarot/daily", new URLSearchParams(), {},
-      ctx({ auth: { ...AUTH, ownerId }, now: new Date("2026-08-15T10:00:00Z") }));
-    return res.body.reading.draw.seed;
-  };
-  assert.notEqual(await forOwner("owner-a"), await forOwner("owner-b"));
+      ctx({ auth: null, now: new Date("2026-08-15T10:00:00Z") }));
+    draws.push(res.body.reading.cards[0].card.slug);
+  }
+  assert.ok(new Set(draws).size > 10,
+    "40 requests produced too few distinct cards to be a draw");
 });
 
 test("a bad timezone is a 400, not a silent fallback to the server's clock", async () => {

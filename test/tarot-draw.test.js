@@ -11,8 +11,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { readFileSync } from "node:fs";
 import {
-  DRAW_CONTRACT_VERSION, dailySeed, drawCards, drawDailyCard, drawSpread,
+  DRAW_CONTRACT_VERSION, drawCards, drawDailyCard, drawSpread,
   isLocalDate, manualSeed, unbiasedIndex,
 } from "../lib/tarot/draw.js";
 import { FULL_DECK_SIZE, SPREAD_POSITIONS } from "../lib/tarot/deck.js";
@@ -23,85 +24,65 @@ const daily = (overrides = {}) => drawDailyCard({
   localDate: "2026-08-15",
   timezone: "UTC",
   deckVersion: FIXTURE_DECK_VERSION,
-  subject: "anonymous",
   ...overrides,
 });
 
-/* ── Stability ────────────────────────────────────────────────────────────── */
+/* ── The daily draw ───────────────────────────────────────────────────────── */
 
-test("the same day yields the same card, every time", () => {
-  const first = daily();
-  // Twenty draws stands in for twenty refreshes. One repeat could pass by luck
-  // with a 78-card deck; twenty could not.
-  for (let i = 0; i < 20; i += 1) {
-    assert.equal(daily().card.slug, first.card.slug);
+test("today's card is drawn, not derived", () => {
+  // It used to be a pure function of (local date, timezone, deck version,
+  // account). That made it stable for free and made WHICH card you got a
+  // function of who you are — so two people never shared a card and one
+  // person's card was decided before they opened the app.
+  //
+  // It is a real draw now. Stability comes from writing it down (see
+  // tarot_daily_draws), not from recomputing it.
+  const slugs = new Set();
+  for (let i = 0; i < 60; i += 1) slugs.add(daily().card.slug);
+  assert.ok(slugs.size > 20,
+    `60 draws produced only ${slugs.size} distinct cards — that is not a draw`);
+});
+
+test("nothing about the reader influences which card comes up", () => {
+  // No account id, no timezone, no date, no history. drawDailyCard takes a
+  // deck and a seed; there is no parameter that could weight the deck.
+  const source = readFileSync(new URL("../lib/tarot/draw.js", import.meta.url), "utf8");
+  const fn = source.slice(source.indexOf("export function drawDailyCard"));
+  const signature = fn.slice(0, fn.indexOf(")"));
+  for (const banned of ["subject", "owner", "history", "recent", "weight"]) {
+    assert.ok(!signature.includes(banned),
+      `drawDailyCard takes "${banned}", which could bias the deck`);
   }
+  // And the seed builder that used to derive it is gone rather than deprecated.
+  assert.ok(!/export function dailySeed/.test(source));
 });
 
-test("a different local date yields a different draw", () => {
-  // Not asserting the CARDS differ — with 78 cards two dates collide about 1.3%
-  // of the time, and a test that fails on a legitimate collision is a test
-  // people learn to re-run. The SEED must differ; that is the actual contract.
-  assert.notEqual(
-    dailySeed({ localDate: "2026-08-15" }),
-    dailySeed({ localDate: "2026-08-16" }),
-  );
-});
-
-test("the day boundary belongs to the reader, not the server", () => {
-  // Same instant, two zones, two different local dates → two different cards.
-  // This is the whole reason localDate is resolved in the caller's timezone.
-  const tokyo = dailySeed({ localDate: "2026-08-16", timezone: "Asia/Tokyo" });
-  const newYork = dailySeed({ localDate: "2026-08-15", timezone: "America/New_York" });
-  assert.notEqual(tokyo, newYork);
-
-  // And the same calendar date in two zones is still two different days.
-  assert.notEqual(
-    dailySeed({ localDate: "2026-08-15", timezone: "Asia/Tokyo" }),
-    dailySeed({ localDate: "2026-08-15", timezone: "America/New_York" }),
-  );
-});
-
-test("re-authoring the deck changes future draws", () => {
-  // A card drawn from a different deck is a different card even if it shares a
-  // name, so the deck version has to be inside the seed.
-  assert.notEqual(
-    dailySeed({ localDate: "2026-08-15", deckVersion: "1.0.0" }),
-    dailySeed({ localDate: "2026-08-15", deckVersion: "1.0.1" }),
-  );
-});
-
-test("two readers get their own daily card", () => {
-  assert.notEqual(
-    dailySeed({ localDate: "2026-08-15", subject: "owner-a" }),
-    dailySeed({ localDate: "2026-08-15", subject: "owner-b" }),
-  );
-  // And every signed-out visitor shares one, deliberately: with no account
-  // there is nothing to key a personal draw to, and minting a device id to
-  // make one would be tracking.
-  assert.equal(
-    dailySeed({ localDate: "2026-08-15", subject: "anonymous" }),
-    dailySeed({ localDate: "2026-08-15", subject: "anonymous" }),
-  );
-});
-
-test("the daily draw reports how to reproduce it", () => {
+test("a drawn card does not claim to be reproducible", () => {
   const { draw } = daily();
   assert.equal(draw.spread_type, "daily");
-  assert.equal(draw.reproducible, true);
+  assert.equal(draw.reproducible, false,
+    "the astrology side IS reproducible; both must not claim the same property");
   assert.equal(draw.deck_version, FIXTURE_DECK_VERSION);
-  assert.equal(draw.contract_version, DRAW_CONTRACT_VERSION);
   assert.equal(draw.local_date, "2026-08-15");
-  assert.match(draw.seed, /^[0-9a-f]{64}$/);
 });
 
-test("a malformed local date is refused rather than coerced", () => {
-  for (const bad of ["2026-8-15", "15/08/2026", "2026-02-31", "", null, undefined, 20260815]) {
-    assert.throws(() => dailySeed({ localDate: bad }), TypeError,
-      `expected ${JSON.stringify(bad)} to be refused`);
+test("the same card can come up two days running", () => {
+  // No exclusion of recently seen cards anywhere. Over many draws a repeat
+  // must occur, or something is quietly filtering the deck.
+  let repeats = 0;
+  let previous = null;
+  for (let i = 0; i < 2000; i += 1) {
+    const slug = daily().card.slug;
+    if (slug === previous) repeats += 1;
+    previous = slug;
   }
-  assert.equal(isLocalDate("2028-02-29"), true);   // 2028 is a leap year
-  assert.equal(isLocalDate("2026-02-29"), false);  // 2026 is not
+  assert.ok(repeats > 0, "2000 consecutive draws with no repeat means the deck is being filtered");
+});
+
+test("every card in the deck can be today's card", () => {
+  const seen = new Set();
+  for (let i = 0; i < 40000 && seen.size < FULL_DECK_SIZE; i += 1) seen.add(daily().card.slug);
+  assert.equal(seen.size, FULL_DECK_SIZE, "some cards are unreachable as a daily card");
 });
 
 /* ── Selection quality ────────────────────────────────────────────────────── */

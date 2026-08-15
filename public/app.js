@@ -4532,6 +4532,32 @@ function tarotRevealKey(localDate) {
   return `${TAROT_REVEAL_PREFIX}.${localDate}`;
 }
 
+/**
+ * The day's card, as this browser remembers it.
+ *
+ * A drawn card cannot be recomputed, so somebody has to write it down. Signed
+ * in, that is the server, and every device agrees. Signed out there is no
+ * account to key a row to, so the browser keeps it — which means a second
+ * device draws its own card, and that is the honest cost of having no account
+ * rather than a bug.
+ *
+ * The slug is sent back on the next request and re-resolved against the
+ * server's deck, so a tampered value yields a fresh draw rather than a card
+ * the reader picked.
+ */
+const TAROT_DAILY_KEY = "orbit.tarot.daily";
+
+function tarotRememberedDaily() {
+  try { return JSON.parse(localStorage.getItem(TAROT_DAILY_KEY) || "null"); }
+  catch { return null; }
+}
+
+function tarotRememberDaily(remember) {
+  if (!remember?.local_date || !remember?.card_slug) return;
+  try { localStorage.setItem(TAROT_DAILY_KEY, JSON.stringify(remember)); }
+  catch { /* private mode: the card lasts for this page view only */ }
+}
+
 function tarotWasRevealed(localDate) {
   if (!localDate) return false;
   try { return localStorage.getItem(tarotRevealKey(localDate)) === "1"; }
@@ -4748,8 +4774,21 @@ async function loadTarotDaily() {
 
   try {
     const timezone = axisResolveTimezone();
-    const data = await get(`/api/tarot/daily?timezone=${encodeURIComponent(timezone)}`
-      + `&reversals=${tarotReversalsOn() ? "on" : "off"}`);
+    const held = tarotRememberedDaily();
+    const query = new URLSearchParams({
+      timezone,
+      reversals: tarotReversalsOn() ? "on" : "off",
+    });
+    if (held?.card_slug && held?.local_date) {
+      query.set("remembered_slug", held.card_slug);
+      query.set("remembered_date", held.local_date);
+      query.set("remembered_orientation", held.orientation || "upright");
+    }
+    const data = await get(`/api/tarot/daily?${query}`);
+    // Whatever came back is today's card — a fresh draw on the first open of
+    // the day, or the one already held. Stored either way, so a refresh a
+    // minute later asks for the same card rather than drawing another.
+    tarotRememberDaily(data.reading?.remember);
     tarotState.reading = data.reading;
     // Known now, turned over later — which is exactly the gap the front loads in.
     preloadTarotFronts(data.reading?.cards);
