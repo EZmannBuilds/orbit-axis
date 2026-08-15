@@ -342,10 +342,17 @@ test("Tarot is no longer flag-gated, and the content gate is what remains", () =
   assert.equal(deckStatus(PRODUCTION_CARDS).ready, true);
 });
 
-test("production cannot serve the Tarot API even if the flag were on", () => {
-  // The route checks the flag itself rather than trusting the client's copy.
-  assert.match(SERVER, /route\.startsWith\("\/api\/tarot\/"\)[\s\S]{0,200}featureEnabled\("tarot", process\.env\)/);
-  assert.match(SERVER, /Unknown Orbit endpoint/);
+test("the Tarot routes are not gated on a flag that no longer exists", () => {
+  // This shipped broken for one deploy. featureEnabled() answers false for an
+  // unknown name, so the moment tarot left the registry every /api/tarot/*
+  // route 404'd — the images and the panel went out fine, and nothing could
+  // draw a card. Caught by checking production rather than by reading the diff.
+  const block = SERVER.slice(SERVER.indexOf('route.startsWith("/api/tarot/")'));
+  assert.ok(!/featureEnabled\("tarot"/.test(block.slice(0, 600)),
+    "a graduated feature must not be gated on its removed flag");
+  // The real gate, still in force on every read path.
+  const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
+  assert.match(service, /assertDeckReady/);
 });
 
 test("an incomplete deck could still not be exposed", () => {
