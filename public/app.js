@@ -4473,9 +4473,12 @@ function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
     </div>`;
   }
   if (!card) return "";
-  const rank = Number.isInteger(card.number)
-    ? (card.arcana === "major" ? romanNumeral(card.number) : String(card.number))
-    : "";
+  // Majors take roman numerals, as every printed deck does. Minor pips take
+  // their number, with the ace as "A". Court cards take NOTHING: they are
+  // eleven through fourteen only as an ordering convenience, and printing
+  // "12" above "Knight of Wands" states an internal index as though it were
+  // part of the card.
+  const rank = tarotRankLabel(card);
   const suit = card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana";
   // The face is decorative: every word on it is repeated as real text beside
   // the card, so a screen reader is never asked to read a layout.
@@ -4484,6 +4487,15 @@ function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
     <span class="tarot-card__name">${esc(card.name)}</span>
     <span class="tarot-card__suit">${esc(suit)}</span>
   </div>`;
+}
+
+/** What belongs in the corner of a card face, if anything. */
+function tarotRankLabel(card) {
+  if (!Number.isInteger(card.number)) return "";
+  if (card.arcana === "major") return romanNumeral(card.number);
+  if (card.number === 1) return "A";
+  if (card.number >= 2 && card.number <= 10) return String(card.number);
+  return "";   // Page, Knight, Queen, King — the name is the rank
 }
 
 /** Majors are numbered in roman on every deck anyone has ever printed. */

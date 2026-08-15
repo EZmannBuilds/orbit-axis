@@ -20,6 +20,8 @@ import {
   validateDeck,
 } from "../lib/tarot/deck.js";
 import { FIXTURE_DECK, FIXTURE_DECK_REVIEWED } from "./fixtures/tarot-deck.js";
+import { DRAFT_CARDS, DRAFT_DECK_VERSION } from "../lib/tarot/draft-deck.js";
+import { resolveDeck } from "../lib/tarot/service.js";
 
 /* ── The production gate ──────────────────────────────────────────────────── */
 
@@ -202,4 +204,66 @@ test("cards are found by slug, not by position", () => {
   assert.equal(card?.name, "The Tower");
   assert.equal(cardBySlug(FIXTURE_DECK, "not-a-card"), null);
   assert.equal(cardBySlug(FIXTURE_DECK, null), null);
+});
+
+
+/* ── The draft deck ───────────────────────────────────────────────────────── */
+
+test("the draft deck is a complete, well-formed 78 cards", () => {
+  const result = validateDeck(DRAFT_CARDS);
+  assert.equal(result.ok, true, result.findings.slice(0, 5).join("; "));
+  assert.equal(DRAFT_CARDS.length, FULL_DECK_SIZE);
+  assert.equal(DRAFT_CARDS.filter((c) => c.arcana === "major").length, 22);
+  for (const suit of SUITS) {
+    assert.equal(DRAFT_CARDS.filter((c) => c.suit === suit).length, 14, `${suit} needs fourteen cards`);
+  }
+});
+
+test("every draft card carries a meaning and a prompt that is a question", () => {
+  for (const card of DRAFT_CARDS) {
+    assert.ok(card.upright_meaning.length > 60, `${card.slug}: meaning is too thin to be useful`);
+    assert.ok(card.reflection_prompt.trim().endsWith("?"),
+      `${card.slug}: a reflection prompt should ask something`);
+  }
+});
+
+test("the draft states its provenance instead of claiming originality", () => {
+  for (const card of DRAFT_CARDS) {
+    // "public-domain-derived" is the honest description: the prose is written
+    // for Orbit, the tradition it draws on is Waite-Smith, and both facts are
+    // recorded rather than one being implied.
+    assert.equal(card.provenance.license, "public-domain-derived");
+    assert.match(card.provenance.source, /public domain/i);
+    assert.equal(card.provenance.reviewed, false, `${card.slug} must not claim review`);
+  }
+});
+
+test("the draft deck cannot ship, and says why", () => {
+  // Structurally perfect and still refused, because review has not happened.
+  assert.equal(validateDeck(DRAFT_CARDS).ok, true);
+  const status = deckStatus(DRAFT_CARDS);
+  assert.equal(status.ready, false);
+  assert.equal(status.reason, "unreviewed_deck");
+  // And it is readable where content can be reviewed and argued with.
+  assert.equal(deckStatus(DRAFT_CARDS, { allowUnreviewed: true }).ready, true);
+});
+
+test("production reads the empty deck; everywhere else reads the draft", () => {
+  const production = { VERCEL_ENV: "production", ORBIT_ENVIRONMENT: "production" };
+  const preview = { VERCEL_ENV: "preview", ORBIT_ENVIRONMENT: "preview" };
+
+  assert.equal(resolveDeck({ env: production }).deck.length, 0,
+    "production must never resolve to the draft");
+  assert.equal(resolveDeck({ env: production }).deckVersion, DECK_VERSION);
+
+  assert.equal(resolveDeck({ env: preview }).deck.length, FULL_DECK_SIZE);
+  assert.equal(resolveDeck({ env: preview }).deckVersion, DRAFT_DECK_VERSION);
+  assert.equal(resolveDeck({ env: {} }).deckVersion, DRAFT_DECK_VERSION);
+});
+
+test("the draft draws under its own version, so replacing it changes the draw", () => {
+  // A reader should not be handed the same "today's card" from two different
+  // decks. The version is in the seed, so a replacement is visibly a new draw.
+  assert.notEqual(DRAFT_DECK_VERSION, DECK_VERSION);
+  assert.match(DRAFT_DECK_VERSION, /-draft$/);
 });
