@@ -17,7 +17,8 @@ import { join } from "node:path";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 
 import { featureEnabled, workspaceBlocked } from "../lib/features.js";
-import { DECK_VERSION, PRODUCTION_CARDS, deckStatus } from "../lib/tarot/deck.js";
+import { DECK_VERSION, PRODUCTION_CARDS, deckStatus, validateCard, validateDeck } from "../lib/tarot/deck.js";
+import { FIXTURE_DECK_REVIEWED } from "./fixtures/tarot-deck.js";
 import {
   EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, EXPORT_TAROT_FIELDS,
   auditExportPrivacy, presentExportTarotReading, stripSecrets,
@@ -153,7 +154,13 @@ test("a card's meaning never depends on its artwork", () => {
   // Face down, the card IS the control: a real button with an accessible name,
   // and the artwork inside it aria-hidden. "No reveal button" is about the
   // interface, not about excluding anyone who cannot tap.
-  assert.match(APP, /class="tarot-card o-object tarot-card--down"\s*\n?\s*data-tarot-action="reveal" aria-label="Turn over today's card"/);
+  assert.match(APP, /class="tarot-card o-object tarot-card--down"/);
+  // The label is per card now — "Turn over today's card" for the daily one,
+  // "Turn over What is present" for a card in a spread — so a screen reader is
+  // never told to turn over "the card" when three are on screen.
+  assert.match(APP, /aria-label="\$\{esc\(label\)\}"/);
+  assert.match(APP, /label = "Turn over today's card"/);
+  assert.match(APP, /label: `Turn over \$\{entry\.position\}`/);
   assert.match(APP, /tarot-card__back" aria-hidden="true"/);
   assert.match(APP, /class="tarot-card o-object tarot-card--up" aria-hidden="true"/);
   assert.match(APP, /function tarotMeaningHtml/);
@@ -356,7 +363,7 @@ test("the card is the control; there is no separate reveal button", () => {
   // focus in tab order. Removing the button was a visual decision, not a
   // decision to make the feature pointer-only.
   assert.match(APP, /<button type="button" class="tarot-card o-object tarot-card--down"/);
-  assert.match(APP, /aria-label="Turn over today's card"/);
+  assert.match(APP, /label = "Turn over today's card"/);
 });
 
 test("a swipe across the face-down card reveals it, without stealing the scroll", () => {
@@ -420,4 +427,86 @@ test("the server still accepts an optional question, because the API is public",
   const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
   assert.match(service, /export function validateQuestion/);
   assert.match(service, /MAX_QUESTION_LENGTH/);
+});
+
+
+/* ── Imagery: local back, remote fronts, loaded behind the back ──────────── */
+
+test("a drawn card starts face down too, so nothing is watched loading", () => {
+  // The face-down state is the loading window. A spread that arrived already
+  // revealed would be the one place a reader could watch an image appear.
+  assert.match(APP, /tarotState\.manualRevealed = data\.reading\.cards\.map\(\(\) => false\)/);
+  assert.match(APP, /function revealTarotSpreadCard/);
+  // Turned one at a time, because a three-card reading is a sequence.
+  assert.match(APP, /revealed\[index\] = true/);
+});
+
+test("fronts are requested when the card is known, not when it is revealed", () => {
+  assert.match(APP, /function preloadTarotFronts/);
+  // Both paths: the daily card at load, a spread at draw.
+  const daily = APP.slice(APP.indexOf("async function loadTarotDaily"), APP.indexOf("function renderTarotUnavailable"));
+  assert.match(daily, /preloadTarotFronts\(data\.reading\?\.cards\)/);
+  const draw = APP.slice(APP.indexOf("async function drawTarotSpread"), APP.indexOf("function setTarotFormBusy"));
+  assert.match(draw, /preloadTarotFronts\(data\.reading\?\.cards\)/);
+});
+
+test("a preload can never block or break a reveal", () => {
+  const fn = APP.slice(APP.indexOf("function preloadTarotFronts"));
+  const body = fn.slice(0, fn.indexOf("\n}"));
+  // No await, no promise anyone waits on, no error path that could surface.
+  assert.ok(!/await|then\(|catch\(/.test(body),
+    "preloading must be fire-and-forget, or a slow image delays a card");
+  assert.match(body, /if \(!url\) continue;/, "a deck with no artwork preloads nothing");
+});
+
+test("the back is local and the fronts are not", () => {
+  // The back is on screen for every card before anything else; a network
+  // request for it would put a loading state inside a face-down card.
+  assert.match(APP, /class="tarot-card__back" aria-hidden="true"/);
+  assert.ok(!/tarot-card__back[^>]*src=/.test(APP), "the back is not an <img> from storage");
+  // Fronts come from a server-resolved URL the client never constructs.
+  const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
+  assert.match(deck, /export function imageUrl/);
+  assert.match(deck, /ORBIT_TAROT_IMAGE_BASE_URL/);
+  assert.ok(!/https?:\/\//.test(APP.slice(APP.indexOf("function tarotCardFaceHtml"), APP.indexOf("function preloadTarotFronts"))),
+    "the client must not build a storage URL");
+});
+
+test("a card image is decoration, and its absence is not a failure", () => {
+  assert.match(APP, /class="tarot-card__art" src="\$\{esc\(card\.image\.url\)\}" alt=""/,
+    "empty alt: the meaning is stated in text beside the card");
+  // Dimensions reserve the box so nothing shifts when the bytes land.
+  assert.match(APP, /width="\$\{esc\(String\(card\.image\.width\)\)\}"/);
+  assert.match(APP, /height="\$\{esc\(String\(card\.image\.height\)\)\}"/);
+  // A failed image falls back to the typographic face rather than a broken frame.
+  assert.match(APP, /onerror="this\.closest\('\.tarot-card'\)\.classList\.remove\('tarot-card--art'\)"/);
+  // And a deck with no imagery renders the text face, which is a complete card.
+  assert.match(APP, /if \(card\.image\?\.url\)/);
+});
+
+test("the image contract refuses what would make a card jump or go stale", () => {
+  const base = { slug: "x", name: "X", arcana: "major", suit: null, number: 1,
+    upright_meaning: "m", reflection_prompt: "p?",
+    provenance: { author: "a", license: "l", reviewed: true } };
+  const withImage = (image) => validateCard({ ...base, image });
+
+  // Dimensions are required — they reserve the layout before the bytes land.
+  assert.ok(withImage({ path: "a/b.webp", license: "public-domain" }).length > 0);
+  // And must be 2:3, or the frame and the file disagree.
+  assert.ok(withImage({ path: "a/b.webp", license: "public-domain", width: 600, height: 600 }).length > 0);
+  // A URL in the deck would hardcode the bucket into content.
+  assert.ok(withImage({ path: "https://cdn.example/b.webp", license: "public-domain", width: 600, height: 900 }).length > 0);
+  assert.ok(withImage({ path: "a/b.webp", width: 600, height: 900 }).length > 0, "licence required");
+  // A well-formed block passes.
+  assert.deepEqual(withImage({ path: "waite-smith/1.0.0/x.webp", license: "public-domain", width: 600, height: 900 }), []);
+  // And imagery stays optional: the deck today has none and is still valid.
+  assert.deepEqual(validateCard(base), []);
+});
+
+test("two cards cannot share an image path", () => {
+  // A reused path means overwritten artwork, which a one-year immutable cache
+  // serves stale for up to a year. New artwork is a new path.
+  const image = { path: "waite-smith/1.0.0/same.webp", license: "public-domain", width: 600, height: 900 };
+  const deck = FIXTURE_DECK_REVIEWED.map((c, i) => (i < 2 ? { ...c, image } : c));
+  assert.ok(validateDeck(deck).findings.some((f) => f.includes("image.path")));
 });

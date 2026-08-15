@@ -401,3 +401,27 @@
     outline: 1px solid CanvasText;
   }
 }
+
+/* ── Card artwork ─────────────────────────────────────────────────────────
+   The image fills the 2:3 frame the typographic face already defines. The
+   text stays in the markup underneath it: when the image fails, onerror drops
+   .tarot-card--art and the words are simply there — no swap, no second render,
+   and no broken-image frame. */
+.tarot-card__art {
+  display: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.tarot-card--art { position: relative; padding: 0; }
+.tarot-card--art .tarot-card__art { display: block; }
+/* With artwork present the words are decoration the image already carries, so
+   they are hidden visually — they remain in the DOM only as the fallback the
+   onerror path reveals. Every one of them is repeated as real text beside the
+   card regardless, which is what the accessibility rule actually rests on. */
+.tarot-card--art .tarot-card__rank,
+.tarot-card--art .tarot-card__name,
+.tarot-card--art .tarot-card__suit { display: none; }

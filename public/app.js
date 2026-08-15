@@ -4497,7 +4497,7 @@ function tarotRememberReveal(localDate) {
 }
 
 /** The card face. Typographic, because there is no artwork and none is implied. */
-function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
+function tarotCardFaceHtml(card, { faceDown = false, label = "Turn over today's card", index = null } = {}) {
   if (faceDown) {
     // The card IS the control. No separate reveal button: tapping or swiping
     // the card turns it over, which is what a physical card affords.
@@ -4507,17 +4507,38 @@ function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
     // the interface, not about excluding anyone who cannot tap. The face stays
     // aria-hidden inside it, because the button's own label says what pressing
     // it does and the artwork says nothing a screen reader can use.
+    //
+    // The back is a LOCAL asset. It is the first thing on screen for every
+    // card, so it must not wait on a network request — see [[Tarot Card
+    // Imagery]]. The front loads behind it.
     return `<button type="button" class="tarot-card o-object tarot-card--down"
-        data-tarot-action="reveal" aria-label="Turn over today's card">
+        data-tarot-action="reveal"${index === null ? "" : ` data-tarot-index="${index}"`}
+        aria-label="${esc(label)}">
       <span class="tarot-card__back" aria-hidden="true"></span>
     </button>`;
   }
   if (!card) return "";
-  // Majors take roman numerals, as every printed deck does. Minor pips take
-  // their number, with the ace as "A". Court cards take NOTHING: they are
-  // eleven through fourteen only as an ordering convenience, and printing
-  // "12" above "Knight of Wands" states an internal index as though it were
-  // part of the card.
+
+  // With artwork, the image. Without it, the typographic face. Both are
+  // complete cards — the image is additive, and a card whose artwork never
+  // arrives is not a degraded state.
+  //
+  // width and height are attributes so the 2:3 box is reserved before the
+  // bytes land and nothing shifts when they do. onerror drops the art class
+  // and the text face underneath shows through, rather than leaving a broken
+  // image frame inside the card.
+  if (card.image?.url) {
+    return `<div class="tarot-card o-object tarot-card--up tarot-card--art" aria-hidden="true">
+      <img class="tarot-card__art" src="${esc(card.image.url)}" alt=""
+           width="${esc(String(card.image.width))}" height="${esc(String(card.image.height))}"
+           decoding="async"
+           onerror="this.closest('.tarot-card').classList.remove('tarot-card--art')" />
+      <span class="tarot-card__rank">${esc(tarotRankLabel(card))}</span>
+      <span class="tarot-card__name">${esc(card.name)}</span>
+      <span class="tarot-card__suit">${esc(card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana")}</span>
+    </div>`;
+  }
+
   const rank = tarotRankLabel(card);
   const suit = card.suit ? card.suit.charAt(0).toUpperCase() + card.suit.slice(1) : "Major Arcana";
   // The face is decorative: every word on it is repeated as real text beside
@@ -4527,6 +4548,28 @@ function tarotCardFaceHtml(card, { faceDown = false, position = null } = {}) {
     <span class="tarot-card__name">${esc(card.name)}</span>
     <span class="tarot-card__suit">${esc(suit)}</span>
   </div>`;
+}
+
+/**
+ * Start loading a card's front while its back is on screen.
+ *
+ * The point of showing a back first — on a drawn card as much as on the daily
+ * one — is that the face-down state IS the loading window. The reader is
+ * looking at a card they have not turned over yet, and the bytes arrive during
+ * a moment they were already spending.
+ *
+ * Fire and forget. Nothing waits on this and a failure is silent: the reveal
+ * falls back to the typographic face, which is a complete card. A preload that
+ * could block a reveal would be worse than no preload at all.
+ */
+function preloadTarotFronts(cards) {
+  for (const entry of cards || []) {
+    const url = entry?.card?.image?.url;
+    if (!url) continue;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = url;   // the browser cache is the destination; the object is not kept
+  }
 }
 
 /** What belongs in the corner of a card face, if anything. */
@@ -4626,6 +4669,8 @@ async function loadTarotDaily() {
     const timezone = axisResolveTimezone();
     const data = await get(`/api/tarot/daily?timezone=${encodeURIComponent(timezone)}`);
     tarotState.reading = data.reading;
+    // Known now, turned over later — which is exactly the gap the front loads in.
+    preloadTarotFronts(data.reading?.cards);
     tarotState.status = "ready";
     tarotState.unavailable = null;
     tarotState.revealed = tarotWasRevealed(data.reading?.draw?.local_date);
@@ -4765,6 +4810,12 @@ async function drawTarotSpread(spreadType) {
       timezone: axisResolveTimezone(),
     });
     tarotState.manual = data.reading;
+    preloadTarotFronts(data.reading?.cards);
+    // Drawn cards start FACE DOWN, like the daily one. Turning a card over is
+    // the gesture this surface is built on, and it is also what gives the
+    // artwork time to arrive — a spread that appeared already revealed would
+    // be the one place a reader could watch an image load.
+    tarotState.manualRevealed = data.reading.cards.map(() => false);
     renderTarotManual();
     // The rendered spread states what it is in its own label, so the status
     // line stands down rather than saying it a second time three lines above.
@@ -4821,12 +4872,25 @@ function renderTarotManual() {
       <button type="button" class="o-btn o-btn--utility" data-tarot-action="back-to-daily">Back to today's card</button>
     </div>`;
 
+  const revealed = tarotState.manualRevealed || [];
+  const cardHtml = (entry, i) => revealed[i]
+    ? tarotCardFaceHtml(entry.card)
+    : tarotCardFaceHtml(null, { faceDown: true, index: i, label: `Turn over ${entry.position}` });
+  // The meaning appears with the card, not before it. Printing the
+  // interpretation beside a face-down card would answer the question the
+  // gesture exists to ask.
+  const meaningHtml = (entry, i, opts) => revealed[i]
+    ? tarotMeaningHtml(entry, opts)
+    : `<p class="tarot-meaning__position">${esc(entry.position)}${
+        opts.step ? ` <span class="tarot-meaning__step">· ${esc(opts.step)}</span>` : ""}</p>
+       <p class="u-meta">Tap the card to turn it over.</p>`;
+
   if (!multi) {
     const entry = reading.cards[0];
     spread.innerHTML = `${back}
       <div class="tarot-layout">
-        <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
-        <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false })}</div>
+        <div class="tarot-card-slot">${cardHtml(entry, 0)}</div>
+        <div class="tarot-reading">${meaningHtml(entry, 0, { headingLevel: 3, showPosition: false })}</div>
       </div>`;
     renderTarotManualSave();
     return;
@@ -4842,8 +4906,8 @@ function renderTarotManual() {
         aria-label="Three cards, in reading order">
       ${reading.cards.map((entry, i) => `<li class="tarot-carousel__item" id="tarot-card-${i}">
           <p class="tarot-carousel__step" aria-hidden="true">${i + 1} of ${reading.cards.length}</p>
-          <div class="tarot-card-slot">${tarotCardFaceHtml(entry.card)}</div>
-          <div class="tarot-reading">${tarotMeaningHtml(entry, { headingLevel: 4, showPosition: true, step: `${i + 1} of ${reading.cards.length}` })}</div>
+          <div class="tarot-card-slot">${cardHtml(entry, i)}</div>
+          <div class="tarot-reading">${meaningHtml(entry, i, { headingLevel: 4, showPosition: true, step: `${i + 1} of ${reading.cards.length}` })}</div>
         </li>`).join("")}
     </ol>
     <div class="tarot-carousel__dots" role="group" aria-label="Go to card">
@@ -4889,6 +4953,25 @@ function wireTarotCarousel() {
   }
 }
 
+/**
+ * Turn over one card of a drawn spread.
+ *
+ * Per card rather than all at once: a three-card reading is a sequence, and
+ * turning them in order is how the sequence is read. It also means each card's
+ * front has until the reader reaches it to arrive.
+ */
+function revealTarotSpreadCard(index) {
+  const revealed = tarotState.manualRevealed;
+  if (!revealed || revealed[index]) return;
+  revealed[index] = true;
+  renderTarotManual();
+  const entry = tarotState.manual?.cards?.[index];
+  if (entry) tarotSay(`${entry.position}: ${entry.card.name}.`);
+  // Focus lands on the card's name, which is what just appeared.
+  const items = document.querySelectorAll("#tarot-spread .tarot-meaning__name");
+  (items[index] || items[0])?.focus?.({ preventScroll: true });
+}
+
 /** Respect the system preference rather than animating and apologising. */
 function prefersReducedMotion() {
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
@@ -4911,6 +4994,7 @@ function backToTarotDaily() {
   if (spread) { spread.hidden = true; spread.innerHTML = ""; }
   if (save) save.innerHTML = "";
   tarotState.manual = null;
+  tarotState.manualRevealed = null;
   tarotState.saved = false;
   setTarotDailyHidden(false);
   renderTarotDaily();
@@ -4983,7 +5067,12 @@ function wireTarot() {
     if (!trigger) return;
     const action = trigger.dataset.tarotAction;
 
-    if (action === "reveal") { revealTarotDaily(); return; }
+    if (action === "reveal") {
+      const index = trigger.dataset.tarotIndex;
+      if (index === undefined) revealTarotDaily();
+      else revealTarotSpreadCard(Number(index));
+      return;
+    }
     if (action === "back-to-daily") { backToTarotDaily(); return; }
     if (action === "retry-daily") { loadTarotDaily(); return; }
     if (action === "retry-draw") { drawTarotSpread(trigger.dataset.spread || "one_card"); return; }
@@ -5011,7 +5100,11 @@ function wireTarot() {
     const dy = Math.abs(event.clientY - y);
     // A horizontal movement of any real distance counts. A tap (dx and dy both
     // tiny) is left to the click handler so a reveal never fires twice.
-    if (dx > 24 && dx > dy && card.isConnected) revealTarotDaily();
+    if (dx > 24 && dx > dy && card.isConnected) {
+      const index = card.dataset.tarotIndex;
+      if (index === undefined) revealTarotDaily();
+      else revealTarotSpreadCard(Number(index));
+    }
   });
 
   const form = $("#tarot-form");
