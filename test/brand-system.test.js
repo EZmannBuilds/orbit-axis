@@ -74,6 +74,7 @@ test("the native icon is opaque RGB and derived from Pure Orbit", () => {
 test("brand motion is finite and withdraws under reduced motion", () => {
   const css = read("public", "styles", "orbit-mark.css");
   const loader = read("public", "brand", "orbit-axis-loader.svg");
+  const lineLoader = read("public", "brand", "orbit-axis-line-loader.svg");
   assert.match(css, /orbit-mark-arrive var\(--duration-brand-reveal\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
   assert.ok(!/infinite/.test(css), "identity reveal motion may not loop indefinitely");
@@ -83,6 +84,12 @@ test("brand motion is finite and withdraws under reduced motion", () => {
     "the satellite travels around the orbit center");
   assert.match(loader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
     "the functional loader becomes static when reduced motion is requested");
+  assert.match(lineLoader, /animation: orbit-line-loader-sweep 1\.4s linear infinite/,
+    "the alternate loader sweeps only the axis continuously");
+  assert.match(lineLoader, /transform-origin: 64px 64px/,
+    "the alternate axis sweeps around the observer");
+  assert.match(lineLoader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
+    "the alternate loader becomes static when reduced motion is requested");
 });
 
 test("the desktop lockup does not become a sixth row in the mobile tab bar", () => {
