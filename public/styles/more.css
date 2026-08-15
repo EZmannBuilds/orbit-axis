@@ -348,3 +348,27 @@
     padding: var(--space-sm) var(--space-md);
   }
 }
+
+/* ── Sky notification settings ────────────────────────────────────────────
+   Divided rows, like every other collection. The example line under each
+   choice is the actual copy that would arrive, so the reader is choosing a
+   notification rather than a category name. */
+.notif-kinds { border: 0; margin: 0; padding: 0; display: grid; }
+.notif-kinds legend { padding: 0; margin-bottom: var(--space-xs); }
+
+.notif-kind {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  min-height: 44px;
+  padding: var(--space-sm) 0;
+  cursor: pointer;
+}
+.notif-kind + .notif-kind { border-top: var(--border-width) solid var(--color-border); }
+.notif-kind input { margin-top: 2px; flex: none; width: 20px; height: 20px; }
+.notif-kind__text { display: grid; gap: 2px; min-width: 0; }
+.notif-kind__name { font-weight: 600; }
+.notif-kind__example { color: var(--color-muted); font-size: 0.9rem; }
+
+.notif-status:empty { display: none; }
+.notif-status { margin: var(--space-sm) 0 0; color: var(--color-secondary); }

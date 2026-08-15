@@ -862,6 +862,61 @@
               </div>
             </section>
 
+            <!-- Sky notifications. Everything off by default: a notification
+                 nobody asked for is the failure mode, so the reader ticks what
+                 they want and the permission prompt happens at that moment
+                 rather than at launch. -->
+            <section class="more-section" id="settings-notifications" aria-labelledby="settings-notifications-title">
+              <h2 class="u-subtitle" id="settings-notifications-title">Sky notifications</h2>
+              <p class="u-caption">Orbit can tell you when the sky does something —
+                a full moon, a planet turning retrograde, a change of sign. Nothing
+                is scheduled until you choose an event below.</p>
+
+              <div class="o-group">
+                <fieldset class="notif-kinds">
+                  <legend class="setting-row__label">Tell me about</legend>
+
+                  <label class="notif-kind">
+                    <input type="checkbox" id="notif-moon" value="moon" />
+                    <span class="notif-kind__text">
+                      <span class="notif-kind__name">Full and new moons</span>
+                      <span class="notif-kind__example">Full moon tonight at 11:04</span>
+                    </span>
+                  </label>
+
+                  <label class="notif-kind">
+                    <input type="checkbox" id="notif-stations" value="stations" />
+                    <span class="notif-kind__text">
+                      <span class="notif-kind__name">Retrogrades</span>
+                      <span class="notif-kind__example">Mercury stations direct today</span>
+                    </span>
+                  </label>
+
+                  <label class="notif-kind">
+                    <input type="checkbox" id="notif-ingresses" value="ingresses" />
+                    <span class="notif-kind__text">
+                      <span class="notif-kind__name">Sign changes</span>
+                      <span class="notif-kind__example">Venus enters Libra tomorrow morning</span>
+                    </span>
+                  </label>
+                </fieldset>
+
+                <div class="setting-row">
+                  <span class="setting-row__label" id="notif-advanced-label">Detail</span>
+                  <div class="o-segment" id="notif-advanced" role="group" aria-labelledby="notif-advanced-label">
+                    <button type="button" data-value="off" aria-pressed="true">Just the event</button>
+                    <button type="button" data-value="on" aria-pressed="false">Add my chart</button>
+                  </div>
+                </div>
+                <p class="setting-row__help">Adding your chart puts the event in
+                  context — <em>Full moon tonight at 11:04, in your seventh house</em>.
+                  It needs a saved chart with a birth time, and changes nothing about
+                  when a notification arrives.</p>
+
+                <p class="notif-status" id="notif-status" role="status" aria-live="polite"></p>
+              </div>
+            </section>
+
             <section class="more-section" aria-labelledby="settings-about-title">
               <h2 class="o-group__label" id="settings-about-title">About Orbit Axis</h2>
               <div class="o-group">

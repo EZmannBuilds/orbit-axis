@@ -8,6 +8,7 @@
    ========================================================================== */
 
 import { renderMoonSVG } from "./moon-phase.js";
+import * as SkyNotifications from "./sky-notifications.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
   relationshipDisplay, chartInitials, validateName,
@@ -1894,6 +1895,7 @@ function renderRoute() {
     if (kind === "tarot") axisLoadTarotHistory();
     else axisLoadHistory($("#history-scope")?.value || "active");
   }
+  if (id === "settings") { wireNotificationSettings(); syncNotificationSettings(); }
   if (id === "tarot") enterTarot();
   // Today's two views. The switch is rendered in both panels, so whichever is
   // on screen has to say where you are — and it stays hidden entirely while
@@ -4876,6 +4878,123 @@ function syncTodayViews(currentId) {
   }
 }
 
+
+/* ── Sky notifications ────────────────────────────────────────────────────
+   The settings surface, and the refresh that runs when the app opens.
+
+   Everything is off until the reader ticks something, and the permission
+   prompt happens at that moment — never at launch, where it would ask for
+   something before anyone knows what it is for, and where iOS would spend the
+   one chance it gives to ask. */
+
+let notificationsWired = false;
+
+function wireNotificationSettings() {
+  if (notificationsWired) return;
+  notificationsWired = true;
+
+  const boxes = () => [...document.querySelectorAll(".notif-kinds input[type=checkbox]")];
+
+  const chosenKinds = () => boxes().filter((b) => b.checked).map((b) => b.value);
+
+  const apply = async () => {
+    const kinds = chosenKinds();
+    const advanced = document.querySelector('#notif-advanced button[aria-pressed="true"]')?.dataset.value === "on";
+
+    // Nothing ticked means off, and off has to mean the phone goes quiet —
+    // cancelling what is pending, not merely declining to add more.
+    if (kinds.length === 0) {
+      const { cancelled } = await SkyNotifications.disable();
+      notifStatus(cancelled > 0
+        ? "Notifications off. Anything already scheduled has been cancelled."
+        : "Notifications off.");
+      return;
+    }
+
+    const result = await SkyNotifications.enable(kinds, { advanced, apiUrl });
+    if (result.ok) {
+      const { scheduled } = await SkyNotifications.refreshSchedule({ apiUrl });
+      notifStatus(scheduled > 0
+        ? `Scheduled. The next ${scheduled === 1 ? "event is" : `${scheduled} events are`} on your phone.`
+        : "Saved. Nothing is coming up in the next month.");
+      return;
+    }
+
+    // Every failure here is stated plainly and puts the controls back where
+    // they actually are. A switch left looking "on" after the system said no
+    // is a promise the app cannot keep.
+    if (result.permission === "denied") {
+      syncNotificationSettings();
+      notifStatus("iOS is set to not allow notifications from Orbit. You can change that in Settings.");
+    } else if (result.permission === "unavailable") {
+      notifStatus("Saved. Notifications are delivered by the Orbit app on your phone — this browser cannot schedule them.");
+    } else {
+      notifStatus("Saved.");
+    }
+  };
+
+  for (const box of boxes()) box.addEventListener("change", apply);
+
+  $("#notif-advanced")?.addEventListener("click", (event) => {
+    const button = event.target.closest("button");
+    if (!button) return;
+    for (const b of document.querySelectorAll("#notif-advanced button")) {
+      b.setAttribute("aria-pressed", String(b === button));
+    }
+    apply();
+  });
+}
+
+function notifStatus(message) {
+  const el = $("#notif-status");
+  if (el) el.textContent = message || "";
+}
+
+/** Put the controls where the stored settings actually are. */
+function syncNotificationSettings() {
+  const settings = SkyNotifications.readSettings();
+  for (const box of document.querySelectorAll(".notif-kinds input[type=checkbox]")) {
+    box.checked = settings.enabled && settings.kinds.includes(box.value);
+  }
+  for (const button of document.querySelectorAll("#notif-advanced button")) {
+    button.setAttribute("aria-pressed", String(button.dataset.value === (settings.advanced ? "on" : "off")));
+  }
+}
+
+/**
+ * Reschedule the rolling window, quietly, when the app opens.
+ *
+ * Events beyond about a month are not scheduled, so the window has to be
+ * topped up — and an event recomputed today may sit a second or two from where
+ * it did last week, which is why notification ids are stable to the minute.
+ *
+ * Nothing is awaited by the caller and no failure is surfaced: a reader who is
+ * offline, or has denied permission, or is in a browser, should notice nothing.
+ */
+function refreshSkyNotifications() {
+  // No empty catch. A silent `.catch(() => {})` is what once swallowed a sky
+  // failure on Home, and a test guards against the pattern returning — rightly,
+  // because "we decided not to look" is indistinguishable from "nothing went
+  // wrong" six months later.
+  //
+  // refreshSchedule does not reject: every failure inside it resolves to a
+  // named reason instead. So the outcome is READ rather than discarded, and a
+  // reason worth knowing about is logged where a developer will find it. The
+  // reader is still told nothing, which is correct — this is a background
+  // courtesy, not a task they are waiting on.
+  SkyNotifications.refreshSchedule({ apiUrl }).then(noteNotificationRefresh, noteNotificationRefresh);
+}
+
+/** Record what a background reschedule did. Never shown to the reader. */
+function noteNotificationRefresh(result) {
+  const reason = result?.reason;
+  // "disabled" and "nothing_upcoming" are ordinary. The rest are worth a line
+  // in the console for anyone debugging why a phone went quiet.
+  if (reason && reason !== "disabled" && reason !== "nothing_upcoming") {
+    console.debug("[orbit] sky notifications not rescheduled:", reason);
+  }
+}
+
 /* ── Toasts ────────────────────────────────────────────────────────────── */
 function toast(message) {
   const el = document.createElement("div");
@@ -5033,6 +5152,11 @@ async function boot() {
   await loadFeatureFlags();
   await loadFeaturePanels();
   buildRail();
+  // Top up the rolling window. Deliberately not awaited: events beyond about a
+  // month are not scheduled yet, so this has to run on open — but nobody
+  // should wait on a notification refresh to see their chart, and every
+  // failure inside it is already silent.
+  refreshSkyNotifications();
   // Icons are declared with data-icon in the markup and painted here, once the
   // feature panels have been injected so their icons are covered too.
   hydrateIcons();
