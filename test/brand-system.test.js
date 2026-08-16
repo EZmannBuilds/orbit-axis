@@ -44,8 +44,12 @@ test("the Instrument motif is technical and the Pure Orbit mark is universal", (
   const app = read("public", "app.js");
   assert.ok((html.match(/\/brand\/orbit-axis-mark\.svg/g) || []).length >= 2,
     "shell and auth reuse the primary mark");
-  assert.equal((html.match(/\/brand\/orbit-axis-loader\.svg/g) || []).length, 1,
-    "startup uses the functional Pure Orbit loader");
+  assert.equal((html.match(/\/brand\/orbit-logo-motion-orbital-relay\.svg/g) || []).length, 1,
+    "startup uses the promoted Orbital Relay loader");
+  assert.equal((app.match(/\/brand\/orbit-logo-motion-signal-lock\.svg/g) || []).length, 1,
+    "authentication uses Signal Lock while acquiring a session");
+  assert.equal((app.match(/\/brand\/orbit-logo-motion-deep-scan\.svg/g) || []).length, 1,
+    "Tarot uses Deep Scan while drawing cards");
   assert.equal((app.match(/\/brand\/orbit-axis-instrument\.svg/g) || []).length, 1,
     "the technical motif has one deliberate app placement");
   assert.ok(!html.includes("rail__orb"), "the retired ring-and-dot mark is gone");
@@ -73,22 +77,24 @@ test("the native icon is opaque RGB and derived from Pure Orbit", () => {
 
 test("brand motion is finite and withdraws under reduced motion", () => {
   const css = read("public", "styles", "orbit-mark.css");
-  const loader = read("public", "brand", "orbit-axis-loader.svg");
+  const loader = read("public", "brand", "orbit-logo-motion-orbital-relay.svg");
   assert.match(css, /orbit-mark-arrive var\(--duration-brand-reveal\)/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
   assert.ok(!/infinite/.test(css), "identity reveal motion may not loop indefinitely");
-  assert.match(loader, /class="orbit-loader__moving-group"[\s\S]*<path d="M37 115 91 13"[\s\S]*<circle cx="89" cy="40"/,
-    "the canonical loader moves the axis and orbital point as one group");
-  assert.match(loader, /animation: orbit-loader-sweep 1\.4s linear infinite/,
-    "the axis and point sweep continuously at a constant rate");
+  assert.match(loader, /class="relay__phase"[\s\S]*class="relay__signal"[\s\S]*class="relay__satellite"/,
+    "the promoted loader combines orbit phase, signal transit, and satellite motion");
+  assert.match(loader, /animation: relay-spin 3\.2s linear infinite/,
+    "the orbital phase loops continuously");
   assert.match(loader, /transform-origin: 64px 64px/,
-    "the moving group sweeps around the observer");
+    "the relay layers move around the observer");
   assert.match(loader, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
     "the functional loader becomes static when reduced motion is requested");
 });
 
-test("logo motion studies preserve the mark and withdraw under reduced motion", () => {
+test("promoted logo motion preserves the mark and withdraws under reduced motion", () => {
   const html = read("public", "index.html");
+  const app = read("public", "app.js");
+  const css = read("public", "styles", "orbit-mark.css");
   const studies = ["signal-lock", "orbital-relay", "deep-scan"];
 
   for (const name of studies) {
@@ -103,8 +109,13 @@ test("logo motion studies preserve the mark and withdraw under reduced motion", 
     assert.match(svg, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
       `${name} becomes a static mark when reduced motion is requested`);
     assert.ok((svg.match(/animation:/g) || []).length >= 4, `${name} is a layered motion system`);
-    assert.ok(!html.includes(`orbit-logo-motion-${name}.svg`), `${name} remains a study until it is selected`);
   }
+
+  assert.match(html, /class="orbit-loader orbit-motion-mark" src="\/brand\/orbit-logo-motion-orbital-relay\.svg"/);
+  assert.match(app, /class="auth-pending__mark orbit-motion-mark" src="\/brand\/orbit-logo-motion-signal-lock\.svg"/);
+  assert.match(app, /class="tarot-card-loader__mark orbit-motion-mark"[\s\S]{0,100}orbit-logo-motion-deep-scan\.svg/);
+  assert.match(css, /:root\[data-motion="reduced"\] \.orbit-motion-mark[\s\S]{0,100}orbit-axis-mark\.svg/,
+    "the in-app reduced-motion setting swaps every animated image to the static mark");
 });
 
 test("the desktop lockup does not become a sixth row in the mobile tab bar", () => {

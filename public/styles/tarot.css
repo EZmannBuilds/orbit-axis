@@ -124,12 +124,24 @@
       transparent calc(50% + 0.5px));
 }
 
-.tarot-card-shimmer {
+.tarot-card-loader {
   aspect-ratio: 7 / 12;
   width: 100%;
   max-width: 200px;
-  /* Matches the card it stands in for, or the corners visibly change on load. */
+  display: grid;
+  place-items: center;
+  overflow: hidden;
   border-radius: 9px;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(74, 40, 184, 0.3), transparent 58%),
+    #080a12;
+  border: 1px solid rgba(185, 167, 255, 0.22);
+}
+
+.tarot-card-loader__mark {
+  display: block;
+  width: min(62%, 112px);
+  height: auto;
 }
 
 /* ── The reveal ────────────────────────────────────────────────────────────
@@ -488,13 +500,13 @@
    for, not the paragraph under it. */
 .tarot-card-slot { display: flex; justify-content: center; }
 .tarot-card,
-.tarot-card-shimmer { margin-inline: auto; }
+.tarot-card-loader { margin-inline: auto; }
 
 /* Above the phone width the card and its meaning sit side by side, and there
    the card belongs beside its text rather than adrift in a wide column. */
 @media (min-width: 768px) {
   .tarot-card-slot { justify-content: flex-start; }
-  .tarot-card, .tarot-card-shimmer { margin-inline: 0; }
+  .tarot-card, .tarot-card-loader { margin-inline: 0; }
 }
 
 /* The carousel centres its cards too, and each item's text is centred under

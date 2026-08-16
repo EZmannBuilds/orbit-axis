@@ -32,6 +32,13 @@
   flex: none;
 }
 
+/* Animated SVGs honor the OS preference internally. Orbit's own Motion toggle
+   cannot cross an <img> document boundary, so it swaps the source visually to
+   the canonical static mark instead. */
+:root[data-motion="reduced"] .orbit-motion-mark {
+  content: url("/brand/orbit-axis-mark.svg");
+}
+
 .brand-wordmark,
 .rail__wordmark {
   color: var(--color-primary);
@@ -89,6 +96,6 @@
 }
 
 @media (forced-colors: active) {
-  .orbit-mark, .orbit-loader, .orbit-instrument { forced-color-adjust: none; }
+  .orbit-mark, .orbit-loader, .orbit-motion-mark, .orbit-instrument { forced-color-adjust: none; }
   .brand-wordmark, .rail__wordmark { color: CanvasText; }
 }

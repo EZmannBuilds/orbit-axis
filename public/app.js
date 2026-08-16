@@ -2320,7 +2320,11 @@ function wireAuth() {
     const message = $("#auth-message");
     submitting = true;
     if (submitButton) submitButton.disabled = true;
-    message.textContent = mode === "signup" ? "Creating account…" : "Signing in…";
+    const pendingLabel = mode === "signup" ? "Creating account…" : "Signing in…";
+    message.innerHTML = `<span class="auth-pending">
+      <img class="auth-pending__mark orbit-motion-mark" src="/brand/orbit-logo-motion-signal-lock.svg" alt="" />
+      <span>${pendingLabel}</span>
+    </span>`;
     try {
       const payload = {
         email: $("#auth-email").value,
@@ -4768,6 +4772,13 @@ function tarotSay(message, { assertive = false } = {}) {
   el.hidden = !message;
 }
 
+function tarotLoadingCardHtml() {
+  return `<div class="tarot-card-loader" aria-hidden="true">
+    <img class="tarot-card-loader__mark orbit-motion-mark"
+         src="/brand/orbit-logo-motion-deep-scan.svg" alt="" />
+  </div>`;
+}
+
 /* ── Daily card ─────────────────────────────────────────────────────────── */
 
 async function loadTarotDaily() {
@@ -4777,9 +4788,9 @@ async function loadTarotDaily() {
 
   tarotState.status = "loading";
   tarotSay("Loading today's card…");
-  // A shimmer rather than an empty bordered shell — an empty card outline that
-  // may never fill is a promise the page might not keep.
-  slot.innerHTML = `<div class="axis-shimmer tarot-card-shimmer"></div>`;
+  // Deep Scan makes the draw feel deliberate without pretending the result is
+  // already known. The live status next to it carries the actual progress.
+  slot.innerHTML = tarotLoadingCardHtml();
   reading.innerHTML = "";
 
   try {
@@ -4931,7 +4942,7 @@ async function drawTarotSpread(spreadType) {
     spread.hidden = false;
     const count = spreadType === "three_card" ? 3 : 1;
     spread.innerHTML = `<div class="tarot-spread__loading">${Array.from({ length: count },
-      () => `<div class="axis-shimmer tarot-card-shimmer"></div>`).join("")}</div>`;
+      () => tarotLoadingCardHtml()).join("")}</div>`;
   }
   tarotSay(spreadType === "three_card" ? "Drawing three cards…" : "Drawing a card…");
   setTarotFormBusy(true);

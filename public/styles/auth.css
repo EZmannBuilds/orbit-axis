@@ -161,6 +161,20 @@
   min-width: 0;
 }
 
+.auth-pending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.auth-pending__mark {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
 /* What is collected and why, before it is asked for — now behind a summary.
    Still ahead of the submit button, still in full, but no longer the largest
    element on a card whose headline had fallen below the fold. */

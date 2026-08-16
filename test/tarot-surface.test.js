@@ -744,6 +744,11 @@ test("the card takes a printed-card corner, not a UI tile corner", () => {
   // scan's own white corners standing proud of the plate's printed curve.
   assert.match(css, /--tarot-radius: 9px/);
   assert.ok(!/border-radius: var\(--radius-lg\)/.test(css));
-  // The shimmer matches, or the corners visibly change on load.
-  assert.match(css, /\.tarot-card-shimmer \{[\s\S]{0,300}border-radius: 9px/);
+  // The Deep Scan loader matches, or the corners visibly change on load.
+  assert.match(css, /\.tarot-card-loader \{[\s\S]{0,400}border-radius: 9px/);
+  assert.match(APP, /function tarotLoadingCardHtml\(\)[\s\S]{0,300}orbit-logo-motion-deep-scan\.svg/);
+  assert.match(APP, /slot\.innerHTML = tarotLoadingCardHtml\(\)/,
+    "the daily draw uses the promoted Deep Scan state");
+  assert.match(APP, /Array\.from\(\{ length: count \}[\s\S]{0,120}tarotLoadingCardHtml\(\)/,
+    "manual spreads use one Deep Scan state per card being drawn");
 });
