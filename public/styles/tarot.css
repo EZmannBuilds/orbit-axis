@@ -93,9 +93,23 @@
 /* The back is one local Orbit asset: it appears before every front, so it must
    never wait on Storage. Its instrument pattern is 180-degree symmetric — a
    reversed draw cannot be identified before the card is turned. */
+@keyframes tarot-card-back-breathe {
+  0%, 100% { background-size: 100% 100%; background-position: 50% 50%; }
+  50% { background-size: 101.6% 101.6%; background-position: 50% 49.7%; }
+}
+
+@keyframes tarot-card-back-light {
+  0%, 18% { opacity: 0; transform: translateX(-28%); }
+  38% { opacity: 0.12; }
+  58% { opacity: 0; transform: translateX(28%); }
+  100% { opacity: 0; transform: translateX(28%); }
+}
+
 .tarot-card--down {
   display: grid;
   place-items: center;
+  position: relative;
+  overflow: hidden;
   /* It is a <button> now, so the UA's own chrome has to go before the card
      reads as a card. Everything else about it — the border, the 2:3, the one
      object shadow — is unchanged. */
@@ -108,6 +122,22 @@
      get past the card. */
   touch-action: pan-y;
   background: #080a12 url("/brand/orbit-tarot-card-back.svg") center / cover no-repeat;
+  animation: tarot-card-back-breathe 18s ease-in-out infinite;
+}
+
+.tarot-card--down::after {
+  content: "";
+  position: absolute;
+  inset: -20% -45%;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(110deg,
+    transparent 39%,
+    rgba(185, 167, 255, 0.1) 48%,
+    rgba(244, 242, 250, 0.08) 51%,
+    transparent 61%);
+  opacity: 0;
+  animation: tarot-card-back-light 18s ease-in-out infinite;
 }
 .tarot-card__back {
   display: none;
@@ -162,8 +192,15 @@
    revealed, the status line still announces it, and nothing about the
    feedback is lost. Only the movement goes. */
 @media (prefers-reduced-motion: reduce) {
-  .tarot-card--up { animation: none; }
+  .tarot-card--up,
+  .tarot-card--down,
+  .tarot-card--down::after { animation: none; }
+  .tarot-card--down::after { display: none; }
 }
+
+:root[data-motion="reduced"] .tarot-card--down,
+:root[data-motion="reduced"] .tarot-card--down::after { animation: none; }
+:root[data-motion="reduced"] .tarot-card--down::after { display: none; }
 
 /* ── Meaning ───────────────────────────────────────────────────────────── */
 .tarot-meaning { display: grid; gap: var(--space-xs); }

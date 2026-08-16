@@ -203,10 +203,24 @@ test("the card is the one object allowed a shadow", () => {
 
 test("reduced motion shows the final state without losing feedback", () => {
   const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,200}animation: none/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]{0,300}\.tarot-card--down::after \{ animation: none; \}/);
+  assert.match(css, /:root\[data-motion="reduced"\] \.tarot-card--down,[\s\S]{0,180}animation: none/,
+    "Orbit's own reduced-motion setting stops the card back too");
   // The reveal is still announced, so the state change survives the animation
   // being removed.
   assert.match(APP, /tarotSay\(name \? `Today's card is \$\{name\}\.`/);
+});
+
+test("the card back moves slowly enough to remain an object, not a loading state", () => {
+  const css = readFileSync(join(REPO_ROOT, "public", "styles", "tarot.css"), "utf8");
+  assert.match(css, /@keyframes tarot-card-back-breathe/);
+  assert.match(css, /@keyframes tarot-card-back-light/);
+  assert.match(css, /animation: tarot-card-back-breathe 18s ease-in-out infinite/);
+  assert.match(css, /animation: tarot-card-back-light 18s ease-in-out infinite/);
+  assert.match(css, /background-size: 101\.6% 101\.6%/,
+    "the artwork breathes by less than two percent");
+  assert.match(css, /38% \{ opacity: 0\.12; \}/,
+    "the passing light never becomes an opaque gloss");
 });
 
 test("forced colors keeps the card an object", () => {
