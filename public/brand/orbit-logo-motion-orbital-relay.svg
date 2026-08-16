@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit orbital relay animation</title>
+  <desc id="desc">Energy travels along the fixed Orbit axis while an orbital point and phase arc circle the observer.</desc>
+  <style>
+    .relay__phase,
+    .relay__satellite,
+    .relay__echo,
+    .relay__observer-wave {
+      transform-box: view-box;
+      transform-origin: 64px 64px;
+    }
+
+    .relay__phase { animation: relay-spin 3.2s linear infinite; }
+    .relay__satellite { animation: relay-spin 3.2s cubic-bezier(.45, .05, .55, .95) infinite; }
+    .relay__echo { animation: relay-spin-reverse 6.4s linear infinite; }
+    .relay__signal { animation: relay-signal 1.6s cubic-bezier(.4, 0, .2, 1) infinite; }
+    .relay__observer-wave { animation: relay-wave 1.6s ease-out infinite; }
+
+    @keyframes relay-spin { to { transform: rotate(360deg); } }
+    @keyframes relay-spin-reverse { to { transform: rotate(-360deg); } }
+    @keyframes relay-signal {
+      from { stroke-dashoffset: 132; opacity: .15; }
+      28%, 72% { opacity: 1; }
+      to { stroke-dashoffset: 0; opacity: .15; }
+    }
+    @keyframes relay-wave {
+      0% { opacity: .75; transform: scale(.7); }
+      65%, 100% { opacity: 0; transform: scale(2.2); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .relay__phase,
+      .relay__satellite,
+      .relay__echo,
+      .relay__signal,
+      .relay__observer-wave { animation: none; }
+      .relay__phase, .relay__echo, .relay__signal, .relay__observer-wave { display: none; }
+      .relay__orbit-base { opacity: 1; }
+    }
+  </style>
+
+  <circle class="relay__echo" cx="64" cy="64" r="47" fill="none" stroke="#b9a7ff" stroke-width="1.5" stroke-dasharray="2 12" opacity=".34"/>
+  <circle class="relay__orbit-base" cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8" opacity=".48"/>
+  <circle class="relay__phase" cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8" stroke-linecap="round" stroke-dasharray="48 172"/>
+  <path d="M37 115 91 13" fill="none" stroke="#4a28b8" stroke-width="7" stroke-linecap="round"/>
+  <path class="relay__signal" d="M37 115 91 13" fill="none" stroke="#b9a7ff" stroke-width="3" stroke-linecap="round" stroke-dasharray="18 114"/>
+  <g class="relay__satellite">
+    <circle cx="89" cy="40" r="11" fill="#7657e8" opacity=".16"/>
+    <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+    <circle cx="91" cy="38" r="2" fill="#f4f2fa" opacity=".8"/>
+  </g>
+  <circle class="relay__observer-wave" cx="64" cy="64" r="8" fill="none" stroke="#b9a7ff" stroke-width="2"/>
+  <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit deep scan animation</title>
+  <desc id="desc">A technical scanner sweeps over the fixed Orbit mark, illuminating its orbital point and measurement field.</desc>
+  <style>
+    .scan__ticks,
+    .scan__sweep,
+    .scan__reticle,
+    .scan__target-halo {
+      transform-box: view-box;
+      transform-origin: 64px 64px;
+    }
+
+    .scan__ticks { animation: scan-ticks 12s linear infinite; }
+    .scan__sweep { animation: scan-sweep 4s cubic-bezier(.6, 0, .35, 1) infinite; }
+    .scan__reticle { animation: scan-reticle 4s ease-in-out infinite; }
+    .scan__target { animation: scan-target 4s ease-out infinite; }
+    .scan__target-halo { transform-origin: 89px 40px; animation: scan-halo 4s ease-out infinite; }
+
+    @keyframes scan-ticks { to { transform: rotate(-360deg); } }
+    @keyframes scan-sweep {
+      0% { opacity: .18; transform: rotate(-90deg); }
+      8% { opacity: .7; }
+      68% { opacity: .85; transform: rotate(270deg); }
+      82%, 100% { opacity: .18; transform: rotate(270deg); }
+    }
+    @keyframes scan-reticle {
+      0%, 20%, 100% { opacity: .2; transform: scale(.88) rotate(0); }
+      42%, 70% { opacity: .75; transform: scale(1) rotate(90deg); }
+    }
+    @keyframes scan-target {
+      0%, 21%, 100% { fill: #7657e8; }
+      28%, 40% { fill: #f4f2fa; }
+      52%, 88% { fill: #b9a7ff; }
+    }
+    @keyframes scan-halo {
+      0%, 24% { opacity: 0; transform: scale(.6); }
+      31% { opacity: .9; transform: scale(1); }
+      48%, 100% { opacity: 0; transform: scale(2.4); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .scan__ticks,
+      .scan__sweep,
+      .scan__reticle,
+      .scan__target,
+      .scan__target-halo { animation: none; }
+      .scan__ticks, .scan__sweep, .scan__reticle, .scan__target-halo { display: none; }
+      .scan__target { fill: #b9a7ff; }
+    }
+  </style>
+
+  <circle class="scan__ticks" cx="64" cy="64" r="49" fill="none" stroke="#b9a7ff" stroke-width="2" stroke-dasharray="2 7.6" opacity=".4"/>
+  <circle cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8"/>
+  <path d="M37 115 91 13" fill="none" stroke="#7657e8" stroke-width="7" stroke-linecap="round"/>
+  <g class="scan__sweep">
+    <path d="M64 64 47 17 A50 50 0 0 1 81 17 Z" fill="#7657e8" opacity=".1"/>
+    <path d="M64 64V14" fill="none" stroke="#b9a7ff" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="64" cy="14" r="3" fill="#f4f2fa"/>
+  </g>
+  <g class="scan__reticle" fill="none" stroke="#b9a7ff" stroke-width="1.5" opacity=".7">
+    <circle cx="64" cy="64" r="13" stroke-dasharray="10 6"/>
+    <path d="M64 47v6m0 22v6M47 64h6m22 0h6"/>
+  </g>
+  <circle class="scan__target-halo" cx="89" cy="40" r="9" fill="none" stroke="#b9a7ff" stroke-width="2"/>
+  <circle class="scan__target" cx="89" cy="40" r="8" fill="#b9a7ff"/>
+  <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+</svg>

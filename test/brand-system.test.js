@@ -87,6 +87,26 @@ test("brand motion is finite and withdraws under reduced motion", () => {
     "the functional loader becomes static when reduced motion is requested");
 });
 
+test("logo motion studies preserve the mark and withdraw under reduced motion", () => {
+  const html = read("public", "index.html");
+  const studies = ["signal-lock", "orbital-relay", "deep-scan"];
+
+  for (const name of studies) {
+    const svg = read("public", "brand", `orbit-logo-motion-${name}.svg`);
+    assert.match(svg, /viewBox="0 0 128 128"/);
+    assert.match(svg, /<title id="title">/);
+    assert.match(svg, /<desc id="desc">/);
+    assert.match(svg, /<circle[^>]+cx="64" cy="64" r="35"/, `${name} keeps the primary orbit`);
+    assert.match(svg, /<path[^>]+d="M37 115 91 13"/, `${name} keeps the 62deg axis`);
+    assert.match(svg, /<circle[^>]+cx="64" cy="64" r="7"/, `${name} keeps the observer`);
+    assert.match(svg, /<circle[^>]+cx="89" cy="40" r="8"/, `${name} keeps the orbital point`);
+    assert.match(svg, /@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/,
+      `${name} becomes a static mark when reduced motion is requested`);
+    assert.ok((svg.match(/animation:/g) || []).length >= 4, `${name} is a layered motion system`);
+    assert.ok(!html.includes(`orbit-logo-motion-${name}.svg`), `${name} remains a study until it is selected`);
+  }
+});
+
 test("the desktop lockup does not become a sixth row in the mobile tab bar", () => {
   const app = read("public", "styles", "app.css");
   assert.match(app, /\.rail__brand\.brand-lockup,[^}]+display: none;/,

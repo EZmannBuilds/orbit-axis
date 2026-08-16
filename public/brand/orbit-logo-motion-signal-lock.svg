@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Orbit signal lock animation</title>
+  <desc id="desc">The Orbit axis searches, settles at sixty-two degrees, and confirms the orbital point with a signal pulse.</desc>
+  <style>
+    .lock__orbit-phase,
+    .lock__axis,
+    .lock__point-halo,
+    .lock__observer-wave,
+    .lock__beacon {
+      transform-box: view-box;
+      transform-origin: 64px 64px;
+    }
+
+    .lock__orbit-phase { animation: lock-orbit 4.2s cubic-bezier(.45, 0, .2, 1) infinite; }
+    .lock__axis { animation: lock-axis 4.2s cubic-bezier(.22, 1, .36, 1) infinite; }
+    .lock__point-halo { transform-origin: 89px 40px; animation: lock-point 4.2s ease-out infinite; }
+    .lock__observer-wave { animation: lock-wave 4.2s ease-out infinite; }
+    .lock__beacon { animation: lock-beacon 4.2s ease-in-out infinite; }
+
+    @keyframes lock-orbit {
+      0% { stroke-dasharray: 12 208; stroke-dashoffset: 0; opacity: .22; transform: rotate(-105deg); }
+      28% { stroke-dasharray: 94 126; opacity: 1; transform: rotate(72deg); }
+      46%, 82% { stroke-dasharray: 220 0; stroke-dashoffset: -18; opacity: .78; transform: rotate(96deg); }
+      94%, 100% { stroke-dasharray: 12 208; stroke-dashoffset: -220; opacity: .22; transform: rotate(255deg); }
+    }
+
+    @keyframes lock-axis {
+      0% { opacity: .2; transform: rotate(-26deg); }
+      17% { opacity: .9; transform: rotate(7deg); }
+      29% { opacity: 1; transform: rotate(-2deg); }
+      38%, 84% { opacity: 1; transform: rotate(0); }
+      94%, 100% { opacity: .2; transform: rotate(-26deg); }
+    }
+
+    @keyframes lock-point {
+      0%, 28% { opacity: 0; transform: scale(.35); }
+      36% { opacity: .85; transform: scale(1.9); }
+      50%, 84% { opacity: 0; transform: scale(2.5); }
+      100% { opacity: 0; transform: scale(.35); }
+    }
+
+    @keyframes lock-wave {
+      0%, 34% { opacity: 0; transform: scale(.7); }
+      42% { opacity: .75; transform: scale(1); }
+      59%, 100% { opacity: 0; transform: scale(2.9); }
+    }
+
+    @keyframes lock-beacon {
+      0%, 31%, 100% { opacity: .18; }
+      38%, 48% { opacity: 1; }
+      60%, 84% { opacity: .45; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .lock__orbit-phase,
+      .lock__axis,
+      .lock__point-halo,
+      .lock__observer-wave,
+      .lock__beacon { animation: none; }
+      .lock__orbit-phase, .lock__point-halo, .lock__observer-wave, .lock__beacon { display: none; }
+      .lock__orbit-base { opacity: 1; }
+      .lock__axis { opacity: 1; }
+    }
+  </style>
+
+  <circle class="lock__orbit-base" cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8" opacity=".28"/>
+  <circle class="lock__orbit-phase" cx="64" cy="64" r="35" fill="none" stroke="#7657e8" stroke-width="8" stroke-linecap="round"/>
+  <g class="lock__beacon" fill="#b9a7ff">
+    <circle cx="64" cy="19" r="1.5"/>
+    <circle cx="109" cy="64" r="1.5"/>
+    <circle cx="64" cy="109" r="1.5"/>
+    <circle cx="19" cy="64" r="1.5"/>
+  </g>
+  <g class="lock__axis">
+    <path d="M37 115 91 13" fill="none" stroke="#7657e8" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+  </g>
+  <circle class="lock__point-halo" cx="89" cy="40" r="9" fill="none" stroke="#b9a7ff" stroke-width="2"/>
+  <circle class="lock__observer-wave" cx="64" cy="64" r="8" fill="none" stroke="#b9a7ff" stroke-width="2"/>
+  <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+</svg>
