@@ -265,7 +265,6 @@
     <g clip-path="url(#pyramid-clip)" fill="none" stroke="#7657e8" stroke-width="1">
       <path d="M308 606H392M308 617H392M308 628H392M308 639H392M308 650H392"/>
     </g>
-    <path d="M302 648 398 552" fill="none" stroke="#7657e8" stroke-width="0.9" opacity="0.62"/>
   </g>
 
   <!-- Printed-card grain, intentionally subtle and non-semantic. -->

@@ -522,6 +522,8 @@ test("the back is local and the fronts are not", () => {
     "the back keeps the exact 7:12 vector canvas");
   assert.ok(!/<image\b|data:image\//.test(back),
     "the SVG must remain native geometry, not a raster in a wrapper");
+  assert.ok(!back.includes('d="M302 648 398 552"'),
+    "the central calibration line must not cut across the eye and pyramid");
   // Fronts come from a server-resolved URL the client never constructs.
   const deck = readFileSync(join(REPO_ROOT, "lib", "tarot", "deck.js"), "utf8");
   assert.match(deck, /export function imageUrl/);
