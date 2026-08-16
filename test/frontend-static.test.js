@@ -199,8 +199,11 @@ test("the birth-time limitation is one page-level notice, not a badge per card",
 
 test("aspects are ranked, explained both ways, and never graded", () => {
   assert.ok(appJs.includes("aspects?.highlights"), "highlights come pre-ranked from the composer");
-  assert.match(appJs, /Constructive potential/, "each aspect shows a constructive reading");
-  assert.match(appJs, /Possible tension/, "and a tension reading");
+  // Both readings are always shown, so no aspect can be graded good or bad.
+  // The labels are the plain ones: "constructive potential" is accurate and it
+  // is the register of a textbook, not of someone finding out what a square is.
+  assert.match(appJs, /What it can help with/, "each aspect shows a constructive reading");
+  assert.match(appJs, /Where it can chafe/, "and a tension reading");
   const aspects = readFileSync(join(ROOT, "lib", "interpretation", "aspects.js"), "utf8");
   assert.match(aspects, /rankAspects/, "ranking is deterministic and lives in the content layer");
   // Applying/separating is absent from the NATAL response, so the natal aspect

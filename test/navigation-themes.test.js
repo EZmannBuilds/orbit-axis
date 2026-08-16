@@ -336,8 +336,7 @@ test("the Tools page is gone and every destination it offered is still reachable
   // Each of Tools' four cards, and where it lives now.
   const rehomed = [
     { was: "History", now: 'href="#history"', on: "panel-more" },
-    { was: "Symbol Atlas", now: 'href="#symbol-atlas"', on: "panel-more" },
-    { was: "Saved Charts", now: 'href="#me"', on: "panel-more" },
+    { was: "Saved Charts", now: 'href="#saved-charts"', on: "panel-me" },
     { was: "Compatibility", now: 'href="#compatibility"', on: "panel-me" },
   ];
   for (const { was, now, on } of rehomed) {
@@ -347,9 +346,17 @@ test("the Tools page is gone and every destination it offered is still reachable
   }
 
   // And the Atlas — the deepest finished feature — is now a tab of its own
-  // rather than two taps down behind a directory.
+  // rather than two taps down behind a directory. That tab IS its route: the
+  // duplicate row on You was removed, because a second door to a destination
+  // already in the bottom bar reads as a second destination.
   assert.ok(registry().find((ws) => ws.id === "symbol-atlas")?.primary,
     "the Atlas took the tab Tools gave up");
+  const you = html.slice(html.indexOf('id="panel-more"'),
+                         html.indexOf('<section class="workspace-panel"', html.indexOf('id="panel-more"') + 10));
+  assert.ok(!you.includes('href="#symbol-atlas"'),
+    "the Atlas has a tab; a row on You duplicates it");
+  assert.ok(!/href="#(me|saved-charts)"/.test(you),
+    "Saved charts belongs with the charts it manages, under Chart");
 });
 
 test("the retired Tools route explains where its contents went", () => {

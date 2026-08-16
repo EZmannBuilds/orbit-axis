@@ -221,6 +221,11 @@
   --ease-emphasized: cubic-bezier(0.3, 0, 0, 1);
   /* The system-wide press. Every button shrinks by this and nothing else. */
   --press-scale: 0.95;
+  /* The same gesture on something the width of the screen. 5% of a pill is a
+     few pixels; 5% of a full-width row is nearly twenty, and the row appears
+     to jump away from the finger. Large surfaces press by a hair instead — the
+     movement is felt rather than watched. */
+  --press-scale-large: 0.99;
 
   /* Breakpoints, for reference — custom properties cannot drive @media:
        480  small phone      640  phone        834  tablet portrait
@@ -343,23 +348,13 @@
 
 /* Density. Components read --density-* for their internal rhythm, so the whole
    app tightens from one place. */
-:root,
-:root[data-density="comfortable"] {
+:root {
   --density-card-pad: var(--space-lg);
   --density-tile-pad: var(--space-lg);
   --density-row-pad: var(--space-sm);
   --density-gap: var(--space-lg);
   --density-stack: var(--space-md);
   --density-section: var(--space-xxl);
-}
-:root[data-density="compact"] {
-  --density-card-pad: var(--space-md);
-  --density-tile-pad: var(--space-sm);
-  --density-row-pad: var(--space-xs);
-  --density-gap: var(--space-md);
-  --density-stack: var(--space-sm);
-  --density-section: var(--space-xl);
-  --control-height: 38px;
 }
 
 /* Large text scales the rem base; every size above is rem-based, so the whole

@@ -207,8 +207,8 @@ test("the summary counts what is in orb, not what fits on the page", () => {
   assert.equal(g.immediate.length, IMMEDIATE_LIMIT, "the page is still capped");
   assert.equal(g.immediateTotal, IMMEDIATE_LIMIT + 3, "the count is not capped");
   assert.equal(s.immediateCount, IMMEDIATE_LIMIT + 3);
-  assert.ok(s.text.includes(`${IMMEDIATE_LIMIT + 3} active contacts`),
-    "the summary states the real total");
+  assert.ok(s.text.includes(`${IMMEDIATE_LIMIT + 3} things in the sky are lining up`),
+    "the summary states the real total, in words a beginner can read");
   assert.ok(s.text.includes(`The ${IMMEDIATE_LIMIT} closest are shown below`),
     "and says plainly that the list below is a subset");
 });
@@ -284,8 +284,9 @@ test("formatting is stable and human", () => {
 
 // ── Interpretation ──────────────────────────────────────────────────────────
 
-import { composeTransit, composeAll, ASPECT_DYNAMIC, TRANSIT_ACTION,
+import { composeTransit, composeAll, ASPECT_DYNAMIC, TRANSIT_ACTION, TRANSIT_STIR,
          intensity, NEVER_RETROGRADE, RETROGRADE_MODIFIER } from "../lib/transits/interpretation.js";
+import { PLANETS } from "../lib/interpretation/planets.js";
 
 test("every aspect carries both a constructive and a tension reading", () => {
   // The same structural guard the natal corpus uses: no aspect can be graded
@@ -296,8 +297,84 @@ test("every aspect carries both a constructive and a tension reading", () => {
     assert.ok(d.constructive, `${name} needs a constructive reading`);
     assert.ok(d.tension, `${name} needs a tension reading`);
     assert.ok(d.verb && d.detail, `${name} incomplete`);
+    assert.ok(d.plain, `${name} needs a plain-language reading`);
   }
-  for (const b of TRANSITING_BODIES) assert.ok(TRANSIT_ACTION[b], `${b} has no transit action`);
+  for (const b of TRANSITING_BODIES) {
+    assert.ok(TRANSIT_ACTION[b], `${b} has no transit action`);
+    assert.ok(TRANSIT_STIR[b], `${b} has no plain-language reading`);
+  }
+});
+
+// ── The plain register ──────────────────────────────────────────────────────
+//
+// The sentence a beginner reads first must not require the vocabulary. This is
+// the same rule the fortune engine has enforced from the start, applied to the
+// surface that was still failing it — the old lead was "Transiting Mercury is
+// putting words, plans, and second thoughts around your natal Venus — values,
+// attraction, and taste", which is four terms deep before it says anything
+// about the reader.
+//
+// Every combination is checked rather than a sample, because a term hiding in
+// one of five hundred readings is exactly the kind of thing nobody sees until
+// it is the one a reader gets.
+
+/** Terminology, plus ordinary English words used technically in astrology. */
+const JARGON = [
+  ...Object.keys(PLANETS), "Chiron", "Lilith", "Ascendant", "Midheaven",
+  "natal", "transit", "transiting", "aspect", "orb", "conjunction",
+  "opposition", "trine", "sextile", "square", "retrograde", "ephemeris",
+  "cusp", "degree", "zodiac", "houses",
+];
+
+test("the reading a beginner sees first contains no terminology at all", () => {
+  const offences = [];
+  for (const a of Object.keys(ASPECT_DYNAMIC)) {
+    for (const transiting of TRANSITING_BODIES) {
+      for (const natal of NATAL_BODIES) {
+        const r = composeTransit({ id: "x", transiting, natal, aspect: a, orb: 1 });
+        assert.ok(r, `${transiting}/${natal}/${a} must compose`);
+        // The lead AND the first line of detail — both are read before anyone
+        // opens the disclosure that holds the technical version.
+        for (const line of [r.lead, r.detail[0]]) {
+          for (const word of JARGON) {
+            if (new RegExp(`\\b${word}\\b`, "i").test(line)) {
+              offences.push(`${transiting}/${natal}/${a}: "${word}" in "${line}"`);
+            }
+          }
+        }
+      }
+    }
+  }
+  assert.deepEqual(offences.slice(0, 5), [], `${offences.length} readings still lead with terminology`);
+});
+
+test("the technical reading is kept, not deleted", () => {
+  // Plain-first is not the same as hiding the subject. Someone learning it must
+  // still be able to find out that this is Mercury square Venus.
+  const r = composeTransit({ id: "x", transiting: "Mercury", natal: "Venus", aspect: "Square", orb: 1 });
+  assert.match(r.technical, /Transiting Mercury/);
+  assert.match(r.technical, /your natal Venus/);
+  assert.match(r.title, /^Mercury presses on your Venus$/,
+    "the card is still titled with the contact it describes");
+
+  // And the plain sentence is the one that leads.
+  assert.equal(r.lead, "Your thoughts and conversations keep returning to "
+    + "what you want, who you are drawn to, and what feels worth it.");
+});
+
+test("both registers describe the same body, from one source", () => {
+  // The failure this guards against is Venus meaning one thing in My Chart and
+  // another in Transits — which is what happens the moment somebody writes the
+  // plain phrase a second time in a second file instead of importing it.
+  // Comments are stripped first. The module's own documentation quotes Venus's
+  // phrase as the worked example, and a scan that counts an explanation as a
+  // duplicate fails on the very file that is doing the right thing.
+  const code = readFileSync(new URL("../lib/transits/interpretation.js", import.meta.url), "utf8")
+    .replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  for (const [name, body] of Object.entries(PLANETS)) {
+    assert.ok(body.plain, `${name} needs a plain phrase in the shared corpus`);
+    assert.ok(!code.includes(body.plain), `${name}'s plain phrase must be imported, not restated`);
+  }
 });
 
 test("natal roles are imported, never restated", () => {

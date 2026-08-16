@@ -775,6 +775,19 @@
 .tr-badge--soft { font-weight: 500; color: var(--color-secondary); }
 .tr-orb { font-size: 13px; color: var(--color-secondary); font-variant-numeric: tabular-nums; }
 
+/* The same reading in the vocabulary, for anyone learning it. Quiet, and
+   below the plain sentence rather than in front of it — the card leads with
+   what is happening to the reader, and this is available if they want the
+   terms for it. */
+.tr-technical-line {
+  margin: 4px 0 0;
+  padding-top: var(--space-sm);
+  border-top: var(--border-width) solid var(--color-border);
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+}
+
 .tr-evidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 18px; margin: 4px 0 0; }
 .tr-evidence dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-secondary); }
 .tr-evidence dd { margin: 2px 0 0; font-variant-numeric: tabular-nums; }

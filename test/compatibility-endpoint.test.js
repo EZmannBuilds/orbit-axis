@@ -384,6 +384,18 @@ test("self mode requires two distinct self charts", async (t) => {
   assert.equal(mine.json.options.self_comparison_available, true);
 });
 
+test("two other charts compare when neither is the owner's own", async (t) => {
+  if (skipped(t)) return;
+  // The case that was actually broken. relationship_type says how someone
+  // relates to the OWNER, and a general comparison never consults it — but the
+  // required-relationship check ran before the general branch, so comparing
+  // two saved charts failed whenever the second had no type set. Which is most
+  // saved charts.
+  const res = await call("GET", `/api/compatibility/compare?a=${friendA.id}&b=${partnerA.id}`, { user: userA });
+  assert.equal(res.status, 200, JSON.stringify(res.json).slice(0, 200));
+  assert.equal(res.json.comparison.mode, "general");
+});
+
 test("two charts that are not the owner compare, without claiming a relationship", async (t) => {
   if (skipped(t)) return;
   // This used to be a 409. Comparing a friend with a partner is a real and

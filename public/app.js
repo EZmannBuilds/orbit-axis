@@ -756,14 +756,15 @@ function transitCardHtml(t, { background = false } = {}) {
   ].filter(Boolean).join("");
   return `<article class="tr-card${background ? " tr-card--background" : ""}">
     <h3 class="tr-card__title">${esc(r.title)}</h3>
-    <p class="tr-card__meta">${facts}<span class="tr-orb">${esc(t.orbLabel)} orb</span></p>
+    <p class="tr-card__meta">${facts}<span class="tr-orb">${esc(t.orbLabel)} from exact</span></p>
     <p class="tr-card__lead">${esc(r.lead)}</p>
     <details class="reading-card__more">
-      <summary><span>What this may emphasise</span></summary>
+      <summary><span>What this might look like</span></summary>
       <div class="reading-card__body">
         ${r.detail.map((d) => `<p>${esc(d)}</p>`).join("")}
-        <div class="reading-card__aside"><h4>Constructive potential</h4><p>${esc(r.constructive)}</p></div>
-        <div class="reading-card__aside"><h4>Possible tension</h4><p>${esc(r.tension)}</p></div>
+        <div class="reading-card__aside"><h4>What it can help with</h4><p>${esc(r.constructive)}</p></div>
+        <div class="reading-card__aside"><h4>Where it can chafe</h4><p>${esc(r.tension)}</p></div>
+        ${r.technical ? `<p class="tr-technical-line">${esc(r.technical)}</p>` : ""}
         <dl class="tr-evidence">
           <div><dt>Transiting</dt><dd>${atlasBodyLinkHtml(t.transiting)} ${esc(t.transitingPosition)}</dd></div>
           <div><dt>Your natal ${atlasBodyLinkHtml(t.natal)}</dt><dd>${esc(t.natalPosition)}</dd></div>
@@ -2036,7 +2037,14 @@ function avatarUrl(chart) {
   // The version in the query string makes a replacement a NEW URL, so no
   // cached bytes from the previous picture can survive a change. The server
   // enforces freshness again with a version-keyed ETag.
-  return `/api/charts/${encodeURIComponent(chart.id)}/avatar?v=${Number(chart.avatar_version) || 0}`;
+  //
+  // apiUrl(), NOT a bare path. Every fetch in the app already goes through it;
+  // this one did not, and an <img src> is a request like any other. In a
+  // browser the two are identical, which is why it looked fine — but the iOS
+  // container is served from capacitor://localhost, where a bare "/api/..."
+  // resolves to the app bundle rather than the server. Chart pictures simply
+  // never appeared there.
+  return apiUrl(`/api/charts/${encodeURIComponent(chart.id)}/avatar?v=${Number(chart.avatar_version) || 0}`);
 }
 
 function chartAvatarHtml(chart, { size = "" } = {}) {
@@ -4987,6 +4995,49 @@ function setTarotFormBusy(busy) {
  * position label and a number ("2 of 3"), so the sequence survives being shown
  * one at a time.
  */
+/**
+ * Rewrite ONE card of the spread, leaving the carousel alone.
+ *
+ * Turning a card over, or asking what it means, used to call
+ * renderTarotManual() — which rebuilds the whole carousel with innerHTML. That
+ * destroys the scrolled element and takes the reader back to card one, so
+ * flipping the third card threw them to the first. It also replayed the reveal
+ * animation on every other card.
+ *
+ * Replacing one <li>'s contents keeps the scroll position, the observer, and
+ * the other two cards exactly where they were.
+ */
+function updateTarotSpreadCard(index) {
+  const reading = tarotState.manual;
+  const item = document.getElementById(`tarot-card-${index}`);
+  if (!reading || !item) return false;
+
+  const entry = reading.cards[index];
+  const total = reading.cards.length;
+  const revealed = (tarotState.manualRevealed || [])[index];
+  const step = total > 1 ? `${index + 1} of ${total}` : null;
+
+  const card = revealed
+    ? tarotCardFaceHtml(entry.card)
+    : tarotCardFaceHtml(null, { faceDown: true, index, label: `Turn over ${entry.position}` });
+
+  const meaning = revealed
+    ? tarotMeaningHtml(entry, {
+        headingLevel: total > 1 ? 4 : 3,
+        showPosition: total > 1,
+        step, index,
+        shown: Boolean(!tarotMeaningOnRequest() || tarotState.meaningShown[entry.card.slug]),
+      })
+    : `<p class="tarot-meaning__position">${esc(entry.position)}${
+        step ? ` <span class="tarot-meaning__step">· ${esc(step)}</span>` : ""}</p>
+       <p class="u-meta">Tap the card to turn it over.</p>`;
+
+  item.querySelector(".tarot-card-slot").innerHTML = card;
+  item.querySelector(".tarot-reading").innerHTML = meaning;
+  renderTarotManualSave();
+  return true;
+}
+
 function renderTarotManual() {
   const spread = $("#tarot-spread");
   const reading = tarotState.manual;
@@ -5104,12 +5155,11 @@ function revealTarotSpreadCard(index) {
   const revealed = tarotState.manualRevealed;
   if (!revealed || revealed[index]) return;
   revealed[index] = true;
-  renderTarotManual();
+  if (!updateTarotSpreadCard(index)) renderTarotManual();
   const entry = tarotState.manual?.cards?.[index];
   if (entry) tarotSay(`${entry.position}: ${entry.card.name}.`);
   // Focus lands on the card's name, which is what just appeared.
-  const items = document.querySelectorAll("#tarot-spread .tarot-meaning__name");
-  (items[index] || items[0])?.focus?.({ preventScroll: true });
+  document.querySelector(`#tarot-card-${index} .tarot-meaning__name`)?.focus?.({ preventScroll: true });
 }
 
 /** Respect the system preference rather than animating and apologising. */
@@ -5222,7 +5272,8 @@ function wireTarot() {
         : tarotState.manual?.cards?.[Number(index)];
       if (!entry) return;
       tarotState.meaningShown[entry.card.slug] = true;
-      if (index === undefined) renderTarotDaily(); else renderTarotManual();
+      if (index === undefined) renderTarotDaily();
+      else if (!updateTarotSpreadCard(Number(index))) renderTarotManual();
       // Focus the text that just appeared, so a keyboard reader is taken to
       // the answer rather than left on a button that is now gone.
       const scope = index === undefined ? "#tarot-daily-reading" : "#tarot-spread";
@@ -5368,14 +5419,31 @@ function applyResolvedTheme(choice) {
 const settings = {
   keys: {
     theme: { attr: "data-theme", default: "system" },
-    density: { attr: "data-density", default: "comfortable" },
     text: { attr: "data-text", default: "default" },
     contrast: { attr: "data-contrast", default: "normal" },
     motion: { attr: "data-motion", default: "full" },
   },
+
+  /**
+   * Settings that change BEHAVIOUR rather than presentation.
+   *
+   * The five above paint an attribute on <html> and CSS does the rest. These
+   * are read by code — tarotEnabled(), tarotPositionSet(), and so on — so they
+   * have no attribute and must not be handed to the attribute path.
+   *
+   * They were absent from `keys` altogether, which meant apply() dereferenced
+   * an undefined config and threw on the first click. Every Tarot setting
+   * looked inert because the handler died before it reached the control.
+   */
+  prefs: {
+    tarot: { default: "on", seg: "#set-tarot" },
+    tarotPositions: { default: "reflective", seg: "#set-tarot-positions" },
+    tarotMeaning: { default: "ask", seg: "#set-tarot-meaning" },
+    tarotReversed: { default: "off", seg: "#set-tarot-reversed" },
+  },
   load() {
     this.apply("theme", readStoredTheme());
-    for (const [key, cfg] of Object.entries(this.keys)) {
+    for (const [key, cfg] of Object.entries({ ...this.keys, ...this.prefs })) {
       if (key === "theme") continue;
       let val = cfg.default;
       try { val = localStorage.getItem(`orbit.${key}`) ?? cfg.default; } catch { /* private mode */ }
@@ -5383,6 +5451,19 @@ const settings = {
     }
   },
   apply(key, val) {
+    // A behavioural preference: store-and-reflect, no document attribute.
+    const pref = this.prefs[key];
+    if (pref) {
+      $$(`${pref.seg} button`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === val)));
+      // Turning Tarot off has to take effect now, not on next load: the rail,
+      // the Today switch and the route all read availability.
+      if (key === "tarot") { buildRail(); syncTodayViews(currentWorkspace()); }
+      // A changed reading preference re-renders whatever is on screen, so the
+      // reader sees the setting take hold rather than wondering if it did.
+      if (key !== "tarot" && currentWorkspace() === "tarot") enterTarot();
+      return;
+    }
+
     const cfg = this.keys[key];
     if (key === "theme") {
       applyResolvedTheme(THEME_CHOICES.includes(val) ? val : "system");
@@ -5393,12 +5474,8 @@ const settings = {
     }
     // Reflect into the segmented control, so the selected state is visible,
     // announced, and never communicated by colour alone.
-    const seg = { theme: "#set-theme", density: "#set-density", text: "#set-text", contrast: "#set-contrast", motion: "#set-motion",
-      tarot: "#set-tarot", tarotPositions: "#set-tarot-positions", tarotMeaning: "#set-tarot-meaning",
-      tarotReversed: "#set-tarot-reversed" }[key];
-    // Switching Tarot off has to take effect immediately, not on next load:
-    // the rail, the Today switch, and the route all read availability.
-    if (key === "tarot") { buildRail(); syncTodayViews(currentWorkspace()); }
+    const seg = { theme: "#set-theme", text: "#set-text",
+      contrast: "#set-contrast", motion: "#set-motion" }[key];
     if (seg) $$(`${seg} button`).forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === val)));
   },
   set(key, val) {
@@ -5409,7 +5486,7 @@ const settings = {
 };
 
 function wireSettings() {
-  const map = { "#set-theme": "theme", "#set-density": "density", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
+  const map = { "#set-theme": "theme", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
     "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning",
     "#set-tarot-reversed": "tarotReversed" };
   for (const [sel, key] of Object.entries(map)) {
@@ -5881,8 +5958,8 @@ function aspectCardHtml(aspect) {
       <summary><span>What this pairing can look like</span></summary>
       <div class="reading-card__body">
         <p>${esc(aspect.detail)}</p>
-        <div class="reading-card__aside"><h4>Constructive potential</h4><p>${esc(aspect.constructive)}</p></div>
-        <div class="reading-card__aside"><h4>Possible tension</h4><p>${esc(aspect.tension)}</p></div>
+        <div class="reading-card__aside"><h4>What it can help with</h4><p>${esc(aspect.constructive)}</p></div>
+        <div class="reading-card__aside"><h4>Where it can chafe</h4><p>${esc(aspect.tension)}</p></div>
       </div>
     </details>
   </article>`;

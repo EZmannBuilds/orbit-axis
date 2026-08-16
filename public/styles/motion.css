@@ -44,12 +44,81 @@
   min-height: 18px;
 }
 
+/* ══ Changing page ═════════════════════════════════════════════════════════
+   Panels are swapped with `hidden`, which is display:none — so the new panel
+   used to appear the way a light switches on. A CSS animation restarts every
+   time an element leaves display:none, so the arrival is had for free here,
+   with no hook in the router.
+
+   It is a cross-fade with a hint of lift rather than a slide. A slide implies
+   a direction, and a tab bar has no direction — the five destinations sit
+   beside each other, and nothing about tapping "You" means "rightwards".
+
+   Short on purpose. This runs on EVERY navigation, and motion you see fifty
+   times an hour has to be under the threshold where you start waiting for it.
+   The transform is not held at the end (no `forwards`), so no lingering
+   containing block is left behind to catch the sticky sub-navigation. */
+@keyframes axis-panel-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.workspace-panel:not([hidden]) {
+  animation: axis-panel-in var(--duration-base) var(--ease-decelerate);
+}
+
+/* ══ Touch feedback ════════════════════════════════════════════════════════
+   Rows are the most-tapped thing in the app — every list on You, Saved charts
+   and History is made of them — and they were the only primitive with no
+   press state at all. Buttons and segments already scale on :active; this
+   gives rows the same answer to "did that register?".
+
+   The background transition is asymmetric on purpose: colour arrives fast on
+   press and leaves slower on release, which is what makes a tap feel answered
+   rather than merely redrawn. */
+.o-row--link {
+  transition: background var(--duration-base) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+.o-row--link:active {
+  transition-duration: var(--duration-instant), var(--duration-instant);
+  transform: scale(var(--press-scale-large));
+}
+
+/* A tile is only pressable when something wrapped it in a link or a button.
+   Styling the wrapper rather than the tile keeps a decorative tile still. */
+a > .o-tile,
+button > .o-tile {
+  transition: background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+a:active > .o-tile,
+button:active > .o-tile { transform: scale(var(--press-scale-large)); }
+
+/* The tab bar states the current page with colour and weight, which land
+   instantly. The icon takes the press, so a tap is acknowledged in the moment
+   between touching the tab and the panel arriving. */
+.rail__link { transition: background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard); }
+.rail__link:active .rail__icon { transform: scale(0.9); }
+.rail__icon { transition: transform var(--duration-instant) var(--ease-standard); }
+
 /* ── Reduced motion ────────────────────────────────────────────────────────
    The entrance resolves to its finished state rather than disappearing, so the
-   content is still there — it simply arrives without moving. */
+   content is still there — it simply arrives without moving.
+
+   The two rules below are duration collapses in base.css's terms, but an
+   animation with a 0.001ms duration still RUNS — it starts at `from`, which
+   for the panel means one frame at opacity 0. Setting animation: none removes
+   the frame rather than shortening it. */
 @media (prefers-reduced-motion: reduce) {
   .axis-rise, .axis-rise-2, .axis-rise-3 { animation: none; opacity: 1; transform: none; }
   .axis-shimmer { animation: none; }
+  .workspace-panel:not([hidden]) { animation: none; }
+  .o-row--link:active,
+  a:active > .o-tile,
+  button:active > .o-tile,
+  .rail__link:active .rail__icon { transform: none; }
 }
 
 :root[data-motion="reduced"] .axis-rise,
@@ -60,3 +129,8 @@
   transform: none;
 }
 :root[data-motion="reduced"] .axis-shimmer { animation: none; }
+:root[data-motion="reduced"] .workspace-panel:not([hidden]) { animation: none; }
+:root[data-motion="reduced"] .o-row--link:active,
+:root[data-motion="reduced"] a:active > .o-tile,
+:root[data-motion="reduced"] button:active > .o-tile,
+:root[data-motion="reduced"] .rail__link:active .rail__icon { transform: none; }

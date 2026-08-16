@@ -479,3 +479,24 @@
 @media (forced-colors: active) {
   .tarot-meaning__reversed { color: CanvasText; }
 }
+
+
+/* ── Centring ─────────────────────────────────────────────────────────────
+   The card is the thing on the page, so it sits in the middle of it rather
+   than tucked against the left margin. The text stays left-aligned: centred
+   body copy is harder to read, and the card being centred is what was asked
+   for, not the paragraph under it. */
+.tarot-card-slot { display: flex; justify-content: center; }
+.tarot-card,
+.tarot-card-shimmer { margin-inline: auto; }
+
+/* Above the phone width the card and its meaning sit side by side, and there
+   the card belongs beside its text rather than adrift in a wide column. */
+@media (min-width: 768px) {
+  .tarot-card-slot { justify-content: flex-start; }
+  .tarot-card, .tarot-card-shimmer { margin-inline: 0; }
+}
+
+/* The carousel centres its cards too, and each item's text is centred under
+   the card only for the step label — the meaning stays readable. */
+.tarot-carousel__step { text-align: center; }
