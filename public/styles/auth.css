@@ -265,3 +265,26 @@
 @media (forced-colors: active) {
   .auth-card, .auth-privacy { border: 1px solid CanvasText; }
 }
+
+/* ── The starfield (Dev Update 4.3) ───────────────────────────────────────
+   Behind the startup card, opacity-only twinkle, static under both
+   reduced-motion refusals. Positions, sizes, and phases are inline from the
+   deterministic generator in app.js — the same sky every open. */
+.starfield { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.starfield i {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--brand-celestial-highlight, #b9a7ff);
+  opacity: 0.16;
+  animation: star-twinkle 3s ease-in-out infinite;
+}
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.10; }
+  50%      { opacity: 0.60; }
+}
+/* The card stacks above the field. */
+.startup-card { position: relative; }
+@media (prefers-reduced-motion: reduce) {
+  .starfield i { animation: none; opacity: 0.28; }
+}
+:root[data-motion="reduced"] .starfield i { animation: none; opacity: 0.28; }

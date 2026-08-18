@@ -515,6 +515,9 @@
 @media (prefers-reduced-motion: reduce) {
   .tarot-meaning--shown .tarot-meaning__body,
   .tarot-meaning--shown .tarot-meaning__prompt { animation: none; }
+  /* The card tilt (Dev Update 4.3) collapses here too. */
+  .tarot-card { transform: none; transition: none; }
+  .tarot-card--reversed { transform: rotate(180deg); }
 }
 
 /* ── Reversed ─────────────────────────────────────────────────────────────
@@ -549,3 +552,24 @@
 /* The carousel centres its cards too, and each item's text is centred under
    the card only for the step label — the meaning stays readable. */
 .tarot-carousel__step { text-align: center; }
+
+/* ── Card motion (Dev Update 4.3) ─────────────────────────────────────────
+   The tilt lives in two custom properties the sensor code writes on the
+   panel; every card composes them into its own transform. Perspective sits on
+   the slot so the rotation reads as depth rather than skew. A reversed card
+   keeps its 180° and tilts within it. The :active press states above still
+   override while pressed, which is correct — a press is feedback, and it wins.
+
+   Under either reduced-motion refusal the transform collapses and the
+   transition goes with it. The JavaScript never attaches the sensor in those
+   states either — this is the belt to that suspender. */
+.tarot-card-slot { perspective: 700px; }
+.tarot-card {
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 120ms var(--ease-standard);
+}
+.tarot-card--reversed {
+  transform: rotate(180deg) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+}
+:root[data-motion="reduced"] .tarot-card { transform: none; transition: none; }
+:root[data-motion="reduced"] .tarot-card--reversed { transform: rotate(180deg); }

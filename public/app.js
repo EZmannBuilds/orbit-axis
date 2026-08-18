@@ -2984,6 +2984,39 @@ async function resolveChartState() {
   await refreshActiveExperience();
 }
 
+/* ── The starfield (Dev Update 4.3) ───────────────────────────────────────
+   A quiet sky behind the startup loader. Decoration for an honest wait, and
+   nothing more: it adds no delay — finishStartup() is untouched and drops the
+   gate the moment auth and charts resolve, stars or no stars.
+
+   Deterministic on purpose: the same seed gives the same sky every open, so
+   launch does not flicker a new random layout each time. Forty-two stars,
+   sized 1–2.6px, animating OPACITY only — one compositor-friendly property,
+   no JavaScript loop, nothing running per frame. Under either reduced-motion
+   refusal the CSS holds them static; the field is decoration and carries
+   nothing, so it is aria-hidden. */
+function buildStarfield() {
+  const gate = $("#startup-gate");
+  if (!gate || gate.hidden || $("#startup-stars")) return;
+  let seed = 62; // the brand axis angle — one constant, stated once
+  const rand = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const field = document.createElement("div");
+  field.id = "startup-stars";
+  field.className = "starfield";
+  field.setAttribute("aria-hidden", "true");
+  let html = "";
+  for (let i = 0; i < 42; i += 1) {
+    const x = (rand() * 100).toFixed(2);
+    const y = (rand() * 100).toFixed(2);
+    const size = (1 + rand() * 1.6).toFixed(2);
+    const delay = (rand() * 4).toFixed(2);
+    const duration = (2.4 + rand() * 3).toFixed(2);
+    html += `<i style="left:${x}%;top:${y}%;width:${size}px;height:${size}px;animation-delay:-${delay}s;animation-duration:${duration}s"></i>`;
+  }
+  field.innerHTML = html;
+  gate.prepend(field);
+}
+
 function setStartupStatus(text) {
   const el = $("#startup-status");
   if (el) el.textContent = text;
@@ -5470,7 +5503,91 @@ function wireTarot() {
 }
 
 /** Called by the router when #tarot is entered. */
+/* ── Card motion (Dev Update 4.3) ─────────────────────────────────────────
+   The cards tilt a few degrees with the phone, and only that: no parallax
+   anywhere else, no panel that moves. Everything here is gated four ways —
+   the setting, the tarot route being on screen, the page being visible, and
+   both reduced-motion refusals — and the sensor listener exists ONLY while
+   all four hold. "No continuous sensor work when the tarot screen is
+   inactive" is enforced by construction: leaving the route, hiding the tab,
+   or turning the setting off releases the listener and zeroes the tilt.
+
+   The baseline is wherever the phone was when the listener attached. Nobody
+   holds a phone level — an absolute reading would render every card
+   permanently tilted ~40° toward the reader's lap. Movement is measured from
+   how you were already holding it. */
+const TILT = { attached: false, baseline: null, last: 0, granted: null };
+const TILT_MAX_INPUT = 18;  // degrees of real movement that reach full tilt
+const TILT_MAX_OUTPUT = 5;  // degrees the card actually moves — felt, not watched
+
+function reducedMotionActive() {
+  return document.documentElement.getAttribute("data-motion") === "reduced"
+    || (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+
+function tarotTiltHandler(e) {
+  if (e.beta == null || e.gamma == null) return;
+  if (!TILT.baseline) TILT.baseline = { beta: e.beta, gamma: e.gamma };
+  const clamp = (v) => Math.max(-TILT_MAX_INPUT, Math.min(TILT_MAX_INPUT, v));
+  const db = clamp(e.beta - TILT.baseline.beta);
+  const dg = clamp(e.gamma - TILT.baseline.gamma);
+  // A time gate, not requestAnimationFrame — this client deliberately has no
+  // animation-frame code at all, and ~30 writes a second is more than a 5°
+  // lean can use. The 120ms CSS transition smooths between them.
+  const now = performance.now();
+  if (now - TILT.last < 33) return;
+  TILT.last = now;
+  const panel = $("#panel-tarot");
+  if (panel) {
+    panel.style.setProperty("--tilt-x", `${((-db / TILT_MAX_INPUT) * TILT_MAX_OUTPUT).toFixed(2)}deg`);
+    panel.style.setProperty("--tilt-y", `${((dg / TILT_MAX_INPUT) * TILT_MAX_OUTPUT).toFixed(2)}deg`);
+  }
+}
+
+function tarotMotionSync() {
+  const want = tarotPref("tarotMotion", "off") === "on"
+    && currentWorkspace() === "tarot"
+    && document.visibilityState === "visible"
+    && !reducedMotionActive()
+    && TILT.granted !== false;
+  if (want && !TILT.attached) {
+    TILT.baseline = null;
+    window.addEventListener("deviceorientation", tarotTiltHandler);
+    TILT.attached = true;
+  } else if (!want && TILT.attached) {
+    window.removeEventListener("deviceorientation", tarotTiltHandler);
+    TILT.attached = false;
+    TILT.baseline = null;
+    const panel = $("#panel-tarot");
+    if (panel) {
+      panel.style.removeProperty("--tilt-x");
+      panel.style.removeProperty("--tilt-y");
+    }
+  }
+}
+
+/**
+ * iOS requires an explicit grant before orientation events fire, and offers
+ * the prompt only inside a user gesture — the settings tap that calls this.
+ * Where no requestPermission function exists (desktop, Android WebView), the
+ * events simply flow and the answer is yes.
+ *
+ * @returns {Promise<boolean>}
+ */
+async function tarotMotionRequestPermission() {
+  const Ctor = globalThis.DeviceOrientationEvent;
+  if (!Ctor || typeof Ctor.requestPermission !== "function") {
+    TILT.granted = true;
+  } else {
+    try { TILT.granted = (await Ctor.requestPermission()) === "granted"; }
+    catch { TILT.granted = false; }
+  }
+  tarotMotionSync();
+  return TILT.granted;
+}
+
 function enterTarot() {
+  tarotMotionSync();
   wireTarot();
   const manual = $("#tarot-manual");
   if (manual) manual.hidden = false;
@@ -5581,6 +5698,7 @@ const settings = {
     tarotPositions: { default: "reflective", seg: "#set-tarot-positions" },
     tarotMeaning: { default: "ask", seg: "#set-tarot-meaning" },
     tarotReversed: { default: "off", seg: "#set-tarot-reversed" },
+    tarotMotion: { default: "off", seg: "#set-tarot-motion" },
   },
   load() {
     this.apply("theme", readStoredTheme());
@@ -5599,6 +5717,9 @@ const settings = {
       // Turning Tarot off has to take effect now, not on next load: the rail,
       // the Today switch and the route all read availability.
       if (key === "tarot") { buildRail(); syncTodayViews(currentWorkspace()); }
+      // Card motion attaches or releases the sensor the moment the setting
+      // changes — never on a schedule, never while the tarot page is away.
+      if (key === "tarotMotion") tarotMotionSync();
       // A changed reading preference re-renders whatever is on screen, so the
       // reader sees the setting take hold rather than wondering if it did.
       if (key !== "tarot" && currentWorkspace() === "tarot") enterTarot();
@@ -5629,11 +5750,27 @@ const settings = {
 function wireSettings() {
   const map = { "#set-theme": "theme", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
     "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning",
-    "#set-tarot-reversed": "tarotReversed" };
+    "#set-tarot-reversed": "tarotReversed", "#set-tarot-motion": "tarotMotion" };
   for (const [sel, key] of Object.entries(map)) {
     $(sel)?.addEventListener("click", e => {
       const btn = e.target.closest("button");
       if (!btn) return;
+      // Card motion is the one setting with a system permission behind it, and
+      // iOS grants the prompt only inside a user gesture — which this click is.
+      // Asked HERE, at the moment the reader turns it on, never at launch: the
+      // prompt should arrive while they are looking at the switch that caused
+      // it. A denial puts the switch back off, because a control left looking
+      // on would be a promise the system has already refused.
+      if (key === "tarotMotion" && btn.dataset.value === "on") {
+        settings.set(key, "on");
+        void tarotMotionRequestPermission().then((granted) => {
+          if (!granted) {
+            settings.set(key, "off");
+            toast("Motion access was declined, so Card motion stays off.");
+          }
+        });
+        return;
+      }
       settings.set(key, btn.dataset.value);
     });
   }
@@ -5711,7 +5848,14 @@ async function refreshData(notify = false, pre = null) {
 
 /* ── Boot ──────────────────────────────────────────────────────────────── */
 async function boot() {
+  buildStarfield();
   settings.load();
+
+  // Card motion follows the page's own lifecycle: navigating away or hiding
+  // the tab releases the sensor, coming back re-attaches it — all through the
+  // same four-condition sync, so there is no second policy to disagree.
+  window.addEventListener("hashchange", tarotMotionSync);
+  document.addEventListener("visibilitychange", tarotMotionSync);
 
   /* Dev Update 4.2. The measured waterfall (2026-08-18) showed startup as a
      strictly sequential chain: features, then session, then everything else —
