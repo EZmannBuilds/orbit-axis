@@ -122,6 +122,7 @@
           <div class="axis-today-head">
             <div class="axis-today-head__main">
               <p class="axis-today-date" id="today-date"></p>
+              <p class="cache-note" id="today-cache-note" hidden></p>
               <h1 class="axis-wordmark" id="home-title">Your sky today</h1>
               <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
               <p class="axis-timezone" id="today-timezone" hidden></p>
@@ -642,6 +643,19 @@
                 </button>
               </div>
               <div class="auth-message" id="account-export-message" role="status" aria-live="polite" aria-atomic="true"></div>
+              <!-- Dev Update 4.2. Visible signed in or out: the cache exists
+                   either way, and a control that appears only sometimes reads
+                   as a control that sometimes doesn't work. -->
+              <div class="o-group">
+                <button type="button" class="o-row o-row--link" id="cache-clear">
+                  <span class="o-row__icon" data-icon="clock-counter-clockwise"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Clear cached readings</span>
+                    <span class="o-row__sub">Removes data kept on this device for faster opening. Nothing on your account is affected.</span>
+                  </span>
+                </button>
+              </div>
+              <div class="auth-message" id="cache-clear-message" role="status" aria-live="polite" aria-atomic="true"></div>
               <details class="o-expand more-details">
                 <summary class="o-expand__head">
                   What Orbit Axis stores, and why

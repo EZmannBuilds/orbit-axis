@@ -368,7 +368,7 @@ test("every renderer refreshData() calls writes only to elements that exist", ()
   assert.ok(refresh, "refreshData should be findable");
 
   // Renderers invoked unconditionally — not inside an if, not optional-chained.
-  const called = [...refresh.matchAll(/^\s{2}(render[A-Za-z]+)\(/gm)].map((m) => m[1]);
+  const called = [...refresh.matchAll(/^\s+(render[A-Za-z]+)\(/gm)].map((m) => m[1]);
   assert.ok(called.length >= 1, `expected at least one unconditional renderer, saw ${called.join(", ")}`);
 
   const declaredIds = new Set([
@@ -420,7 +420,7 @@ test("a refresh on a secondary route re-renders once its data arrives", () => {
     `refreshSecondaryRoute must be invoked after session restore and after each ` +
     `fortune assignment (definition + >=3 calls); found ${calls} occurrences`);
 
-  const afterRestore = appJs.slice(appJs.indexOf("await restoreSession();"));
+  const afterRestore = appJs.slice(appJs.indexOf("await restoreSession(early.session);"));
   assert.match(afterRestore.slice(0, 120), /refreshSecondaryRoute\(\)/,
     "the session path must re-render, since auth decides the empty state");
 });

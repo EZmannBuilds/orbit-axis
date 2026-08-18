@@ -176,7 +176,7 @@ test("a disabled panel is removed from the document, not merely hidden", () => {
 });
 
 test("flags are loaded before the navigation is built", () => {
-  const load = APP_JS.indexOf("await loadFeatureFlags()");
+  const load = APP_JS.indexOf("await loadFeatureFlags(early.features)");
   const build = APP_JS.indexOf("buildRail();", load);
   assert.ok(load > 0 && build > load,
     "building the rail first would flash hidden features on screen");

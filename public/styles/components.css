@@ -963,3 +963,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .o-rowmenu__item:hover { background: var(--color-surface-hover); }
 .o-rowmenu__item:focus-visible { box-shadow: var(--focus-ring); }
 .o-rowmenu__item--danger { color: var(--color-danger, #ff6b6b); }
+
+/* ── The staleness note (Dev Update 4.2) ─────────────────────────────────
+   Shown while Today is painted from the on-device cache. Text, not colour:
+   the age of what is on screen is a fact the reader must be able to read,
+   not infer from a tint. */
+.cache-note {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-caption);
+  color: var(--color-muted);
+}

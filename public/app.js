@@ -22,6 +22,7 @@ import {
 import { decideStartupView, STARTUP_VIEW } from "./startup-state.js";
 import { ICON_PATHS } from "./icons.js";
 import { apiUrl, authHeaders, rememberSession } from "./platform.js";
+import { cacheGet, cachePut, cacheClear, cacheStats, setCacheNamespace } from "./storage.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -169,6 +170,49 @@ async function request(path, { method = "GET", body = null } = {}) {
   return data;
 }
 async function get(path) { return request(path); }
+
+/* ── Dev Update 4.2: cache-first plumbing ─────────────────────────────────
+   The store itself lives in storage.js. These are the three small pieces the
+   call sites share: a day key for cache keys, the muffler for early-started
+   requests, and the one staleness note the Today page shows while cached
+   content is on screen. */
+
+/** The reader's calendar date in their own timezone, as YYYY-MM-DD. */
+function localDayKey(tz) {
+  try { return new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(new Date()); }
+  catch { return new Date().toISOString().slice(0, 10); }
+}
+
+/** Attached to early-started promises so a rejection that happens before its
+ * consumer awaits it is not reported as unhandled. The consumer still receives
+ * the rejection — this handler observes it, nothing more. */
+const muffleEarly = () => {};
+
+/**
+ * The staleness label the roadmap requires: cached content says how old it is,
+ * in text. One element, on Today, because Today is where cached content shows.
+ * null hides it; a timestamp shows it; failed switches the second clause from
+ * "refreshing" to the truth.
+ */
+function cacheNote(savedAt, { failed = false } = {}) {
+  const el = $("#today-cache-note");
+  if (!el) return;
+  if (savedAt == null) { el.hidden = true; el.textContent = ""; return; }
+  const when = new Date(savedAt).toLocaleString("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+  el.hidden = false;
+  el.textContent = failed
+    ? `Showing what loaded ${when} — Orbit couldn't refresh just now.`
+    : `Showing what loaded ${when} — refreshing…`;
+}
+
+/** Sign-out and account deletion both land here. Fire-and-forget: leaving
+ * must never wait on a database. */
+async function resetDeviceCache() {
+  try { await cacheClear(); await setCacheNamespace("anon"); }
+  catch { /* the cache is a courtesy; a failed clear of an empty store harms nobody */ }
+}
 async function post(path, body) { return request(path, { method: "POST", body }); }
 async function put(path, body) { return request(path, { method: "PUT", body }); }
 async function patch(path, body) { return request(path, { method: "PATCH", body }); }
@@ -1538,9 +1582,9 @@ function atlasHouseLinkHtml(houseNumber, { label } = {}) {
    as long as the request took, which is the one moment nobody is watching. */
 const featureState = { learn: false, news: false };
 
-async function loadFeatureFlags() {
+async function loadFeatureFlags(pre = null) {
   try {
-    const res = await fetch(apiUrl("/api/features"));
+    const res = await (pre ?? fetch(apiUrl("/api/features")));
     const parsed = await readApiResponse(res);
     if (parsed.kind !== "json" || !parsed.ok) return;   // keep the safe defaults
     const data = parsed.data ?? {};
@@ -2049,10 +2093,61 @@ function avatarUrl(chart) {
 
 function chartAvatarHtml(chart, { size = "" } = {}) {
   const cls = `chart-avatar${size ? ` chart-avatar--${size}` : ""}`;
+  // Dev Update 4.2: no src in the markup. hydrateAvatars() fills it — from the
+  // on-device cache when the picture has been seen before, from an
+  // authenticated fetch when it has not. The initials underneath are the
+  // designed fallback either way, exactly as before.
   const img = chart.has_avatar
-    ? `<img class="chart-avatar__img" src="${esc(avatarUrl(chart))}" alt="" loading="lazy" decoding="async">`
+    ? `<img class="chart-avatar__img" data-avatar-chart="${esc(chart.id)}" data-avatar-version="${Number(chart.avatar_version) || 0}" alt="" loading="lazy" decoding="async">`
     : "";
+  if (chart.has_avatar) scheduleAvatarHydration();
   return `<span class="${cls}" aria-hidden="true">${esc(chartInitials(chart.nickname))}${img}</span>`;
+}
+
+/* ── Avatar hydration (Dev Update 4.2) ────────────────────────────────────
+   Why hydration instead of a src: an <img src> is a request the cache cannot
+   see, and in the native container it is a request that cannot carry the
+   session header at all. Fetching the bytes ourselves fixes both — the blob
+   is cached under chart id + avatar_version (a replaced picture is a new
+   version, so a new key), and the fetch authenticates the same way every
+   other request does.
+
+   Scheduled, not called: chartAvatarHtml returns markup its caller has not
+   inserted yet, so hydration runs one macrotask later, once per batch of
+   renders, and touches only images still without a src. */
+let avatarHydrationQueued = false;
+function scheduleAvatarHydration() {
+  if (avatarHydrationQueued) return;
+  avatarHydrationQueued = true;
+  setTimeout(() => { avatarHydrationQueued = false; void hydrateAvatars(); }, 0);
+}
+
+async function hydrateAvatars() {
+  for (const img of document.querySelectorAll("img.chart-avatar__img[data-avatar-chart]:not([src])")) {
+    const id = img.dataset.avatarChart;
+    const version = img.dataset.avatarVersion || "0";
+    const path = `/api/charts/${encodeURIComponent(id)}/avatar?v=${version}`;
+    const key = `avatar::${id}::v${version}`;
+    try {
+      const hit = await cacheGet(key);
+      let blob = hit && hit.value instanceof Blob ? hit.value : null;
+      if (!blob) {
+        const res = await fetch(apiUrl(path), { headers: { ...authHeaders() }, credentials: "same-origin" });
+        // Every request that presents the session reads a rotated one back —
+        // the same rule request() enforces for every other fetch in the app.
+        rememberSession(res);
+        if (!res.ok) throw new Error(String(res.status));
+        blob = await res.blob();
+        void cachePut(key, blob);
+      }
+      const url = URL.createObjectURL(blob);
+      img.addEventListener("load", () => URL.revokeObjectURL(url), { once: true });
+      img.src = url;
+    } catch {
+      // Last resort: the direct URL, which is exactly the pre-4.2 behaviour.
+      img.src = apiUrl(path);
+    }
+  }
 }
 
 // 'error' does not bubble, so the fallback swap listens in the capture phase,
@@ -2087,8 +2182,9 @@ function renderPickerAvatar(slotSelector) {
   }
   slot.hidden = false;
   slot.innerHTML = `${esc(chartInitials(active.nickname))}${active.has_avatar
-    ? `<img class="chart-avatar__img" src="${esc(avatarUrl(active))}" alt="" decoding="async">`
+    ? `<img class="chart-avatar__img" data-avatar-chart="${esc(active.id)}" data-avatar-version="${Number(active.avatar_version) || 0}" alt="" decoding="async">`
     : ""}`;
+  if (active.has_avatar) scheduleAvatarHydration();
 }
 
 /* ── Modal utility ─────────────────────────────────────────────────────────
@@ -2377,6 +2473,31 @@ function wireAuth() {
   wireAccountExport();
   wireAccountPasswordReset();
   wireAccountDeletion();
+  wireCacheClear();
+}
+
+/* Dev Update 4.2. The roadmap control: a reader can empty the on-device cache
+   themselves. The message states the count so the click visibly did
+   something, and says plainly that nothing on the account is affected. */
+function wireCacheClear() {
+  const button = $("#cache-clear");
+  const message = $("#cache-clear-message");
+  if (!button) return;
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    try {
+      const { entries } = await cacheStats();
+      await cacheClear();
+      cacheNote(null);
+      if (message) message.textContent = entries
+        ? `Cleared ${entries} cached item${entries === 1 ? "" : "s"} from this device.`
+        : "Nothing was cached on this device.";
+    } catch {
+      if (message) message.textContent = "The cache couldn't be cleared just now.";
+    } finally {
+      button.disabled = false;
+    }
+  });
 }
 
 /* ── Export my data ────────────────────────────────────────────────────────
@@ -2522,6 +2643,11 @@ function clearPrivateState({ purgeLocalData = false } = {}) {
   state.activeNatalChart = null;
   state.chartsStatus = "idle";
   state.onboardingDismissed = false; // a fresh sign-in gets a fresh decision
+
+  // Dev Update 4.2: cached readings are account content. Whoever uses this
+  // device next must not inherit them. Fire-and-forget — leaving never waits
+  // on a database.
+  void resetDeviceCache();
 
   if (purgeLocalData) {
     // oa_birth holds birth date, time, and coordinates. It is the most personal
@@ -2767,12 +2893,12 @@ function requireAccount(reason) {
 // Startup runs in a fixed order: resolve auth -> load saved charts -> decide.
 // Onboarding is only ever a *decision*, never a default, so a returning user is
 // never asked to set up a chart they already have.
-async function restoreSession() {
+async function restoreSession(pre = null) {
   state.auth.restoring = true;
   setStartupStatus("Restoring your Orbit…");
   hideAuthGate();
   try {
-    const data = await get("/api/auth/session");
+    const data = await (pre ?? get("/api/auth/session"));
     if (data.signed_in) {
       await applySignedIn(data.user, { quiet: true });
     } else {
@@ -2803,6 +2929,10 @@ async function restoreSession() {
 
 async function applySignedIn(user, { quiet = false } = {}) {
   state.auth.user = user;
+  // Dev Update 4.2: the cache is namespaced by account, and switching
+  // namespaces deletes the one being left — two accounts on one device never
+  // see each other's cache. Awaited so nothing below writes into the old one.
+  await setCacheNamespace(String(user?.id || "anon"));
   // Auth is resolved the moment we have the user — record that before the chart
   // decision runs, otherwise it would still read as "loading".
   state.auth.restoring = false;
@@ -5525,24 +5655,56 @@ function wireSettings() {
    shadowing rather than providing. */
 
 /* ── Data ──────────────────────────────────────────────────────────────── */
-async function refreshData(notify = false) {
+async function refreshData(notify = false, pre = null) {
   const timezone = axisResolveTimezone();
-  const [chart, symbolsData, eventsData] = await Promise.all([
-    get(`/api/chart/now?tz=${encodeURIComponent(timezone)}`),
-    get("/api/symbols"),
-    get(`/api/events?count=9&tz=${encodeURIComponent(timezone)}`),
-  ]);
+  // Key fields per the 4.2 contract: these are shared sky data, so the key is
+  // endpoint + timezone + local day. Chart-scoped keys (the daily reading)
+  // additionally carry the chart id — see axisLoadToday.
+  const kChart = `chart-now::${timezone}::${localDayKey(timezone)}`;
+  const kEvents = `events::${timezone}`;
 
-  state.chart = chart;
-  state.symbols = symbolsData.symbols;
-  state.events = eventsData.events;
+  const applyData = (chart, symbolsData, eventsData) => {
+    state.chart = chart;
+    state.symbols = symbolsData.symbols;
+    state.events = eventsData.events;
+    renderEvents(state.events);
+    if (!state.ready) { wireGlobalActions(); state.ready = true; }
+    $("#settings-disclaimer").textContent = chart.disclaimer
+      ? `${chart.disclaimer} Sky timing is computed from mean cycles and is approximate.`
+      : $("#settings-disclaimer").textContent;
+  };
 
-  renderEvents(state.events);
-  if (!state.ready) { wireGlobalActions(); state.ready = true; }
+  // Cache first: the last-loaded answer paints immediately, labelled with its
+  // age. The network refresh below repaints over it — same renderers, so a
+  // second application is idempotent.
+  let painted = false;
+  let paintedAt = null;
+  try {
+    const [c, sym, ev] = await Promise.all([cacheGet(kChart), cacheGet("symbols"), cacheGet(kEvents)]);
+    if (c && sym && ev) {
+      applyData(c.value, sym.value, ev.value);
+      painted = true;
+      paintedAt = c.savedAt;
+      cacheNote(paintedAt);
+    }
+  } catch { /* the cache is a courtesy; the network path below is the contract */ }
 
-  $("#settings-disclaimer").textContent = chart.disclaimer
-    ? `${chart.disclaimer} Sky timing is computed from mean cycles and is approximate.`
-    : $("#settings-disclaimer").textContent;
+  try {
+    const [chart, symbolsData, eventsData] = await Promise.all([
+      pre?.chart ?? get(`/api/chart/now?tz=${encodeURIComponent(timezone)}`),
+      pre?.symbols ?? get("/api/symbols"),
+      pre?.events ?? get(`/api/events?count=9&tz=${encodeURIComponent(timezone)}`),
+    ]);
+    void cachePut(kChart, chart);
+    void cachePut("symbols", symbolsData);
+    void cachePut(kEvents, eventsData);
+    applyData(chart, symbolsData, eventsData);
+    cacheNote(null);
+  } catch (error) {
+    if (!painted) throw error; // nothing on screen — the old failure is the right one
+    cacheNote(paintedAt, { failed: true });
+    return;
+  }
 
   if (notify) toast("Transits refreshed");
 }
@@ -5550,9 +5712,28 @@ async function refreshData(notify = false) {
 /* ── Boot ──────────────────────────────────────────────────────────────── */
 async function boot() {
   settings.load();
+
+  /* Dev Update 4.2. The measured waterfall (2026-08-18) showed startup as a
+     strictly sequential chain: features, then session, then everything else —
+     five network stages signed in, none of them overlapping. Every request
+     below is independent of the others, so they all START now; each is
+     CONSUMED at exactly the point in the sequence it always was, so ordering
+     semantics are unchanged — only the waiting overlaps. */
+  const tz0 = axisResolveTimezone();
+  const early = {
+    features: fetch(apiUrl("/api/features")),
+    session: get("/api/auth/session"),
+    chart: get(`/api/chart/now?tz=${encodeURIComponent(tz0)}`),
+    symbols: get("/api/symbols"),
+    events: get(`/api/events?count=9&tz=${encodeURIComponent(tz0)}`),
+    sky: get(`/api/sky/current?tz=${encodeURIComponent(tz0)}`),
+  };
+  for (const p of Object.values(early)) p.catch(muffleEarly);
+  AXIS.preSky = early.sky;
+
   // Flags first: the rail is built from them, and building it twice would make
   // hidden features flash on screen before disappearing.
-  await loadFeatureFlags();
+  await loadFeatureFlags(early.features);
   await loadFeaturePanels();
   buildRail();
   // Icons are declared with data-icon in the markup and painted here, once the
@@ -5580,7 +5761,7 @@ async function boot() {
   renderRoute();
 
   try {
-    await restoreSession();
+    await restoreSession(early.session);
     refreshSecondaryRoute();
   } finally {
     // Belt and braces: whatever happens above, the startup gate comes down so
@@ -5591,7 +5772,7 @@ async function boot() {
   // Orbit Axis daily experience (Today + History + detail levels).
   await axisInit();
 
-  await refreshData();
+  await refreshData(false, early);
 }
 
 // ── My Chart ─────────────────────────────────────────────────────────────────
@@ -6510,20 +6691,32 @@ async function axisLoadToday() {
   // be swallowed by `.catch(() => {})`, which left the shimmer placeholder in
   // place for ever — an indefinite spinner that looked like a slow network and
   // was actually a dead section.
-  get(`/api/sky/current?tz=${encodeURIComponent(tz)}`)
-    .then(r => {
-      AXIS.lastSky = r.sky;
-      AXIS.lastHighlights = r.highlights || [];
-      AXIS.lastMoon = r.moon || null;
-      try {
-        axisRenderSky(r.sky, { highlights: r.highlights, moon: r.moon });
-      } catch (error) {
-        // A render defect is ours, and must not be reported as a network problem.
-        console.error("[orbit] current sky failed to render", { stage: "render", message: error?.message });
-        axisRenderSkyError("We couldn't show the current sky just now.");
-      }
-    })
-    .catch(() => axisRenderSkyError("We couldn't reach the current sky just now."));
+  const kSky = `sky::${tz}::${localDayKey(tz)}`;
+  const applySky = (r) => {
+    AXIS.lastSky = r.sky;
+    AXIS.lastHighlights = r.highlights || [];
+    AXIS.lastMoon = r.moon || null;
+    try {
+      axisRenderSky(r.sky, { highlights: r.highlights, moon: r.moon });
+    } catch (error) {
+      // A render defect is ours, and must not be reported as a network problem.
+      console.error("[orbit] current sky failed to render", { stage: "render", message: error?.message });
+      axisRenderSkyError("We couldn't show the current sky just now.");
+    }
+  };
+  // Cache first — but only when nothing live is on screen yet. On a re-load
+  // the previous live sky is still painted, and covering it with an older
+  // cached one would move the page backwards.
+  let skyFromCache = false;
+  cacheGet(kSky)
+    .then(hit => { if (hit && !AXIS.lastSky) { skyFromCache = true; applySky(hit.value); } })
+    .catch(muffleEarly);
+  // The boot-kicked request, consumed exactly once; every later refresh
+  // fetches its own.
+  const skyPre = AXIS.preSky; AXIS.preSky = null;
+  (skyPre ?? get(`/api/sky/current?tz=${encodeURIComponent(tz)}`))
+    .then(r => { void cachePut(kSky, r); applySky(r); })
+    .catch(() => { if (!skyFromCache && !AXIS.lastSky) axisRenderSkyError("We couldn't reach the current sky just now."); });
 
   // Fortune: prefer the signed-in path; fall back to a local preview.
   // Skipped entirely when signed out. The endpoint is authenticated and a daily
@@ -6531,15 +6724,40 @@ async function axisLoadToday() {
   // catch below already handled the 401, but asking produced one logged failure
   // per page view for every visitor who has not signed up, which is now most of
   // them. Not asking is both quieter and faster.
+  let fortuneCachedAt = null;
   try {
     if (!authSignedIn()) throw new Error("signed out");
+    // The reading's cache key carries the chart, the reader's local day, and
+    // the timezone — change any of them and this is a different reading.
+    const kFortune = `fortune::${state.activeChartId || "active"}::${localDayKey(tz)}::${tz}`;
+    try {
+      const hit = await cacheGet(kFortune);
+      if (hit?.value?.fortune) {
+        fortuneCachedAt = hit.savedAt;
+        AXIS.lastFortune = hit.value.fortune;
+        axisShowReadingFor(hit.value.chart?.nickname || "My Chart");
+        axisRenderFortune(hit.value.fortune);
+        cacheNote(fortuneCachedAt);
+        refreshSecondaryRoute();
+      }
+    } catch { /* the cache is a courtesy */ }
     const r = await get("/api/fortune/today");
+    void cachePut(kFortune, r);
     AXIS.lastFortune = r.fortune;
     axisShowReadingFor(r.chart?.nickname || "My Chart");
     axisRenderFortune(r.fortune);
+    cacheNote(null);
     refreshSecondaryRoute();
     return;
-  } catch { /* signed out, no active chart, or a transient fortune failure */ }
+  } catch { /* signed out, no active chart, or a transient fortune failure */
+    if (fortuneCachedAt != null) {
+      // The cached reading is on screen and the refresh failed. Keeping it,
+      // saying so, and NOT falling through to the setup messages below — a
+      // reading must never be replaced by an apology for one.
+      cacheNote(fortuneCachedAt, { failed: true });
+      return;
+    }
+  }
 
   if (authSignedIn()) {
     // A failed *fortune* request says nothing about whether the account has a

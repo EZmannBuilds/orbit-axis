@@ -491,7 +491,7 @@ test("deferring while unresolved cannot strand a session that arrives later", ()
   // refreshSecondaryRoute (loads). If that second load were skipped, a
   // signed-in user landing on #positions would see nothing for ever.
   const boot = APP.slice(APP.indexOf("  renderRoute();\n\n  try {"), APP.indexOf("  await axisInit();"));
-  assert.match(boot, /await restoreSession\(\);\s*\n\s*refreshSecondaryRoute\(\);/,
+  assert.match(boot, /await restoreSession\(early\.session\);\s*\n\s*refreshSecondaryRoute\(\);/,
     "the route is refreshed once the session resolves");
   const refresh = APP.slice(APP.indexOf("function refreshSecondaryRoute"), APP.indexOf("function renderTransits"));
   assert.match(refresh, /if \(id === "positions"\)[\s\S]{0,80}loadPositions\(\)/,
