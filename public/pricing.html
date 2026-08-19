@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Pricing — Orbit Axis</title>
+  <meta name="description" content="Orbit Free and Orbit Pro — what each includes and what Pro costs." />
+  <link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
+  <!-- Theme resolution BEFORE first paint, identical to index.html.
+       These pages are linked straight from the app, so arriving on one used to
+       flip a light-mode reader onto a black page: without this they have no
+       data-theme at all and fall through to the dark default. Inline and tiny on
+       purpose — a linked script would race the stylesheets and flash the wrong
+       theme. Kept byte-identical across pages, and a test enforces that. -->
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem("orbit.theme"); } catch (e) { /* private mode */ }
+      if (stored !== "light" && stored !== "dark" && stored !== "system") stored = "system";
+      var resolved = stored === "system"
+        ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark")
+        : stored;
+      document.documentElement.dataset.theme = resolved;
+      document.documentElement.dataset.themePreference = stored;
+    })();
+  </script>
+  <link rel="stylesheet" href="/styles/tokens.css" />
+  <link rel="stylesheet" href="/styles/base.css" />
+  <link rel="stylesheet" href="/styles/components.css" />
+  <link rel="stylesheet" href="/styles/legal.css" />
+</head>
+<body>
+  <main class="legal">
+    <a class="legal__back" href="/">← Back to Orbit Axis</a>
+
+    <h1 class="legal__title">Pricing</h1>
+    <p class="legal__dates">Two plans. No countdowns, no fake scarcity, no pressure.</p>
+
+    <p class="legal__lede">
+      Orbit Axis presents astrology as symbolic reflection — a language for
+      thinking about your own patterns. It is not prediction, and it is not
+      medical, financial, legal, or relationship advice. Neither plan changes
+      that.
+    </p>
+
+    <h2 id="free">Orbit Free — $0</h2>
+    <p><strong>Explore your chart and the sky.</strong> Free is the product, not a demo:</p>
+    <ul>
+      <li>Your complete birth chart, calculated by Orbit's own astronomy engine</li>
+      <li>Today's sky and your daily reading, in plain language</li>
+      <li>The daily Tarot card and reflection</li>
+      <li>The Symbol Atlas</li>
+      <li>Your account, your data export, and account deletion — always free.
+          Orbit never charges to give you your own data back.</li>
+    </ul>
+
+    <h2 id="pro">Orbit Pro</h2>
+    <p><strong>Go deeper with more ways to compare, save, revisit and understand
+       your symbolic patterns.</strong></p>
+    <ul>
+      <li>More saved charts — the people around you, not just yourself</li>
+      <li>Chart-to-chart compatibility readings</li>
+      <li>Expanded interpretations and technical sky detail</li>
+      <li>Your full reading history, unlimited</li>
+      <li>Chart photos and personalised reminders</li>
+    </ul>
+
+    <h2 id="price">What Pro costs</h2>
+    <ul>
+      <li><strong>Monthly:</strong> $4.99 per month</li>
+      <li><strong>Annual: $39 billed once per year.</strong> That is the full
+          annual charge — about $3.25 a month, and $20.88 less than twelve
+          months at the monthly price.</li>
+    </ul>
+    <p>
+      Prices are in USD. Cancel any time from Manage Billing; a cancelled
+      subscription keeps Pro until the period you already paid for ends, and
+      nothing renews after that.
+    </p>
+
+    <div class="legal__actions" id="pricing-actions">
+      <button type="button" class="o-btn o-btn--primary" data-billing-interval="month">
+        Get Pro monthly — $4.99/mo
+      </button>
+      <button type="button" class="o-btn o-btn--primary" data-billing-interval="year">
+        Get Pro annual — $39/yr
+      </button>
+    </div>
+    <p id="pricing-status" role="status" aria-live="polite"></p>
+
+    <h2 id="how">How buying works</h2>
+    <p>
+      Payment runs through Stripe's hosted checkout — card details never touch
+      Orbit's servers, and Orbit never sends Stripe your birth details, charts,
+      readings, or anything beyond what payment needs. You must be signed in to
+      your Orbit Axis account first, so the subscription lands on the right
+      account. Manage or cancel any time from You → Manage billing.
+    </p>
+
+    <script>
+      // Buy buttons: ask the server to open Stripe Checkout. Signed out, the
+      // server answers 401 and the reader is sent to sign in first — the
+      // subscription must land on an account, not an email address.
+      for (const button of document.querySelectorAll("[data-billing-interval]")) {
+        button.addEventListener("click", async () => {
+          const status = document.getElementById("pricing-status");
+          button.disabled = true;
+          status.textContent = "Opening secure checkout…";
+          try {
+            const res = await fetch("/api/billing/checkout", {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ interval: button.dataset.billingInterval }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.status === 401) {
+              status.textContent = "Sign in to your Orbit Axis account first — sending you there now.";
+              setTimeout(() => { window.location.href = "/#more"; }, 1200);
+              return;
+            }
+            if (!res.ok || !data.url) {
+              status.textContent = data.error || "Checkout could not be started. Nothing was charged.";
+              return;
+            }
+            window.location.href = data.url;
+          } catch {
+            status.textContent = "Checkout could not be reached. Nothing was charged.";
+          } finally {
+            button.disabled = false;
+          }
+        });
+      }
+    </script>
+  </main>
+</body>
+</html>

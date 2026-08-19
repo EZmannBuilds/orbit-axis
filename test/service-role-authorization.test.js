@@ -95,7 +95,11 @@ test("an unknown purpose is never authorized, however configured", () => {
   const verdict = serviceRoleVerdict("read-every-users-birth-data",
     authorizedEnv({ [PURPOSE_VAR]: "read-every-users-birth-data" }), prodContext);
   assert.equal(verdict.authorized, false);
-  assert.equal(SERVICE_ROLE_PURPOSES.length, 1, "widening this set must be a deliberate change");
+  // Two, since Dev Update 3.10 added "stripe-billing" for webhook writes.
+  // This assertion is the tripwire that makes each widening a reviewed
+  // decision, and it fired for that one exactly as intended.
+  assert.deepEqual([...SERVICE_ROLE_PURPOSES], ["account-deletion", "stripe-billing"],
+    "widening this set must be a deliberate change");
 });
 
 test("no refusal reason ever contains key material", () => {

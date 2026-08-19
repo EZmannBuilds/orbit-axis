@@ -118,3 +118,9 @@
   .legal__note { border-left-color: #666; }
   .legal a::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #444; }
 }
+
+
+/* ── Pricing actions (Dev Update 3.10) ────────────────────────────────────
+   The one legal-shell page with buttons. components.css supplies .o-btn;
+   this supplies only the row they sit in. */
+.legal__actions { display: flex; gap: var(--space-sm); flex-wrap: wrap; margin: var(--space-lg) 0 var(--space-sm); }
