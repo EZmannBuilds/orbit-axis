@@ -11,10 +11,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { normalizeApiBase } from "../scripts/app-config.js";
+import { auditApiOrigin, normalizeApiBase } from "../scripts/app-config.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
@@ -55,14 +56,102 @@ test("an unparsable value fails loudly rather than shipping", () => {
   assert.throws(() => normalizeApiBase("not-a-url"), /not a valid URL/);
 });
 
+// ── The API origin audit: real in the bundle, inert in the repository ───────
+// One file, two opposite requirements, judged as a pure function so both
+// directions of the 2026-08-19 failure are held: the check that refused a
+// correctly configured checkout, and the empty default that shipped to a phone
+// and answered every /api request itself with a 200.
+
+// The fixture carries the real file's trap: a header comment that mentions
+// `apiBaseUrl: ""` as prose ABOVE the declaration. A whole-file regex finds
+// the comment first and reports every config as empty — which is how the
+// previous guard passed a configured and an unconfigured checkout alike.
+const configWith = (origin) => [
+  "// Orbit Axis :: runtime application configuration.",
+  '//   apiBaseUrl: ""  →  the application calls its own origin.',
+  "globalThis.ORBIT_APP_CONFIG = {",
+  `  apiBaseUrl: ${JSON.stringify(origin)},`,
+  "};",
+  "",
+].join("\n");
+
+test("a native bundle cannot ship the empty same-origin default", () => {
+  const inert = configWith("");
+  const { problems } = auditApiOrigin({ workingTree: inert, committed: inert });
+  assert.equal(problems.length, 1);
+  // The failure names the mechanism and the fix, because the symptom it
+  // prevents — 200s from capacitor://localhost — looks like success.
+  assert.match(problems[0], /capacitor:\/\/localhost/);
+  assert.match(problems[0], /ORBIT_APP_API_BASE_URL=<https origin> npm run app:config/);
+});
+
+test("a configured checkout passes — the build chain must not refuse its own contract", () => {
+  const { problems, notes } = auditApiOrigin({
+    workingTree: configWith("https://example.test"),
+    committed: configWith(""),
+  });
+  assert.deepEqual(problems, [], "a real origin locally plus the inert default in git is the documented flow");
+  assert.ok(notes.some((n) => n.includes("https://example.test")),
+    "the origin the bundle will call is stated, not silent");
+});
+
+test("a real origin in git is refused, wherever the working tree stands", () => {
+  // Committing the value would override every browser visitor's own origin.
+  for (const workingTree of [configWith(""), configWith("https://example.test")]) {
+    const { problems } = auditApiOrigin({ workingTree, committed: configWith("https://example.test") });
+    assert.ok(problems.some((p) => /committed public\/app-config\.js has apiBaseUrl/.test(p)),
+      "the commit guard must hold independently of the bundle-side answer");
+  }
+});
+
+test("a missing or undeclared config is a problem, not a pass", () => {
+  assert.ok(auditApiOrigin({ workingTree: null, committed: configWith("") })
+    .problems.some((p) => /missing/.test(p)));
+  assert.ok(auditApiOrigin({ workingTree: "// nothing here", committed: configWith("") })
+    .problems.some((p) => /does not declare apiBaseUrl/.test(p)));
+  assert.ok(auditApiOrigin({ workingTree: configWith("https://example.test"), committed: "// nothing" })
+    .problems.some((p) => /committed .* does not declare/.test(p)));
+});
+
+test("no answer from git skips the commit guard honestly", () => {
+  // A tarball checkout has no index to ask. That is a skipped check to report,
+  // not a failure to invent and not a pass to assume.
+  const { problems, notes } = auditApiOrigin({
+    workingTree: configWith("https://example.test"), committed: null,
+  });
+  assert.deepEqual(problems, []);
+  assert.ok(notes.some((n) => /skipped/.test(n)));
+});
+
+test("every native sync path runs the audit first", () => {
+  // The guard exists only if the build chain actually consults it before
+  // `cap sync` copies the working tree into the device bundle.
+  const pkg = JSON.parse(read("package.json"));
+  assert.match(pkg.scripts["app:build"], /npm run app:check && npx cap sync ios/);
+  assert.match(pkg.scripts["app:sync"], /npm run app:check && npx cap sync ios/,
+    "the standalone sync must not bypass the check the build chain relies on");
+  const check = read("scripts/app-check.js");
+  assert.match(check, /auditApiOrigin\(/);
+  assert.match(check, /"show", ":public\/app-config\.js"/,
+    "the commit side is read from git's index, not inferred from the working tree");
+});
+
 // ── The web build must not depend on the native container ───────────────────
 
 test("the committed app config is the inert same-origin default", () => {
   // `npm run app:config` writes a real origin for a native build. Committing
-  // that value would override every browser visitor's own origin.
-  const config = read("public/app-config.js");
+  // that value would override every browser visitor's own origin. Read from
+  // git's INDEX: the working tree legitimately holds a real origin on a
+  // machine that builds the app, and that is not what this test polices.
+  let config;
+  try {
+    config = execFileSync("git", ["show", ":public/app-config.js"],
+      { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  } catch {
+    config = read("public/app-config.js");   // no git: the shipped file IS the commit
+  }
   assert.match(config, /apiBaseUrl:\s*""/,
-    "public/app-config.js must ship with an empty apiBaseUrl");
+    "public/app-config.js must be committed with an empty apiBaseUrl");
 });
 
 test("index.html references the app config, so the build cannot lose it", () => {

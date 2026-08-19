@@ -2,8 +2,9 @@
 // Orbit Axis :: native application readiness checks (Update 1.1.1).
 //
 // Safe by design: contacts nothing, starts nothing, changes nothing. It reads
-// files and answers whether this checkout could produce a sane iOS build, and
-// whether anything that must never ship to a device is about to.
+// files — and asks git, read-only, what the index holds for one of them — and
+// answers whether this checkout could produce a sane iOS build, and whether
+// anything that must never ship to a device is about to.
 //
 // It deliberately does NOT check that Xcode works. That is an environment
 // question with an honest answer of its own, reported separately, and a
@@ -12,7 +13,9 @@
 
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
+import { auditApiOrigin } from "./app-config.js";
 
 const problems = [];
 const notes = [];
@@ -90,27 +93,29 @@ function scan(dir) {
 scan(join(REPO_ROOT, "public"));
 notes.push("public/ scanned for credentials; nothing shipped to a device may contain one.");
 
-// ── 3. The committed API origin is the inert default ────────────────────────
-// `npm run app:config` writes a real origin for a native build. That value is
-// correct locally and wrong in the repository, where it would override the
-// browser's own origin for everyone.
-const appConfig = read("public/app-config.js");
-if (!appConfig) {
-  problems.push("public/app-config.js is missing — index.html references it and the build will fail.");
-} else {
-  const match = /apiBaseUrl:\s*"([^"]*)"/.exec(appConfig);
-  if (!match) {
-    problems.push("public/app-config.js does not declare apiBaseUrl.");
-  } else if (match[1]) {
-    problems.push(
-      `public/app-config.js has apiBaseUrl "${match[1]}". That is a local native-build `
-      + "value and must not be committed. Run `npm run app:config` with no "
-      + "ORBIT_APP_API_BASE_URL set to restore the same-origin default.",
-    );
-  } else {
-    notes.push("public/app-config.js holds the inert same-origin default.");
+// ── 3. The API origin: real in the bundle, inert in the repository ──────────
+// Two opposite requirements on one file, so both copies are judged. The
+// WORKING TREE is what `cap sync` bundles into the device, and with the empty
+// same-origin default every /api request would resolve against
+// capacitor://localhost and be answered — 200, no data — by the bundle itself.
+// The INDEX is what a commit would publish, where a real origin would override
+// every browser visitor's own. The old version of this check asked only the
+// commit question, of the working tree: it refused a correctly configured
+// checkout and passed the broken default straight onto a phone.
+function committedAppConfig() {
+  try {
+    return execFileSync("git", ["show", ":public/app-config.js"],
+      { cwd: REPO_ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+  } catch {
+    return null;   // not a git checkout: the audit reports the skip honestly
   }
 }
+const origin = auditApiOrigin({
+  workingTree: read("public/app-config.js"),
+  committed: committedAppConfig(),
+});
+problems.push(...origin.problems);
+notes.push(...origin.notes);
 
 // ── 4. The web build does not depend on the native container ────────────────
 // The browser version is the source application. If it needs Capacitor to run,

@@ -23,7 +23,7 @@
     "app:config": "node scripts/app-config.js",
     "app:check": "node scripts/app-check.js",
     "app:build": "npm run build && npm run app:check && npx cap sync ios",
-    "app:sync": "npx cap sync ios",
+    "app:sync": "npm run app:check && npx cap sync ios",
     "app:ios": "npx cap open ios",
     "deploy:check": "node scripts/deploy-check.js",
     "orbit:runtime:check": "node scripts/runtime-check.js",
