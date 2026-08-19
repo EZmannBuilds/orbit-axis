@@ -433,7 +433,9 @@ test("an incomplete deck could still not be exposed", () => {
   assert.equal(deckStatus([]).reason, "empty_deck");
   // And what production actually ships is complete.
   assert.equal(PRODUCTION_CARDS.length, 78);
-  assert.equal(DECK_VERSION, "1.0.0");
+  // A deliberate tripwire: any deck change must come here and say so.
+  // 1.1.0 — every reversed meaning gained a grounding third sentence (4.0.1).
+  assert.equal(DECK_VERSION, "1.1.0");
 });
 
 test("the panel ships in the document, like every other finished surface", () => {
