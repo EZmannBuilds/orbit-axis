@@ -4671,6 +4671,11 @@ function tarotMeaningOnRequest() {
   return tarotPref("tarotMeaning", "ask") !== "always";
 }
 
+/** How many cards a manual draw deals by default: the reader's choice. */
+function tarotDefaultSpread() {
+  return tarotPref("tarotDraw", "one") === "three" ? "three_card" : "one_card";
+}
+
 /** The labels for a three-card spread under this reader's setting. */
 const TAROT_POSITION_SETS = {
   reflective: ["What shaped this", "What is present", "What to consider next"],
@@ -4739,6 +4744,29 @@ function tarotWasRevealed(localDate) {
   if (!localDate) return false;
   try { return localStorage.getItem(tarotRevealKey(localDate)) === "1"; }
   catch { return false; }   // private mode: the card simply starts face down
+}
+
+/**
+ * Whether today's reading has already been logged to the account's reflections.
+ *
+ * Like the reveal marker, this stores a DATE and nothing about the reading —
+ * one key, overwritten daily, so it expires by never being read again. It only
+ * saves a request: the server refuses to file a second daily reading for the
+ * same local day, so losing this marker (private mode, another device) costs
+ * one redundant call, not a duplicate row.
+ */
+const TAROT_LOGGED_KEY = "orbit.tarot.logged";
+
+function tarotDailyLogged(localDate) {
+  if (!localDate) return false;
+  try { return localStorage.getItem(TAROT_LOGGED_KEY) === localDate; }
+  catch { return false; }
+}
+
+function tarotRememberDailyLogged(localDate) {
+  if (!localDate) return;
+  try { localStorage.setItem(TAROT_LOGGED_KEY, localDate); }
+  catch { /* private mode: the server-side check still prevents duplicates */ }
 }
 
 function tarotRememberReveal(localDate) {
@@ -5064,9 +5092,29 @@ function renderTarotDaily() {
   // undefined` fell back to the default of true and every meaning showed
   // immediately regardless of the setting.
   const showMeaning = Boolean(!tarotMeaningOnRequest() || tarotState.meaningShown[entry.card.slug]);
+  // Before the actions render, so an already-logged day paints "Saved" rather
+  // than a save button that flickers into one.
+  autoSaveTarotDaily();
   reading.innerHTML = `${tarotMeaningHtml(entry, { headingLevel: 3, showPosition: false, shown: showMeaning })}
     <div class="tarot-actions" id="tarot-daily-actions"></div>`;
   renderTarotDailySave();
+}
+
+/**
+ * Log today's revealed card to the account's reflections, once per local day.
+ *
+ * Automatic for a signed-in reader — turning the card over IS the reflection,
+ * and asking for a second gesture to keep it lost most of them. It fires on
+ * the revealed render, so a card left face down is never logged. Signed out,
+ * nothing fires and nothing prompts: the save button below still offers the
+ * account at the press, which is the [[Signed-Out Experience]] rule.
+ */
+function autoSaveTarotDaily() {
+  if (!authSignedIn() || tarotState.saved || tarotState.saving) return;
+  const localDate = tarotState.reading?.draw?.local_date;
+  if (!localDate) return;
+  if (tarotDailyLogged(localDate)) { tarotState.saved = true; return; }
+  saveTarotReading("daily", { auto: true });
 }
 
 /** Save is offered to everyone; the account is asked for only on the press. */
@@ -5132,6 +5180,11 @@ async function drawTarotSpread(spreadType) {
     // line stands down rather than saying it a second time three lines above.
     // The "Drawing…" message it replaces did the announcing.
     tarotSay("");
+    // A signed-in draw keeps itself: asking to draw was the deliberate act,
+    // and a second "save" gesture mostly recorded who forgot to press it.
+    // Signed out, nothing fires and nothing prompts — the save button below
+    // still offers the account at the press.
+    if (authSignedIn()) saveTarotReading("manual", { auto: true });
   } catch (error) {
     const code = error?.data?.code;
     if (code === "empty_deck" || code === "incomplete_deck" || code === "unreviewed_deck") {
@@ -5386,15 +5439,21 @@ function renderTarotManualSave() {
  * This is the [[Signed-Out Experience]] rule applied exactly: the card was
  * free, keeping it is what costs an account. The guard runs BEFORE the request
  * so nobody meets a 401 under a button they just pressed.
+ *
+ * `auto` is the automatic path — a signed-in reveal or draw keeping itself.
+ * It stays QUIET: no toast, no live announcement, because the reader did not
+ * press anything and the reveal announcement is still being read. The rendered
+ * "Saved to your reflections." line is the confirmation. A failed auto save is
+ * also quiet — it leaves the save button standing, which is the retry.
  */
-async function saveTarotReading(which) {
+async function saveTarotReading(which, { auto = false } = {}) {
   const reading = which === "daily" ? tarotState.reading : tarotState.manual;
   if (!reading || tarotState.saving) return;
   if (!authSignedIn()) { requireAccount("history"); return; }
 
   tarotState.saving = true;
   which === "daily" ? renderTarotDailySave() : renderTarotManualSave();
-  tarotSay("Saving your reflection…");
+  if (!auto) tarotSay("Saving your reflection…");
 
   try {
     await post("/api/tarot/readings", {
@@ -5410,10 +5469,15 @@ async function saveTarotReading(which) {
       },
     });
     tarotState.saved = true;
-    tarotSay("Saved to your reflections.");
-    toast("Reflection saved");
+    // The server files one daily reading per local day, so this marker only
+    // saves tomorrow's visit a redundant request.
+    if (which === "daily") tarotRememberDailyLogged(reading.draw?.local_date);
+    if (!auto) {
+      tarotSay("Saved to your reflections.");
+      toast("Reflection saved");
+    }
   } catch (error) {
-    tarotSay(error.message || "That reflection could not be saved.", { assertive: true });
+    if (!auto) tarotSay(error.message || "That reflection could not be saved.", { assertive: true });
   } finally {
     tarotState.saving = false;
     which === "daily" ? renderTarotDailySave() : renderTarotManualSave();
@@ -5489,16 +5553,36 @@ function wireTarot() {
     }
   });
 
+  syncTarotDrawButtons();
+
   const form = $("#tarot-form");
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       // Which button submitted decides the spread. `submitter` is the honest
       // source; reading a stored "last clicked" value drifts the moment
-      // somebody submits with the keyboard.
-      const spread = event.submitter?.dataset?.spread || "one_card";
+      // somebody submits with the keyboard. No submitter falls back to the
+      // reader's own default, not to a hardcoded one.
+      const spread = event.submitter?.dataset?.spread || tarotDefaultSpread();
       drawTarotSpread(spread);
     });
+  }
+}
+
+/**
+ * The draw buttons follow the reader's default: the chosen count is the
+ * primary action and listed first, the other stays one tap away. Both buttons
+ * remain — the setting decides which one leads, never which ones exist.
+ */
+function syncTarotDrawButtons() {
+  const holder = document.querySelector("#tarot-form .tarot-form__actions");
+  if (!holder) return;
+  const preferred = tarotDefaultSpread();
+  for (const button of holder.querySelectorAll("button[data-spread]")) {
+    const leads = button.dataset.spread === preferred;
+    button.classList.toggle("o-btn--primary", leads);
+    button.classList.toggle("o-btn--secondary", !leads);
+    if (leads && holder.firstElementChild !== button) holder.prepend(button);
   }
 }
 
@@ -5699,6 +5783,7 @@ const settings = {
     tarotMeaning: { default: "ask", seg: "#set-tarot-meaning" },
     tarotReversed: { default: "off", seg: "#set-tarot-reversed" },
     tarotMotion: { default: "off", seg: "#set-tarot-motion" },
+    tarotDraw: { default: "one", seg: "#set-tarot-draw" },
   },
   load() {
     this.apply("theme", readStoredTheme());
@@ -5720,6 +5805,9 @@ const settings = {
       // Card motion attaches or releases the sensor the moment the setting
       // changes — never on a schedule, never while the tarot page is away.
       if (key === "tarotMotion") tarotMotionSync();
+      // The draw default restyles two buttons in place. Falling through to the
+      // full re-render below would reload the daily card just to reorder them.
+      if (key === "tarotDraw") { syncTarotDrawButtons(); return; }
       // A changed reading preference re-renders whatever is on screen, so the
       // reader sees the setting take hold rather than wondering if it did.
       if (key !== "tarot" && currentWorkspace() === "tarot") enterTarot();
@@ -5750,7 +5838,7 @@ const settings = {
 function wireSettings() {
   const map = { "#set-theme": "theme", "#set-text": "text", "#set-contrast": "contrast", "#set-motion": "motion",
     "#set-tarot": "tarot", "#set-tarot-positions": "tarotPositions", "#set-tarot-meaning": "tarotMeaning",
-    "#set-tarot-reversed": "tarotReversed", "#set-tarot-motion": "tarotMotion" };
+    "#set-tarot-reversed": "tarotReversed", "#set-tarot-motion": "tarotMotion", "#set-tarot-draw": "tarotDraw" };
   for (const [sel, key] of Object.entries(map)) {
     $(sel)?.addEventListener("click", e => {
       const btn = e.target.closest("button");

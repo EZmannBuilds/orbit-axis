@@ -93,7 +93,9 @@
       <li><strong>Error information</strong> — the error code and route. <strong>Request bodies are never logged</strong>, so your birth details do not appear in Orbit's logs.</li>
       <li><strong>Standard server request data</strong> handled by the hosting provider.</li>
       <li><strong>Kept in your browser, not on Orbit's servers</strong> — your theme and
-        display preferences, and whether you have turned over today's Tarot card. The
+        display preferences, whether you have turned over today's Tarot card, and — when
+        you are signed in — whether today's card has already been added to your
+        reflections, so it is not sent twice. The
         Tarot marker records only that you revealed the card and for which date; the card
         itself is worked out from the date each time, so it is the same card whatever
         device you open. Nothing in this group is sent to Orbit, and clearing your browser
@@ -132,7 +134,7 @@
           <tr><td>Signing you in</td><td>Email, password, session</td></tr>
           <tr><td>Calculating a chart</td><td>Birth date, time, place, coordinates, time zone</td></tr>
           <tr><td>Keeping charts across devices</td><td>Saved charts, active chart</td></tr>
-          <tr><td>Keeping the Tarot reflections you choose to save</td><td>Saved Tarot readings — the cards drawn, any question you wrote, and the date</td></tr>
+          <tr><td>Keeping your Tarot reflections</td><td>Saved Tarot readings — the cards drawn, any question you wrote, and the date</td></tr>
           <tr><td>Daily readings and history</td><td>Active chart, calculated placements</td></tr>
           <tr><td>Ask Orbit</td><td>Your question, active chart, conversation history</td></tr>
           <tr><td>Security</td><td>Session information, request ids</td></tr>
@@ -162,7 +164,10 @@
     </p>
 
     <p>
-      <strong>Tarot reflections</strong> are kept only when you choose to save one. A
+      <strong>Tarot reflections</strong> are kept only for a signed-in account: the
+      daily card you turn over and any reading you draw are added to your reflections
+      automatically, and today's card is recorded once per day. Signed out, nothing is
+      stored on Orbit's servers — there is no account to keep it for. A
       saved reflection holds the cards drawn, the question you wrote if you wrote one,
       and the date — nothing else. Tarot in Orbit Axis is a reflection prompt, not a
       prediction, and it is not calculated from your chart or from the sky. Saved
