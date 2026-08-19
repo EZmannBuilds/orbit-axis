@@ -275,6 +275,99 @@ test("a saved reading stores slugs, never card row ids", async () => {
     "no uuid may appear in a stored reading");
 });
 
+/* ── The daily reading is filed once per local day ────────────────────────
+   The client saves the revealed daily card automatically, so the server has
+   to be the arbiter of "once": a second device, a cleared browser, or a
+   repeated visit must find the day's existing row rather than file another.
+   tarot_readings has no unique constraint to lean on — the local date lives
+   inside reading_data — so the guard is read-then-insert, and these tests
+   hold both halves of it. */
+
+const DAILY_PAYLOAD = Object.freeze({
+  spread_type: "daily",
+  cards: ["the-fool"],
+  draw: { local_date: "2026-08-15", timezone: "UTC" },
+});
+
+test("a second daily save the same day returns the existing reading, inserting nothing", async () => {
+  const existing = {
+    id: "row-daily",
+    spread_type: "daily",
+    question: null,
+    reading_data: {
+      cards: [{ position: "Today's card", card: { slug: "the-star", name: "The Star" } }],
+      draw: { local_date: "2026-08-15" },
+    },
+    created_at: "2026-08-15T08:00:00Z",
+  };
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method });
+    return { ok: true, status: 200, text: async () => JSON.stringify([existing]) };
+  };
+
+  const saved = await saveReading({
+    auth: AUTH, payload: { ...DAILY_PAYLOAD }, deck: DECK, deckVersion: FIXTURE_DECK_VERSION, fetchImpl,
+  });
+
+  assert.equal(calls.length, 1, "found, so nothing may be inserted");
+  assert.equal(calls[0].method, "GET");
+  assert.ok(calls[0].url.includes("spread_type=eq.daily"));
+  assert.ok(calls[0].url.includes(`owner_id=eq.${AUTH.ownerId}`), "the check is owner-scoped");
+  assert.ok(calls[0].url.includes("local_date=eq.2026-08-15"));
+  // The day's FIRST card is what history keeps — not whatever arrived second.
+  assert.equal(saved.id, "row-daily");
+  assert.equal(saved.cards[0].card.slug, "the-star");
+});
+
+test("the first daily save of the day checks, finds nothing, and inserts", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ url: String(url), method: options.method, body: options.body });
+    return {
+      ok: true, status: 200,
+      text: async () => JSON.stringify(calls.length === 1 ? [] : [{ id: "row-new", spread_type: "daily", reading_data: {} }]),
+    };
+  };
+
+  const saved = await saveReading({
+    auth: AUTH, payload: { ...DAILY_PAYLOAD }, deck: DECK, deckVersion: FIXTURE_DECK_VERSION, fetchImpl,
+  });
+
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0].method, "GET");
+  assert.equal(calls[1].method, "POST");
+  assert.equal(saved.id, "row-new");
+});
+
+test("a failed dedupe check must not cost the reader their save", async () => {
+  const calls = [];
+  const fetchImpl = async (url, options = {}) => {
+    calls.push({ method: options.method });
+    if (calls.length === 1) throw new Error("store unreachable");
+    return { ok: true, status: 200, text: async () => JSON.stringify([{ id: "row-new", reading_data: {} }]) };
+  };
+
+  const saved = await saveReading({
+    auth: AUTH, payload: { ...DAILY_PAYLOAD }, deck: DECK, deckVersion: FIXTURE_DECK_VERSION, fetchImpl,
+  });
+
+  assert.equal(calls.length, 2, "the check failing falls through to the insert");
+  assert.equal(calls[1].method, "POST");
+  assert.equal(saved.id, "row-new");
+});
+
+test("a manual reading is never deduped — drawing twice keeps both", async () => {
+  const fetchImpl = stubFetch([{ id: "row-1", reading_data: {} }]);
+  await saveReading({
+    auth: AUTH,
+    payload: { spread_type: "one_card", cards: ["the-star"], draw: { local_date: "2026-08-15" } },
+    deck: DECK, deckVersion: FIXTURE_DECK_VERSION, fetchImpl,
+  });
+  assert.equal(fetchImpl.calls.length, 1, "no pre-check for a manual draw");
+  assert.equal(fetchImpl.calls[0].options.method, "POST");
+});
+
 test("history is scoped to the owner and bounded", async () => {
   const fetchImpl = stubFetch([]);
   await listReadings({ auth: AUTH, limit: 5000, fetchImpl });

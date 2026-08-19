@@ -843,7 +843,9 @@
           <section class="o-section tarot-manual" id="tarot-manual" aria-labelledby="tarot-manual-title">
             <h2 class="axis-section-title" id="tarot-manual-title">A reflection</h2>
             <p class="axis-section-help">Draw one card, or three to read as a sequence.
-              A drawn reading replaces today's card until you come back to it.</p>
+              A drawn reading replaces today's card until you come back to it. Signed in,
+              every reading you draw — and today's card, once you turn it over — is kept
+              in your reflections without a separate save.</p>
 
             <form class="tarot-form" id="tarot-form">
               <div class="tarot-form__actions">
@@ -942,6 +944,17 @@
                   <em>What shaped this · What is present · What to consider next</em>.
                   Past · Present · Future is the traditional wording. The cards and their
                   meanings are identical either way — only the labels change.</p>
+
+                <div class="setting-row">
+                  <span class="setting-row__label" id="set-tarot-draw-label">Default draw</span>
+                  <div class="o-segment" id="set-tarot-draw" role="group" aria-labelledby="set-tarot-draw-label">
+                    <button type="button" data-value="one" aria-pressed="true">One card</button>
+                    <button type="button" data-value="three" aria-pressed="false">Three cards</button>
+                  </div>
+                </div>
+                <p class="setting-row__help">Which draw leads in A reflection: your
+                  choice becomes the first, highlighted button, and the other stays a tap
+                  away. Today's card is always a single card.</p>
 
                 <div class="setting-row">
                   <span class="setting-row__label" id="set-tarot-reversed-label">Reversed cards</span>

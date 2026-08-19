@@ -271,6 +271,60 @@ test("saving asks for an account at the press, not before the card", () => {
   assert.ok(!/loadTarotDaily[\s\S]{0,200}requireAccount/.test(block));
 });
 
+/* ── Auto-save, and the reader's draw default ─────────────────────────────── */
+
+test("a signed-in reading keeps itself, and the automatic path never pops the account gate", () => {
+  const block = APP.slice(APP.indexOf("/* ── Tarot ──"), APP.indexOf("/* ── Toasts"));
+  // A manual draw saves right after it renders — behind its own signed-in
+  // check, so a signed-out reader is never prompted by something they did not
+  // press. The button they CAN press still asks at the press (asserted above).
+  assert.match(block, /if \(authSignedIn\(\)\) saveTarotReading\("manual", \{ auto: true \}\)/);
+  // The daily card logs itself on the revealed render, never face down.
+  const start = block.indexOf("function autoSaveTarotDaily");
+  const auto = block.slice(start, block.indexOf("\n}", start));
+  assert.match(auto, /if \(!authSignedIn\(\)/);
+  assert.ok(!/requireAccount/.test(auto),
+    "an automatic save must never open the account dialog uninvited");
+  assert.match(block, /autoSaveTarotDaily\(\)/);
+});
+
+test("the automatic save is quiet — confirmation is rendered, not announced", () => {
+  // The reveal announcement ("Today's card is …") is still being read when an
+  // auto save completes; a toast or live-region update on top of it would talk
+  // over the card. The "Saved to your reflections." line is the confirmation.
+  const fn = APP.slice(APP.indexOf("async function saveTarotReading"));
+  const body = fn.slice(0, fn.indexOf("\n}"));
+  assert.match(body, /if \(!auto\) tarotSay\("Saving your reflection…"\)/);
+  assert.match(body, /if \(!auto\) \{\s*\n\s*tarotSay\("Saved to your reflections\."\);\s*\n\s*toast\("Reflection saved"\)/);
+});
+
+test("the daily card is logged once per local day, on both sides of the wire", () => {
+  const block = APP.slice(APP.indexOf("/* ── Tarot ──"), APP.indexOf("/* ── Toasts"));
+  // The browser remembers only a DATE — the same shape as the reveal marker,
+  // and it exists only to skip a redundant request.
+  assert.match(block, /const TAROT_LOGGED_KEY = "orbit\.tarot\.logged"/);
+  assert.match(block, /localStorage\.setItem\(TAROT_LOGGED_KEY, localDate\)/);
+  // The server is the arbiter: the day's existing reading wins over an insert,
+  // so a second device cannot double-log the day. Behaviour is proven in
+  // tarot-api.test.js; this pins where the rule lives.
+  const service = readFileSync(join(REPO_ROOT, "lib", "tarot", "service.js"), "utf8");
+  assert.match(service, /reading_data->draw->>local_date=eq\./);
+  assert.match(service, /spread_type=eq\.daily/);
+});
+
+test("the reader chooses which draw leads, and both draws survive the choice", () => {
+  assert.match(HTML, /id="set-tarot-draw"/);
+  assert.match(HTML, /id="set-tarot-draw"[\s\S]{0,200}data-value="one" aria-pressed="true"/,
+    "one card is the default, chosen rather than arrived at");
+  assert.match(APP, /tarotPref\("tarotDraw", "one"\)/);
+  // The keyboard fallback follows the same default, not a hardcoded spread.
+  assert.match(APP, /event\.submitter\?\.dataset\?\.spread \|\| tarotDefaultSpread\(\)/);
+  // The setting reorders and restyles; it never removes a button.
+  assert.match(APP, /function syncTarotDrawButtons/);
+  assert.match(PANEL, /data-spread="one_card"/);
+  assert.match(PANEL, /data-spread="three_card"/);
+});
+
 /* ── History ──────────────────────────────────────────────────────────────── */
 
 test("history gains explicit Astrology and Tarot views", () => {
@@ -399,6 +453,12 @@ test("privacy copy matches what the feature actually stores", () => {
   // The local marker is disclosed, and described as what it is.
   assert.match(PRIVACY, /whether you have turned over today's Tarot card/);
   assert.match(PRIVACY, /included in your data export and are deleted with your account/);
+  // Saving is automatic for an account now, and the policy says so plainly —
+  // "only when you choose to save one" would be a promise the feature no
+  // longer keeps.
+  assert.match(PRIVACY, /added to your reflections\s+automatically/);
+  assert.ok(!/only when you choose to save/.test(PRIVACY));
+  assert.match(PRIVACY, /recorded once per day/);
 });
 
 
