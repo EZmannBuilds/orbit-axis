@@ -607,6 +607,34 @@
                   </span>
                   <span class="o-row__value" id="account-email">Not signed in</span>
                 </div>
+                <!-- Plan and billing (Dev Update 3.10). The plan row always
+                     renders for a signed-in account; the two actions are
+                     web-only — purchases and Stripe's portal are hidden in the
+                     native container, where Apple's rules make a web checkout
+                     the wrong door. Managing money happens on Stripe's hosted
+                     pages either way; Orbit never renders a card form. -->
+                <div class="o-row">
+                  <span class="o-row__icon" data-icon="star"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Plan</span>
+                    <span class="o-row__sub" id="account-plan-detail" hidden></span>
+                  </span>
+                  <span class="o-row__value" id="account-plan">Orbit Free</span>
+                </div>
+                <a class="o-row o-row--link" href="/pricing" id="account-upgrade" hidden>
+                  <span class="o-row__icon" data-icon="sparkle"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Upgrade to Orbit Pro</span>
+                    <span class="o-row__sub">More charts, comparisons, and history. $4.99/mo or $39/yr.</span>
+                  </span>
+                </a>
+                <button type="button" class="o-row o-row--link" id="account-billing-manage" hidden>
+                  <span class="o-row__icon" data-icon="gear"></span>
+                  <span class="o-row__main">
+                    <span class="o-row__title">Manage billing</span>
+                    <span class="o-row__sub">Payment method, invoices, and cancellation — on Stripe's secure page.</span>
+                  </span>
+                </button>
                 <button type="button" class="o-row o-row--link" id="account-password-reset">
                   <span class="o-row__icon" data-icon="lock-key"></span>
                   <span class="o-row__main"><span class="o-row__title">Reset password</span></span>
@@ -625,6 +653,7 @@
                    control that is not on the page when signed out, and a live
                    region announcing for an absent button is worse than absent. -->
               <div class="auth-message" id="account-password-message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+              <div class="auth-message" id="account-billing-message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
               <div class="account-offer" id="account-signed-out" hidden>
                 <p class="account-offer__lead">You're using Orbit Axis without an account. Today's sky, the Atlas, and every position are yours either way.</p>
