@@ -209,6 +209,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .o-search { position: relative; display: flex; align-items: center; min-width: 0; }
 .o-search svg {
   position: absolute; left: var(--space-md); width: 18px; height: 18px;
+  /* Anchored vertically as well as horizontally. The icon arrives inside a
+     zero-size span (hydrateIcons injects it), so with no `top` its static
+     position is the field's midline and all 18px hang BELOW centre — the
+     magnifier visibly sat low in the pill. Absolute centring ignores the
+     wrapper's size entirely, so it holds for any nesting. */
+  top: 50%; transform: translateY(-50%);
   color: var(--color-muted); pointer-events: none;
 }
 .o-search .o-input, .o-search input {
@@ -224,7 +230,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   position: absolute; right: 6px;
   width: 32px; height: 32px;
 }
-.o-search .o-search__clear svg { position: static; width: 16px; height: 16px; }
+/* transform reset too: translateY applies even to static elements, so the
+   centring fix above would drag the clear glyph upward without it. */
+.o-search .o-search__clear svg { position: static; top: auto; transform: none; width: 16px; height: 16px; }
 
 /* ── Badges ──────────────────────────────────────────────────────────────── */
 .o-badge {
