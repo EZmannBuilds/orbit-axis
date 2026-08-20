@@ -10,13 +10,16 @@
 <link rel="stylesheet" href="/styles/base.css" />
 <link rel="stylesheet" href="/styles/components.css" />
 <style>
-  /* Desk chrome only — everything visual in the EXPORTS comes from brand
-     tokens in the SVG template below, not from this page styling. */
-  body { padding: var(--space-lg); max-width: 1180px; margin: 0 auto; }
+  /* Desk chrome only — everything visual in the EXPORTS comes from the
+     shared renderer modules (templates.js/celestial.js), not page styling. */
+  body { padding: var(--space-lg); max-width: 1280px; margin: 0 auto; }
   .x-head { display: flex; align-items: baseline; gap: var(--space-md); flex-wrap: wrap; }
   .x-head h1 { margin: 0; }
-  .x-grid { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.2fr); gap: var(--space-lg); margin-top: var(--space-lg); }
-  @media (max-width: 900px) { .x-grid { grid-template-columns: 1fr; } }
+  .x-grid { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(440px, 1.4fr); gap: var(--space-lg); margin-top: var(--space-lg); }
+  /* min-width:0 so a wide preview strip scrolls INSIDE its panel instead of
+     stretching the whole grid column off the phone screen. */
+  .x-grid > * { min-width: 0; }
+  @media (max-width: 900px) { .x-grid { grid-template-columns: 1fr; } body { padding: var(--space-md); } }
   .x-panel { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-md); background: var(--color-surface); }
   .x-cand { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin-bottom: var(--space-sm); }
   .x-cand--dup { border-color: var(--color-error); }
@@ -24,19 +27,48 @@
   .x-reasons { font-size: var(--type-caption); color: var(--color-muted); }
   .x-row { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; margin: var(--space-xs) 0; }
   textarea, input[type="text"] { width: 100%; }
-  textarea { min-height: 70px; }
-  .x-slides svg { width: 100%; height: auto; border-radius: var(--radius-md); border: var(--border-width) solid var(--color-border); }
-  .x-facts { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: var(--type-caption); }
+  textarea { min-height: 64px; }
+  .x-slides { display: flex; gap: var(--space-sm); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--space-xs); }
+  .x-slides > * { scroll-snap-align: start; flex: 0 0 auto; }
+  .x-slides svg { border-radius: var(--radius-md); border: var(--border-width) solid var(--color-border); display: block; }
+  .x-slides--full svg { width: min(480px, 84vw); height: auto; }
+  .x-slides--feed svg { width: 375px; height: auto; }
+  .x-facts { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: var(--type-caption); overflow-wrap: anywhere; }
   .x-facts strong { color: var(--color-accent); }
   .x-status { color: var(--color-muted); font-size: var(--type-caption); min-height: 1.2em; }
-  .x-hist { font-size: var(--type-caption); }
-  .x-hist td, .x-hist th { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--color-border); }
+  .x-hist { font-size: var(--type-caption); width: 100%; display: block; overflow-x: auto; }
+  .x-hist td, .x-hist th { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+  .x-hist svg { width: 56px; height: auto; border-radius: 4px; display: block; }
+  .x-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
+  .x-section--empty { border-left: 3px solid var(--color-accent); }
+  .x-helper { font-size: var(--type-caption); color: var(--color-muted); margin: 2px 0 6px; }
+  .x-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .x-chip { font-size: var(--type-caption); border: 1px solid var(--color-border); border-radius: 999px; padding: 3px 10px; background: none; color: var(--color-text); cursor: pointer; text-align: left; }
+  .x-chip:hover { border-color: var(--color-accent); }
+  .x-meter { font-size: var(--type-caption); color: var(--color-accent); font-weight: 600; }
+  .x-warn { color: var(--color-error); font-size: var(--type-caption); }
+  .x-advice { color: var(--color-muted); font-size: var(--type-caption); }
+  .x-controls { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
+  .x-controls label { font-size: var(--type-caption); display: inline-flex; align-items: center; gap: 4px; }
+  .x-tpl-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-sm); margin: var(--space-sm) 0; }
+  .x-tpl-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-xs); cursor: pointer; background: none; color: var(--color-text); text-align: left; }
+  .x-tpl-card.is-active { border-color: var(--color-accent); }
+  .x-tpl-card svg { width: 100%; height: auto; border-radius: 4px; }
+  .x-tpl-card .t-name { font-weight: 600; font-size: var(--type-caption); margin-top: 4px; }
+  .x-tpl-card .t-use { font-size: 11px; color: var(--color-muted); }
+  .x-feedsim { max-width: 380px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: #000; }
+  .x-feedsim .f-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; color: #fff; background: #101010; }
+  .x-feedsim .f-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4a28b8, #7657e8); }
+  .x-feedsim .f-dots { text-align: center; padding: 6px; color: #777; font-size: 10px; letter-spacing: 3px; }
+  .x-feedsim .f-dots .on { color: #7657e8; }
+  .x-feedsim .f-caption { padding: 8px 10px 12px; font-size: 13px; color: #ddd; white-space: pre-wrap; }
+  .x-feedsim svg { width: 100%; height: auto; display: block; }
 </style>
 </head>
 <body>
 <header class="x-head">
   <h1>Orbit X</h1>
-  <p style="color:var(--color-muted)">Internal content desk — calculate → select → explain → design → review. Nothing publishes from here.</p>
+  <p style="color:var(--color-muted)">Internal content desk — calculate → select → explain → visualize → reflect. Nothing publishes from here.</p>
 </header>
 
 <div class="x-row">
@@ -64,18 +96,27 @@
 
   <section class="x-panel" aria-label="Draft editor">
     <h2 id="x-editor-title">Draft</h2>
-    <div id="x-editor"><p class="x-status">Generate from a candidate to begin.</p></div>
+    <div id="x-editor"><p class="x-status">Start a draft from a candidate to begin.</p></div>
   </section>
 </div>
 
 <script type="module">
+import { renderPost, normalizeDesign, TEMPLATES, ASPECTS, DENSITIES, REQUIRED_ROLES, humanDate }
+  from "/admin/orbit-x/templates.js";
+import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
+
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const api = async (path, options = {}) => {
   const res = await fetch(path, { credentials: "same-origin",
     headers: { "Content-Type": "application/json" }, ...options });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(body.error || `HTTP ${res.status}`), { body, status: res.status });
+  if (!res.ok) {
+    if (res.status === 401) throw Object.assign(
+      new Error("You're not signed in to Orbit Axis in this browser — sign in on the site, then come back here."),
+      { body, status: 401 });
+    throw Object.assign(new Error(body.error || `HTTP ${res.status}`), { body, status: res.status });
+  }
   return body;
 };
 const status = (t) => { $("#x-status").textContent = t; };
@@ -83,10 +124,12 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
 /* ── State: the verified candidate is held SEPARATELY from editable copy and
    is rendered read-only. Editing facts is not a UI affordance that exists. */
-let current = null;   // { candidate, post, calculationMetadata, generatedCopy }
+let current = null;   // { candidate, post, generatedCopy, calculationMetadata, savedId, suggestions, design }
 let formats = {};
 let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
+let lastSky = [];     // current-sky strip data from the candidates response
+let previewMode = "full"; // full | feed | sim
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 $("#x-date").value = todayIso();
@@ -103,9 +146,11 @@ async function load() {
     const data = await api(`/api/orbit-x/candidates?date=${$("#x-date").value}&tz=${encodeURIComponent(tz)}`);
     formats = data.formats; template = data.template;
     aiAvailable = data.aiAvailable === true;
+    lastSky = data.sky || [];
     const box = $("#x-candidates"); box.innerHTML = "";
     for (const entry of data.candidates) {
       const { candidate, score, suggestedFormat, coverage } = entry;
+      const recTpl = data.recommendedTemplates?.[candidate.eventKey];
       const div = document.createElement("div");
       div.className = "x-cand" + (score.duplicate || coverage.length ? " x-cand--dup" : "");
       div.innerHTML = `
@@ -113,6 +158,7 @@ async function load() {
           <span class="x-score">${score.totalScore}/${score.maxScore}</span></div>
         <div class="x-reasons">${esc(candidate.eventType)} · ${esc(candidate.timestamp || "evergreen")}
           · suggested: ${esc(formats[suggestedFormat]?.name || suggestedFormat)}
+          ${recTpl ? ` · template: ${esc(TEMPLATES[recTpl]?.name || recTpl)}` : ""}
           ${coverage.length ? ` · <strong>already covered (${esc(coverage[0].status)})</strong>` : ""}</div>
         <div class="x-reasons">${esc(score.reasons.join(" · "))}</div>
         <div class="x-row">
@@ -142,9 +188,11 @@ async function manualDraft(candidate, format) {
     // generatedCopy stays null for a manual draft: human-authored is a
     // recorded fact in the row, not a pretence of generation.
     current = { candidate: data.candidate, post: data.post, generatedCopy: null,
-      calculationMetadata: data.calculationMetadata, savedId: null };
+      calculationMetadata: data.calculationMetadata, savedId: null,
+      suggestions: data.suggestions,
+      design: normalizeDesign({ template: data.recommendedTemplate }, data.candidate.eventType, format) };
     renderEditor();
-    status("Manual scaffold ready — every slide needs your pass before approval.");
+    status("Draft ready — the facts are in place; the interpretation is yours.");
   } catch (error) { status(error.message); }
 }
 
@@ -154,7 +202,8 @@ async function generate(candidate, format, instruction = "") {
     const data = await api("/api/orbit-x/generate", { method: "POST", body: JSON.stringify({
       eventKey: candidate.eventKey, date: $("#x-date").value, tz, format, instruction }) });
     current = { candidate: data.candidate, post: data.post, generatedCopy: data.post,
-      calculationMetadata: data.calculationMetadata, savedId: null };
+      calculationMetadata: data.calculationMetadata, savedId: null, suggestions: null,
+      design: normalizeDesign(data.post.design || {}, candidate.eventType, format) };
     renderEditor();
     status(data.usage ? `Generated (${data.usage.input}+${data.usage.output} tokens)` : "Generated");
   } catch (error) {
@@ -162,35 +211,116 @@ async function generate(candidate, format, instruction = "") {
   }
 }
 
+/* ── Design controls: constrained, designed choices — no free x/y anywhere. */
+function designControls() {
+  const d = current.design;
+  const tplChoices = Object.values(TEMPLATES);
+  return `<div class="x-controls">
+    <div class="x-row">
+      <label>Aspect
+        <select class="o-select" id="d-aspect">
+          ${Object.values(ASPECTS).map((a) => `<option value="${a.id}" ${a.id === d.aspect ? "selected" : ""}>${a.id} (${a.width}×${a.height})</option>`).join("")}
+        </select></label>
+      <label>Density
+        <select class="o-select" id="d-density">
+          ${Object.values(DENSITIES).map((x) => `<option value="${x.id}" ${x.id === d.density ? "selected" : ""}>${x.name}</option>`).join("")}
+        </select></label>
+      <label>Variant
+        <select class="o-select" id="d-variant">
+          ${Array.from({ length: TEMPLATES[d.template]?.variants || 1 }, (_, i) =>
+            `<option value="${i}" ${i === d.variant ? "selected" : ""}>${i === 0 ? "Axis (left)" : "Centered"}</option>`).join("")}
+        </select></label>
+    </div>
+    <div class="x-row">
+      <label><input type="checkbox" id="d-v-moon" ${d.visuals.moon ? "checked" : ""}/> Moon</label>
+      <label><input type="checkbox" id="d-v-strip" ${d.visuals.strip ? "checked" : ""}/> Sky strip</label>
+      <label><input type="checkbox" id="d-v-diagram" ${d.visuals.diagram ? "checked" : ""}/> Diagram</label>
+      <span style="opacity:.4">|</span>
+      <label><input type="checkbox" id="d-m-date" ${d.metadata.date ? "checked" : ""}/> Date</label>
+      <label><input type="checkbox" id="d-m-time" ${d.metadata.time ? "checked" : ""}/> Time</label>
+      <label><input type="checkbox" id="d-m-sign" ${d.metadata.sign ? "checked" : ""}/> Sign</label>
+      <label><input type="checkbox" id="d-m-illum" ${d.metadata.illumination ? "checked" : ""}/> Illumination</label>
+      <label><input type="checkbox" id="d-m-calc" ${d.metadata.calculated ? "checked" : ""}/> Calculated label</label>
+    </div>
+    <div class="x-tpl-cards" id="d-templates">
+      ${tplChoices.map((t) => `
+        <button type="button" class="x-tpl-card ${t.id === d.template ? "is-active" : ""}" data-tpl="${t.id}">
+          <span data-thumb="${t.id}"></span>
+          <div class="t-name">${esc(t.name)}</div>
+          <div class="t-use">${esc(t.intendedUse)} · ${esc(t.density)}</div>
+        </button>`).join("")}
+    </div>
+  </div>`;
+}
+
+function readDesign() {
+  return normalizeDesign({
+    aspect: $("#d-aspect")?.value, density: $("#d-density")?.value,
+    template: current.design.template, variant: Number($("#d-variant")?.value || 0),
+    visuals: { moon: $("#d-v-moon")?.checked, strip: $("#d-v-strip")?.checked, diagram: $("#d-v-diagram")?.checked },
+    metadata: { date: $("#d-m-date")?.checked, time: $("#d-m-time")?.checked, sign: $("#d-m-sign")?.checked,
+      illumination: $("#d-m-illum")?.checked, calculated: $("#d-m-calc")?.checked },
+  }, current.candidate.eventType, current.post.format);
+}
+
+function suggestionFor(role) {
+  return current.suggestions?.slides?.find((s) => s.role === role) || null;
+}
+
 function renderEditor() {
   const { candidate, post } = current;
-  const fmt = formats[post.format];
+  const fmt = formats[post.format] || FORMATS[post.format];
   $("#x-editor-title").textContent = `${fmt.name} — ${candidate.title}`;
   const facts = Object.entries(candidate.facts || {})
     .map(([k, v]) => `<div><strong>${esc(k)}</strong>: ${esc(JSON.stringify(v))}</div>`).join("");
+  const expandable = EXPANDABLE_ROLE[post.format];
+
   $("#x-editor").innerHTML = `
     <div class="x-facts" aria-label="Verified engine facts — read only">
       <div><strong>VERIFIED FACTS (engine · read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}
     </div>
+    ${designControls()}
     <label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>
-    <div id="e-slides">${post.slides.map((s, i) => `
-      <label>Slide ${i + 1} heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
-      <label>Slide ${i + 1} body <textarea class="o-input" data-sb="${i}">${esc(s.body)}</textarea></label>`).join("")}
-    </div>
+    ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
+      `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
+    <div id="e-slides">${post.slides.map((s, i) => slideSection(s, i)).join("")}</div>
+    ${expandable ? `<div class="x-row">
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-add-slide">Add ${esc(expandable)} slide</button>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-remove-slide">Remove last ${esc(expandable)} slide</button>
+    </div>` : ""}
     <label>Caption <textarea id="e-caption" class="o-input">${esc(post.caption)}</textarea></label>
-    <label>CTA <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" /></label>
+    ${current.suggestions?.caption?.helper ? `<div class="x-helper">${esc(current.suggestions.caption.helper)}</div>` : ""}
+    <div class="x-row">
+      <label style="flex:1">CTA <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" /></label>
+      <select class="o-select" id="e-cta-pick" style="max-width:240px">
+        <option value="">CTA options…</option>
+        ${(current.suggestions?.cta ? [...current.suggestions.cta.product.map((c) => ["product", c]),
+          ...current.suggestions.cta.editorial.map((c) => ["editorial", c])] : [])
+          .map(([k, c]) => `<option value="${esc(c)}">${esc(k)}: ${esc(c)}</option>`).join("")}
+        <option value="">— none (end on the idea) —</option>
+      </select>
+    </div>
     <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
+    <div class="x-helper">Describe what the graphic actually shows — not the symbolism.</div>
     <label>Editor notes <textarea id="e-notes" class="o-input"></textarea></label>
+    <div class="x-row">
+      <span class="x-meter" id="e-meter"></span>
+      <span class="x-warn" id="e-warnings"></span>
+    </div>
+    <div class="x-advice" id="e-advice"></div>
     <div class="x-row">
       ${aiAvailable ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
       <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-preview">Preview</button>
       <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
+      <span style="opacity:.4">|</span>
+      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="full">Full size</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="feed">Feed size</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="sim">Feed preview</button>
     </div>
     <div class="x-row">
       <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-caption">Copy caption</button>
       <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-alt">Copy alt text</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export slides (PNG)</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export carousel (PNG)</button>
       <button class="o-btn o-btn--primary o-btn--sm" id="e-approve" disabled>Approve</button>
       <select id="e-reject-reason" class="o-select" style="max-width:200px">
         <option value="">Reject: reason…</option>
@@ -200,76 +330,176 @@ function renderEditor() {
       </select>
       <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
     </div>
-    <div class="x-slides" id="e-slides-preview"></div>`;
+    <div id="e-preview-box"></div>`;
 
+  for (const chip of document.querySelectorAll("[data-headline]")) {
+    chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); refresh(); };
+  }
+  for (const chip of document.querySelectorAll("[data-insert]")) {
+    chip.onclick = () => {
+      const field = document.querySelector(`[data-sb="${chip.getAttribute("data-insert")}"]`);
+      field.value = chip.getAttribute("data-text"); refresh();
+    };
+  }
+  for (const el of document.querySelectorAll("#d-aspect, #d-density, #d-variant, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
+    el.onchange = () => { current.design = readDesign(); refresh(); };
+  }
+  for (const card of document.querySelectorAll("[data-tpl]")) {
+    card.onclick = () => {
+      current.design = normalizeDesign({ ...current.design, template: card.getAttribute("data-tpl"), variant: 0 },
+        candidate.eventType, post.format);
+      renderEditor(); // variant list depends on template
+    };
+  }
+  const addBtn = $("#e-add-slide"), rmBtn = $("#e-remove-slide");
+  if (addBtn) addBtn.onclick = () => resizeSlides(1);
+  if (rmBtn) rmBtn.onclick = () => resizeSlides(-1);
+  for (const btn of document.querySelectorAll("[data-pv]")) {
+    btn.onclick = () => { previewMode = btn.getAttribute("data-pv"); preview(); };
+  }
   const regen = $("#e-regen");
   if (regen) regen.onclick = () => generate(candidate, post.format, $("#e-instruction").value);
-  $("#e-preview").onclick = preview;
+  $("#e-cta-pick").onchange = () => { $("#e-cta").value = $("#e-cta-pick").value; refresh(); };
   $("#e-save").onclick = saveDraft;
   $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
   $("#e-copy-alt").onclick = () => copyText(readCopy().altText, "Alt text copied");
   $("#e-export").onclick = exportSlides;
   $("#e-approve").onclick = () => decide("approved");
   $("#e-reject").onclick = () => decide("rejected");
-  preview();
+  $("#x-editor").oninput = debounce(refresh, 350); // assignment, not addEventListener — re-renders must not stack listeners
+  renderTemplateThumbs();
+  refresh();
+}
+
+function slideSection(s, i) {
+  const sugg = suggestionFor(s.role);
+  const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
+  const empty = required && !String(s.body || "").trim();
+  return `<div class="x-section ${empty ? "x-section--empty" : ""}" data-slide-section="${i}">
+    <div class="x-row"><strong style="font-size:var(--type-caption)">Slide ${i + 1}${s.role ? ` · ${esc(s.role)}` : ""}${required ? "" : " · optional"}</strong></div>
+    ${sugg?.helper ? `<div class="x-helper">${esc(sugg.helper)}</div>` : ""}
+    <label>Heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
+    <label>Body <textarea class="o-input" data-sb="${i}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea></label>
+    ${sugg?.suggestions?.length ? `<div class="x-chips">
+      ${sugg.styleExamples ? `<span class="x-helper" style="width:100%">Style examples — adapt to this event, don't paste:</span>` : ""}
+      ${sugg.suggestions.map((t) => `<button type="button" class="x-chip" data-insert="${i}" data-text="${esc(t)}">${esc(t)}</button>`).join("")}
+    </div>` : ""}
+  </div>`;
+}
+
+function resizeSlides(delta) {
+  const fmt = FORMATS[current.post.format];
+  const role = EXPANDABLE_ROLE[current.post.format];
+  const copy = readCopy();
+  const slides = [...copy.slides];
+  if (delta > 0 && slides.length < fmt.slides.max) {
+    const lastIdx = slides.map((s) => s.role).lastIndexOf(role);
+    slides.splice(lastIdx + 1, 0, { role, heading: "", body: "" });
+  } else if (delta < 0 && slides.length > fmt.slides.min) {
+    const lastIdx = slides.map((s) => s.role).lastIndexOf(role);
+    if (lastIdx > 0) slides.splice(lastIdx, 1);
+  } else return;
+  current.post = { ...copy, slides };
+  renderEditor();
 }
 
 function readCopy() {
   const { post } = current;
   return { format: post.format,
     headline: $("#e-headline").value, subhead: post.subhead,
-    slides: post.slides.map((_, i) => ({
+    slides: post.slides.map((s, i) => ({
+      ...(s.role ? { role: s.role } : {}),
       heading: document.querySelector(`[data-sh="${i}"]`).value,
       body: document.querySelector(`[data-sb="${i}"]`).value })),
     caption: $("#e-caption").value, cta: $("#e-cta").value,
-    altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [] };
+    altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [],
+    design: current.design };
 }
 
-/* ── The template: brand tokens, the 62° axis, no generative imagery. ── */
-function slideSvg(copy, slideIndex, total) {
-  const s = copy.slides[slideIndex];
-  const W = template.width, H = template.height;
-  const wrap = (text, max) => { // simple word wrap for <text> tspans
-    const words = String(text).split(/\s+/); const lines = [[]];
-    for (const w of words) {
-      if (lines[lines.length - 1].join(" ").length + w.length > max) lines.push([w]);
-      else lines[lines.length - 1].push(w);
-    }
-    return lines.map((l) => l.join(" ")).slice(0, 9);
-  };
-  const heading = wrap(slideIndex === 0 ? copy.headline : s.heading, 24);
-  const body = wrap(s.body, 44);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img">
-    <rect width="${W}" height="${H}" fill="#080a12"/>
-    <line x1="${W * 0.12}" y1="${H * 0.86}" x2="${W * 0.88}" y2="${H * 0.86 - Math.tan(62 * Math.PI / 180) * 0}" stroke="none"/>
-    <line x1="140" y1="${H - 140}" x2="${140 + 260 * Math.cos(-62 * Math.PI / 180) * -1}" y2="${H - 140 + 260 * Math.sin(-62 * Math.PI / 180)}" stroke="#4a28b8" stroke-width="3"/>
-    <circle cx="140" cy="${H - 140}" r="10" fill="#7657e8"/>
-    ${heading.map((line, i) => `<text x="120" y="${240 + i * 88}" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#f4f2fa">${esc(line)}</text>`).join("")}
-    ${body.map((line, i) => `<text x="120" y="${240 + heading.length * 88 + 60 + i * 52}" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="36" fill="#8e93a8">${esc(line)}</text>`).join("")}
-    <text x="120" y="${H - 100}" font-family="-apple-system, Arial, sans-serif" font-size="30" letter-spacing="4" fill="#b9a7ff">ORBIT AXIS</text>
-    <text x="${W - 120}" y="${H - 100}" text-anchor="end" font-family="-apple-system, Arial, sans-serif" font-size="30" fill="#8e93a8">${slideIndex + 1}/${total}</text>
-  </svg>`;
+/** Client-side completeness mirror — the server re-checks on approval. */
+function completeness(copy) {
+  const missing = [];
+  if (!copy.headline.trim()) missing.push("headline");
+  copy.slides.forEach((s, i) => {
+    const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
+    if (required && !s.body.trim()) missing.push(`slide ${i + 1}${s.role ? ` (${s.role})` : ""}`);
+  });
+  if (!copy.caption.trim()) missing.push("caption");
+  if (!copy.altText.trim()) missing.push("alt text");
+  const requiredTotal = 2 + copy.slides.filter((s) => (s.role ? REQUIRED_ROLES[s.role] !== false : true)).length;
+  return { missing, complete: !missing.length, done: requiredTotal - missing.length, total: requiredTotal };
 }
 
-function preview() {
+function renderContext(copy) {
+  const facts = current.candidate.facts || {};
+  return { eventType: current.candidate.eventType, title: current.candidate.title,
+    facts, sky: facts.planets || lastSky, design: current.design };
+}
+
+function refresh() {
   const copy = readCopy();
-  $("#e-slides-preview").innerHTML = copy.slides.map((_, i) => slideSvg(copy, i, copy.slides.length)).join("");
+  const c = completeness(copy);
+  $("#e-meter").textContent = `${c.done} of ${c.total} required sections complete`;
+  const rendered = renderPost(copy, renderContext(copy));
+  $("#e-warnings").textContent = rendered.warnings.join("  ·  ");
+  $("#e-approve").disabled = !(current.savedId && c.complete);
+  $("#e-reject").disabled = !current.savedId;
+  preview(rendered);
+  for (const [i, s] of copy.slides.entries()) {
+    const box = document.querySelector(`[data-slide-section="${i}"]`);
+    if (!box) continue;
+    const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
+    box.classList.toggle("x-section--empty", required && !s.body.trim());
+  }
 }
 
+function preview(rendered = null) {
+  const copy = readCopy();
+  const r = rendered || renderPost(copy, renderContext(copy));
+  const box = $("#e-preview-box");
+  if (previewMode === "sim") {
+    const dots = copy.slides.map((_, i) => `<span class="${i === 0 ? "on" : ""}">●</span>`).join(" ");
+    box.innerHTML = `<div class="x-feedsim">
+      <div class="f-head"><span class="f-avatar"></span><strong>orbitaxis</strong></div>
+      ${r.slides[0]?.svg || ""}
+      <div class="f-dots">${dots}</div>
+      <div class="f-caption">${esc(copy.caption.length > 140 ? copy.caption.slice(0, 140) + "… more" : copy.caption)}</div>
+    </div>
+    <p class="x-helper">Simulated feed at phone size — judge legibility here, not at full size.</p>`;
+  } else {
+    box.innerHTML = `<div class="x-slides ${previewMode === "feed" ? "x-slides--feed" : "x-slides--full"}">`
+      + r.slides.map((s) => s.svg).join("") + `</div>`
+      + (previewMode === "feed" ? `<p class="x-helper">375&nbsp;px wide — roughly what the feed shows.</p>` : "");
+  }
+}
+
+function renderTemplateThumbs() {
+  const copy = readCopy();
+  for (const holder of document.querySelectorAll("[data-thumb]")) {
+    const tplId = holder.getAttribute("data-thumb");
+    const design = normalizeDesign({ ...current.design, template: tplId, variant: 0 },
+      current.candidate.eventType, current.post.format);
+    const r = renderPost({ ...copy, design }, { ...renderContext(copy), design });
+    holder.innerHTML = r.slides[0]?.svg || "";
+  }
+}
+
+/* ── Export: deterministic filenames, aspect-aware dimensions ── */
 async function exportSlides() {
   const copy = readCopy();
+  const r = renderPost(copy, renderContext(copy));
+  const A = ASPECTS[current.design.aspect];
   const slug = current.candidate.eventKey.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
   const day = current.calculationMetadata?.local_date || $("#x-date").value;
-  for (let i = 0; i < copy.slides.length; i += 1) {
-    const svg = slideSvg(copy, i, copy.slides.length);
-    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  for (let i = 0; i < r.slides.length; i += 1) {
+    const url = URL.createObjectURL(new Blob([r.slides[i].svg], { type: "image/svg+xml" }));
     const img = new Image();
     await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
-    const canvas = Object.assign(document.createElement("canvas"), { width: template.width, height: template.height });
+    const canvas = Object.assign(document.createElement("canvas"), { width: A.width, height: A.height });
     canvas.getContext("2d").drawImage(img, 0, 0);
     URL.revokeObjectURL(url);
     const a = document.createElement("a");
-    a.download = `${template.filePrefix}_${day}_${slug}_${String(i + 1).padStart(2, "0")}.png`;
+    a.download = `${template.filePrefix}_${day}_${slug}_${String(i + 1).padStart(2, "0")}${A.suffix}.png`;
     a.href = canvas.toDataURL("image/png");
     a.click();
   }
@@ -278,29 +508,28 @@ async function exportSlides() {
       body: JSON.stringify({ status: "exported" }) }).catch(() => {});
     loadHistory();
   }
-  status(`Exported ${copy.slides.length} slide(s)`);
+  status(`Exported ${r.slides.length} slide(s) · ${A.width}×${A.height}`);
 }
 
 async function saveDraft() {
   status("Saving…");
+  const payload = () => ({ eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
+    format: current.post.format, copy: readCopy(),
+    generatedCopy: current.generatedCopy, notes: $("#e-notes").value });
   try {
-    const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify({
-      eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
-      format: current.post.format, copy: readCopy(),
-      generatedCopy: current.generatedCopy, notes: $("#e-notes").value }) });
+    const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify(payload()) });
     current.savedId = data.post.id;
-    $("#e-approve").disabled = false; $("#e-reject").disabled = false;
-    status("Draft saved"); loadHistory();
+    showAdvisories(data.advisories);
+    status(data.completeness?.complete ? "Draft saved" : `Draft saved — still missing: ${data.completeness.missing.join(", ")}`);
+    refresh(); loadHistory();
   } catch (error) {
     if (error.status === 409) {
       if (confirm("This event already has living coverage. Save a deliberate fresh treatment anyway?")) {
-        const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify({
-          eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
-          format: current.post.format, copy: readCopy(),
-          generatedCopy: current.generatedCopy, notes: $("#e-notes").value, allowDuplicate: true }) });
+        const data = await api("/api/orbit-x/posts", { method: "POST",
+          body: JSON.stringify({ ...payload(), allowDuplicate: true }) });
         current.savedId = data.post.id;
-        $("#e-approve").disabled = false; $("#e-reject").disabled = false;
-        status("Fresh treatment saved"); loadHistory(); return;
+        showAdvisories(data.advisories);
+        status("Fresh treatment saved"); refresh(); loadHistory(); return;
       }
       status("Not saved — duplicate declined"); return;
     }
@@ -308,29 +537,61 @@ async function saveDraft() {
   }
 }
 
+function showAdvisories(advisories) {
+  $("#e-advice").innerHTML = (advisories || []).length
+    ? `Editorial advisories (non-blocking):<br>` + advisories.map((a) => `· ${esc(a.why)}`).join("<br>")
+    : "";
+}
+
 async function decide(to) {
   if (!current.savedId) return;
-  const body = { status: to };
+  // Approval persists the latest copy first, so the gate judges what's on
+  // screen, not a stale save.
+  const body = { status: to, copy: readCopy() };
   if (to === "rejected") {
     body.rejectionReason = $("#e-reject-reason").value || "other";
+    delete body.copy;
   }
   try {
     await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH", body: JSON.stringify(body) });
     status(to === "approved" ? "Approved" : "Rejected"); loadHistory();
-  } catch (error) { status(error.message); }
+  } catch (error) {
+    status(error.body?.missing ? `${error.message} Missing: ${error.body.missing.join(", ")}` : error.message);
+  }
 }
 
 async function loadHistory() {
   try {
     const filter = $("#x-hist-filter").value;
     const data = await api(`/api/orbit-x/posts${filter ? `?status=${filter}` : ""}`);
-    $("#x-history").innerHTML = `<tr><th>Date</th><th>Event</th><th>Format</th><th>Status</th><th>Score</th></tr>`
-      + data.posts.map((p) => `<tr><td>${esc((p.created_at || "").slice(0, 10))}</td><td>${esc(p.event_key)}</td><td>${esc(p.selected_format)}</td><td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td><td>${esc(p.editorial_score ?? "")}</td></tr>`).join("");
+    $("#x-history").innerHTML = `<tr><th></th><th>Date</th><th>Event</th><th>Status</th><th>Score</th></tr>`
+      + data.posts.map((p, i) => `<tr>
+        <td data-hist-thumb="${i}"></td>
+        <td>${esc((p.created_at || "").slice(0, 10))}</td>
+        <td>${esc(p.event_key)}<br><span class="x-reasons">${esc(p.selected_format)}</span></td>
+        <td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td>
+        <td>${esc(p.editorial_score ?? "")}</td></tr>`).join("");
+    // First-slide thumbnails: the history is a content library, not a table.
+    data.posts.forEach((p, i) => {
+      const cell = document.querySelector(`[data-hist-thumb="${i}"]`);
+      if (!cell || !p.edited_copy?.slides?.length) return;
+      try {
+        const cand = p.event_payload || {};
+        const r = renderPost(p.edited_copy, { eventType: cand.eventType, title: cand.title,
+          facts: cand.facts || {}, sky: cand.facts?.planets || [] });
+        cell.innerHTML = r.slides[0]?.svg || "";
+      } catch { /* a thumbnail is never worth an error */ }
+    });
   } catch (error) { $("#x-history").innerHTML = `<tr><td>${esc(error.message)}</td></tr>`; }
 }
 
 function copyText(text, done) {
   navigator.clipboard.writeText(text).then(() => status(done), () => status("Copy failed — select manually"));
+}
+
+function debounce(fn, ms) {
+  let t = null;
+  return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
 </script>
 </body>

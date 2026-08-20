@@ -14,7 +14,8 @@ import { scoreCandidate, rankCandidates, SCORE_DIMENSIONS, SCORE_MAX_PER_DIMENSI
 import { FORMATS, FORMAT_IDS, APPROVED_CTAS, TEMPLATE } from "../lib/orbit-x/formats.js";
 import { auditCopy, verifyFactIntegrity, AUDIT_RULES } from "../lib/orbit-x/editorial.js";
 import { buildPacket, systemPrompt } from "../lib/orbit-x/prompts.js";
-import { manualScaffold, parseModelJson, validateGeneratedPost, OrbitXValidationError } from "../lib/orbit-x/schemas.js";
+import { parseModelJson, validateGeneratedPost, draftCompleteness, OrbitXValidationError } from "../lib/orbit-x/schemas.js";
+import { buildScaffold } from "../lib/orbit-x/language.js";
 import { handleOrbitXRoute, orbitXEnabled } from "../lib/orbit-x/api.js";
 import { orbitXStore } from "../lib/orbit-x/store.js";
 
@@ -261,7 +262,10 @@ test("duplicate coverage is refused unless the fresh treatment is deliberate", a
 });
 
 test("the lifecycle refuses illegal jumps and nothing can become published", async () => {
-  const draft = { id: "11111111-2222-4333-8444-555555555555", status: "draft", selected_format: "without_the_fog", event_payload: { facts: {} } };
+  // edited_copy is complete because approval now runs the quality gate (5.1):
+  // an unfinished draft is a different test below.
+  const draft = { id: "11111111-2222-4333-8444-555555555555", status: "draft", selected_format: "without_the_fog",
+    event_payload: { facts: {} }, edited_copy: goodPost("without_the_fog", 3) };
   const store = stubStore({ history: [draft] });
   const jump = await handleOrbitXRoute("PATCH", `/api/orbit-x/posts/${draft.id}`, new URLSearchParams(),
     { status: "exported" }, { ...AUTH }, { env: ENV_ON, store });
@@ -302,7 +306,7 @@ test("real Orbit engine data produces candidates end to end", async () => {
 
 /* ── The manual lane: the desk owes nothing to a provider ───────────────── */
 
-test("the manual scaffold passes every gate a generated draft must, for every format", () => {
+test("the manual scaffold passes every gate a draft must — publishable or empty, never a worksheet", () => {
   const { candidates } = buildCandidates(EVENTS, CONTEXT);
   const samples = [
     candidates.find((c) => c.eventType === "full_moon"),
@@ -312,18 +316,54 @@ test("the manual scaffold passes every gate a generated draft must, for every fo
   ];
   for (const candidate of samples) {
     for (const formatId of FORMAT_IDS) {
-      const post = manualScaffold(candidate, formatId);   // throws if invalid
+      const { post: raw, suggestions } = buildScaffold(candidate, formatId, {});
+      const post = validateGeneratedPost(raw, formatId, { requireComplete: false }); // throws if invalid
       assert.equal(post.format, formatId);
-      assert.equal(auditCopy(post).length, 0, `${formatId} scaffold trips no editorial rule`);
+      assert.equal(auditCopy(post).length, 0, `${formatId} scaffold trips no editorial rule (worksheet tripwire included)`);
       assert.equal(verifyFactIntegrity(post, candidate.facts).length, 0,
         `${formatId} scaffold invents no dates for ${candidate.eventKey}`);
-      assert.ok(post.editorialNotes.join(" ").includes("manual scaffold"),
-        "a scaffold names itself so an unedited one never reads as finished");
+      // The 5.1 contract: no field ever contains an authoring instruction —
+      // guidance lives in the suggestions object the desk renders as UI.
+      assert.ok(!/write th|edit this|edit me|edit before approving/i.test(JSON.stringify(post)),
+        `${formatId} scaffold copy carries no worksheet text`);
+      assert.ok(suggestions.slides.length === post.slides.length, "every slide gets its guidance beside it");
+      // And an unedited scaffold can never be approved where interpretive
+      // sections exist: they start empty, and completeness says so by name.
+      // (daily_signal's single slide is the engine's fact register, so it
+      // alone starts complete — concise by design.)
+      const completeness = draftCompleteness(post);
+      if (post.slides.some((s) => ["symbolic", "reflection", "the_sky", "your_sky"].includes(s.role))) {
+        assert.equal(completeness.complete, false,
+          `${formatId} for ${candidate.eventKey} still needs the editor before approval`);
+      }
     }
   }
-  // Approximate candidates scaffold with "around", never a false precision.
+  // Approximate candidates scaffold with "around", never a false precision —
+  // and in human dates, with the ISO instant left to the facts panel.
   const mercury = samples[1];
-  assert.match(manualScaffold(mercury, "something_changed").slides[0].body, /around 2026-03-14/);
+  const { post: mercPost } = buildScaffold(mercury, "something_changed", {});
+  const factSlide = mercPost.slides.find((s) => s.role === "fact");
+  assert.match(factSlide.body, /around March 14/);
+});
+
+test("the approval quality gate refuses an unfinished draft, by name", async () => {
+  const { candidates } = buildCandidates(EVENTS, CONTEXT);
+  const full = candidates.find((c) => c.eventType === "full_moon");
+  const { post: scaffold } = buildScaffold(full, "something_changed", {});
+  const draft = { id: "11111111-2222-4333-8444-555555555555", status: "draft",
+    selected_format: "something_changed", event_payload: full, edited_copy: scaffold };
+  const store = stubStore({ history: [draft] });
+  const refused = await handleOrbitXRoute("PATCH", `/api/orbit-x/posts/${draft.id}`, new URLSearchParams(),
+    { status: "approved" }, { ...AUTH }, { env: ENV_ON, store });
+  assert.equal(refused.status, 422);
+  assert.ok(refused.body.missing.some((m) => /symbolic/.test(m)), "the gate names what is missing");
+  assert.equal(store.updated.length, 0);
+  // Author the missing sections and the same transition succeeds.
+  const finished = { ...scaffold, slides: scaffold.slides.map((s) =>
+    s.body ? s : { ...s, body: "In astrology, this moment is read as a culmination — attributed to tradition, not fate." }) };
+  const ok = await handleOrbitXRoute("PATCH", `/api/orbit-x/posts/${draft.id}`, new URLSearchParams(),
+    { status: "approved", copy: finished }, { ...AUTH }, { env: ENV_ON, store });
+  assert.equal(ok.status, 200, "completing the sections opens the gate");
 });
 
 test("the manual endpoint needs no provider and mirrors /generate's shape", async () => {

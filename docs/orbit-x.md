@@ -51,14 +51,91 @@ works except Generate/Regenerate, which the UI hides rather than disables into
 an apology; the status line says once, neutrally: *manual drafting (no AI
 provider configured)*. Missing AI configuration is never an Orbit X error.
 
-**Create Manual Draft** builds a schema-correct scaffold from the selected
-verified candidate and format — no model, no network. The scaffold passes the
-same validation, editorial audit, and fact-integrity gates a generated draft
-must (its only dates come from the engine facts; approximate events say
-"around"), names itself in its editorial notes so an unedited scaffold never
-reads as finished, and flows through the identical editor, preview, export,
-save, approve/reject, and history. A manual draft records `generated_copy` as
-NULL — human authorship is a stored fact, not a pretence of generation.
+**Create Manual Draft** builds a scaffold from the selected verified candidate
+and format — no model, no network. Since Dev Update 5.1 the scaffold is
+**publishable-or-empty, never a worksheet**: fields derivable from verified
+facts arrive as finished sentences (headline patterns like *Full Moon in
+Pisces*, a human-dated fact register like *The Moon reaches full illumination
+on August 27, in Pisces, directly opposite the Sun in Virgo*), while the
+interpretive fields — the symbolic layer, the reflection — arrive **empty**,
+with helper text, placeholders, and one-tap suggestions carried in a separate
+`suggestions` object the desk renders as UI. Nothing from that guidance can
+reach stored copy, an SVG, or an export; the old worksheet phrasing ("write
+the symbolic layer here…") is now a **blocking audit tripwire**. Symbolic
+suggestions are built from the Symbol Atlas `themes` lists (trusted, reviewed
+knowledge — no new astrology database), rotated through the approved
+interpretive framings so "astrologers traditionally associate" stops stamping
+every post. A manual draft records `generated_copy` as NULL — human authorship
+is a stored fact, not a pretence of generation.
+
+An unfinished draft can be saved, previewed, and edited freely, but the
+**approval quality gate** (`draftCompleteness`) refuses `status: approved`
+while required sections are empty, naming exactly what is missing; the desk
+shows *N of M required sections complete* live. The hero slide needs no body
+(slide one carries no paragraphs by design) and the CTA is optional — a post
+may end on the final idea.
+
+## The visual system (Dev Update 5.1)
+
+Three isomorphic modules run identically in Node tests and the desk browser
+(served read-only at `/admin/orbit-x/{celestial,templates,language,formats}.js`):
+
+- **`celestial.js`** — the iconography. All ten bodies and all twelve zodiac
+  signs as **authored SVG paths** (never platform-font glyphs), a restrained
+  drawn ℞ station mark, event badges, the 62° axis motif, a Sun–Moon
+  opposition diagram, and the PLANET → SIGN ingress grammar. The centrepiece
+  is `moonDisc()`: a deterministic instrument-style lunar disc that renders
+  the **engine's illumination continuously** (terminator as a half-ellipse,
+  waxing lights the right limb — northern-hemisphere convention), in hero /
+  inline / mini modes all derived from the same state. No illumination fact →
+  no moon, never a decorative one. `skyStrip()` lays engine positions out as
+  glyph + sign (+degree, +℞); missing bodies render as absence.
+- **`templates.js`** — tokens (body copy strengthened to `#aab0c4` for feed
+  legibility), two designed aspects (**square 1080×1080** and **portrait
+  1080×1350**, each with its own safe zones — never scaled), three designed
+  density presets (minimal / standard / data — no sliders), a template
+  registry (`lunar_hero`, `planet_shift`, `sky_grid`, `fog_panel`,
+  `sky_contrast`, `instrument`) with deterministic per-event recommendations,
+  slide **roles** (`hero`, `fact`, `symbolic`, `reflection`, `cta`, `signal`,
+  `explain`, `takeaway`, `the_sky`, `your_sky`, `method`) that give each slide
+  its own layout under the format's control, and deterministic **text
+  fitting**: designed type tiers step down, and copy that still cannot fit
+  comes back as a named warning ("Headline exceeds the hero safe area") —
+  never silently shrunk. Dates render for humans (`August 27`, `AUG 27`);
+  exact instants stay in the facts panel or appear UTC-labelled.
+- **`language.js`** — the editorial voice as data: the approved interpretive
+  framing bank (§ rotation, attribution never erased), reflection style
+  examples (offered as chips marked *adapt, don't paste* — never auto-filled
+  into unrelated events), CTA classes (product + editorial; nothing begs),
+  headline patterns, engine-grounded fact sentences honouring "around" for
+  approximate sources, and alt text that describes the actual graphic rather
+  than invisible symbolism.
+
+Lunation packets now carry `sky_at_event` — the engine re-asked at the event's
+exact instant (Moon sign, Sun sign, illumination), which is how "Full Moon in
+Pisces" is a calculated fact rather than copywriting. The daily-sky packet
+carries its own position table so a saved Sky Grid draft can re-render its
+strip from verified facts forever. Approximate events get no instant
+enrichment at all.
+
+A post may carry a sanitized `design` object (aspect, template, variant,
+density, visual and metadata toggles); unknown keys and values are dropped at
+validation. Deterministic advisories (`adviseCopy`) warn — never block — on
+headline length, duplicated sentences across slides, repeated framing,
+captions that mirror slides verbatim, generic reflections, relative-time
+claims ("tonight") whose truth depends on the publication instant, and long
+CTAs.
+
+**Editor controls** (constrained, designed — no freeform x/y): aspect,
+density, template cards with live thumbnails, variant, celestial toggles
+(Moon / sky strip / diagram), metadata toggles (date / time / sign /
+illumination / calculated label), add/remove slide within format bounds for
+the expandable roles (`explain`, `method` — the Deep Explainer path, up to 8
+slides for Without the Fog), full-size / feed-size (375 px) / simulated-feed
+previews, and history with first-slide thumbnails. Export produces
+`orbit-axis_<date>_<event>_<nn>[_portrait].png` in posting order. On a phone
+the desk is single-column with horizontally snapping slide previews; editing,
+template/density changes, approval, and export all work at 375 px.
 
 ## Environment
 
@@ -72,8 +149,9 @@ NULL — human authorship is a stored fact, not a pretence of generation.
 ## Migration
 
 `supabase/migrations/20260819210000_orbit_x_editorial.sql` — `orbit_x_admins`
-and `orbit_x_posts`. **Not applied to hosted.** Apply before enabling the flag
-in production; the desk 404s until both exist. Verified facts live in
+and `orbit_x_posts`. **Applied to hosted production 2026-08-19** (Dev Update
+5.0 deployment); the founder's account is the only admin row. The desk 404s
+until both tables and the flag exist. Verified facts live in
 `event_payload`, which the store's column allow-list makes unwritable after
 creation — copy changes beside facts, never over them.
 
