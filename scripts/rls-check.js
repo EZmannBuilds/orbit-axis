@@ -246,6 +246,56 @@ async function main() {
       await call(`/rest/v1/ask_conversations?id=eq.${convo.data[0].id}`, { method: "DELETE", token: A.token });
     }
 
+    // ── Tarot reflections: owner-scoped, and the daily one lands once ──────
+    // tarot_readings holds saved reflections, and the daily card now saves
+    // ITSELF when a signed-in reader turns it over. That makes the once-per-day
+    // guard in saveReading() the only thing standing between a reader and a
+    // duplicate row for every device they open — and that guard is a PostgREST
+    // filter on a JSON path INSIDE reading_data.
+    //
+    // No unit test can exercise it: the suite stubs fetch, so a filter that
+    // matches nothing still passes every assertion, and the guard fails open
+    // into exactly the duplicates it exists to prevent. This is the only place
+    // the query meets a real database.
+    const DAILY_DATE = "2026-08-20";
+    const dailyReading = await call("/rest/v1/tarot_readings", {
+      method: "POST", token: A.token, headers: { Prefer: "return=representation" },
+      body: {
+        owner_id: A.id,
+        spread_type: "daily",
+        reading_data: {
+          cards: [{ position: "Todays card", card: { slug: "the-emperor" } }],
+          draw: { local_date: DAILY_DATE, timezone: "UTC" },
+        },
+      },
+    });
+    check("user A can save their own tarot reflection", dailyReading.ok, `HTTP ${dailyReading.status}`);
+
+    if (dailyReading.ok && dailyReading.data?.[0]?.id) {
+      // Character for character, the query saveReading() runs before it inserts.
+      const dedupe = (token, localDate) => call(
+        `/rest/v1/tarot_readings?owner_id=eq.${A.id}&spread_type=eq.daily`
+        + `&reading_data->draw->>local_date=eq.${localDate}&order=created_at.asc&limit=1`,
+        { token });
+
+      const sameDay = await dedupe(A.token, DAILY_DATE);
+      check("the daily dedupe query finds today's saved reading",
+        sameDay.ok && sameDay.data.length === 1,
+        `rows: ${sameDay.data?.length ?? "?"} — a miss is one duplicate row per device, per day`);
+
+      const otherDay = await dedupe(A.token, "2026-08-19");
+      check("the dedupe query does not match a different day",
+        otherDay.ok && otherDay.data.length === 0,
+        "a false match would stop tomorrow's card from ever being saved");
+
+      const crossed = await dedupe(B.token, DAILY_DATE);
+      check("user B cannot read user A's tarot reflection",
+        crossed.ok && crossed.data.length === 0, `rows visible: ${crossed.data?.length ?? "?"}`);
+
+      await call(`/rest/v1/tarot_readings?id=eq.${dailyReading.data[0].id}`,
+        { method: "DELETE", token: A.token });
+    }
+
     // ── Anonymous access ───────────────────────────────────────────────────
     const anonRead = await call("/rest/v1/birth_profiles?select=id", { token: ANON });
     check("anonymous callers get no charts at all",
@@ -256,6 +306,11 @@ async function main() {
     check("anonymous callers get no readings",
       anonFortunes.status === 401 || (anonFortunes.ok && anonFortunes.data.length === 0),
       `HTTP ${anonFortunes.status}`);
+
+    const anonReadings = await call("/rest/v1/tarot_readings?select=id", { token: ANON });
+    check("anonymous callers get no saved reflections",
+      anonReadings.status === 401 || (anonReadings.ok && anonReadings.data.length === 0),
+      `HTTP ${anonReadings.status}`);
 
     const anonWrite = await call("/rest/v1/birth_profiles", {
       method: "POST", token: ANON, body: CHART("anon"),
