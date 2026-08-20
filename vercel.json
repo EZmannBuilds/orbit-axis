@@ -7,13 +7,21 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "vendor/orbit-axis-engine/{ephemeris,src,bin/linux-x64}/**",
+      "includeFiles": "{vendor/orbit-axis-engine/ephemeris/**,vendor/orbit-axis-engine/src/**,vendor/orbit-axis-engine/bin/linux-x64/**,lib/orbit-x/**}",
       "excludeFiles": "vendor/orbit-axis-engine/bin/darwin-arm64/**"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/admin/orbit-x",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/admin/orbit-x/(.*)",
       "destination": "/api/index"
     },
     {
