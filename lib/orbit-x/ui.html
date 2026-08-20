@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Orbit X — Content Desk</title>
+<link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
+<link rel="stylesheet" href="/styles/tokens.css" />
+<link rel="stylesheet" href="/styles/base.css" />
+<link rel="stylesheet" href="/styles/components.css" />
+<style>
+  /* Desk chrome only — everything visual in the EXPORTS comes from brand
+     tokens in the SVG template below, not from this page styling. */
+  body { padding: var(--space-lg); max-width: 1180px; margin: 0 auto; }
+  .x-head { display: flex; align-items: baseline; gap: var(--space-md); flex-wrap: wrap; }
+  .x-head h1 { margin: 0; }
+  .x-grid { display: grid; grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.2fr); gap: var(--space-lg); margin-top: var(--space-lg); }
+  @media (max-width: 900px) { .x-grid { grid-template-columns: 1fr; } }
+  .x-panel { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-md); background: var(--color-surface); }
+  .x-cand { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin-bottom: var(--space-sm); }
+  .x-cand--dup { border-color: var(--color-error); }
+  .x-score { font-variant-numeric: tabular-nums; color: var(--color-accent); font-weight: 600; }
+  .x-reasons { font-size: var(--type-caption); color: var(--color-muted); }
+  .x-row { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; margin: var(--space-xs) 0; }
+  textarea, input[type="text"] { width: 100%; }
+  textarea { min-height: 70px; }
+  .x-slides svg { width: 100%; height: auto; border-radius: var(--radius-md); border: var(--border-width) solid var(--color-border); }
+  .x-facts { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: var(--type-caption); }
+  .x-facts strong { color: var(--color-accent); }
+  .x-status { color: var(--color-muted); font-size: var(--type-caption); min-height: 1.2em; }
+  .x-hist { font-size: var(--type-caption); }
+  .x-hist td, .x-hist th { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--color-border); }
+</style>
+</head>
+<body>
+<header class="x-head">
+  <h1>Orbit X</h1>
+  <p style="color:var(--color-muted)">Internal content desk — calculate → select → explain → design → review. Nothing publishes from here.</p>
+</header>
+
+<div class="x-row">
+  <label>Date <input type="date" id="x-date" /></label>
+  <button class="o-btn o-btn--secondary o-btn--sm" id="x-today">Today</button>
+  <button class="o-btn o-btn--secondary o-btn--sm" id="x-tomorrow">Tomorrow</button>
+  <button class="o-btn o-btn--primary o-btn--sm" id="x-load">Load candidates</button>
+  <span class="x-status" id="x-status" role="status" aria-live="polite"></span>
+</div>
+
+<div class="x-grid">
+  <section class="x-panel" aria-label="Candidates">
+    <h2>Candidates</h2>
+    <div id="x-candidates"><p class="x-status">Pick a date and load.</p></div>
+    <h2 style="margin-top:var(--space-lg)">History</h2>
+    <div class="x-row">
+      <select id="x-hist-filter" class="o-select" style="max-width:180px">
+        <option value="">All statuses</option>
+        <option>draft</option><option>approved</option><option>rejected</option><option>exported</option>
+      </select>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="x-hist-load">Refresh history</button>
+    </div>
+    <table class="x-hist" id="x-history"></table>
+  </section>
+
+  <section class="x-panel" aria-label="Draft editor">
+    <h2 id="x-editor-title">Draft</h2>
+    <div id="x-editor"><p class="x-status">Generate from a candidate to begin.</p></div>
+  </section>
+</div>
+
+<script type="module">
+const $ = (s) => document.querySelector(s);
+const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const api = async (path, options = {}) => {
+  const res = await fetch(path, { credentials: "same-origin",
+    headers: { "Content-Type": "application/json" }, ...options });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(body.error || `HTTP ${res.status}`), { body, status: res.status });
+  return body;
+};
+const status = (t) => { $("#x-status").textContent = t; };
+const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+/* ── State: the verified candidate is held SEPARATELY from editable copy and
+   is rendered read-only. Editing facts is not a UI affordance that exists. */
+let current = null;   // { candidate, post, calculationMetadata, generatedCopy }
+let formats = {};
+let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
+
+const todayIso = () => new Date().toISOString().slice(0, 10);
+$("#x-date").value = todayIso();
+$("#x-today").onclick = () => { $("#x-date").value = todayIso(); load(); };
+$("#x-tomorrow").onclick = () => {
+  const d = new Date(Date.now() + 86400000); $("#x-date").value = d.toISOString().slice(0, 10); load();
+};
+$("#x-load").onclick = load;
+$("#x-hist-load").onclick = loadHistory;
+
+async function load() {
+  status("Calculating…");
+  try {
+    const data = await api(`/api/orbit-x/candidates?date=${$("#x-date").value}&tz=${encodeURIComponent(tz)}`);
+    formats = data.formats; template = data.template;
+    const box = $("#x-candidates"); box.innerHTML = "";
+    for (const entry of data.candidates) {
+      const { candidate, score, suggestedFormat, coverage } = entry;
+      const div = document.createElement("div");
+      div.className = "x-cand" + (score.duplicate || coverage.length ? " x-cand--dup" : "");
+      div.innerHTML = `
+        <div class="x-row"><strong>${esc(candidate.title)}</strong>
+          <span class="x-score">${score.totalScore}/${score.maxScore}</span></div>
+        <div class="x-reasons">${esc(candidate.eventType)} · ${esc(candidate.timestamp || "evergreen")}
+          · suggested: ${esc(formats[suggestedFormat]?.name || suggestedFormat)}
+          ${coverage.length ? ` · <strong>already covered (${esc(coverage[0].status)})</strong>` : ""}</div>
+        <div class="x-reasons">${esc(score.reasons.join(" · "))}</div>
+        <div class="x-row">
+          <select class="o-select" data-fmt style="max-width:230px">
+            ${Object.values(formats).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
+          </select>
+          <button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate</button>
+        </div>`;
+      div.querySelector("[data-gen]").onclick = () => generate(candidate, div.querySelector("[data-fmt]").value);
+      box.appendChild(div);
+    }
+    status(`${data.candidates.length} candidates for ${data.localDate}${data.skipped.length ? ` · ${data.skipped.length} unsupported skipped` : ""}`);
+    loadHistory();
+  } catch (error) { status(error.message); }
+}
+
+async function generate(candidate, format, instruction = "") {
+  status("Generating…");
+  try {
+    const data = await api("/api/orbit-x/generate", { method: "POST", body: JSON.stringify({
+      eventKey: candidate.eventKey, date: $("#x-date").value, tz, format, instruction }) });
+    current = { candidate: data.candidate, post: data.post, generatedCopy: data.post,
+      calculationMetadata: data.calculationMetadata, savedId: null };
+    renderEditor();
+    status(data.usage ? `Generated (${data.usage.input}+${data.usage.output} tokens)` : "Generated");
+  } catch (error) {
+    status(error.body?.findings ? `Refused: ${error.body.findings.map((f) => f.why).join("; ")}` : error.message);
+  }
+}
+
+function renderEditor() {
+  const { candidate, post } = current;
+  const fmt = formats[post.format];
+  $("#x-editor-title").textContent = `${fmt.name} — ${candidate.title}`;
+  const facts = Object.entries(candidate.facts || {})
+    .map(([k, v]) => `<div><strong>${esc(k)}</strong>: ${esc(JSON.stringify(v))}</div>`).join("");
+  $("#x-editor").innerHTML = `
+    <div class="x-facts" aria-label="Verified engine facts — read only">
+      <div><strong>VERIFIED FACTS (engine · read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}
+    </div>
+    <label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>
+    <div id="e-slides">${post.slides.map((s, i) => `
+      <label>Slide ${i + 1} heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
+      <label>Slide ${i + 1} body <textarea class="o-input" data-sb="${i}">${esc(s.body)}</textarea></label>`).join("")}
+    </div>
+    <label>Caption <textarea id="e-caption" class="o-input">${esc(post.caption)}</textarea></label>
+    <label>CTA <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" /></label>
+    <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
+    <label>Editor notes <textarea id="e-notes" class="o-input"></textarea></label>
+    <div class="x-row">
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate</button>
+      <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-preview">Preview</button>
+      <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
+    </div>
+    <div class="x-row">
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-caption">Copy caption</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-alt">Copy alt text</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export slides (PNG)</button>
+      <button class="o-btn o-btn--primary o-btn--sm" id="e-approve" disabled>Approve</button>
+      <select id="e-reject-reason" class="o-select" style="max-width:200px">
+        <option value="">Reject: reason…</option>
+        <option>inaccurate interpretation</option><option>too predictive</option>
+        <option>too sensational</option><option>too much jargon</option><option>repetitive</option>
+        <option>poor visual fit</option><option>weak product connection</option><option>other</option>
+      </select>
+      <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
+    </div>
+    <div class="x-slides" id="e-slides-preview"></div>`;
+
+  $("#e-regen").onclick = () => generate(candidate, post.format, $("#e-instruction").value);
+  $("#e-preview").onclick = preview;
+  $("#e-save").onclick = saveDraft;
+  $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
+  $("#e-copy-alt").onclick = () => copyText(readCopy().altText, "Alt text copied");
+  $("#e-export").onclick = exportSlides;
+  $("#e-approve").onclick = () => decide("approved");
+  $("#e-reject").onclick = () => decide("rejected");
+  preview();
+}
+
+function readCopy() {
+  const { post } = current;
+  return { format: post.format,
+    headline: $("#e-headline").value, subhead: post.subhead,
+    slides: post.slides.map((_, i) => ({
+      heading: document.querySelector(`[data-sh="${i}"]`).value,
+      body: document.querySelector(`[data-sb="${i}"]`).value })),
+    caption: $("#e-caption").value, cta: $("#e-cta").value,
+    altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [] };
+}
+
+/* ── The template: brand tokens, the 62° axis, no generative imagery. ── */
+function slideSvg(copy, slideIndex, total) {
+  const s = copy.slides[slideIndex];
+  const W = template.width, H = template.height;
+  const wrap = (text, max) => { // simple word wrap for <text> tspans
+    const words = String(text).split(/\s+/); const lines = [[]];
+    for (const w of words) {
+      if (lines[lines.length - 1].join(" ").length + w.length > max) lines.push([w]);
+      else lines[lines.length - 1].push(w);
+    }
+    return lines.map((l) => l.join(" ")).slice(0, 9);
+  };
+  const heading = wrap(slideIndex === 0 ? copy.headline : s.heading, 24);
+  const body = wrap(s.body, 44);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img">
+    <rect width="${W}" height="${H}" fill="#080a12"/>
+    <line x1="${W * 0.12}" y1="${H * 0.86}" x2="${W * 0.88}" y2="${H * 0.86 - Math.tan(62 * Math.PI / 180) * 0}" stroke="none"/>
+    <line x1="140" y1="${H - 140}" x2="${140 + 260 * Math.cos(-62 * Math.PI / 180) * -1}" y2="${H - 140 + 260 * Math.sin(-62 * Math.PI / 180)}" stroke="#4a28b8" stroke-width="3"/>
+    <circle cx="140" cy="${H - 140}" r="10" fill="#7657e8"/>
+    ${heading.map((line, i) => `<text x="120" y="${240 + i * 88}" font-family="Georgia, 'Times New Roman', serif" font-size="72" fill="#f4f2fa">${esc(line)}</text>`).join("")}
+    ${body.map((line, i) => `<text x="120" y="${240 + heading.length * 88 + 60 + i * 52}" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif" font-size="36" fill="#8e93a8">${esc(line)}</text>`).join("")}
+    <text x="120" y="${H - 100}" font-family="-apple-system, Arial, sans-serif" font-size="30" letter-spacing="4" fill="#b9a7ff">ORBIT AXIS</text>
+    <text x="${W - 120}" y="${H - 100}" text-anchor="end" font-family="-apple-system, Arial, sans-serif" font-size="30" fill="#8e93a8">${slideIndex + 1}/${total}</text>
+  </svg>`;
+}
+
+function preview() {
+  const copy = readCopy();
+  $("#e-slides-preview").innerHTML = copy.slides.map((_, i) => slideSvg(copy, i, copy.slides.length)).join("");
+}
+
+async function exportSlides() {
+  const copy = readCopy();
+  const slug = current.candidate.eventKey.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
+  const day = current.calculationMetadata?.local_date || $("#x-date").value;
+  for (let i = 0; i < copy.slides.length; i += 1) {
+    const svg = slideSvg(copy, i, copy.slides.length);
+    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+    const canvas = Object.assign(document.createElement("canvas"), { width: template.width, height: template.height });
+    canvas.getContext("2d").drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    const a = document.createElement("a");
+    a.download = `${template.filePrefix}_${day}_${slug}_${String(i + 1).padStart(2, "0")}.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  }
+  if (current.savedId) {
+    await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH",
+      body: JSON.stringify({ status: "exported" }) }).catch(() => {});
+    loadHistory();
+  }
+  status(`Exported ${copy.slides.length} slide(s)`);
+}
+
+async function saveDraft() {
+  status("Saving…");
+  try {
+    const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify({
+      eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
+      format: current.post.format, copy: readCopy(),
+      generatedCopy: current.generatedCopy, notes: $("#e-notes").value }) });
+    current.savedId = data.post.id;
+    $("#e-approve").disabled = false; $("#e-reject").disabled = false;
+    status("Draft saved"); loadHistory();
+  } catch (error) {
+    if (error.status === 409) {
+      if (confirm("This event already has living coverage. Save a deliberate fresh treatment anyway?")) {
+        const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify({
+          eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
+          format: current.post.format, copy: readCopy(),
+          generatedCopy: current.generatedCopy, notes: $("#e-notes").value, allowDuplicate: true }) });
+        current.savedId = data.post.id;
+        $("#e-approve").disabled = false; $("#e-reject").disabled = false;
+        status("Fresh treatment saved"); loadHistory(); return;
+      }
+      status("Not saved — duplicate declined"); return;
+    }
+    status(error.body?.findings ? `Refused: ${error.body.findings.map((f) => f.why).join("; ")}` : error.message);
+  }
+}
+
+async function decide(to) {
+  if (!current.savedId) return;
+  const body = { status: to };
+  if (to === "rejected") {
+    body.rejectionReason = $("#e-reject-reason").value || "other";
+  }
+  try {
+    await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH", body: JSON.stringify(body) });
+    status(to === "approved" ? "Approved" : "Rejected"); loadHistory();
+  } catch (error) { status(error.message); }
+}
+
+async function loadHistory() {
+  try {
+    const filter = $("#x-hist-filter").value;
+    const data = await api(`/api/orbit-x/posts${filter ? `?status=${filter}` : ""}`);
+    $("#x-history").innerHTML = `<tr><th>Date</th><th>Event</th><th>Format</th><th>Status</th><th>Score</th></tr>`
+      + data.posts.map((p) => `<tr><td>${esc((p.created_at || "").slice(0, 10))}</td><td>${esc(p.event_key)}</td><td>${esc(p.selected_format)}</td><td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td><td>${esc(p.editorial_score ?? "")}</td></tr>`).join("");
+  } catch (error) { $("#x-history").innerHTML = `<tr><td>${esc(error.message)}</td></tr>`; }
+}
+
+function copyText(text, done) {
+  navigator.clipboard.writeText(text).then(() => status(done), () => status("Copy failed — select manually"));
+}
+</script>
+</body>
+</html>
