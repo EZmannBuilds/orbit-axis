@@ -44,6 +44,22 @@ values ('<your auth.users id>');
 Your id is `auth.users.id` for your account (Dashboard → Authentication).
 There is deliberately no INSERT policy — nobody can grant themselves entry.
 
+## Manual drafting — AI is optional, and its absence is a state
+
+The desk is whole without a provider. With no `ORBIT_X_AI_API_KEY`, everything
+works except Generate/Regenerate, which the UI hides rather than disables into
+an apology; the status line says once, neutrally: *manual drafting (no AI
+provider configured)*. Missing AI configuration is never an Orbit X error.
+
+**Create Manual Draft** builds a schema-correct scaffold from the selected
+verified candidate and format — no model, no network. The scaffold passes the
+same validation, editorial audit, and fact-integrity gates a generated draft
+must (its only dates come from the engine facts; approximate events say
+"around"), names itself in its editorial notes so an unedited scaffold never
+reads as finished, and flows through the identical editor, preview, export,
+save, approve/reject, and history. A manual draft records `generated_copy` as
+NULL — human authorship is a stored fact, not a pretence of generation.
+
 ## Environment
 
 | Variable | Meaning |
@@ -99,7 +115,9 @@ or product integrity. No self-modifying behaviour exists or is planned here.
 13. Save draft → approve → reopen from history.
 14. Save a second draft of the same event → 409 → deliberate fresh treatment works.
 15. Reject a draft with a reason → reason visible in history.
-16. Unset the AI key → Generate fails cleanly, candidate survives, retry offered.
+16. Unset the AI key → Generate/Regenerate disappear; Manual draft still
+    scaffolds, edits, previews, exports, saves, and approves end to end; the
+    status line notes manual mode without an error appearing anywhere.
 17. Stop local Supabase → save fails with a clear message, copy not lost.
 18. Confirm no secrets in the page source and no natal/account data in packets.
 19. `npm run test:local` — the whole suite still passes.

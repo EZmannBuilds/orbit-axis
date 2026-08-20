@@ -14,7 +14,7 @@ import { scoreCandidate, rankCandidates, SCORE_DIMENSIONS, SCORE_MAX_PER_DIMENSI
 import { FORMATS, FORMAT_IDS, APPROVED_CTAS, TEMPLATE } from "../lib/orbit-x/formats.js";
 import { auditCopy, verifyFactIntegrity, AUDIT_RULES } from "../lib/orbit-x/editorial.js";
 import { buildPacket, systemPrompt } from "../lib/orbit-x/prompts.js";
-import { parseModelJson, validateGeneratedPost, OrbitXValidationError } from "../lib/orbit-x/schemas.js";
+import { manualScaffold, parseModelJson, validateGeneratedPost, OrbitXValidationError } from "../lib/orbit-x/schemas.js";
 import { handleOrbitXRoute, orbitXEnabled } from "../lib/orbit-x/api.js";
 import { orbitXStore } from "../lib/orbit-x/store.js";
 
@@ -298,4 +298,75 @@ test("real Orbit engine data produces candidates end to end", async () => {
   assert.equal(skipped.length, 0, "the live pipeline produces nothing unsupported");
   const daily = candidates.find((c) => c.eventType === "daily_sky");
   assert.equal(daily.facts.moon_phase_name, context.moon_phase_name, "facts are the engine's, verbatim");
+});
+
+/* ── The manual lane: the desk owes nothing to a provider ───────────────── */
+
+test("the manual scaffold passes every gate a generated draft must, for every format", () => {
+  const { candidates } = buildCandidates(EVENTS, CONTEXT);
+  const samples = [
+    candidates.find((c) => c.eventType === "full_moon"),
+    candidates.find((c) => c.eventType === "mercury_direct"),
+    candidates.find((c) => c.eventType === "daily_sky"),
+    candidates.find((c) => c.eventKey === "educational:why-apps-disagree"),
+  ];
+  for (const candidate of samples) {
+    for (const formatId of FORMAT_IDS) {
+      const post = manualScaffold(candidate, formatId);   // throws if invalid
+      assert.equal(post.format, formatId);
+      assert.equal(auditCopy(post).length, 0, `${formatId} scaffold trips no editorial rule`);
+      assert.equal(verifyFactIntegrity(post, candidate.facts).length, 0,
+        `${formatId} scaffold invents no dates for ${candidate.eventKey}`);
+      assert.ok(post.editorialNotes.join(" ").includes("manual scaffold"),
+        "a scaffold names itself so an unedited one never reads as finished");
+    }
+  }
+  // Approximate candidates scaffold with "around", never a false precision.
+  const mercury = samples[1];
+  assert.match(manualScaffold(mercury, "something_changed").slides[0].body, /around 2026-03-14/);
+});
+
+test("the manual endpoint needs no provider and mirrors /generate's shape", async () => {
+  // ENV_ON deliberately carries no ORBIT_X_AI_API_KEY.
+  const store = stubStore();
+  const res = await handleOrbitXRoute("POST", "/api/orbit-x/manual", new URLSearchParams(),
+    { eventKey: "educational:why-birth-time-matters", format: "without_the_fog" },
+    { ...AUTH }, { env: ENV_ON, store });
+  assert.equal(res.status, 200);
+  assert.equal(res.body.manual, true);
+  assert.equal(res.body.usage, null);
+  assert.ok(res.body.post.headline && res.body.post.slides.length >= 3);
+  assert.ok(res.body.candidate.facts.ground, "the verified candidate rides along, same as /generate");
+});
+
+test("missing AI configuration is a state on the candidates response, never an error", async () => {
+  const store = stubStore();
+  const without = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", new URLSearchParams("date=2026-03-05"), {},
+    { ...AUTH }, { env: ENV_ON, store });
+  assert.equal(without.status, 200, "the desk lists and scores without any provider");
+  assert.equal(without.body.aiAvailable, false);
+  const withKey = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", new URLSearchParams("date=2026-03-05"), {},
+    { ...AUTH }, { env: { ...ENV_ON, ORBIT_X_AI_API_KEY: "k", ORBIT_X_AI_PROVIDER: "anthropic" }, store });
+  assert.equal(withKey.body.aiAvailable, true);
+});
+
+test("a manual draft saves through the full lifecycle and records human authorship", async () => {
+  const store = stubStore();
+  const { body } = await handleOrbitXRoute("POST", "/api/orbit-x/manual", new URLSearchParams(),
+    { eventKey: "educational:what-is-a-transit", format: "without_the_fog" }, { ...AUTH }, { env: ENV_ON, store });
+  const saved = await handleOrbitXRoute("POST", "/api/orbit-x/posts", new URLSearchParams(),
+    { eventKey: "educational:what-is-a-transit", format: "without_the_fog",
+      copy: body.post, generatedCopy: null }, { ...AUTH }, { env: ENV_ON, store });
+  assert.equal(saved.status, 200);
+  assert.equal(store.inserted[0].generated_copy, null,
+    "generated_copy stays null — human-authored is a recorded fact, not a pretence");
+  assert.ok(store.inserted[0].edited_copy.headline);
+});
+
+test("the desk page hides AI controls rather than rendering apologies", () => {
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.ok(page.includes("data-manual"), "Manual draft is a first-class action");
+  assert.match(page, /aiAvailable \?/, "Generate and Regenerate render only when a provider exists");
+  assert.match(page, /manual drafting \(no AI provider configured\)/,
+    "absence is stated once, neutrally, in the status line — never as an error");
 });

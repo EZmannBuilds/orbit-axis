@@ -85,6 +85,7 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
    is rendered read-only. Editing facts is not a UI affordance that exists. */
 let current = null;   // { candidate, post, calculationMetadata, generatedCopy }
 let formats = {};
+let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -101,6 +102,7 @@ async function load() {
   try {
     const data = await api(`/api/orbit-x/candidates?date=${$("#x-date").value}&tz=${encodeURIComponent(tz)}`);
     formats = data.formats; template = data.template;
+    aiAvailable = data.aiAvailable === true;
     const box = $("#x-candidates"); box.innerHTML = "";
     for (const entry of data.candidates) {
       const { candidate, score, suggestedFormat, coverage } = entry;
@@ -117,13 +119,32 @@ async function load() {
           <select class="o-select" data-fmt style="max-width:230px">
             ${Object.values(formats).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
           </select>
-          <button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate</button>
+          <button class="o-btn o-btn--secondary o-btn--sm" data-manual>Manual draft</button>
+          ${aiAvailable ? `<button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate (AI)</button>` : ""}
         </div>`;
-      div.querySelector("[data-gen]").onclick = () => generate(candidate, div.querySelector("[data-fmt]").value);
+      div.querySelector("[data-manual]").onclick = () => manualDraft(candidate, div.querySelector("[data-fmt]").value);
+      div.querySelector("[data-gen]") && (div.querySelector("[data-gen]").onclick =
+        () => generate(candidate, div.querySelector("[data-fmt]").value));
       box.appendChild(div);
     }
-    status(`${data.candidates.length} candidates for ${data.localDate}${data.skipped.length ? ` · ${data.skipped.length} unsupported skipped` : ""}`);
+    status(`${data.candidates.length} candidates for ${data.localDate}`
+      + `${data.skipped.length ? ` · ${data.skipped.length} unsupported skipped` : ""}`
+      + `${aiAvailable ? "" : " · manual drafting (no AI provider configured)"}`);
     loadHistory();
+  } catch (error) { status(error.message); }
+}
+
+async function manualDraft(candidate, format) {
+  status("Building manual draft…");
+  try {
+    const data = await api("/api/orbit-x/manual", { method: "POST", body: JSON.stringify({
+      eventKey: candidate.eventKey, date: $("#x-date").value, tz, format }) });
+    // generatedCopy stays null for a manual draft: human-authored is a
+    // recorded fact in the row, not a pretence of generation.
+    current = { candidate: data.candidate, post: data.post, generatedCopy: null,
+      calculationMetadata: data.calculationMetadata, savedId: null };
+    renderEditor();
+    status("Manual scaffold ready — every slide needs your pass before approval.");
   } catch (error) { status(error.message); }
 }
 
@@ -161,8 +182,8 @@ function renderEditor() {
     <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
     <label>Editor notes <textarea id="e-notes" class="o-input"></textarea></label>
     <div class="x-row">
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate</button>
-      <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />
+      ${aiAvailable ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
+      <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
       <button class="o-btn o-btn--secondary o-btn--sm" id="e-preview">Preview</button>
       <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
     </div>
@@ -181,7 +202,8 @@ function renderEditor() {
     </div>
     <div class="x-slides" id="e-slides-preview"></div>`;
 
-  $("#e-regen").onclick = () => generate(candidate, post.format, $("#e-instruction").value);
+  const regen = $("#e-regen");
+  if (regen) regen.onclick = () => generate(candidate, post.format, $("#e-instruction").value);
   $("#e-preview").onclick = preview;
   $("#e-save").onclick = saveDraft;
   $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
