@@ -1,90 +1,84 @@
-/* Orbit Axis :: the printed chart.
+/* Orbit Axis :: the saved chart.
  *
- * Everything here is inside @media print, so this file changes nothing on
- * screen. It is linked LAST so it can override any rule above it without
- * reaching for !important on layout — the cascade is enough when you are last.
+ * This produces a FILE SOMEONE KEEPS, not a sheet of paper. It hooks
+ * @media print because that is the pipeline "Save as PDF" runs through, but
+ * nothing here is designed for a printer: the page is full-bleed void black,
+ * the wheel keeps its shadow, and the whole document is the Orbit night-sky
+ * palette rather than ink on white.
  *
- * WHY A STYLESHEET AND NOT A PDF LIBRARY
+ * That is a deliberate reversal of where this file started. The first version
+ * forced everything to black-on-white on the reasoning that printed pages are
+ * white — true, and beside the point. A chart is a keepsake and a thing people
+ * send to each other; it should look like the product it came from.
  *
- * The browser already has a typesetter, and it is the one that drew the page
- * the reader is looking at. Printing through it means one layout to maintain
- * instead of two, text that stays selectable and searchable in the PDF, glyphs
- * resolved by the reader's own font stack, and no megabyte of embedded font in
- * a serverless bundle that already carries an ephemeris. The cost is that page
- * breaks are advisory rather than absolute, which is what most of the rules
- * below are about.
+ * Linked LAST so it can override any rule above it without !important.
  *
- * WHAT A PRINTED CHART IS FOR
+ * TWO MECHANICS THIS DEPENDS ON
  *
- * Someone is going to keep this. It has to say whose chart it is, when it was
- * calculated and from what, and it has to admit what it does not know — a
- * printout outlives the app screen that would have explained the caveat, so
- * every caveat travels with it. */
+ * `print-color-adjust: exact` is INHERITED, so setting it on :root carries the
+ * dark canvas through every descendant. Without it the browser helpfully drops
+ * every background as "economy" and the document arrives as pale text on
+ * white — unreadable, and the exact opposite of what is intended.
+ *
+ * `@page { margin: 0 }` is what makes the black go to the edge. The padding
+ * that keeps content off the trim is on the body instead. A side effect worth
+ * knowing: with a zero margin most browsers stop adding their own URL/date
+ * header, which is right for a keepsake and would have been wrong for a
+ * reference printout. */
 
 @media print {
 
-  /* ── Page ──────────────────────────────────────────────────────────────
-     A named page with real margins. The header/footer the browser adds are
-     the reader's setting, not ours to remove — but the margin has to leave
-     room for them or the first line collides with the URL. */
+  /* ── The page ──────────────────────────────────────────────────────────── */
 
   @page {
-    margin: 16mm 14mm;
+    margin: 0;
   }
 
-  /* Light on paper, always. The app is theme-aware; a printer is not, and a
-     dark-mode chart is a solid black rectangle and an empty toner cartridge.
-     Tokens are re-pointed rather than each rule rewritten, so every component
-     below inherits paper colours without knowing it is being printed. */
+  :root {
+    /* Inherited by everything. This one declaration is the difference between
+       a night-sky document and pale grey text on white. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-scheme: dark;
+  }
+
+  /* THE SAVED CHART IS ALWAYS THE NIGHT-SKY ONE.
+     Orbit defaults to dark because it is an app about the night sky; a saved
+     chart is the same object whichever theme the reader happens to be in, so
+     every export looks like the product rather than like a setting. The values
+     are the dark theme's own, restated here so a reader in light mode gets
+     them too. */
   :root,
-  :root[data-theme="dark"],
-  :root[data-theme="light"] {
-    --color-bg: #ffffff;
-    --color-canvas: #ffffff;
-    --color-surface: #ffffff;
-    --color-surface-elevated: #ffffff;
-    --color-surface-sunken: #ffffff;
-    --color-surface-ghost: #ffffff;
-    --color-surface-hover: #ffffff;
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
+    --color-bg: #080a12;
+    --color-canvas: #0b0e19;
+    --color-surface: #101321;
+    --color-surface-elevated: #171b2d;
+    --color-surface-sunken: #0b0d18;
+    --color-surface-ghost: rgba(255, 255, 255, 0.06);
+    --color-surface-hover: #1c2136;
 
-    /* These four are the text ramp, and the names matter: every heading in the
-       app is `color: var(--color-primary)`. An earlier version of this file
-       invented `--color-text-primary` and friends, which exist nowhere in
-       tokens.css and so overrode nothing — the
-       headings kept their dark-theme near-white and printed as pale grey on
-       white, all but invisible. The body copy looked fine throughout, so the
-       page read as working. Print previews are not optional. */
-    --color-primary: #000000;
-    --color-secondary: #2b2b2b;
-    --color-muted: #4a4a4a;
-    --color-faint: #6a6a6a;
+    --color-border: rgba(185, 167, 255, 0.14);
+    --color-border-strong: rgba(185, 167, 255, 0.28);
 
-    --color-accent: #000000;
-    --color-accent-hover: #000000;
-    --color-accent-soft: #ffffff;
-    --color-accent-border: #767676;
-    --color-on-accent: #ffffff;
+    --color-primary: #f4f2fa;
+    --color-secondary: #c9c5d6;
+    --color-muted: #8e93a8;
+    --color-faint: #70758b;
 
-    --color-border: #b8b8b8;
-    --color-border-strong: #767676;
-    --color-border-focus: #767676;
+    /* One accent, in its on-dark variant. Nothing in a saved file is
+       interactive, so it appears only as a rule and an eyebrow — never as
+       running text pretending to be a link. */
+    --color-accent: #b9a7ff;
+    --color-accent-soft: rgba(118, 87, 232, 0.18);
+    --color-accent-border: rgba(185, 167, 255, 0.42);
   }
 
-  /* THE SECOND PALETTE, and the one that actually decides most of this page.
-     features.css gives #panel-me its own set of legacy short names —
-     `--text`, `--muted`, `--border`, `--accent` — hardcoded DARK, with light
-     values supplied only under `:root[data-theme="light"] #panel-me`.
-     Re-pointing the --color-* tokens above does not reach them: they are set on
-     the panel itself, at higher specificity, and they do not read from --color-*.
-
-     So for a reader in dark mode — or on system default with a dark OS — the
-     chart panel printed `--text: #e6e9ff` onto white paper. Near-white on
-     white: the reading, the placements and the table headers, gone. The
-     symptom that led here was milder (lavender table headers in light mode)
-     and the same root cause.
-
-     Matched on #panel-me so the specificity ties, and won on source order
-     because this file is linked last. */
+  /* The second palette. features.css sets these legacy short names on
+     #panel-me itself — higher specificity than :root, and they do not read
+     from --color-*, so re-pointing the tokens above does not reach them.
+     Left alone they decide most of this document. */
   #panel-me,
   #panel-more,
   #panel-tools,
@@ -92,38 +86,35 @@
   .o-modal,
   :root[data-theme="light"] #panel-me,
   :root[data-theme="dark"] #panel-me {
-    --bg: #ffffff;
-    --surface: #ffffff;
-    --surface-2: #ffffff;
-    --border: #b8b8b8;
-    --text: #000000;
-    --muted: #3a3a3a;
-    --dim: #5a5a5a;
-    --accent: #000000;
-    --gold: #5a4410;
-    --violet: #3a2a6a;
+    --bg: #080a12;
+    --surface: #101321;
+    --surface-2: #171b2d;
+    --border: rgba(185, 167, 255, 0.14);
+    --text: #f4f2fa;
+    --muted: #c9c5d6;
+    --dim: #8e93a8;
+    --accent: #b9a7ff;
+    --gold: #f0c674;
+    --violet: #b9a7ff;
   }
 
-  html, body {
-    background: #ffffff;
-    color: #000000;
-    /* Points, not rem: the reader's interface text-size preference should not
-       decide how many pages their chart costs to print. */
+  html {
+    background: #080a12;
+  }
+
+  body {
+    background: #080a12;
+    color: #f4f2fa;
+    /* Points rather than rem: the reader's interface text-size preference
+       should not decide the typography of a file they are going to send to
+       someone else. */
     font-size: 10.5pt;
-    line-height: 1.45;
+    line-height: 1.55;
+    /* @page has no margin, so the breathing room lives here. */
+    padding: 16mm 15mm;
   }
 
-  /* Colour-managed backgrounds are dropped by default in most browsers, which
-     is usually right. The wheel needs its aspect strokes, so it opts in. */
-  .orbit-wheel {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* ── What does not print ───────────────────────────────────────────────
-     Navigation, controls and anything that only makes sense when tappable.
-     A printed page with a "Save as PDF" button on it is a small joke at the
-     reader's expense. */
+  /* ── What is not in the file ───────────────────────────────────────────── */
 
   .app-nav, .app-tabbar, .workspace-nav, .navigation, nav,
   .chart-subnav, .chart-switcher, .me-head-actions, .o-btn,
@@ -133,8 +124,6 @@
     display: none;
   }
 
-  /* Only the chart panel prints, whatever else the single-page app has
-     rendered into the document behind it. */
   .workspace-panel:not(#panel-me) {
     display: none;
   }
@@ -143,26 +132,40 @@
     display: block;
   }
 
-  /* ── Disclosures ───────────────────────────────────────────────────────
-     The positions table is folded by default on a phone, and a folded section
-     prints as its summary line and nothing else — which would silently drop
-     the most data-dense part of the chart from the PDF.
+  /* The page's own "Your chart / explained placement by placement" head is
+     interface copy addressed to someone using the app. The saved file opens on
+     whose chart it is instead. */
+  .o-section-head {
+    display: none;
+  }
 
-     Opening it is NOT done here: a closed <details> hides its content through
-     the user-agent shadow tree, so no `display` rule in this file can reach
-     it. openDisclosuresForPrint() in app.js sets the `open` attribute on
-     beforeprint and restores it afterwards. What is left here is only the
-     styling of a section once it is open. */
+  /* ── Disclosures ───────────────────────────────────────────────────────── */
+
+  /* A closed <details> hides its content through the user-agent shadow tree,
+     so no rule here can open one — openDisclosuresForPrint() in app.js sets
+     the `open` attribute on beforeprint and restores it afterwards. What is
+     left here is how a section looks once it is open. */
 
   details {
     display: block;
   }
 
-  details > summary {
+  /* Class-qualified to beat features.css's `.chart-details summary`, which
+     colours the summary with the accent. On screen that is right — it is a
+     control. In a saved file nothing is clickable, and accent-coloured text
+     that cannot be pressed reads as a dead link. One accent, and it only ever
+     says "you can act on this". */
+  details > summary,
+  .chart-details > summary,
+  .o-disclosure-row > summary,
+  .reading-card__more > summary {
     display: block;
-    font-weight: 600;
     list-style: none;
-    margin-bottom: 0.4em;
+    font-family: var(--font-display);
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: var(--space-sm, 12px);
   }
 
   details > summary::-webkit-details-marker,
@@ -171,9 +174,7 @@
     content: "";
   }
 
-  /* The app's own disclosure chevron, which means nothing on paper. Opening
-     the section itself is JavaScript's job — see openDisclosuresForPrint() in
-     app.js, and the note there on why a stylesheet cannot do it. */
+  /* The app's disclosure chevron, which points at nothing in a file. */
   .chart-details > summary::before,
   .reading-card__more > summary::before,
   .o-disclosure-row > summary::after {
@@ -181,31 +182,21 @@
     content: "";
   }
 
-  /* Scroll containers have no meaning on paper; let the table size itself. */
   .table-scroll {
     overflow: visible;
     max-height: none;
   }
 
-  /* ── Detail level ──────────────────────────────────────────────────────
-     THE PRINTED CHART IS ALWAYS THE FULL ONE.
+  /* ── Detail level ──────────────────────────────────────────────────────── */
 
-     Simple/Advanced (data-detail on <html>) decides what a beginner sees on
-     screen, and Simple is the default — `:root:not([data-detail="Advanced"])`
-     hides `.me-panel--advanced` and `.advanced-only`, which is the exact
-     degrees, the calculated-positions table, and the calculation metadata.
+  /* THE SAVED CHART IS ALWAYS THE FULL ONE.
 
-     Left alone, that rule follows the page into the printer: a reader who had
-     never opened the detail control — most of them — would save a "full chart"
-     PDF with its data table, its degrees and its engine version silently
-     missing, and nothing on the page to say so. The same failure as a folded
-     <details>, arriving by a different route.
-
-     A printout is a keepsake and a reference; the reading is the substance and
-     the table is what makes it checkable years later, when the app that drew it
-     is not to hand. So the export is complete regardless of the on-screen
-     preference. The preference is untouched — it means what it always meant on
-     screen. */
+     Simple/Advanced decides what a beginner sees on screen, and Simple is the
+     default — `:root:not([data-detail="Advanced"])` hides `.me-panel--advanced`
+     and `.advanced-only`, which is the exact degrees, the positions table and
+     the calculation metadata. Left alone, a reader who had never opened the
+     detail control would save a chart with all of it silently missing. The
+     on-screen preference is untouched; it still means what it always meant. */
 
   :root[data-detail="Simple"] #panel-me .advanced-only,
   :root[data-detail="Simple"] #panel-me .me-panel--advanced,
@@ -214,9 +205,7 @@
     display: revert;
   }
 
-  /* ── Flow ──────────────────────────────────────────────────────────────
-     The app lays the reading out as a grid. On paper it is a document: one
-     column, top to bottom, in reading order. */
+  /* ── Flow ──────────────────────────────────────────────────────────────── */
 
   .me-grid {
     display: block;
@@ -226,136 +215,298 @@
   .me-panel--bare {
     display: block;
     width: auto;
-    margin: 0 0 7mm;
+    margin: 0 0 var(--space-lg, 24px);
     padding: 0;
     border: 0;
-    border-radius: 0;
-    box-shadow: none;
     background: transparent;
-    /* Advisory, not absolute: a placement list longer than a page still has to
-       break somewhere, and forbidding it outright leaves a page half empty. */
+    box-shadow: none;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
-  /* A heading stranded at the foot of a page is the most common print defect
-     and the easiest to prevent. */
   h1, h2, h3, h4 {
     break-after: avoid;
     page-break-after: avoid;
     break-inside: avoid;
+    color: var(--color-primary);
   }
-
-  h1 { font-size: 19pt; }
-  h2 { font-size: 13pt; margin-top: 0; }
-  h3 { font-size: 11pt; }
 
   p, li, dd, dt, td, th {
     orphans: 3;
     widows: 3;
   }
 
+  /* ── The cover ─────────────────────────────────────────────────────────
+     Whose chart, when, and the wheel — then a break. Everything after it is
+     the reading. */
+
+  #me-overview {
+    margin-bottom: var(--space-lg, 24px);
+  }
+
+  #me-overview .u-eyebrow {
+    color: var(--color-accent);
+    font-size: 9pt;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 var(--space-xs, 8px);
+  }
+
+  #me-overview h2 {
+    font-family: var(--font-display);
+    font-size: 30pt;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin: 0 0 var(--space-md, 17px);
+  }
+
+  /* The facts under the name: a quiet grid, not a table. */
+  .me-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-xs, 8px) var(--space-lg, 24px);
+    margin: 0;
+    padding: var(--space-md, 17px) 0 0;
+    border-top: 0.5pt solid var(--color-border);
+  }
+
+  .me-facts > div {
+    break-inside: avoid;
+  }
+
+  .me-facts dt {
+    color: var(--color-muted);
+    font-size: 8.5pt;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 2px;
+  }
+
+  .me-facts dd {
+    color: var(--color-primary);
+    font-size: 10.5pt;
+    margin: 0;
+  }
+
+  .me-facts__help {
+    display: block;
+    color: var(--color-muted);
+    font-size: 8.5pt;
+  }
+
+  /* The rows behind "Chart details" are reference — house system, zodiac,
+     timezone, engine version — and should not compete with the four facts
+     that identify the chart. */
+  .o-disclosure-row__body .me-facts {
+    border-top: 0;
+    padding-top: 0;
+    gap: var(--space-xs, 8px) var(--space-lg, 24px);
+  }
+
+  .o-disclosure-row__body .me-facts dd {
+    font-size: 9.5pt;
+    color: var(--color-secondary);
+  }
+
   /* ── The wheel ─────────────────────────────────────────────────────────
-     It opens the document and gets a page of its own, because a wheel worth
-     printing is a wheel worth looking at whole. */
+     It closes the cover, and takes the one shadow the design system has —
+     which the system says belongs to the chart wheel and the Moon, objects
+     resting on a surface rather than interface. */
 
   #section-wheel {
+    /* A PAGE OF ITS OWN, both sides. The cover above it varies in height with
+       the birth data, the limitation notice and the chart-details rows, so a
+       wheel sized to fit beneath it on one chart is a wheel half off the page
+       on another. Given its own sheet it is always the same size, always
+       centred, and the cover is free to be as long as it needs. */
+    break-before: page;
+    page-break-before: always;
     break-after: page;
     page-break-after: always;
     break-inside: avoid;
+    margin: 0;
+    /* Fill the sheet, less the body padding, so the wheel sits optically
+       centred rather than pinned to the top. */
+    min-height: 265mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* The wheel identifies itself on the cover; a heading above it would be
+     labelling the obvious. */
+  #section-wheel .me-section-head {
+    display: none;
   }
 
   .orbit-wheel {
     width: 100%;
-    max-width: 165mm;
-    max-height: 200mm;
-    margin: 4mm auto 0;
+    max-width: 172mm;
+    max-height: 240mm;
+    margin: 0 auto;
+    filter: drop-shadow(3px 5px 30px rgba(0, 0, 0, 0.5));
   }
 
-  /* On paper the wheel carries the ink alone — no theme, no accent. The
-     aspect colours stay (they are a redundant channel, the dash pattern is
-     the carrier) but everything structural goes to black. */
-  .ow-rim { stroke: #000000; stroke-width: 2.5; }
-  .ow-ring { stroke: #9a9a9a; }
-  .ow-sign-divide { stroke: #9a9a9a; }
-  .ow-tick { stroke: #6a6a6a; opacity: 1; }
-  .ow-cusp { stroke: #7a7a7a; }
-  .ow-cusp--angular { stroke: #000000; }
-  .ow-sign-glyph { fill: #1a1a1a; }
-  .ow-body-glyph { fill: #000000; }
-  .ow-body-tick { stroke: #000000; }
-  .ow-body-leader { stroke: #6a6a6a; }
-  .ow-house-number, .ow-body-degree, .ow-body-retro { fill: #3a3a3a; }
-  .ow-angle-label { fill: #000000; }
-  .ow-aspects { opacity: 0.8; }
+  /* ── Sections ──────────────────────────────────────────────────────────
+     A violet hairline and an uppercase head. One accent, used as a rule
+     rather than as decoration. */
 
-  /* ── Tables ────────────────────────────────────────────────────────────
-     The positions table is the reference half of the document: the wheel says
-     where things are relative to each other, this says exactly where. */
-
-  table.placements {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 9.5pt;
+  .me-section-head {
+    margin: 0 0 var(--space-md, 17px);
+    padding-top: var(--space-sm, 12px);
+    border-top: 1pt solid var(--color-accent-border);
   }
 
-  table.placements th,
-  table.placements td {
-    border-bottom: 0.4pt solid #c8c8c8;
-    padding: 1.6mm 2mm;
-    text-align: left;
-  }
-
-  table.placements thead th {
-    border-bottom: 0.8pt solid #000000;
+  .me-section-head h2 {
+    font-family: var(--font-display);
+    font-size: 15pt;
     font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
   }
 
-  /* Repeat the header when a table crosses a page, or the second page is a
-     grid of numbers with nothing to say which column is which. */
-  thead { display: table-header-group; }
-  tfoot { display: table-footer-group; }
-  tr { break-inside: avoid; page-break-inside: avoid; }
+  .me-section-head p {
+    color: var(--color-muted);
+    font-size: 9.5pt;
+    margin: 4px 0 0;
+  }
 
-  /* ── Reading cards ─────────────────────────────────────────────────────
-     On screen these are cards in a grid. On paper a card is just a paragraph
-     with a heading, and the border around each one wastes a third of the
-     page. */
+  /* ── Cards ─────────────────────────────────────────────────────────────
+     The card grammar from the design system: 18px radius, a tile a step up
+     from the canvas, one hairline. No shadow — the system has exactly one and
+     the wheel has it. */
 
   .reading-grid {
     display: block;
   }
 
   .reading-card,
+  .o-flat-list > *,
   .reading-grid > * {
     break-inside: avoid;
     page-break-inside: avoid;
-    margin-bottom: 4mm;
+    background: var(--color-surface);
+    border: 0.5pt solid var(--color-border);
+    border-radius: 11px;
+    padding: var(--space-md, 17px);
+    margin-bottom: var(--space-sm, 12px);
+  }
+
+  .reading-card h3,
+  .o-flat-row__title {
+    font-family: var(--font-display);
+    font-size: 11.5pt;
+    font-weight: 600;
+    margin: 0 0 4px;
+    color: var(--color-primary);
+  }
+
+  .reading-card p {
+    color: var(--color-secondary);
+    margin: 0 0 6px;
+  }
+
+  .reading-card p:last-child {
+    margin-bottom: 0;
+  }
+
+  .reading-card .u-caption,
+  .o-flat-row__meta {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 9pt;
+  }
+
+  /* ── The limitation notice ─────────────────────────────────────────────
+     What the chart does not know travels with the file, because a saved chart
+     outlives the screen that would have explained it. */
+
+  /* renderLimitation() puts an <aside class="chart-limitation"> inside the
+     #chart-limitation wrapper. Styling both drew a box inside a box. */
+  #chart-limitation {
+    background: transparent;
     border: 0;
     padding: 0;
-    background: transparent;
-    box-shadow: none;
   }
 
-  /* ── Links ─────────────────────────────────────────────────────────────
-     Underlines without the URL: this document has no navigation in it, and
-     printing "(https://…)" after every link would be noise. */
-  a { color: #000000; text-decoration: none; }
+  .chart-limitation {
+    background: var(--color-accent-soft);
+    border: 0.5pt solid var(--color-accent-border);
+    border-radius: 11px;
+    padding: var(--space-md, 17px);
+    break-inside: avoid;
+  }
+
+  .chart-limitation__title {
+    font-size: 11pt;
+    margin: 0 0 6px;
+  }
+
+  /* ── The positions table ───────────────────────────────────────────────
+     The reference half: the wheel says where things are relative to each
+     other, this says exactly where. */
+
+  table.placements {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin: 0;
+  }
+
+  table.placements th,
+  table.placements td {
+    border-bottom: 0.5pt solid var(--color-border);
+    padding: 2.2mm 2.5mm;
+    text-align: left;
+  }
+
+  table.placements thead th {
+    color: var(--color-muted);
+    font-size: 8pt;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1pt solid var(--color-accent-border);
+  }
+
+  table.placements td {
+    color: var(--color-secondary);
+  }
+
+  /* The body's own name, and its degree, are what the eye looks for. */
+  table.placements td:first-child {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  table.placements td:nth-child(3) {
+    font-family: var(--font-mono);
+    color: var(--color-primary);
+  }
+
+  /* Repeat the header when the table crosses a page, or the second page is a
+     grid of numbers with nothing to say which column is which. */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
 
   /* ── Provenance ────────────────────────────────────────────────────────
-     What the screen says beside the reading has to travel with the paper: the
-     birth data it was calculated from, the engine and content versions, and
-     the note that none of this came from a model. A printout outlives the
-     screen that would have explained it. */
+     Engine version, content version, and the note that no model wrote any of
+     this. Quiet, and present. */
 
-  .me-muted, .me-facts {
-    font-size: 9pt;
-    color: #3a3a3a;
+  .me-muted {
+    color: var(--color-muted);
+    font-size: 8.5pt;
+    line-height: 1.5;
+    margin-top: var(--space-md, 17px);
+    padding-top: var(--space-sm, 12px);
+    border-top: 0.5pt solid var(--color-border);
   }
 
-  #chart-limitation {
-    border: 0.6pt solid #767676;
-    padding: 3mm 4mm;
-    break-inside: avoid;
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
   }
 }

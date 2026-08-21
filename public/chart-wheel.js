@@ -27,12 +27,17 @@
 //   +180°       ->   0°  -> right     (the Descendant)
 //   +270°       -> 270°  -> top       (the MC)
 //
-// PRINT IS THE PRIMARY TARGET. This wheel exists so a chart can be put on
-// paper, which rules out three habits that are fine on screen: colour as the
-// only carrier of meaning (aspect TYPE is a line style here, colour is
-// decoration on top), hairlines that disappear at 180mm wide, and glyphs so
-// small they fill in. Every stroke width below is chosen to survive a
-// laser printer, not to look delicate on a retina display.
+// ONE DRAWING, THREE PLACES. The same SVG serves the dark app, the light app
+// and the saved PDF, so nothing here carries a colour: every stroke and fill
+// is left to chart-wheel.css and follows the theme. What IS fixed here is
+// geometry and line style — the dash pattern and weight that tell a square
+// from a trine, which must not depend on a stylesheet having loaded, and which
+// keep the wheel readable with the hue removed entirely.
+//
+// Stroke weights are chosen for a wheel about 150mm across, which is what the
+// saved file uses. That is heavier than a screen-only diagram would need, and
+// it is the right trade: a hairline that looks delicate at 2x on a laptop
+// disappears in a PDF someone opens at 100%.
 
 /* ── The glyphs ──────────────────────────────────────────────────────────────
    Ordinary Unicode, matching lib/symbols.js. Several of these ALSO have emoji
@@ -71,18 +76,25 @@ export const BODY_LABELS = Object.freeze({ TrueLilith: "True Lilith" });
 /**
  * Aspect line styles.
  *
- * The TYPE is carried by the dash pattern, never by the colour, so the wheel
- * survives greyscale printing and colour-blind readers with equal grace. The
- * colours are a second, redundant channel for people reading on screen.
+ * TYPE IS CARRIED BY LINE STYLE ALONE — dash pattern and weight, never colour.
+ * All four are distinguishable with the hue removed entirely, which is what a
+ * colour-blind reader gets and what a greyscale copy gets.
+ *
+ * There is no colour here at all, and that is the design system's rule rather
+ * than an accessibility compromise: Orbit has ONE accent, and colour in this
+ * product only ever says "you can act on this". A saved chart has nothing to
+ * act on, so the chords take the accent hue from CSS and differ by drawing
+ * rather than by palette. It is also simply calmer — a wheel with two warring
+ * hues across the middle is the busiest thing on the page.
  *
  * Conjunctions are deliberately absent: two bodies at the same longitude have
  * no line to draw between them, and the glyphs already sit side by side.
  */
 export const ASPECT_STYLE = Object.freeze({
-  Opposition: { dash: "", width: 2.4, colour: "#b4432f" },
-  Square: { dash: "10 6", width: 2.2, colour: "#b4432f" },
-  Trine: { dash: "", width: 1.6, colour: "#2f6d8c" },
-  Sextile: { dash: "3 6", width: 1.6, colour: "#2f6d8c" },
+  Opposition: { dash: "", width: 2.2 },
+  Square: { dash: "9 5", width: 2 },
+  Trine: { dash: "", width: 1.1 },
+  Sextile: { dash: "2 5", width: 1.3 },
 });
 
 /* ── Geometry ─────────────────────────────────────────────────────────────── */
@@ -402,8 +414,11 @@ function renderAspects(chart, asc, bodies) {
       const style = ASPECT_STYLE[a.aspect];
       const p1 = pointOnWheel(RADII.aspect, angleOf.get(a.a));
       const p2 = pointOnWheel(RADII.aspect, angleOf.get(a.b));
+      // Stroke COLOUR is left to CSS so the chords follow the theme; weight and
+      // dash are written here because they carry the aspect's identity and must
+      // not depend on a stylesheet loading.
       return `<line x1="${fixed(p1.x)}" y1="${fixed(p1.y)}" x2="${fixed(p2.x)}" y2="${fixed(p2.y)}"`
-        + ` class="ow-aspect ow-aspect--${a.aspect.toLowerCase()}" stroke="${style.colour}"`
+        + ` class="ow-aspect ow-aspect--${a.aspect.toLowerCase()}"`
         + ` stroke-width="${style.width}"${style.dash ? ` stroke-dasharray="${style.dash}"` : ""}`
         + `><title>${escAttr(`${a.a} ${a.aspect.toLowerCase()} ${a.b}, orb ${a.orb}°`)}</title></line>`;
     });

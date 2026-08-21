@@ -1,24 +1,29 @@
-// Orbit Axis :: the printed chart export.
+// Orbit Axis :: the saved chart export.
+//
+// The export is a FILE SOMEONE KEEPS, in the product's own night-sky palette —
+// not a printout. It runs through @media print because that is the pipeline
+// "Save as PDF" uses, and nothing more should be read into the name.
 //
 // Structural facts a source read can establish, in the spirit of
-// tarot-surface.test.js. What a stylesheet DOES on paper cannot be proved from
-// here — that took a headless browser and a print preview, which is how the
-// three defects below were found in the first place. What can be pinned is
-// that each fix is still present, because every one of them is invisible on
-// screen and silent when it breaks.
+// tarot-surface.test.js. What a stylesheet actually DOES cannot be proved from
+// here; that took a headless browser, which is how every defect below was
+// found. What can be pinned is that each fix is still present, because all of
+// them are invisible on screen and silent when they break.
 //
-// THE THREE, all of which shipped a plausible-looking page with something
-// missing from the PDF:
+// THE FOUR, each of which produced a plausible-looking document that was
+// wrong or incomplete:
 //
-//   1. The chart panel carries a SECOND, legacy palette hardcoded dark. A
-//      reader in dark mode printed near-white text onto white paper.
-//   2. Simple is the default detail level and hides the positions table, the
-//      exact degrees and the calculation metadata — so the "full chart" PDF
-//      quietly had no data in it.
-//   3. A closed <details> cannot be opened from CSS, so the table printed as
+//   1. The chart panel carries a SECOND, legacy palette set on #panel-me
+//      itself, which the --color-* tokens cannot reach.
+//   2. Simple is the DEFAULT detail level and hides the positions table, the
+//      exact degrees and the calculation metadata — so the "full chart" file
+//      quietly had no chart data in it.
+//   3. A closed <details> cannot be opened from CSS, so the table exported as
 //      its summary line alone.
+//   4. Without print-color-adjust the browser drops every background as
+//      "economy", and the whole design evaporates into pale text on white.
 //
-// None of the three produced an error, a warning, or a visibly broken page.
+// None of them produced an error, a warning, or a visibly broken page.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -56,10 +61,10 @@ test("nothing in the print stylesheet escapes onto the screen", () => {
     "every declaration must be inside @media print, or it restyles the live app");
 });
 
-test("the export button exists, starts hidden, and does not print itself", () => {
+test("the export button exists, starts hidden, and is not in the file itself", () => {
   assert.match(INDEX, /id="me-export-pdf"[^>]*hidden/,
     "the button must start hidden — an export button above a placeholder saves nothing");
-  assert.ok(PRINT_CSS.includes("#me-export-pdf"), "the button must be hidden on paper");
+  assert.ok(PRINT_CSS.includes("#me-export-pdf"), "the button must not appear in the export");
 });
 
 test("the wheel has a section on the page and is rendered from the tested module", () => {
@@ -71,27 +76,31 @@ test("the wheel has a section on the page and is rendered from the tested module
 
 /* ── Defect 1: the second palette ─────────────────────────────────────────── */
 
-test("the legacy panel palette is overridden for print", () => {
-  // features.css sets --text/--muted/--border/--accent ON #panel-me, hardcoded
-  // dark, with light values only under :root[data-theme="light"]. Re-pointing
-  // the --color-* tokens does not reach them: different names, higher
-  // specificity. A dark-mode reader printed near-white text on white paper.
+test("the legacy panel palette is set explicitly for the export", () => {
+  // features.css sets --text/--muted/--border/--accent ON #panel-me, and only
+  // supplies light values under :root[data-theme="light"]. Re-pointing the
+  // --color-* tokens does not reach them: different names, higher specificity.
+  // Left alone they decide most of the document, and a reader in light mode
+  // would export the light palette onto the dark canvas.
   const features = read("public/styles/features.css");
   assert.match(features, /#panel-me[^{]*\{[^}]*--text:\s*#e6e9ff/,
-    "this test exists because features.css hardcodes a dark --text on #panel-me");
+    "this test exists because features.css sets a hardcoded --text on #panel-me");
 
-  const block = PRINT_CSS.slice(PRINT_CSS.indexOf("#panel-me,"));
+  const block = PRINT_CSS.slice(PRINT_CSS.indexOf("#panel-me,"), PRINT_CSS.indexOf("#panel-me,") + 900);
   assert.ok(PRINT_CSS.includes("#panel-me,"), "print.css must target #panel-me directly");
   for (const name of ["--text", "--muted", "--border", "--accent", "--surface", "--bg"]) {
-    assert.match(block.slice(0, 900), new RegExp(`${name}:`),
-      `${name} must be re-pointed for paper`);
+    assert.match(block, new RegExp(`${name}:`), `${name} must be set for the export`);
   }
-  assert.match(block.slice(0, 900), /--text:\s*#000000/, "--text must be black on paper");
+  // Both themes are named, so the export does not depend on which one the
+  // reader happens to be in.
+  assert.ok(PRINT_CSS.includes(':root[data-theme="light"] #panel-me')
+    && PRINT_CSS.includes(':root[data-theme="dark"] #panel-me'),
+    "the export must not depend on the reader's theme");
 });
 
 /* ── Defect 2: the full chart ─────────────────────────────────────────────── */
 
-test("the printed chart is the full one, whatever the on-screen detail level", () => {
+test("the saved chart is the full one, whatever the on-screen detail level", () => {
   // Simple is the DEFAULT — the rule is :root:not([data-detail="Advanced"]) —
   // and it hides the positions table, the exact degrees and the calculation
   // metadata. Without this override the export silently omits all of it.
@@ -132,19 +141,33 @@ test("only sections the export opened are folded back afterwards", () => {
   assert.match(APP_JS, /disclosuresOpenedForPrint\.clear\(\)/);
 });
 
-/* ── Paper ────────────────────────────────────────────────────────────────── */
+/* ── The look ─────────────────────────────────────────────────────────────── */
 
-test("the page is set up for paper, not for a screen", () => {
-  assert.match(PRINT_CSS, /@page\s*\{[^}]*margin:/, "a printed page needs margins");
-  assert.match(PRINT_CSS, /background:\s*#ffffff/, "paper is white whatever the theme");
-  // The theme cannot be allowed to survive into the printer.
-  assert.ok(PRINT_CSS.includes(':root[data-theme="dark"]'),
-    "the dark theme's tokens must be overridden explicitly");
+test("the export is the Orbit night sky, whatever theme the reader is in", () => {
+  // This is a file someone keeps and sends on, so it looks like the product
+  // rather than like a setting. It is NOT a printout: the canvas is void
+  // black, full bleed.
+  assert.match(PRINT_CSS, /@page\s*\{[^}]*margin:\s*0/,
+    "a zero page margin is what lets the dark canvas reach the edge");
+  assert.match(PRINT_CSS, /background:\s*#080a12/, "the canvas is Orbit's void black");
+  assert.ok(PRINT_CSS.includes(':root[data-theme="light"]'),
+    "a reader in light mode must still get the night-sky export");
+});
+
+test("backgrounds are forced, or the export arrives as pale text on white", () => {
+  // Browsers drop backgrounds as "economy" by default. print-color-adjust is
+  // an INHERITED property, so declaring it on :root carries the dark canvas
+  // through every descendant — without it this whole design evaporates.
+  const root = PRINT_CSS.slice(PRINT_CSS.indexOf(":root {"), PRINT_CSS.indexOf(":root {") + 400);
+  assert.match(root, /print-color-adjust:\s*exact/,
+    "print-color-adjust: exact must be set on :root so it inherits everywhere");
+  assert.match(root, /-webkit-print-color-adjust:\s*exact/,
+    "the prefixed property is still what Safari reads");
 });
 
 test("navigation and controls do not print", () => {
   for (const selector of [".chart-subnav", ".chart-switcher", ".o-btn", ".me-status"]) {
-    assert.ok(PRINT_CSS.includes(selector), `${selector} must be hidden on paper`);
+    assert.ok(PRINT_CSS.includes(selector), `${selector} must not appear in the export`);
   }
 });
 
@@ -153,14 +176,23 @@ test("only the chart panel prints", () => {
     "a single-page app has every other panel in the document too");
 });
 
-test("the wheel keeps its ink on paper", () => {
-  // print-color-adjust, or the browser drops the aspect strokes as decoration.
-  assert.match(PRINT_CSS, /print-color-adjust:\s*exact/);
-  // And the structural strokes are restated in black rather than left to a
-  // theme token that means something else on paper.
-  for (const cls of [".ow-rim", ".ow-body-glyph", ".ow-cusp--angular"]) {
-    assert.ok(PRINT_CSS.includes(cls), `${cls} needs a paper colour`);
-  }
+test("the wheel gets a page to itself", () => {
+  // The cover's height varies with the birth data, the limitation notice and
+  // the chart-details rows, so a wheel sized to fit underneath it on one chart
+  // is a wheel half off the page on another.
+  const rule = PRINT_CSS.slice(PRINT_CSS.indexOf("#section-wheel {"));
+  assert.match(rule.slice(0, 900), /break-before:\s*page/);
+  assert.match(rule.slice(0, 900), /break-after:\s*page/);
+});
+
+test("the wheel takes the one shadow the design system has", () => {
+  // DESIGN_SYSTEM.md: exactly one drop shadow, and it belongs to the chart
+  // wheel and the Moon — objects resting on a surface, not interface. Cards
+  // never take it.
+  assert.match(WHEEL_CSS, /\.orbit-wheel\b[^}]*drop-shadow/s,
+    "the wheel is one of the two things entitled to the shadow");
+  const cards = PRINT_CSS.slice(PRINT_CSS.indexOf(".reading-card,"), PRINT_CSS.indexOf(".reading-card,") + 500);
+  assert.ok(!/box-shadow:\s*[^n]/.test(cards), "cards must not take a shadow");
 });
 
 test("the wheel stylesheet uses tokens that exist", () => {

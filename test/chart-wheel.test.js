@@ -210,16 +210,27 @@ test("every glyph carries the text-presentation selector", () => {
   }
 });
 
-test("aspect type is carried by line style, not by colour alone", () => {
-  // The wheel is built to be printed, including in greyscale, and to be read by
-  // people who do not distinguish the two aspect colours.
+test("aspect type is carried by line style, with no colour involved at all", () => {
+  // Every aspect must be distinguishable with the hue removed — which is what a
+  // colour-blind reader gets, and what a greyscale copy gets. Orbit also has
+  // exactly one accent, so the chords have no palette of their own to spend.
   const byDash = new Map();
   for (const [name, style] of Object.entries(ASPECT_STYLE)) {
     const signature = `${style.dash}|${style.width}`;
     assert.ok(!byDash.has(signature),
-      `${name} and ${byDash.get(signature)} are distinguishable only by colour`);
+      `${name} and ${byDash.get(signature)} are drawn identically`);
     byDash.set(signature, name);
+    assert.ok(!("colour" in style) && !("color" in style),
+      `${name} carries a colour; stroke colour belongs to CSS so it follows the theme`);
   }
+});
+
+test("the wheel hardcodes no stroke colour", () => {
+  // Colour comes from the stylesheet, so one SVG serves the dark app, the light
+  // app and the saved file without being re-rendered for each.
+  const svg = renderChartWheel(CHART);
+  assert.ok(!/stroke="#/.test(svg), "a hardcoded stroke colour cannot follow the theme");
+  assert.ok(!/fill="#/.test(svg), "a hardcoded fill cannot follow the theme");
 });
 
 test("aspects are only drawn between bodies that are actually on the wheel", () => {
