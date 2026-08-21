@@ -466,6 +466,10 @@ function renderEditor() {
       <div class="x-helper">The Intro/Cover hook. Editorial copy—not engine output.</div>
       <label>Reading in one sentence <textarea id="e-one" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
       <div class="x-helper">The independent second hook and thesis.</div>
+      <label>Cover hook line <input type="text" id="e-hook" class="o-input" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." /></label>
+      <div class="x-helper">Optional, and drawn under the theme on slide 1 — the line that earns the swipe. The cover slide carries it; without a field it could never be written.</div>
+      ${(suggestionFor("cover")?.suggestions || []).length ? `<div class="x-chips">${suggestionFor("cover").suggestions.map((h) =>
+        `<button type="button" class="x-chip" data-hook="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
     </div>` : `<label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>`}
     ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
       `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
@@ -538,6 +542,9 @@ function renderEditor() {
     <div id="e-template-lab"></div>
     <div id="e-preview-box"></div>`;
 
+  for (const chip of document.querySelectorAll("[data-hook]")) {
+    chip.onclick = () => { $("#e-hook").value = chip.getAttribute("data-hook"); refresh(); };
+  }
   for (const chip of document.querySelectorAll("[data-headline]")) {
     chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); refresh(); };
   }
@@ -619,6 +626,23 @@ function resizeSlides(delta) {
   renderEditor();
 }
 
+/* Where a slide's body actually LIVES in the DOM. Readings edit their first
+   two slides through named fields (theme, one-sentence, cover hook) rather
+   than the indexed textareas, and readCopy and the importer disagreeing about
+   that is what let an import write into elements that did not exist and
+   report success. One resolver, consulted by both. */
+function slideBodyField(slide, i) {
+  if (current.post?.reading) {
+    if (slide.role === "cover") return $("#e-hook");
+    if (slide.role === "one_sentence") return $("#e-one");
+  }
+  return document.querySelector(`[data-sb="${i}"]`);
+}
+
+function headlineField() {
+  return current.post?.reading ? $("#e-theme") : $("#e-headline");
+}
+
 function readCopy() {
   const { post } = current;
   const reading = post.reading ? { ...post.reading,
@@ -629,8 +653,7 @@ function readCopy() {
       ...(s.role ? { role: s.role } : {}),
       heading: s.role === "cover" ? `${reading?.type?.toUpperCase()} READING`
         : (document.querySelector(`[data-sh="${i}"]`)?.value || s.heading),
-      body: s.role === "one_sentence" ? (reading?.oneSentence || "")
-        : (document.querySelector(`[data-sb="${i}"]`)?.value || "") })),
+      body: slideBodyField(s, i)?.value || "" })),
     caption: $("#e-caption").value, cta: $("#e-cta").value,
     altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [],
     ...(reading ? { reading } : {}), design: current.design };
@@ -1019,8 +1042,11 @@ function applyHandoff(text) {
   // Map by role first (the brief asks for it), falling back to position.
   const slides = Array.isArray(incoming.slides) ? incoming.slides : [];
   let filled = 0;
+  const unplaced = [];
   if (typeof incoming.headline === "string" && incoming.headline.trim()) {
-    $("#e-headline").value = incoming.headline.trim(); filled += 1;
+    const head = headlineField();
+    if (head) { head.value = incoming.headline.trim(); filled += 1; }
+    else unplaced.push("headline");
   }
   current.post.slides.forEach((slide, i) => {
     const match = slides.find((entry) => entry && entry.role && entry.role === slide.role)
@@ -1028,8 +1054,12 @@ function applyHandoff(text) {
       || slides[i];
     const body = typeof match?.body === "string" ? match.body.trim() : "";
     if (!body) return;
-    const field = document.querySelector(`[data-sb="${i}"]`);
+    const field = slideBodyField(slide, i);
+    // A field that is not on the page means this text has nowhere to go. It
+    // gets NAMED, never dropped quietly — a silent skip reads as "the import
+    // did nothing", which is exactly how this went unnoticed before.
     if (field) { field.value = body; filled += 1; }
+    else unplaced.push(`slide ${i + 1}${slide.role ? ` (${slide.role})` : ""}`);
   });
   if (typeof incoming.caption === "string" && incoming.caption.trim()) {
     $("#e-caption").value = incoming.caption.trim(); filled += 1;
@@ -1042,6 +1072,7 @@ function applyHandoff(text) {
   refresh();
   const advisories = adviseCopy(readCopy());
   status(`Imported ${filled} field(s). Every date checked against the packet.`
+    + (unplaced.length ? ` COULD NOT PLACE: ${unplaced.join(", ")} — no field for it on this format.` : "")
     + (advisories.length ? ` ${advisories.length} advisory to review.` : " Nothing flagged."));
 }
 

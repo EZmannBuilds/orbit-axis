@@ -525,10 +525,16 @@ test("retention advisories name the four ways a correct deck still fails", () =>
   // 1. No open loop.
   assert.ok(rules(base).includes("no_hook"), "an empty hero hook is flagged");
 
-  // 2. A paragraph where a hook belongs.
+  // 2. A paragraph where a hook belongs — and the threshold is the RENDERER's
+  //    hook limit, not a second opinion about it. They disagreed once (140 vs
+  //    72) and copy that passed the advisory came out truncated on the slide.
   const wall = { ...base, slides: base.slides.map((s, i) => i === 0
-    ? { ...s, body: "x".repeat(180) } : s) };
+    ? { ...s, body: "x".repeat(SAFE_LIMITS.hookChars + 40) } : s) };
   assert.ok(rules(wall).includes("hero_paragraph"));
+  const justFits = { ...base, slides: base.slides.map((s, i) => i === 0
+    ? { ...s, body: "y".repeat(SAFE_LIMITS.hookChars) } : s) };
+  assert.ok(!rules(justFits).includes("hero_paragraph"),
+    "exactly the renderable length is fine — the advisory and the renderer agree");
 
   // 3. Slide 2 spends the swipe and returns nothing.
   const echoed = { ...base, headline: "Full Moon in Pisces",
@@ -576,4 +582,25 @@ test("the handoff brief carries facts and rules, and nothing personal", () => {
   assert.ok(!/ownerId|accessToken|session|natal|birth/i.test(
     page.slice(page.indexOf("function handoffBrief("), page.indexOf("function parseHandoff("))),
     "the brief carries no account or natal material");
+});
+
+
+test("a reading's first two slides are editable, or their copy has nowhere to land", () => {
+  // cover maps to the hero layout and the renderer draws its body as the hook,
+  // but the reading editor renders named fields (theme, one-sentence, cover
+  // hook) instead of the indexed textareas. When those disagreed, an import
+  // wrote into elements that did not exist and reported success — the copy
+  // vanished and the no_hook advisory could never be satisfied.
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.match(page, /id="e-hook"/, "a reading has a field for its cover hook");
+  assert.match(page, /function slideBodyField\(/,
+    "one resolver decides where a body lives, so readCopy and the importer cannot disagree");
+  assert.match(page, /COULD NOT PLACE/,
+    "text with no field is named, never dropped quietly");
+  // The importer must consult the resolver rather than reaching for [data-sb].
+  const importer = page.slice(page.indexOf("function applyHandoff("), page.indexOf("function copyText("));
+  assert.match(importer, /slideBodyField\(slide, i\)/);
+  assert.match(importer, /headlineField\(\)/);
+  assert.ok(!/querySelector\(`\[data-sb=/.test(importer),
+    "no direct field lookup survives in the importer");
 });
