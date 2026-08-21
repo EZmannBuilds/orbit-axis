@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { buildCandidates, EDUCATIONAL_TOPICS, CANDIDATE_TYPES } from "../lib/orbit-x/candidates.js";
+import { buildCandidates, CANDIDATE_TYPES, MOON_LOOKAHEAD_PER_KIND } from "../lib/orbit-x/candidates.js";
 import { scoreCandidate, rankCandidates, SCORE_DIMENSIONS, SCORE_MAX_PER_DIMENSION } from "../lib/orbit-x/scoring.js";
 import { FORMATS, FORMAT_IDS, APPROVED_CTAS, TEMPLATE } from "../lib/orbit-x/formats.js";
 import { auditCopy, verifyFactIntegrity, AUDIT_RULES } from "../lib/orbit-x/editorial.js";
@@ -29,6 +29,7 @@ const CONTEXT = Object.freeze({
 });
 const EVENTS = Object.freeze([
   { date: "2026-03-09", instant_utc: "2026-03-09T18:00:00Z", kind: "full_moon", title: "Full Moon 🌕", detail: "Peak illumination.", source: "orbit-axis-engine" },
+  { date: "2026-03-24", instant_utc: "2026-03-24T02:00:00Z", kind: "new_moon", title: "New Moon 🌑", detail: "Dark sky.", source: "orbit-axis-engine" },
   { date: "2026-03-20", kind: "sun_ingress", title: "Sun enters Aries ♈", detail: "Aries season begins — Fire Cardinal." },
   { date: "2026-03-14", kind: "mercury_direct", title: "Mercury stations direct ☿", detail: "Retrograde ends. (approximate)" },
   { date: "2026-03-15", kind: "comet_flyby", title: "Unsupported thing", detail: "?" },
@@ -60,28 +61,80 @@ function goodPost(format = "something_changed", slides = 4) {
   };
 }
 
+
+/** A live moon candidate — key and date that genuinely agree with the engine.
+ *  The lifecycle tests below exercise the STORE, not candidate selection, but
+ *  the route rebuilds the candidate server-side, so the pair must be real. */
+async function liveMoon() {
+  const { createCurrentSkyContext } = await import("../lib/astro/current-sky-context.js");
+  const { upcomingEvents } = await import("../lib/sky.js");
+  const dateIso = "2026-08-19";
+  const context = createCurrentSkyContext({
+    at: new Date(`${dateIso}T12:00:00.000Z`), timezoneName: "America/Chicago", timezoneSource: "request",
+  });
+  const events = upcomingEvents(new Date(`${context.local_date}T12:00:00.000Z`), 12, { currentSkyContext: context });
+  const { candidates } = buildCandidates(events, context);
+  return { dateIso, eventKey: candidates[0].eventKey };
+}
+
 /* ── Candidates ─────────────────────────────────────────────────────────── */
 
-test("engine events become candidates with stable keys; junk is skipped, named", () => {
-  const { candidates, skipped } = buildCandidates(EVENTS, CONTEXT);
+test("only the moon readings become event candidates; everything else is named, not invented", () => {
+  const { candidates, skipped, setAside } = buildCandidates(EVENTS, CONTEXT);
   const keys = candidates.map((c) => c.eventKey);
   assert.ok(keys.includes("full_moon:2026-03-09"), "stable key = kind + date");
-  assert.ok(keys.includes("daily_sky:2026-03-05"), "today's sky is a candidate in its own right");
-  assert.ok(keys.includes("educational:why-apps-disagree"), "evergreen stock rides along");
-  assert.deepEqual(skipped.map((s) => s.kind), ["comet_flyby", "malformed"],
-    "unsupported and malformed are categories, never invented handling");
   for (const c of candidates) assert.ok(CANDIDATE_TYPES.includes(c.eventType), c.eventType);
+
+  // Dev Update 5.3: the desk recommends four things. Ingresses and stations
+  // are still real, calculated events — they are SET ASIDE by editorial
+  // policy, which is a different fact from malformed and is counted apart so
+  // the UI never implies the engine produced something broken.
+  assert.deepEqual(skipped.map((s) => s.kind), ["malformed"],
+    "only genuinely malformed input is 'skipped'");
+  const asideKinds = setAside.map((s) => s.kind);
+  assert.ok(asideKinds.includes("sun_ingress") && asideKinds.includes("mercury_direct"),
+    "retired kinds are set aside by name");
+  assert.ok(asideKinds.includes("comet_flyby"), "and so is a kind nothing understands");
+  assert.ok(!keys.some((k) => k.startsWith("educational:")), "the evergreen stock is no longer recommended");
+  assert.ok(!keys.some((k) => k.startsWith("daily_sky:")), "the Daily Reading replaced today's-sky");
+
   const twice = buildCandidates(EVENTS, CONTEXT);
   assert.deepEqual(twice.candidates.map((c) => c.eventKey), keys, "deterministic");
 });
 
-test("approximate sources stay approximate all the way through", () => {
-  const { candidates } = buildCandidates(EVENTS, CONTEXT);
-  const mercury = candidates.find((c) => c.eventType === "mercury_direct");
-  assert.equal(mercury.approximate, true, "the table said approximate; the candidate says so too");
-  const full = candidates.find((c) => c.eventType === "full_moon");
-  assert.equal(full.approximate, false);
-  assert.equal(full.source, "orbit-engine");
+test("only the NEXT lunation of each kind is recommended", () => {
+  const many = [
+    { date: "2026-03-09", instant_utc: "2026-03-09T18:00:00Z", kind: "full_moon", title: "Full Moon", detail: "a", source: "orbit-axis-engine" },
+    { date: "2026-04-08", instant_utc: "2026-04-08T18:00:00Z", kind: "full_moon", title: "Full Moon", detail: "b", source: "orbit-axis-engine" },
+    { date: "2026-03-24", instant_utc: "2026-03-24T02:00:00Z", kind: "new_moon", title: "New Moon", detail: "c", source: "orbit-axis-engine" },
+  ];
+  const { candidates, setAside } = buildCandidates(many, CONTEXT);
+  assert.equal(candidates.filter((c) => c.eventType === "full_moon").length, MOON_LOOKAHEAD_PER_KIND);
+  assert.equal(candidates.filter((c) => c.eventType === "new_moon").length, MOON_LOOKAHEAD_PER_KIND);
+  assert.equal(candidates[0].eventKey, "full_moon:2026-03-09", "the soonest one, not the last seen");
+  assert.ok(setAside.some((s) => s.date === "2026-04-08"), "the backlog is set aside, not silently dropped");
+});
+
+test("a moon's event key does not move with the caller's timezone", async () => {
+  // The August 2026 full moon is the 27th in Chicago and the 28th in UTC, and
+  // event.date is what the key is built from. Keyed off the requester, one
+  // real moon became two candidates — and since the key IS the duplicate
+  // guard, the desk would mint a second draft of a moon it had covered.
+  const store = stubStore();
+  const asked = async (tz) => {
+    const params = new URLSearchParams(`date=2026-08-19${tz ? `&tz=${tz}` : ""}`);
+    const res = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", params, {},
+      { ...AUTH }, { env: ENV_ON, store });
+    return res.body.candidates.map((c) => c.candidate.eventKey)
+      .filter((k) => k.startsWith("full_moon:") || k.startsWith("new_moon:"));
+  };
+  const chicago = await asked("America/Chicago");
+  const utc = await asked("UTC");
+  const tokyo = await asked("Asia/Tokyo");
+  assert.deepEqual(chicago, utc, "the same moon, whoever asks");
+  assert.deepEqual(chicago, tokyo, "including from the other side of the date line");
+  assert.ok(chicago.includes("full_moon:2026-08-27"),
+    "and it stays the key the existing production draft was saved under");
 });
 
 /* ── Scoring ────────────────────────────────────────────────────────────── */
@@ -143,7 +196,7 @@ test("legacy formats plus three first-class reading formats keep explicit risk c
 
 test("the packet carries facts and editorial context — and nothing personal", () => {
   const { candidates } = buildCandidates(EVENTS, CONTEXT);
-  const packet = buildPacket(candidates[1], "something_changed", ["full_moon:2026-02-08"]);
+  const packet = buildPacket(candidates.find((c) => c.eventType === "new_moon"), "something_changed", ["full_moon:2026-02-08"]);
   const text = JSON.stringify(packet);
   for (const banned of ["birth", "natal", "email", "ownerId", "owner_id", "accessToken", "apiKey", "sk_", "whsec"]) {
     assert.ok(!text.toLowerCase().includes(banned.toLowerCase()), `packet must not carry ${banned}`);
@@ -236,15 +289,16 @@ test("the server wires the route behind requireAuth and the page outside public/
 
 test("saving stores verified facts write-once, beside the copy — never under it", async () => {
   const store = stubStore();
+  const moon = await liveMoon();
   const res = await handleOrbitXRoute("POST", "/api/orbit-x/posts", new URLSearchParams(),
-    { eventKey: "educational:why-apps-disagree", format: "without_the_fog",
-      copy: { ...goodPost("without_the_fog", 3) } },
+    { eventKey: moon.eventKey, date: moon.dateIso, format: "something_changed",
+      copy: { ...goodPost("something_changed", 4) } },
     { ...AUTH }, { env: ENV_ON, store });
   assert.equal(res.status, 200);
   const row = store.inserted[0];
-  assert.equal(row.event_key, "educational:why-apps-disagree");
+  assert.equal(row.event_key, moon.eventKey);
   assert.equal(row.status, "draft");
-  assert.ok(row.event_payload.facts.ground, "the verified packet is stored whole");
+  assert.ok(row.event_payload.facts.date, "the verified packet is stored whole");
   assert.ok(row.edited_copy.headline, "the copy is stored beside it");
   // And the store's own allow-list makes facts unwritable afterwards:
   const real = orbitXStore(AUTH, { fetchImpl: async () => ({ ok: true, json: async () => [{}] }) });
@@ -253,7 +307,8 @@ test("saving stores verified facts write-once, beside the copy — never under i
 
 test("duplicate coverage is refused unless the fresh treatment is deliberate", async () => {
   const store = stubStore({ coverage: [{ id: "old", status: "approved", created_at: "2026-03-01" }] });
-  const body = { eventKey: "educational:what-is-a-transit", format: "without_the_fog", copy: goodPost("without_the_fog", 3) };
+  const moon = await liveMoon();
+  const body = { eventKey: moon.eventKey, date: moon.dateIso, format: "something_changed", copy: goodPost("something_changed", 4) };
   const refused = await handleOrbitXRoute("POST", "/api/orbit-x/posts", new URLSearchParams(), body, { ...AUTH }, { env: ENV_ON, store });
   assert.equal(refused.status, 409);
   const allowed = await handleOrbitXRoute("POST", "/api/orbit-x/posts", new URLSearchParams(),
@@ -298,10 +353,13 @@ test("real Orbit engine data produces candidates end to end", async () => {
   const context = createCurrentSkyContext({ at: new Date("2026-08-19T17:00:00Z"), timezoneName: "America/Chicago", timezoneSource: "request" });
   const events = upcomingEvents(new Date(`${context.local_date}T12:00:00.000Z`), 12, { currentSkyContext: context });
   const { candidates, skipped } = buildCandidates(events, context);
-  assert.ok(candidates.length >= EDUCATIONAL_TOPICS.length + 3, "sky + lunations + stock");
-  assert.equal(skipped.length, 0, "the live pipeline produces nothing unsupported");
-  const daily = candidates.find((c) => c.eventType === "daily_sky");
-  assert.equal(daily.facts.moon_phase_name, context.moon_phase_name, "facts are the engine's, verbatim");
+  assert.equal(skipped.length, 0, "the live pipeline produces nothing malformed");
+  assert.ok(candidates.length >= 1 && candidates.length <= 2,
+    "live sky yields the next full moon and the next new moon, and nothing else");
+  for (const c of candidates) {
+    assert.ok(["full_moon", "new_moon"].includes(c.eventType), c.eventType);
+    assert.equal(c.source, "orbit-engine", "facts are the engine's, verbatim");
+  }
 });
 
 /* ── The manual lane: the desk owes nothing to a provider ───────────────── */
@@ -310,9 +368,7 @@ test("the manual scaffold passes every gate a draft must — publishable or empt
   const { candidates } = buildCandidates(EVENTS, CONTEXT);
   const samples = [
     candidates.find((c) => c.eventType === "full_moon"),
-    candidates.find((c) => c.eventType === "mercury_direct"),
-    candidates.find((c) => c.eventType === "daily_sky"),
-    candidates.find((c) => c.eventKey === "educational:why-apps-disagree"),
+    candidates.find((c) => c.eventType === "new_moon"),
   ];
   for (const candidate of samples) {
     for (const formatId of FORMAT_IDS.filter((id) => !FORMATS[id].readingType)) {
@@ -338,9 +394,17 @@ test("the manual scaffold passes every gate a draft must — publishable or empt
       }
     }
   }
-  // Approximate candidates scaffold with "around", never a false precision —
-  // and in human dates, with the ISO instant left to the facts panel.
-  const mercury = samples[1];
+  // Approximate sources scaffold with "around", never a false precision — and
+  // in human dates, with the ISO instant left to the facts panel. Mercury is
+  // no longer RECOMMENDED (Dev Update 5.3), but a post already saved under it
+  // must still scaffold and render, so the behaviour is still pinned here.
+  const mercury = Object.freeze({
+    eventKey: "mercury_direct:2026-03-14", eventType: "mercury_direct",
+    title: "Mercury stations direct", timestamp: "2026-03-14", approximate: true,
+    source: "orbit-sky-tables",
+    facts: Object.freeze({ date: "2026-03-14", instant_utc: null,
+      detail: "Retrograde ends. (approximate)", approximate: true }),
+  });
   const { post: mercPost } = buildScaffold(mercury, "something_changed", {});
   const factSlide = mercPost.slides.find((s) => s.role === "fact");
   assert.match(factSlide.body, /around March 14/);
@@ -369,14 +433,15 @@ test("the approval quality gate refuses an unfinished draft, by name", async () 
 test("the manual endpoint needs no provider and mirrors /generate's shape", async () => {
   // ENV_ON deliberately carries no ORBIT_X_AI_API_KEY.
   const store = stubStore();
+  const moon = await liveMoon();
   const res = await handleOrbitXRoute("POST", "/api/orbit-x/manual", new URLSearchParams(),
-    { eventKey: "educational:why-birth-time-matters", format: "without_the_fog" },
+    { eventKey: moon.eventKey, date: moon.dateIso, format: "something_changed" },
     { ...AUTH }, { env: ENV_ON, store });
   assert.equal(res.status, 200);
   assert.equal(res.body.manual, true);
   assert.equal(res.body.usage, null);
-  assert.ok(res.body.post.headline && res.body.post.slides.length >= 3);
-  assert.ok(res.body.candidate.facts.ground, "the verified candidate rides along, same as /generate");
+  assert.ok(res.body.post.headline && res.body.post.slides.length >= 4);
+  assert.ok(res.body.candidate.facts.date, "the verified candidate rides along, same as /generate");
 });
 
 test("missing AI configuration is a state on the candidates response, never an error", async () => {
@@ -392,10 +457,11 @@ test("missing AI configuration is a state on the candidates response, never an e
 
 test("a manual draft saves through the full lifecycle and records human authorship", async () => {
   const store = stubStore();
+  const moon = await liveMoon();
   const { body } = await handleOrbitXRoute("POST", "/api/orbit-x/manual", new URLSearchParams(),
-    { eventKey: "educational:what-is-a-transit", format: "without_the_fog" }, { ...AUTH }, { env: ENV_ON, store });
+    { eventKey: moon.eventKey, date: moon.dateIso, format: "something_changed" }, { ...AUTH }, { env: ENV_ON, store });
   const saved = await handleOrbitXRoute("POST", "/api/orbit-x/posts", new URLSearchParams(),
-    { eventKey: "educational:what-is-a-transit", format: "without_the_fog",
+    { eventKey: moon.eventKey, date: moon.dateIso, format: "something_changed",
       copy: body.post, generatedCopy: null }, { ...AUTH }, { env: ENV_ON, store });
   assert.equal(saved.status, 200);
   assert.equal(store.inserted[0].generated_copy, null,

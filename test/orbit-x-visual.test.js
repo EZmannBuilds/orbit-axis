@@ -432,21 +432,27 @@ test("lunation packets carry sky_at_event and the renderer trusts only that", ()
   // A failing engine lookup yields absence, not invention.
   const { candidates: bare } = buildCandidates(events, null, { skyAt: () => { throw new Error("nope"); } });
   assert.equal(bare.find((c) => c.eventType === "full_moon").facts.sky_at_event, undefined);
-  // And an approximate event never gets an exact-instant enrichment at all.
-  const approx = [{ date: "2026-10-24", kind: "mercury_rx", title: "Mercury stations retrograde ☿",
-    detail: "Retrograde. (approximate)" }];
-  const { candidates: mc } = buildCandidates(approx, null, { skyAt: () => ({}) });
-  assert.equal(mc.find((c) => c.eventType === "mercury_rx").facts.sky_at_event, undefined);
+  // And an event with no exact instant never gets an exact-instant
+  // enrichment: precision that is not there is not manufactured.
+  const noInstant = [{ date: "2026-10-24", kind: "new_moon", title: "New Moon 🌑", detail: "Dark sky." }];
+  const { candidates: ni } = buildCandidates(noInstant, null, { skyAt: () => ({ moon: { sign: "Libra" } }) });
+  assert.equal(ni.find((c) => c.eventType === "new_moon").facts.sky_at_event, undefined);
 });
 
-test("the daily packet carries its own strip so a saved draft re-renders forever", () => {
+test("the reading packet carries its own strip so a saved draft re-renders forever", async () => {
+  // The synthetic daily_sky candidate retired with Dev Update 5.3; the Daily
+  // Reading is that post now. The guarantee is unchanged and still matters:
+  // the positions live IN the saved packet, so a draft opened months later
+  // redraws exactly the sky it was written about.
+  const { buildReadingCandidate, calculateReadingPeriod } = await import("../lib/orbit-x/readings.js");
   const context = { context_version: 1, local_date: "2026-08-19", moon_phase_name: "First Quarter",
     illumination_percent: 44, is_waxing: true, moon: { sign: "Scorpio" },
     planets: { Sun: { name: "Sun", sign: "Leo", degrees: 26, retrograde: false },
       Saturn: { name: "Saturn", sign: "Aries", degrees: 2, retrograde: true } } };
-  const { candidates } = buildCandidates([], context);
-  const daily = candidates.find((c) => c.eventType === "daily_sky");
+  const period = calculateReadingPeriod("daily", "2026-08-19", "America/Chicago");
+  const daily = buildReadingCandidate({ type: "daily", period, events: [], context });
   assert.equal(daily.facts.planets.length, 2);
   assert.equal(daily.facts.planets[1].retrograde, true);
   assert.equal(daily.facts.moon_sign, "Scorpio");
+  assert.equal(daily.readingType, "daily", "the period is on the candidate, not only in the key");
 });

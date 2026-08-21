@@ -309,7 +309,7 @@ async function load() {
         <div class="x-reasons">${esc(score.reasons.join(" · "))}</div>
         <div class="x-row">
           <select class="o-select" data-fmt style="max-width:230px">
-            ${Object.values(formats).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
+            ${compatibleFormats(candidate, suggestedFormat).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
           </select>
           <button class="o-btn o-btn--secondary o-btn--sm" data-manual>Manual draft</button>
           ${aiAvailable ? `<button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate (AI)</button>` : ""}
@@ -319,11 +319,28 @@ async function load() {
         () => generate(candidate, div.querySelector("[data-fmt]").value));
       box.appendChild(div);
     }
-    status(`${data.candidates.length} candidates for ${data.localDate}`
+    status(`${data.candidates.length} recommendations for ${data.localDate}`
+      + `${data.setAside?.length ? ` · ${data.setAside.length} other sky events not recommended` : ""}`
       + `${data.skipped.length ? ` · ${data.skipped.length} unsupported skipped` : ""}`
       + `${aiAvailable ? "" : " · manual drafting (no AI provider configured)"}`);
     loadHistory();
   } catch (error) { status(error.message); }
+}
+
+/* Only the formats that actually fit this candidate. Offering all eight put
+   "Astrology Without the Fog" on a Full Moon and the Daily Reading format on
+   a Monthly one — choices that are wrong before the editor types anything.
+   The suggested format is always included, so the list can never be empty. */
+function compatibleFormats(candidate, suggested) {
+  const all = Object.values(formats);
+  const fits = all.filter((f) => {
+    if (f.readingType) return f.readingType === candidate.readingType;
+    if (candidate.readingType) return false;
+    return !f.candidateTypes || f.candidateTypes.includes(candidate.eventType);
+  });
+  const list = fits.length ? fits : all.filter((f) => f.id === suggested);
+  return list.some((f) => f.id === suggested) ? list
+    : [...list, all.find((f) => f.id === suggested)].filter(Boolean);
 }
 
 async function manualDraft(candidate, format) {
