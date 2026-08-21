@@ -26,5 +26,5 @@
 // credentials do not belong here or anywhere else in public/.
 
 globalThis.ORBIT_APP_CONFIG = {
-  apiBaseUrl: "",
+  apiBaseUrl: "https://orbit-axis-omega.vercel.app",
 };

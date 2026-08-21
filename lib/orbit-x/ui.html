@@ -63,6 +63,16 @@
   .x-feedsim .f-dots .on { color: #7657e8; }
   .x-feedsim .f-caption { padding: 8px 10px 12px; font-size: 13px; color: #ddd; white-space: pre-wrap; }
   .x-feedsim svg { width: 100%; height: auto; display: block; }
+  .x-reading-bar { margin-top: var(--space-md); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
+  .x-reading-bar strong { margin-right: var(--space-sm); }
+  .x-lab { margin: var(--space-md) 0; padding: var(--space-md); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
+  .x-lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: var(--space-sm); }
+  .x-lab-card { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--color-surface); }
+  .x-lab-card h4 { margin: 0 0 4px; }
+  .x-lab-card p { min-height: 3.6em; color: var(--color-muted); font-size: var(--type-caption); }
+  .x-lab-slides { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .x-lab-slides svg { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .x-demo-label { display: inline-block; color: var(--color-accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
 </style>
 </head>
 <body>
@@ -79,15 +89,29 @@
   <span class="x-status" id="x-status" role="status" aria-live="polite"></span>
 </div>
 
+<div class="x-reading-bar" aria-label="Collective readings">
+  <strong>Collective Readings</strong>
+  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="daily">Today</button>
+  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="weekly">This Week</button>
+  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="monthly">This Month</button>
+  <span class="x-helper">Shared current sky · manual authoring · portrait first</span>
+</div>
+
 <div class="x-grid">
   <section class="x-panel" aria-label="Candidates">
     <h2>Candidates</h2>
     <div id="x-candidates"><p class="x-status">Pick a date and load.</p></div>
-    <h2 style="margin-top:var(--space-lg)">History</h2>
+    <h2 style="margin-top:var(--space-lg)">Saved work</h2>
+    <p class="x-helper">Drafts and past decisions appear here automatically. Open any item to review or continue it.</p>
     <div class="x-row">
       <select id="x-hist-filter" class="o-select" style="max-width:180px">
         <option value="">All statuses</option>
         <option>draft</option><option>approved</option><option>rejected</option><option>exported</option>
+      </select>
+      <select id="x-hist-kind" class="o-select" style="max-width:190px">
+        <option value="">All content</option>
+        <option value="daily_reading">Daily</option><option value="weekly_reading">Weekly</option>
+        <option value="monthly_reading">Monthly</option><option value="other">Other formats</option>
       </select>
       <button class="o-btn o-btn--secondary o-btn--sm" id="x-hist-load">Refresh history</button>
     </div>
@@ -101,7 +125,8 @@
 </div>
 
 <script type="module">
-import { renderPost, normalizeDesign, TEMPLATES, ASPECTS, DENSITIES, REQUIRED_ROLES, humanDate }
+import { renderPost, normalizeDesign, TEMPLATES, TEMPLATE_FAMILY_IDS, ASPECTS, DENSITIES,
+  REQUIRED_ROLES, LOGO_POSITIONS, HEADLINE_ALIGNMENTS, humanDate }
   from "/admin/orbit-x/templates.js";
 import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
 
@@ -124,7 +149,7 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
 /* ── State: the verified candidate is held SEPARATELY from editable copy and
    is rendered read-only. Editing facts is not a UI affordance that exists. */
-let current = null;   // { candidate, post, generatedCopy, calculationMetadata, savedId, suggestions, design }
+let current = null;   // { candidate, post, generatedCopy, calculationMetadata, savedId, suggestions, design, notes }
 let formats = {};
 let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
@@ -139,6 +164,20 @@ $("#x-tomorrow").onclick = () => {
 };
 $("#x-load").onclick = load;
 $("#x-hist-load").onclick = loadHistory;
+for (const button of document.querySelectorAll("[data-reading]")) {
+  button.onclick = () => loadReading(button.getAttribute("data-reading"));
+}
+
+async function loadReading(type) {
+  status(`Calculating ${type} reading…`);
+  try {
+    const data = await api(`/api/orbit-x/readings?type=${encodeURIComponent(type)}&date=${$("#x-date").value}`);
+    formats = data.formats; aiAvailable = data.aiAvailable === true;
+    lastSky = data.candidate.facts?.planets || [];
+    status(`${data.candidate.title} · ${data.candidate.facts.selected_events.length} curated movement(s) · ${data.editorialTimezone}`);
+    await manualDraft(data.candidate, data.format);
+  } catch (error) { status(error.message); }
+}
 
 async function load() {
   status("Calculating…");
@@ -189,7 +228,7 @@ async function manualDraft(candidate, format) {
     // recorded fact in the row, not a pretence of generation.
     current = { candidate: data.candidate, post: data.post, generatedCopy: null,
       calculationMetadata: data.calculationMetadata, savedId: null,
-      suggestions: data.suggestions,
+      suggestions: data.suggestions, notes: "",
       design: normalizeDesign({ template: data.recommendedTemplate }, data.candidate.eventType, format) };
     renderEditor();
     status("Draft ready — the facts are in place; the interpretation is yours.");
@@ -203,6 +242,7 @@ async function generate(candidate, format, instruction = "") {
       eventKey: candidate.eventKey, date: $("#x-date").value, tz, format, instruction }) });
     current = { candidate: data.candidate, post: data.post, generatedCopy: data.post,
       calculationMetadata: data.calculationMetadata, savedId: null, suggestions: null,
+      notes: "",
       design: normalizeDesign(data.post.design || {}, candidate.eventType, format) };
     renderEditor();
     status(data.usage ? `Generated (${data.usage.input}+${data.usage.output} tokens)` : "Generated");
@@ -214,7 +254,8 @@ async function generate(candidate, format, instruction = "") {
 /* ── Design controls: constrained, designed choices — no free x/y anywhere. */
 function designControls() {
   const d = current.design;
-  const tplChoices = Object.values(TEMPLATES);
+  const isReading = Boolean(current.post.reading);
+  const tplChoices = isReading ? TEMPLATE_FAMILY_IDS.map((id) => TEMPLATES[id]) : Object.values(TEMPLATES);
   return `<div class="x-controls">
     <div class="x-row">
       <label>Aspect
@@ -229,6 +270,14 @@ function designControls() {
         <select class="o-select" id="d-variant">
           ${Array.from({ length: TEMPLATES[d.template]?.variants || 1 }, (_, i) =>
             `<option value="${i}" ${i === d.variant ? "selected" : ""}>${i === 0 ? "Axis (left)" : "Centered"}</option>`).join("")}
+        </select></label>
+      <label>Logo
+        <select class="o-select" id="d-logo">
+          ${Object.entries(LOGO_POSITIONS).map(([id, name]) => `<option value="${id}" ${id === d.logoPosition ? "selected" : ""}>${name}</option>`).join("")}
+        </select></label>
+      <label>Headline
+        <select class="o-select" id="d-align">
+          ${Object.entries(HEADLINE_ALIGNMENTS).map(([id, name]) => `<option value="${id}" ${id === d.headlineAlignment ? "selected" : ""}>${name}</option>`).join("")}
         </select></label>
     </div>
     <div class="x-row">
@@ -250,6 +299,7 @@ function designControls() {
           <div class="t-use">${esc(t.intendedUse)} · ${esc(t.density)}</div>
         </button>`).join("")}
     </div>
+    ${isReading ? `<button type="button" class="o-btn o-btn--primary o-btn--sm" id="d-compare">Compare all five in Template Lab</button>` : ""}
   </div>`;
 }
 
@@ -260,6 +310,8 @@ function readDesign() {
     visuals: { moon: $("#d-v-moon")?.checked, strip: $("#d-v-strip")?.checked, diagram: $("#d-v-diagram")?.checked },
     metadata: { date: $("#d-m-date")?.checked, time: $("#d-m-time")?.checked, sign: $("#d-m-sign")?.checked,
       illumination: $("#d-m-illum")?.checked, calculated: $("#d-m-calc")?.checked },
+    logoPosition: $("#d-logo")?.value,
+    headlineAlignment: $("#d-align")?.value,
   }, current.candidate.eventType, current.post.format);
 }
 
@@ -270,6 +322,7 @@ function suggestionFor(role) {
 function renderEditor() {
   const { candidate, post } = current;
   const fmt = formats[post.format] || FORMATS[post.format];
+  const isReading = Boolean(post.reading);
   $("#x-editor-title").textContent = `${fmt.name} — ${candidate.title}`;
   const facts = Object.entries(candidate.facts || {})
     .map(([k, v]) => `<div><strong>${esc(k)}</strong>: ${esc(JSON.stringify(v))}</div>`).join("");
@@ -280,10 +333,15 @@ function renderEditor() {
       <div><strong>VERIFIED FACTS (engine · read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}
     </div>
     ${designControls()}
-    <label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>
+    ${isReading ? `<div class="x-section">
+      <label>Theme <input type="text" id="e-theme" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before approval" /></label>
+      <div class="x-helper">The Intro/Cover hook. Editorial copy—not engine output.</div>
+      <label>Reading in one sentence <textarea id="e-one" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
+      <div class="x-helper">The independent second hook and thesis.</div>
+    </div>` : `<label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>`}
     ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
       `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
-    <div id="e-slides">${post.slides.map((s, i) => slideSection(s, i)).join("")}</div>
+    <div id="e-slides">${post.slides.map((s, i) => isReading && ["cover", "one_sentence"].includes(s.role) ? "" : slideSection(s, i)).join("")}</div>
     ${expandable ? `<div class="x-row">
       <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-add-slide">Add ${esc(expandable)} slide</button>
       <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-remove-slide">Remove last ${esc(expandable)} slide</button>
@@ -302,14 +360,14 @@ function renderEditor() {
     </div>
     <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
     <div class="x-helper">Describe what the graphic actually shows — not the symbolism.</div>
-    <label>Editor notes <textarea id="e-notes" class="o-input"></textarea></label>
+    <label>Editor notes <textarea id="e-notes" class="o-input">${esc(current.notes || "")}</textarea></label>
     <div class="x-row">
       <span class="x-meter" id="e-meter"></span>
       <span class="x-warn" id="e-warnings"></span>
     </div>
     <div class="x-advice" id="e-advice"></div>
     <div class="x-row">
-      ${aiAvailable ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
+      ${aiAvailable && !isReading ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
       <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
       <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
       <span style="opacity:.4">|</span>
@@ -330,6 +388,7 @@ function renderEditor() {
       </select>
       <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
     </div>
+    <div id="e-template-lab"></div>
     <div id="e-preview-box"></div>`;
 
   for (const chip of document.querySelectorAll("[data-headline]")) {
@@ -341,9 +400,11 @@ function renderEditor() {
       field.value = chip.getAttribute("data-text"); refresh();
     };
   }
-  for (const el of document.querySelectorAll("#d-aspect, #d-density, #d-variant, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
+  for (const el of document.querySelectorAll("#d-aspect, #d-density, #d-variant, #d-logo, #d-align, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
     el.onchange = () => { current.design = readDesign(); refresh(); };
   }
+  const compare = $("#d-compare");
+  if (compare) compare.onclick = renderTemplateLab;
   for (const card of document.querySelectorAll("[data-tpl]")) {
     card.onclick = () => {
       current.design = normalizeDesign({ ...current.design, template: card.getAttribute("data-tpl"), variant: 0 },
@@ -366,6 +427,7 @@ function renderEditor() {
   $("#e-export").onclick = exportSlides;
   $("#e-approve").onclick = () => decide("approved");
   $("#e-reject").onclick = () => decide("rejected");
+  $("#e-notes").oninput = () => { current.notes = $("#e-notes").value; };
   $("#x-editor").oninput = debounce(refresh, 350); // assignment, not addEventListener — re-renders must not stack listeners
   renderTemplateThumbs();
   refresh();
@@ -405,28 +467,37 @@ function resizeSlides(delta) {
 
 function readCopy() {
   const { post } = current;
+  const reading = post.reading ? { ...post.reading,
+    theme: $("#e-theme")?.value || "", oneSentence: $("#e-one")?.value || "" } : null;
   return { format: post.format,
-    headline: $("#e-headline").value, subhead: post.subhead,
+    headline: reading ? reading.theme : $("#e-headline").value, subhead: post.subhead,
     slides: post.slides.map((s, i) => ({
       ...(s.role ? { role: s.role } : {}),
-      heading: document.querySelector(`[data-sh="${i}"]`).value,
-      body: document.querySelector(`[data-sb="${i}"]`).value })),
+      heading: s.role === "cover" ? `${reading?.type?.toUpperCase()} READING`
+        : (document.querySelector(`[data-sh="${i}"]`)?.value || s.heading),
+      body: s.role === "one_sentence" ? (reading?.oneSentence || "")
+        : (document.querySelector(`[data-sb="${i}"]`)?.value || "") })),
     caption: $("#e-caption").value, cta: $("#e-cta").value,
     altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [],
-    design: current.design };
+    ...(reading ? { reading } : {}), design: current.design };
 }
 
 /** Client-side completeness mirror — the server re-checks on approval. */
 function completeness(copy) {
   const missing = [];
-  if (!copy.headline.trim()) missing.push("headline");
+  if (!copy.reading && !copy.headline.trim()) missing.push("headline");
+  if (copy.reading && !copy.reading.theme.trim()) missing.push("theme");
+  if (copy.reading && !copy.reading.oneSentence.trim()) missing.push("reading in one sentence");
   copy.slides.forEach((s, i) => {
+    if (copy.reading && ["cover", "one_sentence"].includes(s.role)) return;
     const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
     if (required && !s.body.trim()) missing.push(`slide ${i + 1}${s.role ? ` (${s.role})` : ""}`);
   });
   if (!copy.caption.trim()) missing.push("caption");
   if (!copy.altText.trim()) missing.push("alt text");
-  const requiredTotal = 2 + copy.slides.filter((s) => (s.role ? REQUIRED_ROLES[s.role] !== false : true)).length;
+  const requiredSlides = copy.slides.filter((s) => !(copy.reading && ["cover", "one_sentence"].includes(s.role))
+    && (s.role ? REQUIRED_ROLES[s.role] !== false : true)).length;
+  const requiredTotal = 2 + (copy.reading ? 2 : 0) + requiredSlides;
   return { missing, complete: !missing.length, done: requiredTotal - missing.length, total: requiredTotal };
 }
 
@@ -484,6 +555,55 @@ function renderTemplateThumbs() {
   }
 }
 
+function labCopy() {
+  const copy = readCopy();
+  if (!copy.reading) return copy;
+  const theme = copy.reading.theme || "A shared sky, read in motion.";
+  const one = copy.reading.oneSentence
+    || "Editorial demo copy for layout comparison; verified sky movements appear later in the carousel.";
+  return { ...copy, headline: theme, reading: { ...copy.reading, theme, oneSentence: one },
+    slides: copy.slides.map((slide) => {
+      if (slide.role === "one_sentence") return { ...slide, body: one };
+      if (slide.role === "reading" && !slide.body) return { ...slide,
+        body: "Editorial demo: the final symbolic synthesis will connect the selected, verified movements without predicting individual outcomes." };
+      if (slide.role === "reflection" && !slide.body) return { ...slide,
+        body: "Editorial demo: what becomes easier to notice when the pace changes?" };
+      return slide;
+    }) };
+}
+
+function renderTemplateLab() {
+  const box = $("#e-template-lab");
+  if (!box || !current.post.reading) return;
+  const copy = labCopy();
+  const cards = TEMPLATE_FAMILY_IDS.map((id) => {
+    const family = TEMPLATES[id];
+    const design = normalizeDesign({ ...current.design, aspect: "portrait", template: id },
+      current.candidate.eventType, current.post.format);
+    const rendered = renderPost({ ...copy, design }, { ...renderContext(copy), design });
+    const readingIndex = Math.max(0, copy.slides.findIndex((s) => s.role === "reading"));
+    const detailIndex = Math.max(0, copy.slides.findIndex((s) => ["reflection", "evidence", "key_dates"].includes(s.role)));
+    const indexes = [...new Set([0, 1, readingIndex, detailIndex])].slice(0, 4);
+    return `<article class="x-lab-card">
+      <span class="x-demo-label">EDITORIAL DEMO · REAL ENGINE FACTS</span>
+      <h4>${esc(family.name)}</h4><p>${esc(family.intendedUse)}</p>
+      <div class="x-lab-slides">${indexes.map((i) => rendered.slides[i]?.svg || "").join("")}</div>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-use-family="${id}" style="margin-top:8px">Use for this draft</button>
+    </article>`;
+  }).join("");
+  box.innerHTML = `<section class="x-lab" aria-label="Founder Template Review">
+    <h3>Founder Template Review · ${esc(copy.reading.type[0].toUpperCase() + copy.reading.type.slice(1))} · ${esc(copy.reading.periodLabel)}</h3>
+    <p class="x-helper">The same structured reading feeds all five versioned portrait systems. Demo symbolic lines are labeled editorial copy; astronomy remains engine output. No default changes here.</p>
+    <div class="x-lab-grid">${cards}</div></section>`;
+  for (const button of box.querySelectorAll("[data-use-family]")) {
+    button.onclick = () => {
+      current.design = normalizeDesign({ ...current.design, aspect: "portrait",
+        template: button.getAttribute("data-use-family") }, current.candidate.eventType, current.post.format);
+      renderEditor();
+    };
+  }
+}
+
 /* ── Export: deterministic filenames, aspect-aware dimensions ── */
 async function exportSlides() {
   const copy = readCopy();
@@ -517,8 +637,19 @@ async function saveDraft() {
     format: current.post.format, copy: readCopy(),
     generatedCopy: current.generatedCopy, notes: $("#e-notes").value });
   try {
+    if (current.savedId) {
+      const copy = readCopy();
+      const notes = $("#e-notes").value;
+      const data = await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH",
+        body: JSON.stringify({ copy, notes }) });
+      current.post = data.post.edited_copy || copy;
+      current.notes = data.post.editor_notes ?? notes;
+      status("Draft updated");
+      refresh(); loadHistory(); return;
+    }
     const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify(payload()) });
     current.savedId = data.post.id;
+    current.notes = data.post.editor_notes || $("#e-notes").value;
     showAdvisories(data.advisories);
     status(data.completeness?.complete ? "Draft saved" : `Draft saved — still missing: ${data.completeness.missing.join(", ")}`);
     refresh(); loadHistory();
@@ -564,15 +695,20 @@ async function loadHistory() {
   try {
     const filter = $("#x-hist-filter").value;
     const data = await api(`/api/orbit-x/posts${filter ? `?status=${filter}` : ""}`);
-    $("#x-history").innerHTML = `<tr><th></th><th>Date</th><th>Event</th><th>Status</th><th>Score</th></tr>`
-      + data.posts.map((p, i) => `<tr>
+    const kind = $("#x-hist-kind").value;
+    const posts = data.posts.filter((p) => !kind ? true : kind === "other"
+      ? !["daily_reading", "weekly_reading", "monthly_reading"].includes(p.selected_format)
+      : p.selected_format === kind);
+    $("#x-history").innerHTML = `<tr><th></th><th>Date</th><th>Event</th><th>Status</th><th>Score</th><th></th></tr>`
+      + posts.map((p, i) => `<tr>
         <td data-hist-thumb="${i}"></td>
         <td>${esc((p.created_at || "").slice(0, 10))}</td>
         <td>${esc(p.event_key)}<br><span class="x-reasons">${esc(p.selected_format)}</span></td>
         <td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td>
-        <td>${esc(p.editorial_score ?? "")}</td></tr>`).join("");
+        <td>${esc(p.editorial_score ?? "")}</td>
+        <td><button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-post="${esc(p.id)}">Open</button></td></tr>`).join("");
     // First-slide thumbnails: the history is a content library, not a table.
-    data.posts.forEach((p, i) => {
+    posts.forEach((p, i) => {
       const cell = document.querySelector(`[data-hist-thumb="${i}"]`);
       if (!cell || !p.edited_copy?.slides?.length) return;
       try {
@@ -582,7 +718,33 @@ async function loadHistory() {
         cell.innerHTML = r.slides[0]?.svg || "";
       } catch { /* a thumbnail is never worth an error */ }
     });
+    for (const button of document.querySelectorAll("[data-open-post]")) {
+      button.onclick = () => openSavedPost(button.getAttribute("data-open-post"));
+    }
   } catch (error) { $("#x-history").innerHTML = `<tr><td>${esc(error.message)}</td></tr>`; }
+}
+
+async function openSavedPost(id) {
+  status("Opening saved work…");
+  try {
+    const data = await api(`/api/orbit-x/posts/${id}`);
+    const row = data.post;
+    const candidate = row.event_payload;
+    const post = row.edited_copy || row.generated_copy;
+    if (!candidate || !post) throw new Error("This saved item is missing its draft packet.");
+    const localDate = row.calculation_metadata?.local_date || candidate.facts?.period?.start_date;
+    if (localDate) $("#x-date").value = localDate;
+    lastSky = candidate.facts?.planets || [];
+    current = {
+      candidate, post, generatedCopy: row.generated_copy || null,
+      calculationMetadata: row.calculation_metadata || null,
+      savedId: row.id, suggestions: null, notes: row.editor_notes || "",
+      design: normalizeDesign({ template: row.template_family, ...(post.design || {}) },
+        candidate.eventType, post.format || row.selected_format),
+    };
+    renderEditor();
+    status(`Opened saved ${row.status || "draft"} · changes will update this item`);
+  } catch (error) { status(error.message); }
 }
 
 function copyText(text, done) {
@@ -593,6 +755,10 @@ function debounce(fn, ms) {
   let t = null;
   return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
+
+// Saved work is useful before a new candidate calculation, so the desk opens
+// with the library populated instead of making drafts depend on Load.
+loadHistory();
 </script>
 </body>
 </html>

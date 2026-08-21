@@ -127,8 +127,8 @@ test("ranking is total-score first and fully deterministic", () => {
 
 /* ── Formats ────────────────────────────────────────────────────────────── */
 
-test("five formats, as code, each with a risk category a future cannot erase", () => {
-  assert.equal(FORMAT_IDS.length, 5);
+test("legacy formats plus three first-class reading formats keep explicit risk categories", () => {
+  assert.equal(FORMAT_IDS.length, 8);
   for (const f of Object.values(FORMATS)) {
     assert.ok(["green", "yellow", "red"].includes(f.autonomyRisk), f.id);
     assert.ok(f.slides.min >= 1 && f.slides.max >= f.slides.min, f.id);
@@ -315,7 +315,7 @@ test("the manual scaffold passes every gate a draft must — publishable or empt
     candidates.find((c) => c.eventKey === "educational:why-apps-disagree"),
   ];
   for (const candidate of samples) {
-    for (const formatId of FORMAT_IDS) {
+    for (const formatId of FORMAT_IDS.filter((id) => !FORMATS[id].readingType)) {
       const { post: raw, suggestions } = buildScaffold(candidate, formatId, {});
       const post = validateGeneratedPost(raw, formatId, { requireComplete: false }); // throws if invalid
       assert.equal(post.format, formatId);

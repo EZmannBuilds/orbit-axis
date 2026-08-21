@@ -120,7 +120,7 @@ test("hero, inline, and mini moons derive from the same lunar state", () => {
 
 /* ── Glyph systems (§6–7, §12) ──────────────────────────────────────────── */
 
-test("all ten bodies and all twelve signs render as authored paths with labels", () => {
+test("all ten bodies and all twelve OpenMoji signs render as paths with labels", () => {
   assert.equal(PLANET_NAMES.length, 10);
   assert.deepEqual(ZODIAC_NAMES, ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]);
@@ -133,6 +133,8 @@ test("all ten bodies and all twelve signs render as authored paths with labels",
   for (const name of ZODIAC_NAMES) {
     const g = zodiacGlyph(name, { size: 40 });
     assert.ok(g.includes(`<title>${name}</title>`), name);
+    assert.equal(ZODIAC_GLYPHS[name].strokeWidth, 3, `${name} retains OpenMoji's line weight`);
+    assert.ok(ZODIAC_GLYPHS[name].codePoint, `${name} records its OpenMoji source code point`);
     noNonsense(g);
   }
   // Unknown bodies produce absence, never an invented mark.
@@ -239,7 +241,8 @@ test("every fixture renders every aspect with correct dimensions and no leaks", 
       for (const { svg } of rendered.slides) {
         assert.ok(svg.startsWith("<svg "), "standalone SVG");
         assert.ok(svg.includes(`viewBox="0 0 ${A.width} ${A.height}"`), `${aspectId} has its own designed geometry`);
-        assert.ok(svg.includes("ORBIT AXIS"), "the brand footer survives every template");
+        assert.ok(svg.includes('aria-label="Orbit Axis"'), "the accessible brand mark survives every template");
+        assert.ok(!svg.includes(">ORBIT AXIS</text>"), "the exported mark does not repeat the wordmark");
         noNonsense(svg);
         assert.ok(!/write th|edit this|edit me|placeholder/i.test(svg), "no authoring instruction can reach an export");
       }
@@ -250,10 +253,12 @@ test("every fixture renders every aspect with correct dimensions and no leaks", 
 
 test("Full and New Moon are meaningfully different discs, not relabelled twins (§62)", () => {
   const full = renderPost(
-    { ...buildScaffold(FULL_MOON, "something_changed", {}).post },
+    { ...buildScaffold(FULL_MOON, "something_changed", {}).post,
+      design: { template: "lunar_hero" } },
     { eventType: "full_moon", title: FULL_MOON.title, facts: FULL_MOON.facts }).slides[0].svg;
   const dark = renderPost(
-    { ...buildScaffold(NEW_MOON, "something_changed", {}).post },
+    { ...buildScaffold(NEW_MOON, "something_changed", {}).post,
+      design: { template: "lunar_hero" } },
     { eventType: "new_moon", title: NEW_MOON.title, facts: NEW_MOON.facts }).slides[0].svg;
   assert.ok(full.includes("100% illuminated"));
   assert.ok(dark.includes("0% illuminated"));
@@ -262,7 +267,8 @@ test("Full and New Moon are meaningfully different discs, not relabelled twins (
 
 test("slides carry role-specific layouts under one format's control (§46)", () => {
   const { post } = buildScaffold(FULL_MOON, "something_changed", {});
-  const filled = { ...post, slides: post.slides.map((s) => s.body ? s : { ...s, body: "Attributed to tradition." }) };
+  const filled = { ...post, design: { ...post.design, template: "lunar_hero" },
+    slides: post.slides.map((s) => s.body ? s : { ...s, body: "Attributed to tradition." }) };
   const r = renderPost(filled, { eventType: "full_moon", title: FULL_MOON.title, facts: FULL_MOON.facts });
   const [hero, fact, symbolic] = r.slides.map((s) => s.svg);
   assert.ok(hero.includes('r="200"'), "slide 1: hero Moon");

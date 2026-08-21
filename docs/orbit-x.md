@@ -1,8 +1,121 @@
-# Orbit X — Internal Content Desk (Dev Update 5.0)
+# Orbit X — Collective Readings + Template Lab (Dev Update 5.2)
 
 An AI-assisted editorial system built on deterministic Orbit calculations.
 It turns verified astronomical events into faceless, brand-voiced social
 content, with a human approving every word before anything leaves the desk.
+
+## Dev Update 5.2: Today, This Week, This Month
+
+Orbit X now treats `daily`, `weekly`, and `monthly` as first-class collective
+reading types. They describe symbolism associated with the sky everyone
+shares; they are not natal readings, sign-by-sign horoscopes, predictions, or
+claims that every person will experience the same theme.
+
+The editorial hierarchy is deliberately narrative:
+
+```text
+intro → second hook → selected movement → synthesis → reflection → evidence
+```
+
+Early slides carry theme and orientation. Calculated positions and timing move
+to the later Current Sky/evidence register.
+
+### Period contract and editorial timezone
+
+`ORBIT_X_EDITORIAL_TIMEZONE` is the single reading timezone. It defaults to
+`America/Chicago` and is validated as an IANA timezone. Browser timezone does
+not silently rename a reading period.
+
+- Daily: one local calendar day, local midnight to the next local midnight.
+- Weekly: the ISO Monday–Sunday editorial week, exactly seven local dates.
+- Monthly: the named local calendar month.
+
+Every reading stores a stable period key plus `period_start_at` and
+`period_end_at` in UTC. The end is explicitly exclusive, so daylight-saving
+transitions remain accurate without inventing 24-hour local days. Examples:
+`daily:2026-08-20`, `weekly:2026-08-17:2026-08-23`, `monthly:2026-08`.
+
+### Reading architecture
+
+- Daily (six): Cover, Today in one sentence, What's moving, The reading,
+  Reflection, Sky behind the reading.
+- Weekly (eight): Cover, Week in one sentence, Opening tone, Pivot, Landing,
+  Weekly reading, Reflection, Key dates/evidence.
+- Monthly (up to ten): Cover, Month in one sentence, Opening, First movement,
+  Midmonth pivot, Second half, Monthly reading, Reflection, Key dates,
+  Current Sky/Orbit close.
+
+Optional event sections remain empty when the deterministic source packet does
+not support them. Orbit X never invents a pivot to satisfy a slide outline.
+The curation policy filters the existing `upcomingEvents` surface and ranks
+supported lunations, Mercury stations, and Sun ingresses, with period-specific
+caps. The source packet also carries the engine Current Sky and calculated
+Moon state.
+
+### Five visual families
+
+The same structured reading renders through five explicit, versioned portrait
+families (`1080×1350`) while square (`1080×1080`) remains compatible:
+
+1. `orbit_instrument/v1` — precise, minimal, 62° observatory geometry.
+2. `celestial_editorial/v1` — asymmetrical, typographic, publication-like.
+3. `lunar_field/v1` — quiet calculated Moon geometry and restrained depth.
+4. `planetary_grid/v1` — modernist modules and late-carousel data registers.
+5. `orbit_signal/v1` — bold, high-contrast, social-native hooks.
+
+The founder-selected cadence defaults are now explicit and deterministic:
+Daily uses `lunar_field/v1`, Weekly uses `planetary_grid/v1`, and Monthly uses
+`orbit_signal/v1`. The special `something_changed` format also uses
+`orbit_signal/v1`. A founder can still choose any of the five families for an
+individual draft; the family is persisted with that saved artifact.
+
+All families share the authored SVG planet/zodiac library, continuous Moon
+renderer, Current Sky strip, brand tokens, and one canonical Orbit Axis mark.
+Exports use the mark without the `ORBIT AXIS` wordmark. Orbit Signal replaces
+its decorative orb with the actual Sun-season zodiac sign from the verified
+sky packet and omits the 62° axis ornament. Logo placement is constrained to
+Footer Left, Footer Center, or Upper Corner. Headline alignment, density,
+Moon, diagrams, and sky strip are constrained controls—not a freeform vector
+editor.
+
+### Template Lab and review artifact
+
+The founder can open a Daily, Weekly, or Monthly reading from the Orbit X
+header and compare all five families from the same editor state. Each card
+shows the Intro, second hook, reading, and reflection/detail slide, with a
+per-draft selection action. Feed-size and simulated-feed views remain
+available.
+
+Run `node scripts/orbit-x-template-review.js YYYY-MM-DD` to regenerate
+`docs/orbit-x-template-review.html`. The artifact contains all 15
+family/period combinations using real Orbit engine facts; manual symbolic
+lines are visibly labelled `EDITORIAL DEMO`.
+
+Run `node scripts/build-orbit-zodiac-glyphs.js` to regenerate the twelve
+standalone SVGs in `public/brand/zodiac/` and the reference sheet at
+`public/brand/orbit-zodiac-glyphs.svg`. The zodiac artwork uses OpenMoji's
+official black SVG linework, adapted to remove the emoji square and accept
+Orbit's color and sizing. The untouched upstream files and required CC BY-SA
+4.0 attribution live in `public/brand/zodiac/openmoji-source/` and
+`public/brand/zodiac/ATTRIBUTION.md`.
+
+### Persistence and duplicate protection
+
+Migration `20260820200000_orbit_x_collective_readings.sql` adds reading type,
+period boundaries, template family, and template version. Alternate drafts
+remain possible, but a partial unique index allows only one approved/exported/
+scheduled/published record to own a period. Saved and exported artifacts keep
+their selected family/version when future defaults change.
+
+The desk loads Saved work immediately. Each row can be reopened with its
+write-once verified event packet, last edited copy, selected family, and
+editor notes; Save then updates that row rather than creating a duplicate.
+
+Manual authoring remains the complete path. No AI key is needed to calculate a
+period, collect/select facts, render the Moon/glyphs/templates, edit, preview,
+save, approve, export, or use history. AI controls are not offered for these
+reading formats yet; a future provider may assist with copy without owning any
+astronomy.
 
 **What it is not:** an astrology calculation engine · a replacement for Swiss
 Ephemeris · an autonomous prediction system · a general-purpose social bot ·
