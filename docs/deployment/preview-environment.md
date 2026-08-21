@@ -99,8 +99,8 @@ difference is **0.0°**. See
 [orbit-core-runtime.md](orbit-core-runtime.md) for provenance, checksums,
 tolerances, and the exact container commands.
 
-*Still true:* this resolved a **technical** blocker. It resolved nothing about
-Swiss Ephemeris licensing — see below.
+*Historical note:* this resolved the **technical** runtime blocker. The separate
+licensing decision was recorded on 2026-08-21; see below.
 
 ### Must fix before Production
 
@@ -114,25 +114,13 @@ Swiss Ephemeris licensing — see below.
 
 ### Legal and launch blockers
 
-**Swiss Ephemeris licensing is UNRESOLVED and undocumented in this repository.**
-
-Swiss Ephemeris is dual-licensed: AGPL, or a paid commercial licence from
-Astrodienst. Both carry obligations for a publicly reachable deployment — the
-AGPL path requires offering corresponding source to users of the network
-service.
-
-**Keeping the GitHub repository private does not by itself establish that a
-publicly reachable hosted Orbit service complies with either licence.** The
-AGPL's network clause concerns providing software to users over a network,
-which is what a deployment does; repository visibility is a different question.
-
-Update 4.0.4 building a Linux executable resolved a *portability* blocker and
-resolved nothing here. Full detail:
-[swiss-ephemeris-licensing.md](swiss-ephemeris-licensing.md).
-
-No licence file, notice, or purchase record exists in this repository. This is
-stated as unresolved because it *is* unresolved; it must not be treated as
-settled without documentation. Resolve before any public launch.
+**Swiss Ephemeris licensing route: AGPL-3.0 selected and recorded on
+2026-08-21.** Orbit Axis and Orbit Axis Engine are `AGPL-3.0-or-later`, both
+repositories are public, and the hosted application exposes them through
+`/source` and `GET /api/v1/source`. No Swiss Ephemeris Professional License is
+currently used or claimed. Full factual record:
+[swiss-ephemeris-licensing.md](swiss-ephemeris-licensing.md). This record is not
+legal advice or an automated compliance certification.
 
 ---
 

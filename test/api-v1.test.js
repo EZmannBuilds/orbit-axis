@@ -176,15 +176,29 @@ test("version works even with no git metadata available", async () => {
   assert.ok("commit" in r.body.data.build, "build identity must be present even when null");
 });
 
-test("source reports AGPL and does not invent a repository URL", async () => {
+test("source reports AGPL and both public repositories", async () => {
   const r = await call({ url: "/api/v1/source" });
   const d = r.body.data;
   assert.equal(d.application.license, "AGPL-3.0-or-later");
   assert.equal(d.engine.license, "AGPL-3.0-or-later");
-  // Unpublished: the honest answer is null, not a URL that 404s.
-  assert.equal(d.application.repositoryUrl, null);
-  assert.equal(d.application.repositoryStatus, "pending-publication");
+  assert.equal(d.application.repositoryUrl, "https://github.com/EZmannBuilds/orbit-axis");
+  assert.equal(d.engine.repositoryUrl, "https://github.com/EZmannBuilds/orbit-axis-engine");
+  assert.equal(d.application.repositoryStatus, "published");
+  assert.equal(d.engine.repositoryStatus, "published");
   assert.ok(d.thirdParty.some((t) => t.name === "Swiss Ephemeris"));
+  assert.match(d.thirdParty.find((t) => t.name === "Swiss Ephemeris").license, /AGPL option/i);
+});
+
+test("source and version report the same running component versions", async () => {
+  const [sourceResponse, versionResponse] = await Promise.all([
+    call({ url: "/api/v1/source" }),
+    call({ url: "/api/v1/version" }),
+  ]);
+  const source = sourceResponse.body.data;
+  const version = versionResponse.body.data;
+  assert.equal(source.application.version, version.applicationVersion);
+  assert.equal(source.engine.version, version.engineVersion);
+  assert.equal(source.thirdParty.find((t) => t.name === "Swiss Ephemeris").version, version.ephemerisVersion);
 });
 
 test("only https URLs on known code hosts are accepted as source URLs", () => {

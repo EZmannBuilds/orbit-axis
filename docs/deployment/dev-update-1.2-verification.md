@@ -85,7 +85,9 @@ share the Production database with this exact Preview branch.
 ## Remaining release decisions
 
 1. Choose and approve the Preview database path.
-2. Supply verified legal/support facts and resolve Swiss Ephemeris licensing.
+2. Supply verified legal/support facts. Swiss Ephemeris licensing was later
+   recorded as the AGPL-3.0 route on 2026-08-21; see
+   `swiss-ephemeris-licensing.md`.
 3. Enable Supabase leaked-password protection or explicitly accept the risk.
 4. Provide an approved disposable hosted inbox/account for the final hosted
    recovery-email acceptance check.

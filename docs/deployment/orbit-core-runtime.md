@@ -20,7 +20,7 @@ lib/astro/runtime/resolve.js    platform → executable + data paths
         ↓
 lib/astro/runtime/exec.js       validation · spawn · timeout · classification
         ↓
-lib/astro/bin/<platform>/swetest
+vendor/orbit-axis-engine/bin/<platform>/swetest
         ↓
 structured calculation result
 ```
@@ -32,7 +32,7 @@ runtimes.
 
 | File | Responsibility |
 |---|---|
-| `runtime/manifest.json` | Which runtimes exist, their checksums, origin, licence status |
+| `vendor/orbit-axis-engine/src/adapters/swiss-ephemeris/manifest.json` | Which runtimes exist, their checksums, origin, licence status |
 | `runtime/resolve.js` | Platform detection, executable + data resolution, permission and checksum verification |
 | `runtime/exec.js` | Input validation, argument allow-list, spawn, timeout, output cap, error classification, customer-safe messages |
 | `ephemeris.js` | Argument construction and output parsing only |
@@ -85,7 +85,8 @@ executable.
 
 ## 3. Integrity
 
-`lib/astro/runtime/manifest.json` records, per runtime: OS, architecture,
+`vendor/orbit-axis-engine/src/adapters/swiss-ephemeris/manifest.json` records,
+per runtime: OS, architecture,
 relative executable path, Swiss Ephemeris version, SHA-256, linkage, origin,
 supported status, and verification date. It also records the SHA-256 of each
 `.se1` data file.
@@ -188,7 +189,8 @@ docker run --rm --platform linux/amd64 -v "$PWD":/work:ro -w /work \
 
 # static-linkage proof: busybox has no glibc
 docker run --rm --platform linux/amd64 -v "$PWD":/work:ro \
-  busybox:1.36 /work/lib/astro/bin/linux-x64/swetest -edir/work/lib/astro/ephe \
+  busybox:1.36 /work/vendor/orbit-axis-engine/bin/linux-x64/swetest \
+  -edir/work/vendor/orbit-axis-engine/ephemeris \
   -b01.01.2000 -ut12:00:00 -p0 -fPlZs -head
 ```
 
@@ -201,10 +203,10 @@ data are opened **by path**, not imported, so tracing misses them. They ship
 only because `vercel.json` force-includes them:
 
 ```json
-"functions": { "api/index.js": { "includeFiles": "lib/astro/**" } }
+"functions": { "api/index.js": { "includeFiles": "vendor/orbit-axis-engine/**" } }
 ```
 
-`.vercelignore` excludes `lib/astro/bin/darwin-arm64/` — a macOS binary cannot
+`.vercelignore` excludes `vendor/orbit-axis-engine/bin/darwin-arm64/` — a macOS binary cannot
 run on a Linux function and should not be in a public deployment.
 
 `lib/deploy/bundle.js` models the upload from the real `.vercelignore` and

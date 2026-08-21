@@ -13,7 +13,7 @@
     "tag": "v2.10.03",
     "commit": "175e1fc",
     "licence": "Dual-licensed: AGPL-3.0 or a paid Astrodienst commercial licence.",
-    "licenceStatus": "UNRESOLVED. No licence has been selected, purchased, or documented for a publicly reachable Orbit deployment. See docs/deployment/swiss-ephemeris-licensing.md. Keeping this repository private does not by itself resolve the obligations of a public hosted service."
+    "licenceStatus": "The AGPL option. Orbit Axis operates under the Swiss Ephemeris AGPL licence, not the paid Astrodienst Professional License; Orbit is therefore itself AGPL-3.0-or-later and offers its complete corresponding source to network users. Recorded 2026-08-21. See docs/deployment/swiss-ephemeris-licensing.md."
   },
   "dataDirectory": "ephemeris",
   "dataFiles": {

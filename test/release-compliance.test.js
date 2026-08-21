@@ -180,8 +180,18 @@ test("the source page states the licence and the Swiss Ephemeris relationship", 
   assert.match(html, /inherited/i, "the page must explain WHY Orbit is AGPL");
 });
 
-test("the source page shows publication as pending rather than a broken link", () => {
-  assert.match(page("source.html"), /Repository publication pending/);
+test("the source page contains both working public repository links", () => {
+  // This assertion used to require the words "Repository publication pending"
+  // on the page, which was right while the repositories were private and became
+  // wrong the moment they were published: it pinned a stale claim in place and
+  // would have failed the fix. What it was actually protecting is that the page
+  // never shows a dead link — so that is what it checks now.
+  const html = page("source.html");
+  assert.ok(!/publication is pending/i.test(html),
+    "both repositories are public; claiming otherwise turns a working source offer into a request form");
+
+  assert.match(html, /data-legal="sourceApp" href="https:\/\/github\.com\/EZmannBuilds\/orbit-axis"/);
+  assert.match(html, /data-legal="sourceEngine" href="https:\/\/github\.com\/EZmannBuilds\/orbit-axis-engine"/);
 });
 
 test("versions are read live rather than typed into the page", () => {

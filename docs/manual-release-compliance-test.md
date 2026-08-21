@@ -121,7 +121,7 @@ Only that feature returns. Production ignores these variables completely.
 | What you see | What it means |
 | --- | --- |
 | "not yet published" in a dashed box | A decision of yours that has not been made yet. Not a bug. |
-| "Repository publication pending" on the source page | Correct — neither repository is public yet. |
+| Either public repository link is missing on the source page | Regression — both public source links must be present and working. |
 | A page 404s | Check the server is running and the URL is spelled correctly. |
 | The reset email never arrives | Check spam. If it still does not arrive, the Supabase redirect allow-list is the likely cause. |
 

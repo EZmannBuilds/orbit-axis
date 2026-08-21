@@ -1,104 +1,66 @@
-# Swiss Ephemeris licensing — UNRESOLVED
+# Swiss Ephemeris licensing — AGPL-3.0 route selected
 
-**Status: unresolved. No licence has been selected, purchased, or documented.**
+**Status: selected and recorded on 2026-08-21.**
 
-This note records what is known and what is not. It is **not** legal advice and
-reaches **no** legal conclusion. It exists so the question cannot be quietly
-forgotten, and so nobody mistakes an engineering fact for a licensing answer.
+This is a factual repository decision record. It is not legal advice and does
+not claim legal compliance, attorney review, or legal certification.
 
----
+## Decision
 
-## What Orbit uses
+**Decision: Swiss Ephemeris AGPL-3.0 route selected for Orbit Axis. Orbit Axis
+will remain distributed under AGPL-compatible terms and provide a
+corresponding-source path to network users. No Swiss Ephemeris Professional
+License is currently used or claimed.**
 
-- Swiss Ephemeris **2.10.03** by Astrodienst AG
-- The `swetest` command-line executable, built from official source at
-  `https://github.com/aloistr/swisseph`, tag `v2.10.03`
-- The bundled `.se1` ephemeris data files
-- Two compiled executables committed to this repository:
-  `lib/astro/bin/darwin-arm64/swetest` and `lib/astro/bin/linux-x64/swetest`
+Orbit Axis uses Swiss Ephemeris **2.10.03** by Astrodienst AG from the upstream
+`v2.10.03` tag (commit `175e1fc`). Swiss Ephemeris is dual-licensed. Orbit Axis
+uses the AGPL option (AGPL-3.0); it does not operate under the paid Swiss Ephemeris
+Professional License.
 
-Every astrology feature depends on it: natal charts, Current Sky, daily
-fortunes, and the evidence behind every Ask Orbit answer.
+The application and calculation engine are each distributed as
+`AGPL-3.0-or-later`:
 
----
+- Orbit Axis: [`LICENSE`](../../LICENSE) and the root `package.json`
+- Orbit Axis Engine: `vendor/orbit-axis-engine/LICENSE` and the engine
+  repository's `package.json`
 
-## The licensing position, as published by Astrodienst
+Both source repositories are public:
 
-Swiss Ephemeris is **dual-licensed**. A user chooses one:
+- Orbit Axis: <https://github.com/EZmannBuilds/orbit-axis>
+- Orbit Axis Engine: <https://github.com/EZmannBuilds/orbit-axis-engine>
 
-1. **AGPL-3.0** — a strong copyleft licence. Its distinguishing feature is the
-   network clause: making the software available to users over a network can
-   trigger an obligation to offer corresponding source to those users.
-2. **A paid Astrodienst Professional Licence** — a commercial licence intended
-   for applications whose authors do not wish to publish their source.
+## Source and notice paths
 
-Which obligations actually apply to Orbit depends on facts and legal
-interpretation that this repository cannot settle.
+The hosted application exposes the corresponding-source path in both human-
+and machine-readable forms:
 
----
+- `public/source.html`, served at `/source` and `/source.html`, links both
+  public repositories and reads running version information from the API.
+- `GET /api/v1/source` reports the application and engine licenses, versions,
+  public repository URLs, and the Swiss Ephemeris notice and selected option.
+- `GET /api/v1/version` reports the running application, engine, API contract,
+  and Swiss Ephemeris versions.
+- `SOURCE.md` describes how users obtain and build the source.
+- `NOTICE` and `THIRD_PARTY_NOTICES.md` preserve the AGPL and Swiss Ephemeris
+  attribution notices, including Astrodienst's copyright.
 
-## What is NOT resolved
+The canonical Swiss Ephemeris runtime record is
+`vendor/orbit-axis-engine/src/adapters/swiss-ephemeris/manifest.json`. The older
+path `lib/astro/runtime/manifest.json` is not present on current `main`; the
+runtime moved into the vendored Orbit Axis Engine. Its existing
+`source.licenceStatus` field records the selected AGPL posture and decision
+date. Checksums and provenance in that manifest are supply-chain records, not
+legal certification.
 
-- No licence has been chosen.
-- No Professional Licence has been purchased.
-- No AGPL compliance plan exists (no source-offer mechanism, no licence notices
-  shipped to users, no written analysis).
-- No legal review has been carried out.
-- No lawyer has been consulted.
+`npm run deploy:check` includes a narrow, offline consistency check for the
+AGPL license texts, source links, source page, upstream notices, and manifest
+status. It is explicitly a regression check, not a legal review or compliance
+certificate.
 
-## What must NOT be inferred
+## Professional License
 
-> **Keeping the GitHub repository private does not, by itself, establish that a
-> publicly reachable hosted Orbit service complies with either licence.**
-
-The AGPL's network clause is concerned with providing software to users *over a
-network*, which is exactly what a deployed Orbit Preview or Production would
-do. Repository visibility is a different question from network distribution.
-Private-repository status is therefore evidence of nothing in particular here,
-and must not be presented as a resolution.
-
-Similarly:
-
-- Update 4.0.4 building a Linux executable resolved a **technical portability**
-  blocker. It resolved nothing about licensing.
-- Recording provenance and checksums in `lib/astro/runtime/manifest.json` is
-  supply-chain hygiene, not a licence.
-- Passing `npm run deploy:check` never clears this item. It is reported as a
-  standing WARNING and is deliberately not clearable by code.
-
----
-
-## Where this blocks
-
-| Activity | Blocked by licensing? |
-|---|---|
-| Local development on the owner's machine | No |
-| Automated tests, containers, CI | No |
-| A **private** Vercel Preview, access-restricted to the owner | Lower risk, but unreviewed — this note does not clear it |
-| A **publicly reachable** Preview or Production deployment | **Yes — resolve first** |
-| Any paid or commercial offering | **Yes — resolve first** |
-
----
-
-## What resolving it would look like
-
-Owner decision. Roughly, one of:
-
-**Option A — Professional Licence.** Contact Astrodienst, purchase the licence
-appropriate to the intended use, store the record outside the repository, and
-replace this note with the licence reference and its scope.
-
-**Option B — AGPL compliance.** Accept the copyleft terms, ship the required
-notices, and provide a corresponding-source offer to users of the network
-service. Note this has implications for the rest of the Orbit codebase that
-should be understood before choosing it.
-
-**Option C — Replace the dependency.** Use a differently licensed ephemeris.
-This would change calculation results and require re-verifying the parity
-fixture, so it is a product decision as much as a legal one.
-
-Whichever is chosen: record the decision, its date, and its evidence here, and
-update the `source.licenceStatus` field in
-`lib/astro/runtime/manifest.json`.
-
-Until then, this file should keep saying UNRESOLVED.
+A future Swiss Ephemeris Professional License would be a separate business
+decision. If Orbit Axis later takes that route, record the license reference,
+scope, and effective date separately and update this record, the runtime
+manifest, the source page, and the source API together. Until then, the recorded
+and implemented route is AGPL-3.0.
