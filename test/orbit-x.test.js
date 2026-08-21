@@ -410,3 +410,32 @@ test("the desk page hides AI controls rather than rendering apologies", () => {
   assert.match(page, /manual drafting \(no AI provider configured\)/,
     "absence is stated once, neutrally, in the status line — never as an error");
 });
+
+test("the desk signs itself in without ever widening who may enter", () => {
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  // The gate exists and runs BEFORE any candidate request, so a signed-out
+  // visit opens on a form instead of a dead-end error line.
+  assert.match(page, /checkSession\(\)\.then/, "the page decides gate-or-desk at boot");
+  assert.match(page, /"\/api\/auth\/session"/, "it asks the ordinary session endpoint");
+  assert.match(page, /"\/api\/auth\/signin"/, "and posts to the ordinary sign-in endpoint");
+  assert.match(page, /"\/api\/auth\/signout"/, "sign-out is reachable from the desk");
+
+  // A 401 arriving mid-session re-gates instead of stranding the editor.
+  assert.match(page, /showGate\("Your session expired/);
+
+  // THE LINE THAT MATTERS: the gate answers "is there a session", never
+  // "may this person use Orbit X". Nothing in the page may decide admin
+  // membership — that is orbit_x_admins, checked server-side and re-checked
+  // by RLS on every row. A page that branched on an admin flag would be a
+  // second, weaker authorization system.
+  assert.ok(!/isAdmin|is_admin|orbit_x_admins/i.test(page),
+    "the desk page never evaluates admin membership client-side");
+
+  // Credentials are used and dropped: never stored, never echoed into a URL.
+  assert.match(page, /\$\("#x-password"\)\.value = "";/, "the password field is cleared after use");
+  assert.ok(!/localStorage|sessionStorage|document\.cookie/.test(page),
+    "no credential or session material is stashed by the page");
+  assert.ok(!/password=|email=\$\{/.test(page), "credentials never travel in a URL");
+  assert.match(page, /type="password"[^>]*autocomplete="current-password"/,
+    "a real password field, so password managers behave normally");
+});

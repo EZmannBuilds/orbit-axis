@@ -110,9 +110,15 @@ function committedAppConfig() {
     return null;   // not a git checkout: the audit reports the skip honestly
   }
 }
+// `--native` (set by app:build and app:sync) means a device bundle is about to
+// be produced, which is the only situation where the working tree MUST carry a
+// real origin. A bare `npm run app:check` audits the repository as it rests.
+const nativeTarget = process.argv.includes("--native")
+  || process.env.ORBIT_APP_TARGET === "native";
 const origin = auditApiOrigin({
   workingTree: read("public/app-config.js"),
   committed: committedAppConfig(),
+  native: nativeTarget,
 });
 problems.push(...origin.problems);
 notes.push(...origin.notes);

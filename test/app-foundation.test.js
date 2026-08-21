@@ -77,12 +77,26 @@ const configWith = (origin) => [
 
 test("a native bundle cannot ship the empty same-origin default", () => {
   const inert = configWith("");
-  const { problems } = auditApiOrigin({ workingTree: inert, committed: inert });
+  const { problems } = auditApiOrigin({ workingTree: inert, committed: inert, native: true });
   assert.equal(problems.length, 1);
   // The failure names the mechanism and the fix, because the symptom it
   // prevents — 200s from capacitor://localhost — looks like success.
   assert.match(problems[0], /capacitor:\/\/localhost/);
   assert.match(problems[0], /ORBIT_APP_API_BASE_URL=<https origin> npm run app:config/);
+});
+
+test("the inert default is the RESTING state, not a failure, outside a native build", () => {
+  // The strict form of the check treated the repository's own required
+  // committed state as a fault, so a clean clone — and CI, and anyone doing
+  // web-only work — could never pass. The demand belongs to the native build
+  // that is about to compile an origin into a binary, and nowhere else.
+  const inert = configWith("");
+  const { problems, notes } = auditApiOrigin({ workingTree: inert, committed: inert });
+  assert.deepEqual(problems, [], "an ordinary checkout passes as it stands");
+  assert.ok(notes.some((n) => /inert same-origin default/.test(n)),
+    "and is told what it holds rather than left to guess");
+  assert.ok(notes.some((n) => /compiled into the binary/.test(n)),
+    "with the reminder that a native build bakes the origin in permanently");
 });
 
 test("a configured checkout passes — the build chain must not refuse its own contract", () => {
@@ -97,10 +111,16 @@ test("a configured checkout passes — the build chain must not refuse its own c
 
 test("a real origin in git is refused, wherever the working tree stands", () => {
   // Committing the value would override every browser visitor's own origin.
+  // Unlike the bundle-side rule, this one is unconditional: it holds in native
+  // mode and out of it, because publishing an origin is wrong in both.
   for (const workingTree of [configWith(""), configWith("https://example.test")]) {
-    const { problems } = auditApiOrigin({ workingTree, committed: configWith("https://example.test") });
-    assert.ok(problems.some((p) => /committed public\/app-config\.js has apiBaseUrl/.test(p)),
-      "the commit guard must hold independently of the bundle-side answer");
+    for (const native of [true, false]) {
+      const { problems } = auditApiOrigin({
+        workingTree, committed: configWith("https://example.test"), native,
+      });
+      assert.ok(problems.some((p) => /committed public\/app-config\.js has apiBaseUrl/.test(p)),
+        "the commit guard must hold independently of the bundle-side answer");
+    }
   }
 });
 
@@ -127,11 +147,15 @@ test("every native sync path runs the audit first", () => {
   // The guard exists only if the build chain actually consults it before
   // `cap sync` copies the working tree into the device bundle.
   const pkg = JSON.parse(read("package.json"));
-  assert.match(pkg.scripts["app:build"], /npm run app:check && npx cap sync ios/);
-  assert.match(pkg.scripts["app:sync"], /npm run app:check && npx cap sync ios/,
+  // --native is what turns the empty-origin rule back on. A native path that
+  // dropped the flag would run the audit and pass a bundle that answers its
+  // own API calls, which is the exact failure this guard exists to stop.
+  assert.match(pkg.scripts["app:build"], /npm run app:check -- --native && npx cap sync ios/);
+  assert.match(pkg.scripts["app:sync"], /npm run app:check -- --native && npx cap sync ios/,
     "the standalone sync must not bypass the check the build chain relies on");
   const check = read("scripts/app-check.js");
   assert.match(check, /auditApiOrigin\(/);
+  assert.match(check, /--native/, "the flag is read where the audit is called");
   assert.match(check, /"show", ":public\/app-config\.js"/,
     "the commit side is read from git's index, not inferred from the working tree");
 });

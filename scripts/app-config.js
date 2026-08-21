@@ -79,7 +79,19 @@ export function renderConfig(apiBaseUrl) {
  * @param {string|null} input.committed    the same file as git's index holds it
  * @returns {{problems: string[], notes: string[]}}
  */
-export function auditApiOrigin({ workingTree, committed }) {
+/**
+ * @param {object} input
+ * @param {string|null} input.workingTree  what `cap sync` would bundle
+ * @param {string|null} input.committed    what git's index would publish
+ * @param {boolean} [input.native]         true when a NATIVE build is being
+ *   prepared. Only then is the empty same-origin default a failure: it is the
+ *   correct and required state of every ordinary checkout, so demanding a real
+ *   origin unconditionally failed clean clones, CI, and web-only work — the
+ *   check refused the repository's own documented resting state. The commit
+ *   guard below is NOT conditional; a real origin must never be committed
+ *   whatever is being built.
+ */
+export function auditApiOrigin({ workingTree, committed, native = false }) {
   const problems = [];
   const notes = [];
   // Anchored to the assignment — the same marker renderConfig() splits on —
@@ -100,12 +112,22 @@ export function auditApiOrigin({ workingTree, committed }) {
     problems.push("public/app-config.js is missing — index.html references it and the build will fail.");
   } else if (shipping === null) {
     problems.push("public/app-config.js does not declare apiBaseUrl.");
-  } else if (!shipping) {
+  } else if (!shipping && native) {
     problems.push(
       "public/app-config.js still holds the empty same-origin apiBaseUrl. A native bundle "
       + "built from it sends every /api request to capacitor://localhost, where the bundle "
       + "answers them all itself — status 200, no data, no account. Run "
       + "`ORBIT_APP_API_BASE_URL=<https origin> npm run app:config` before building the app.",
+    );
+  } else if (!shipping) {
+    // The resting state, and the reminder that the origin COMPILES INTO the
+    // binary: a native build made from this checkout would ship no origin at
+    // all, and the day the domain changes, every installed build needs
+    // rebuilding. Said once, as a note, because nothing is wrong here.
+    notes.push(
+      "the working tree holds the inert same-origin default — correct for the browser and "
+      + "for committing. Set ORBIT_APP_API_BASE_URL and run `npm run app:config` before a "
+      + "native build; that origin is compiled into the binary.",
     );
   } else {
     notes.push(`the native bundle will call ${shipping}.`);
