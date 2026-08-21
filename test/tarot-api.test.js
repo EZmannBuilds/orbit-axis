@@ -165,6 +165,26 @@ test("the deck version recorded is the server's, not the client's claim", () => 
   assert.equal(clean.draw.reproducible, false);
 });
 
+test("no saved reading claims to be reproducible — the daily one included", () => {
+  // This once read `reproducible: spreadType === "daily"`, left from the era
+  // when today's card was computed from the date and genuinely could be
+  // recomputed. The daily card is drawn now and the seed is not kept, so a
+  // saved daily reading claiming to be reproducible was history contradicting
+  // the draw that produced it — and the account export publishes the flag.
+  for (const [spreadType, cards] of [
+    ["daily", ["the-star"]],
+    ["one_card", ["the-star"]],
+    ["three_card", ["the-star", "the-tower", "the-fool"]],
+  ]) {
+    const clean = validateReadingPayload(
+      { spread_type: spreadType, cards, draw: { reproducible: true } },
+      { deck: DECK, deckVersion: FIXTURE_DECK_VERSION },
+    );
+    assert.equal(clean.draw.reproducible, false,
+      `a saved ${spreadType} reading must not claim to be reproducible`);
+  }
+});
+
 /* ── Draw paths ───────────────────────────────────────────────────────────── */
 
 test("today's card is drawn once and then remembered", async () => {

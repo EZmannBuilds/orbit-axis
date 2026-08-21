@@ -114,6 +114,24 @@ test("a one-card deck needs no arithmetic at all", () => {
   assert.equal(unbiasedIndex("anything", "l", 1), 0);
 });
 
+test("the rejection loop still lands when rejection is a coin flip", () => {
+  // Exercises the path that the bound protects. At size 2^31 + 1 nearly half
+  // of all 32-bit words fall in the rejection zone, so most calls here reject
+  // at least once and some reject several times — where a 78-card deck rejects
+  // about one call in 195 million.
+  //
+  // The bound itself cannot be reached by any test: 64 consecutive rejections
+  // is 2^-64 even at this size. That is why exhausting it now throws rather
+  // than falling back to a modulo — an unreachable fallback buys no
+  // reliability and reintroduces exactly the bias being avoided.
+  const size = 2 ** 31 + 1;
+  for (let i = 0; i < 500; i += 1) {
+    const index = unbiasedIndex(`reject-${i}`, "l", size);
+    assert.ok(Number.isInteger(index) && index >= 0 && index < size,
+      `returned ${index}, which is not an index into ${size}`);
+  }
+});
+
 test("an impossible size is refused, not guessed", () => {
   for (const bad of [0, -1, 1.5, NaN, "78"]) {
     assert.throws(() => unbiasedIndex("s", "l", bad), RangeError);
@@ -176,6 +194,92 @@ test("a given seed reproduces a given spread", () => {
   const first = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed });
   const second = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed });
   assert.deepEqual(first.cards.map((c) => c.card.slug), second.cards.map((c) => c.card.slug));
+});
+
+/* ── The shuffle, not just the number picker ───────────────────────────────────
+   The chi-square above tests `unbiasedIndex` in isolation. That is the
+   primitive; `drawCards` is the composition, and a partial Fisher-Yates is
+   exactly the kind of loop that gets "tidied" later into something that still
+   looks right and no longer is. These pin the composition. */
+
+test("every position in a spread is uniform across the whole deck", () => {
+  // No card is likelier to land in any particular position — including the
+  // later ones, where the choice is over a shrinking pool and an off-by-one
+  // would concentrate the deck's tail.
+  const N = FULL_DECK_SIZE * 200;
+  const counts = [0, 1, 2].map(() => new Map());
+  for (let i = 0; i < N; i += 1) {
+    drawCards(FIXTURE_DECK, 3, `spread-seed-${i}`).forEach((card, position) => {
+      counts[position].set(card.slug, (counts[position].get(card.slug) ?? 0) + 1);
+    });
+  }
+
+  const expected = N / FULL_DECK_SIZE;
+  counts.forEach((tally, position) => {
+    assert.equal(tally.size, FULL_DECK_SIZE,
+      `position ${position} never produced ${FULL_DECK_SIZE - tally.size} of the cards`);
+    const chiSquare = [...tally.values()]
+      .reduce((sum, c) => sum + ((c - expected) ** 2) / expected, 0);
+    // 77 degrees of freedom, 0.999 critical value ~124 — the same bound the
+    // primitive is held to above.
+    assert.ok(chiSquare < 124,
+      `position ${position}: chi-square ${chiSquare.toFixed(1)} suggests a biased shuffle`);
+  });
+});
+
+test("the whole spread is uniform, not merely each position", () => {
+  // Marginals can look fine while the joint distribution is skewed — that is
+  // the classic broken-shuffle signature, where each card appears everywhere
+  // often enough but certain ORDERINGS are favoured. Tested on a six-card deck
+  // so all 6*5*4 = 120 orderings can be counted directly; the arithmetic does
+  // not know how big the deck is, so proving it here proves it at 78.
+  const small = FIXTURE_DECK.slice(0, 6);
+  const ORDERINGS = 6 * 5 * 4;
+  const N = ORDERINGS * 60;
+
+  const counts = new Map();
+  for (let i = 0; i < N; i += 1) {
+    const key = drawCards(small, 3, `joint-seed-${i}`).map((c) => c.slug).join("|");
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  assert.equal(counts.size, ORDERINGS,
+    `only ${counts.size} of ${ORDERINGS} orderings ever came up`);
+  const expected = N / ORDERINGS;
+  const chiSquare = [...counts.values()]
+    .reduce((sum, c) => sum + ((c - expected) ** 2) / expected, 0);
+  // 119 degrees of freedom. The 0.999 critical value is ~173; a shuffle that
+  // favours some orderings lands far above it.
+  assert.ok(chiSquare < 173,
+    `chi-square ${chiSquare.toFixed(1)} over ${ORDERINGS} orderings suggests a biased shuffle`);
+});
+
+test("orientation is independent of which card came up", () => {
+  // The card runs off `draw-N` and the orientation off `orientation-N`. If
+  // those streams were ever collapsed into one, particular cards would start
+  // arriving reversed more often than others — a bias no per-position count
+  // would catch.
+  const N = FULL_DECK_SIZE * 120;
+  const drawn = new Map();   // slug -> [times seen, times reversed]
+  for (let i = 0; i < N; i += 1) {
+    const { cards } = drawSpread({
+      deck: FIXTURE_DECK, spreadType: "one_card", seed: `orient-seed-${i}`,
+    });
+    const [{ card, orientation }] = cards;
+    const row = drawn.get(card.slug) ?? [0, 0];
+    row[0] += 1;
+    if (orientation === "reversed") row[1] += 1;
+    drawn.set(card.slug, row);
+  }
+
+  const chiSquare = [...drawn.values()].reduce((sum, [seen, reversed]) => {
+    const expected = seen / 2;
+    // One degree of freedom per card: reversed vs upright against an even split.
+    return sum + ((reversed - expected) ** 2) / expected + ((seen - reversed - expected) ** 2) / expected;
+  }, 0);
+  // 78 degrees of freedom, 0.999 critical value ~125.
+  assert.ok(chiSquare < 125,
+    `chi-square ${chiSquare.toFixed(1)} — some cards are arriving reversed more often than others`);
 });
 
 /* ── Orientation ──────────────────────────────────────────────────────────────
