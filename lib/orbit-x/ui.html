@@ -75,6 +75,9 @@
   .x-lab-card p { min-height: 3.6em; color: var(--color-muted); font-size: var(--type-caption); }
   .x-lab-slides { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
   .x-lab-slides svg { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .x-handoff { margin: var(--space-sm) 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); }
+  .x-handoff summary { cursor: pointer; font-size: var(--type-caption); color: var(--color-accent); }
+  .x-brief { max-height: 260px; overflow: auto; background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
   .x-demo-label { display: inline-block; color: var(--color-accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
 </style>
 </head>
@@ -155,6 +158,7 @@ import { renderPost, normalizeDesign, TEMPLATES, TEMPLATE_FAMILY_IDS, ASPECTS, D
   REQUIRED_ROLES, LOGO_POSITIONS, HEADLINE_ALIGNMENTS, humanDate }
   from "/admin/orbit-x/templates.js";
 import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
+import { adviseCopy, CONSTITUTION } from "/admin/orbit-x/editorial.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -490,6 +494,25 @@ function renderEditor() {
       <span class="x-warn" id="e-warnings"></span>
     </div>
     <div class="x-advice" id="e-advice"></div>
+    <details class="x-handoff" id="e-handoff">
+      <summary>Hand off to a writer, then import the text</summary>
+      <p class="x-helper">Copy the brief into any writer or assistant. It carries the verified
+        facts, the slots that need words, the limits, and Orbit's editorial rules — and nothing
+        about you or any account. Paste what comes back below; it is checked against the same
+        facts before it touches the draft.</p>
+      <div class="x-row">
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-brief">Copy handoff brief</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-show-brief">Show brief</button>
+      </div>
+      <pre class="x-brief" id="e-brief" hidden></pre>
+      <label>Paste the returned draft
+        <textarea id="e-import" class="o-input" placeholder="Paste the JSON the writer returned."></textarea>
+      </label>
+      <div class="x-row">
+        <button class="o-btn o-btn--primary o-btn--sm" id="e-import-go">Import into draft</button>
+        <span class="x-status" id="e-import-status"></span>
+      </div>
+    </details>
     <div class="x-row">
       ${aiAvailable && !isReading ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
       <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
@@ -549,6 +572,13 @@ function renderEditor() {
   $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
   $("#e-copy-alt").onclick = () => copyText(readCopy().altText, "Alt text copied");
   $("#e-export").onclick = exportSlides;
+  $("#e-copy-brief").onclick = () => copyText(handoffBrief(), "Handoff brief copied");
+  $("#e-show-brief").onclick = () => {
+    const box = $("#e-brief");
+    box.hidden = !box.hidden;
+    if (!box.hidden) box.textContent = handoffBrief();
+  };
+  $("#e-import-go").onclick = () => applyHandoff($("#e-import").value);
   $("#e-approve").onclick = () => decide("approved");
   $("#e-reject").onclick = () => decide("rejected");
   $("#e-notes").oninput = () => { current.notes = $("#e-notes").value; };
@@ -637,6 +667,10 @@ function refresh() {
   $("#e-meter").textContent = `${c.done} of ${c.total} required sections complete`;
   const rendered = renderPost(copy, renderContext(copy));
   $("#e-warnings").textContent = rendered.warnings.join("  ·  ");
+  // Advisories update as you type. They used to appear only after a save,
+  // which is the moment they are least useful — the point of a retention
+  // warning is to change the draft, not to grade it afterwards.
+  showAdvisories(adviseCopy(copy));
   $("#e-approve").disabled = !(current.savedId && c.complete);
   $("#e-reject").disabled = !current.savedId;
   preview(rendered);
@@ -869,6 +903,146 @@ async function openSavedPost(id) {
     renderEditor();
     status(`Opened saved ${row.status || "draft"} · changes will update this item`);
   } catch (error) { status(error.message); }
+}
+
+
+/* ── Handoff and import (Dev Update 5.4) ────────────────────────────────────
+   Orbit calls no AI. But the founder may want one — or a human writer — to
+   draft the interpretive lines, and retyping them slot by slot is where a
+   verified fact quietly becomes a typo. So: export a brief, import the reply.
+
+   The brief carries the VERIFIED FACTS verbatim, the empty slots, the limits,
+   and the editorial rules. It carries nothing about the account, no session,
+   no natal data — the same boundary the AI packet has always held.
+
+   The import is treated as UNTRUSTED TEXT, because that is exactly what it is:
+   it may have come from a model that invented a date. It is parsed leniently,
+   then checked against the packet's facts before a single field is replaced,
+   and the server re-checks everything again on save. A writer can change the
+   words; nobody can change the astronomy. */
+
+function handoffBrief() {
+  const copy = readCopy();
+  const candidate = current.candidate;
+  const fmt = FORMATS[copy.format];
+  const needed = copy.slides.map((slide, i) => {
+    const sugg = suggestionFor(slide.role);
+    const required = slide.role ? REQUIRED_ROLES[slide.role] !== false : true;
+    return {
+      slide: i + 1,
+      role: slide.role || "slide",
+      required,
+      currentlyEmpty: !String(slide.body || "").trim(),
+      needs: sugg?.helper || "",
+      maxCharacters: fmt?.limits?.slideBody ?? 240,
+    };
+  });
+  return [
+    "ORBIT AXIS — EDITORIAL HANDOFF",
+    "",
+    "You are writing social copy for a post whose ASTRONOMY IS ALREADY CALCULATED.",
+    "Do not change, add, or infer any astronomical fact. Every date, sign, time and",
+    "percentage below came from an ephemeris. If you want a fact that is not here,",
+    "leave it out.",
+    "",
+    "VERIFIED FACTS (read-only):",
+    JSON.stringify(candidate.facts, null, 2),
+    "",
+    `FORMAT: ${fmt?.name || copy.format}`,
+    `HEADLINE (max ${fmt?.limits?.headline ?? 60} chars): ${copy.headline || "(write one)"}`,
+    "",
+    "SLOTS TO WRITE:",
+    JSON.stringify(needed, null, 2),
+    "",
+    `CAPTION (max ${fmt?.limits?.caption ?? 600} chars) — its own read, not a copy of the slides.`,
+    "ALT TEXT — describe what the graphic SHOWS, not what it means.",
+    "",
+    "EDITORIAL RULES:",
+    CONSTITUTION,
+    "",
+    "RETURN ONLY THIS JSON — no commentary, no markdown fence:",
+    JSON.stringify({
+      headline: "string",
+      slides: copy.slides.map((slide, i) => ({ slide: i + 1, role: slide.role, body: "string" })),
+      caption: "string",
+      altText: "string",
+    }, null, 2),
+  ].join("\n");
+}
+
+/** Lenient parse: a fence or a sentence of preamble is the model's habit, not
+ *  the founder's mistake, and refusing over decoration punishes the wrong
+ *  person. Anything that is not recoverable JSON is refused by name. */
+function parseHandoff(text) {
+  let raw = String(text || "").trim()
+    .replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  if (!raw) throw new Error("Nothing pasted.");
+  if (!raw.startsWith("{")) {
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+    if (start === -1 || end <= start) throw new Error("No JSON object found in what you pasted.");
+    raw = raw.slice(start, end + 1);
+  }
+  try { return JSON.parse(raw); }
+  catch { throw new Error("That is not valid JSON — check for a missing comma or quote."); }
+}
+
+/** Every ISO date in imported prose must appear in the verified packet. This
+ *  is the client-side mirror of the server's fact-integrity gate; the server
+ *  runs it again on save regardless of what happens here. */
+function importedInventsFacts(incoming, facts) {
+  const factText = JSON.stringify(facts || {});
+  const found = [];
+  const walk = (value) => {
+    if (typeof value === "string") {
+      for (const m of value.matchAll(/\b(\d{4}-\d{2}-\d{2})\b/g)) {
+        if (!factText.includes(m[1])) found.push(m[1]);
+      }
+    } else if (value && typeof value === "object") Object.values(value).forEach(walk);
+  };
+  walk(incoming);
+  return [...new Set(found)];
+}
+
+function applyHandoff(text) {
+  const status = (t) => { $("#e-import-status").textContent = t; };
+  let incoming;
+  try { incoming = parseHandoff(text); }
+  catch (error) { status(error.message); return; }
+
+  const invented = importedInventsFacts(incoming, current.candidate?.facts);
+  if (invented.length) {
+    status(`Refused — ${invented.join(", ")} appears in no verified fact. The astronomy is not the writer's to change.`);
+    return;
+  }
+
+  // Map by role first (the brief asks for it), falling back to position.
+  const slides = Array.isArray(incoming.slides) ? incoming.slides : [];
+  let filled = 0;
+  if (typeof incoming.headline === "string" && incoming.headline.trim()) {
+    $("#e-headline").value = incoming.headline.trim(); filled += 1;
+  }
+  current.post.slides.forEach((slide, i) => {
+    const match = slides.find((entry) => entry && entry.role && entry.role === slide.role)
+      || slides.find((entry) => entry && Number(entry.slide) === i + 1)
+      || slides[i];
+    const body = typeof match?.body === "string" ? match.body.trim() : "";
+    if (!body) return;
+    const field = document.querySelector(`[data-sb="${i}"]`);
+    if (field) { field.value = body; filled += 1; }
+  });
+  if (typeof incoming.caption === "string" && incoming.caption.trim()) {
+    $("#e-caption").value = incoming.caption.trim(); filled += 1;
+  }
+  if (typeof incoming.altText === "string" && incoming.altText.trim()) {
+    $("#e-alt").value = incoming.altText.trim(); filled += 1;
+  }
+  if (!filled) { status("Nothing usable in that JSON — expected headline, slides, caption, altText."); return; }
+
+  refresh();
+  const advisories = adviseCopy(readCopy());
+  status(`Imported ${filled} field(s). Every date checked against the packet.`
+    + (advisories.length ? ` ${advisories.length} advisory to review.` : " Nothing flagged."));
 }
 
 function copyText(text, done) {

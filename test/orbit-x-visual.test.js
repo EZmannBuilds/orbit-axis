@@ -10,6 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   PLANET_GLYPHS, ZODIAC_GLYPHS, PLANET_NAMES, ZODIAC_NAMES,
@@ -24,9 +25,10 @@ import {
 import {
   FRAMING_BANK, REFLECTION_EXAMPLES, CTA_CLASSES, pick,
   headlineOptions, factSentence, altTextFor, buildScaffold, symbolicSuggestions, signFromTitle,
+  hookOptions, countWord,
 } from "../lib/orbit-x/language.js";
 import { FORMATS, FORMAT_IDS, ROLE_SEQUENCES, EXPANDABLE_ROLE, EDITORIAL_CTAS } from "../lib/orbit-x/formats.js";
-import { auditCopy, adviseCopy } from "../lib/orbit-x/editorial.js";
+import { auditCopy, adviseCopy, adviseRetention } from "../lib/orbit-x/editorial.js";
 import { validateGeneratedPost, draftCompleteness } from "../lib/orbit-x/schemas.js";
 import { buildCandidates } from "../lib/orbit-x/candidates.js";
 
@@ -368,8 +370,14 @@ test("the social validator warns on weak copy without blocking it", () => {
     ...base.slides.slice(1)] }).includes("generic_reflection"));
   assert.ok(warnedFor({ caption: "The Full Moon is tonight!" }).includes("relative_time"),
     "relative timing depends on the publication instant (§52)");
-  assert.deepEqual(adviseCopy(base).filter((a) => a.rule !== "headline_long"), [],
-    "the scaffold itself publishes clean");
+  // Scoped to the 5.1 social rules: the 5.4 retention rules are asserted in
+  // their own test, and the scaffold trips `no_hook` there BY DESIGN — the
+  // hook starts empty and the advisory is what asks for one.
+  const RETENTION = new Set(["no_hook", "hero_paragraph", "slide2_restates_hero",
+    "bare_cta_ending", "no_celestial_anchor"]);
+  assert.deepEqual(
+    adviseCopy(base).filter((a) => a.rule !== "headline_long" && !RETENTION.has(a.rule)), [],
+    "the scaffold itself publishes clean against the social rules");
 });
 
 test("worksheet text is a BLOCKING tripwire, not an advisory", () => {
@@ -455,4 +463,117 @@ test("the reading packet carries its own strip so a saved draft re-renders forev
   assert.equal(daily.facts.planets[1].retrograde, true);
   assert.equal(daily.facts.moon_sign, "Scorpio");
   assert.equal(daily.readingType, "daily", "the period is on the candidate, not only in the key");
+});
+
+
+/* ── The hook line and retention advisories (Dev Update 5.4) ─────────────── */
+
+test("hook options are packet-derived open loops, never invented and never bait", () => {
+  const fm = hookOptions(FULL_MOON);
+  assert.ok(fm.length >= 2);
+  assert.ok(fm.some((h) => h.includes("Pisces") && h.includes("Virgo")),
+    "the full moon hook states the real opposition the engine calculated");
+
+  const nm = hookOptions(NEW_MOON);
+  assert.ok(nm.some((h) => h.includes("Virgo")), "the new moon hook names the calculated sign");
+
+  const weekly = hookOptions({ eventType: "collective_reading", readingType: "weekly",
+    facts: { selected_events: [1, 2, 3] } });
+  assert.ok(weekly[0].startsWith("Three "), "a count is spelled, and it is the REAL count");
+  assert.ok(weekly[0].includes("this week"), "and it names the period it promises");
+
+  // The count must follow the packet, not a template.
+  const one = hookOptions({ eventType: "collective_reading", readingType: "daily",
+    facts: { selected_events: [1] } });
+  assert.ok(one[0].startsWith("One movement"), "singular when there is one");
+  const quiet = hookOptions({ eventType: "collective_reading", readingType: "daily",
+    facts: { selected_events: [] } });
+  assert.ok(quiet[0].includes("quiet sky"), "an empty sky is an honest hook, not a manufactured one");
+
+  // No hook may trip the constitution's tripwires.
+  for (const candidate of [FULL_MOON, NEW_MOON]) {
+    for (const hook of hookOptions(candidate)) {
+      assert.equal(auditCopy({ caption: hook }).length, 0, hook);
+      assert.ok(hook.length <= SAFE_LIMITS.hookChars, `"${hook}" fits one line`);
+    }
+  }
+  assert.equal(countWord(3), "three");
+  assert.equal(countWord(42), "42", "past the spelled range it stays a numeral");
+  assert.deepEqual(hookOptions({ eventType: "educational", facts: {} }), [],
+    "no packet basis, no hook — absence over invention");
+});
+
+test("the hook renders on slide one and is flagged when it stops being a hook", () => {
+  const { post } = buildScaffold(FULL_MOON, "something_changed", {});
+  const withHook = { ...post, slides: post.slides.map((s, i) =>
+    i === 0 ? { ...s, body: "Full in Pisces, opposite the Sun in Virgo." } : s) };
+  const r = renderPost(withHook, { eventType: "full_moon", title: FULL_MOON.title, facts: FULL_MOON.facts });
+  assert.ok(r.slides[0].svg.includes("opposite the Sun in Virgo"), "the hook is drawn on the hero");
+  assert.deepEqual(r.warnings, [], "and fits");
+
+  const bloated = { ...post, slides: post.slides.map((s, i) =>
+    i === 0 ? { ...s, body: "A hook line that simply will not stop going and keeps adding clause after clause until it is plainly a paragraph pretending to be a single line of type." } : s) };
+  const over = renderPost(bloated, { eventType: "full_moon", title: FULL_MOON.title, facts: FULL_MOON.facts });
+  assert.ok(over.warnings.some((w) => /hook line is too long/.test(w)),
+    "an overlong hook is named, not silently shrunk");
+});
+
+test("retention advisories name the four ways a correct deck still fails", () => {
+  const base = buildScaffold(FULL_MOON, "something_changed", {}).post;
+  const rules = (post) => adviseRetention(post).map((a) => a.rule);
+
+  // 1. No open loop.
+  assert.ok(rules(base).includes("no_hook"), "an empty hero hook is flagged");
+
+  // 2. A paragraph where a hook belongs.
+  const wall = { ...base, slides: base.slides.map((s, i) => i === 0
+    ? { ...s, body: "x".repeat(180) } : s) };
+  assert.ok(rules(wall).includes("hero_paragraph"));
+
+  // 3. Slide 2 spends the swipe and returns nothing.
+  const echoed = { ...base, headline: "Full Moon in Pisces",
+    slides: base.slides.map((s, i) => i === 0 ? { ...s, body: "The Moon is full in Pisces." }
+      : i === 1 ? { ...s, body: "The Moon is full in Pisces." } : s) };
+  assert.ok(rules(echoed).includes("slide2_restates_hero"));
+
+  // 4. Ending on a pitch with nothing landed.
+  const pitch = { ...base, slides: [
+    { role: "hero", heading: "h", body: "Full in Pisces." },
+    { role: "fact", heading: "f", body: "The Moon reaches full illumination." },
+    { role: "cta", heading: "Orbit Axis", body: "See your sky in Orbit Axis." },
+  ] };
+  assert.ok(rules(pitch).includes("bare_cta_ending"));
+  const landed = { ...pitch, slides: [
+    pitch.slides[0], pitch.slides[1],
+    { role: "reflection", heading: "Notice", body: "What feels clearer now?" },
+    pitch.slides[2],
+  ] };
+  assert.ok(!rules(landed).includes("bare_cta_ending"), "a closed idea before the invitation passes");
+
+  // 5. Nothing to look at.
+  const blind = { ...base, design: { visuals: { moon: false, strip: false, diagram: false } } };
+  assert.ok(rules(blind).includes("no_celestial_anchor"));
+
+  // A finished deck with a hook trips none of them.
+  const good = { ...base,
+    slides: base.slides.map((s) => s.role === "hero" ? { ...s, body: "Full in Pisces, opposite the Sun in Virgo." }
+      : s.body ? s : { ...s, body: "In astrology, this is read as a culmination — attributed to tradition." }) };
+  assert.deepEqual(rules(good), [], "a complete, anchored, looped deck is clean");
+
+  // And they are ADVISORIES: adviseCopy folds them in without ever blocking.
+  assert.ok(adviseCopy(base).some((a) => a.rule === "no_hook"));
+});
+
+test("the handoff brief carries facts and rules, and nothing personal", () => {
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.match(page, /function handoffBrief\(/);
+  assert.match(page, /VERIFIED FACTS \(read-only\)/, "the brief marks the facts unwritable");
+  assert.match(page, /CONSTITUTION/, "the editorial rules travel with the words");
+  // The import is treated as untrusted: parsed leniently, fact-checked before
+  // it can touch a field.
+  assert.match(page, /function importedInventsFacts\(/);
+  assert.match(page, /appears in no verified fact/, "an invented date is refused by name");
+  assert.ok(!/ownerId|accessToken|session|natal|birth/i.test(
+    page.slice(page.indexOf("function handoffBrief("), page.indexOf("function parseHandoff("))),
+    "the brief carries no account or natal material");
 });
