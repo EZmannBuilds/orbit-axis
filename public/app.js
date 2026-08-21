@@ -1865,6 +1865,18 @@ function requestedRoute() {
   return location.hash.replace(/^#/, "").split("?")[0].trim();
 }
 
+/**
+ * Report a product event, if measurement is present and permitted.
+ *
+ * analytics.js is deliberately optional: it declines to load anything for a
+ * reader sending Do Not Track or Global Privacy Control, and a private window
+ * with no storage measures nothing. So every call site goes through this, and
+ * the absence of the module is a silent no-op rather than a broken page.
+ */
+function track(name) {
+  try { window.orbitTrack?.(name); } catch { /* measurement must never break a screen */ }
+}
+
 function currentWorkspace() {
   const hash = requestedRoute();
   // Symbol Atlas owns nested reference routes (#symbol-atlas/planets/moon).
@@ -1924,6 +1936,18 @@ function renderRoute() {
   if (resolveLegacyRoute()) return;
 
   const id = currentWorkspace();
+  // One event per workspace arrival. These four are the surfaces whose usage is
+  // otherwise invisible: Sky and Atlas write nothing to the database at all,
+  // and Today's first open per day is the only thing daily_fortunes records.
+  const TRACKED_WORKSPACES = {
+    home: "today_opened",
+    transits: "sky_opened",
+    "symbol-atlas": "atlas_opened",
+    tarot: "tarot_opened",
+    compatibility: "compatibility_opened",
+  };
+  if (TRACKED_WORKSPACES[id]) track(TRACKED_WORKSPACES[id]);
+
   // Secondary destinations load their own data on arrival, so a direct link or
   // a refresh lands on a populated page rather than an empty one.
   if (id === "symbol-atlas") { wireSymbolAtlas(); loadSymbolAtlas(); }
@@ -2428,6 +2452,9 @@ function wireAuth() {
         confirm_password: $("#auth-confirm").value,
       };
       const data = await post(mode === "signup" ? "/api/auth/signup" : "/api/auth/signin", payload);
+      // The conversion the whole beta is trying to observe. Recorded on the
+      // signup branch only — a sign-in is a returning person, not a new one.
+      if (mode === "signup") track("signup_completed");
       message.textContent = data.message || "Signed in.";
       if (data.signed_in) await applySignedIn(data.user);
     } catch (error) {
@@ -3846,6 +3873,7 @@ function wireChartModal() {
       const saved = id
         ? await patch(`/api/charts/${id}`, payload)
         : await post("/api/charts", payload);
+      if (!id) track("chart_created");
 
       // The chart exists from here on. A picture that fails to upload must
       // not un-save it, duplicate it, or read as a failed creation — the

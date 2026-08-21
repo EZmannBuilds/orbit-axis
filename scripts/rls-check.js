@@ -296,6 +296,124 @@ async function main() {
         { method: "DELETE", token: A.token });
     }
 
+    // ── Tables that gained user data after this script was written ─────────
+    // tarot_daily_draws, account_entitlements and the Orbit X editorial tables
+    // all shipped with policies and none of them was ever exercised here. A
+    // policy that exists is not a policy that holds, and this is the only place
+    // that difference is measured.
+
+    // A daily draw is another person's reading history.
+    const drawA = await call("/rest/v1/tarot_daily_draws", {
+      method: "POST", token: A.token, headers: { Prefer: "return=representation" },
+      body: { owner_id: A.id, local_date: "2026-08-21", deck_version: "1.0.0", card_slug: "the-star" },
+    });
+    check("user A can record their own daily draw", drawA.ok, `HTTP ${drawA.status}`);
+    if (drawA.ok) {
+      const seen = await call(`/rest/v1/tarot_daily_draws?owner_id=eq.${A.id}`, { token: B.token });
+      check("user B cannot read user A's daily draw",
+        seen.ok && seen.data.length === 0, `rows visible: ${seen.data?.length ?? "?"}`);
+
+      // There is deliberately no UPDATE policy: a draw is a record of what was
+      // drawn, and rewriting it would let today's card become a different card.
+      const rewritten = await call(`/rest/v1/tarot_daily_draws?owner_id=eq.${A.id}`, {
+        method: "PATCH", token: A.token, headers: { Prefer: "return=representation" },
+        body: { card_slug: "the-world" },
+      });
+      check("not even the owner can rewrite a daily draw",
+        rewritten.status === 403 || (rewritten.ok && rewritten.data.length === 0),
+        `HTTP ${rewritten.status}, rows changed: ${rewritten.data?.length ?? 0}`);
+      await call(`/rest/v1/tarot_daily_draws?owner_id=eq.${A.id}`, { method: "DELETE", token: A.token });
+    }
+
+    // Entitlements decide what someone has paid for. A client that could write
+    // one could grant itself a plan.
+    const forgedPlan = await call("/rest/v1/account_entitlements", {
+      method: "POST", token: A.token, headers: { Prefer: "return=representation" },
+      body: { owner_id: A.id, plan: "researcher", status: "active", source: "manual" },
+    });
+    check("a user cannot grant themselves an entitlement",
+      !forgedPlan.ok, `HTTP ${forgedPlan.status}`);
+
+    const othersPlan = await call(`/rest/v1/account_entitlements?owner_id=eq.${B.id}`, { token: A.token });
+    check("a user cannot read another account's entitlement",
+      othersPlan.ok && othersPlan.data.length === 0, `rows visible: ${othersPlan.data?.length ?? "?"}`);
+
+    // The editorial desk is admin-only. Neither disposable user is an admin, so
+    // both the membership table and the posts must be empty for them.
+    const adminRows = await call("/rest/v1/orbit_x_admins?select=owner_id", { token: A.token });
+    check("a non-admin sees no Orbit X admin rows",
+      adminRows.ok && adminRows.data.length === 0, `rows visible: ${adminRows.data?.length ?? "?"}`);
+    const posts = await call("/rest/v1/orbit_x_posts?select=id", { token: A.token });
+    check("a non-admin cannot read Orbit X posts",
+      posts.ok && posts.data.length === 0, `rows visible: ${posts.data?.length ?? "?"}`);
+    const forgedPost = await call("/rest/v1/orbit_x_posts", {
+      method: "POST", token: A.token, headers: { Prefer: "return=representation" },
+      body: { event_key: "rls-test", event_type: "test", created_by: A.id, status: "draft" },
+    });
+    check("a non-admin cannot write an Orbit X post", !forgedPost.ok, `HTTP ${forgedPost.status}`);
+
+    // ── First-party analytics (Dev Update 6.0) ─────────────────────────────
+    // These tables are deliberately insertable by anyone, because the visitors
+    // worth counting have no account. The property that matters is the other
+    // half: nobody who is not an admin can READ them back.
+    // These tables are deliberately insertable by anyone, because the visitors
+    // worth counting have no account. The property that matters — and the only
+    // one that can leak — is the other half: nobody who is not an admin can
+    // READ them back.
+    //
+    // Nothing here writes a row that succeeds. An earlier version of this block
+    // inserted a visit and an event and then deleted them, which quietly did
+    // not work: service_role holds SELECT on these tables but not DELETE (by
+    // design — the read-only grant is asserted in
+    // test/deletion-verification-grants.test.js), so the cleanup failed
+    // silently and left a fake visit in the metrics of whichever project this
+    // ran against. A verification script that pollutes the numbers it is
+    // verifying is worse than one that checks less.
+    //
+    // The successful-insert path is covered where it costs nothing: unit tests
+    // in test/analytics.test.js, and a real browser against the local stack.
+    const invented = await call("/rest/v1/analytics_events", {
+      method: "POST", token: ANON,
+      body: {
+        session_id: "3f2504e0-4f89-41d3-9a0c-0305e82c3301",
+        visitor_id: "9c858901-8a57-4791-81fe-4c455b099bc9",
+        name: "exfiltrate_everything",
+      },
+    });
+    check("the database refuses an event name outside the vocabulary",
+      !invented.ok, `HTTP ${invented.status} — refused, so no row is created`);
+
+    // A 404 here means the table is not in this project at all, which must fail
+    // loudly rather than look like a denial: "nothing came back" is the same
+    // shape whether access was refused or the table was never applied, and only
+    // one of those is a passing result.
+    const missingTable = (res) => res.status === 404
+      || String(res.data?.code || "") === "PGRST205";
+    const denied = (res) => !missingTable(res)
+      && (res.status === 401 || res.status === 403 || (res.ok && res.data.length === 0));
+    const describe = (res) => missingTable(res)
+      ? `HTTP ${res.status} — TABLE NOT PRESENT. Apply 20260821130000_first_party_analytics.sql to this project.`
+      : `HTTP ${res.status}`;
+
+    const anonReadEvents = await call("/rest/v1/analytics_events?select=id", { token: ANON });
+    check("anonymous callers cannot read analytics back",
+      denied(anonReadEvents), describe(anonReadEvents));
+
+    const anonReadSessions = await call("/rest/v1/analytics_sessions?select=id", { token: ANON });
+    check("anonymous callers cannot read visits back",
+      denied(anonReadSessions), describe(anonReadSessions));
+
+    const userReadEvents = await call("/rest/v1/analytics_events?select=id", { token: A.token });
+    check("a signed-in non-admin cannot read analytics either",
+      denied(userReadEvents), describe(userReadEvents));
+
+    const totals = await call("/rest/v1/rpc/orbit_beta_account_totals", { method: "POST", token: A.token, body: {} });
+    check("a non-admin cannot call the beta totals function", !totals.ok, `HTTP ${totals.status}`);
+
+    const anonTotals = await call("/rest/v1/rpc/orbit_beta_account_totals", { method: "POST", token: ANON, body: {} });
+    check("an anonymous caller cannot call the beta totals function either",
+      !anonTotals.ok, `HTTP ${anonTotals.status}`);
+
     // ── Anonymous access ───────────────────────────────────────────────────
     const anonRead = await call("/rest/v1/birth_profiles?select=id", { token: ANON });
     check("anonymous callers get no charts at all",

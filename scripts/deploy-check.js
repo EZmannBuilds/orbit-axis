@@ -32,6 +32,7 @@ import { checkoutPortability, inspectVercelLink, vercelArtifactsIgnored } from "
 import { inspectVercelOutput, architectureWarning } from "../lib/deploy/vercel-output.js";
 import { envFileStatus } from "../lib/local-llm/config.js";
 import { auditSourcePosture } from "../lib/legal/source-posture.js";
+import { legalConfig, REQUIRED_BEFORE_PUBLIC } from "../lib/legal/config.js";
 
 const findings = [];
 const add = (level, area, message, action = null) => findings.push({ level, area, message, action });
@@ -198,14 +199,52 @@ if (askMigration && !recordedMigrations.has(askMigration)) {
   info("supabase", `${askMigration} recorded as applied on ${record.appliedAt} (${record.verifiedBy}).`);
 }
 
+// Migration-history reconciliation (Dev Update 6.0). The single-file check
+// above was the only migration this script ever verified, so twenty-one others
+// could be applied — or not — without a word. The record now carries a
+// reconciliation against the hosted history, and anything still pending is
+// named here rather than discovered when a feature quietly does nothing.
+const reconciliation = hostedRecord?.migrationHistoryReconciliation;
+if (reconciliation) {
+  const { reconciledAt, repositoryMigrations, appliedToHosted } = reconciliation;
+  info("supabase", `Migration history reconciled ${reconciledAt}: `
+    + `${appliedToHosted}/${repositoryMigrations} repository migrations recorded as applied to hosted.`);
+  if (migrations.length > (repositoryMigrations || 0)) {
+    warn("supabase", `The repository now has ${migrations.length} migrations but the reconciliation `
+      + `recorded ${repositoryMigrations}.`,
+      "A migration was added after the last reconciliation. Re-reconcile "
+      + "docs/deployment/hosted-verification.json, or the record is stale again.");
+  }
+  for (const pending of reconciliation.pendingApplication || []) {
+    warn("supabase", `${pending.file} is NOT applied to the hosted project.`,
+      `${pending.blocks} ${pending.action}`);
+  }
+} else {
+  warn("supabase", "No migration-history reconciliation is recorded.",
+    "deploy:check can otherwise only verify a single named migration, which leaves every other "
+    + "one unchecked. Reconcile the hosted history into docs/deployment/hosted-verification.json.");
+}
+
 const rls = hostedRecord?.rlsVerification;
 if (rls && rls.checksPassed === rls.checksTotal && rls.checksTotal > 0) {
   info("supabase", `Hosted RLS verified ${rls.verifiedAt}: ${rls.checksPassed}/${rls.checksTotal} checks passed with two live users.`);
   warn("supabase", "Hosted schema and RLS status comes from a RECORDED verification, not a live check.",
     `Recorded ${rls.verifiedAt}. Re-verify after any hosted schema change — this file can become stale without anything failing.`);
+  const uncovered = rls.notCovered || [];
+  if (uncovered.length) {
+    warn("supabase", `The hosted RLS run predates ${uncovered.length} table(s): ${uncovered.join(", ")}.`,
+      "Their policies exist in applied migrations, but existing is not holding. Re-run "
+      + "scripts/rls-check.js against the hosted project to cover them.");
+  }
 } else {
   warn("supabase", "Hosted Supabase schema, RLS policies, indexes, and grants are UNVERIFIED.",
     "This check never contacts the hosted project. Verify them from the Supabase dashboard before Production.");
+}
+
+const authRecord = hostedRecord?.authenticationSettings;
+if (authRecord && authRecord.emailConfirmationRequired === "UNVERIFIED") {
+  warn("supabase", "Whether hosted email confirmation is required is UNVERIFIED.",
+    `${authRecord.reason} ${authRecord.action}`);
 }
 
 // ── 3b. Branch-scoped Preview variables ─────────────────────────────────────
@@ -372,6 +411,7 @@ if (process.platform === "linux" && process.arch === "x64") {
 // opinion — see the note below.
 const posture = auditSourcePosture({
   root: REPO_ROOT, env: process.env, manifest,
+  // Only a deployed Orbit owes network users a resolvable link.
   requireSourceUrls: Boolean(env.isDeployed || env.isVercel),
 });
 for (const finding of posture.findings) {
@@ -384,6 +424,27 @@ if (!posture.findings.length) {
 }
 info("licensing", "These are source-availability and posture checks, NOT a legal compliance "
   + "certification. No script can determine licence compliance, and this one does not try.");
+
+// ── 6c. Public legal configuration ─────────────────────────────────────────
+// Support address, publisher, governing law and minimum age are owner
+// decisions Orbit refuses to invent. Unset, the public pages render a visible
+// "not yet published" state — acceptable while private, not acceptable once
+// real people are being sent to the app.
+const legal = legalConfig(process.env);
+if (legal.missing.length) {
+  const missing = legal.missing.join(", ");
+  const action = `Set ${missing} in the Vercel project's Environment Variables. These are owner `
+    + "decisions, not engineering ones: Orbit will not invent a support address, publisher, "
+    + `jurisdiction or minimum age. Until they are set, /support, /terms and /privacy publish a `
+    + `visible "not yet published" state to every visitor.`;
+  if (env.environment === "production") {
+    blocker("legal-config", `Production is missing required public legal values: ${missing}.`, action);
+  } else {
+    warn("legal-config", `Public legal values are unset: ${missing}.`, action);
+  }
+} else {
+  info("legal-config", `All ${REQUIRED_BEFORE_PUBLIC.length} public legal values are configured.`);
+}
 
 // ── 7. Vercel project link (added after the Update 4.0.4.1 incident) ────────
 // `npx vercel link` run in this repository attached it to `the-lorehouse` — a
