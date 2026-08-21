@@ -1,0 +1,361 @@
+/* Orbit Axis :: the printed chart.
+ *
+ * Everything here is inside @media print, so this file changes nothing on
+ * screen. It is linked LAST so it can override any rule above it without
+ * reaching for !important on layout — the cascade is enough when you are last.
+ *
+ * WHY A STYLESHEET AND NOT A PDF LIBRARY
+ *
+ * The browser already has a typesetter, and it is the one that drew the page
+ * the reader is looking at. Printing through it means one layout to maintain
+ * instead of two, text that stays selectable and searchable in the PDF, glyphs
+ * resolved by the reader's own font stack, and no megabyte of embedded font in
+ * a serverless bundle that already carries an ephemeris. The cost is that page
+ * breaks are advisory rather than absolute, which is what most of the rules
+ * below are about.
+ *
+ * WHAT A PRINTED CHART IS FOR
+ *
+ * Someone is going to keep this. It has to say whose chart it is, when it was
+ * calculated and from what, and it has to admit what it does not know — a
+ * printout outlives the app screen that would have explained the caveat, so
+ * every caveat travels with it. */
+
+@media print {
+
+  /* ── Page ──────────────────────────────────────────────────────────────
+     A named page with real margins. The header/footer the browser adds are
+     the reader's setting, not ours to remove — but the margin has to leave
+     room for them or the first line collides with the URL. */
+
+  @page {
+    margin: 16mm 14mm;
+  }
+
+  /* Light on paper, always. The app is theme-aware; a printer is not, and a
+     dark-mode chart is a solid black rectangle and an empty toner cartridge.
+     Tokens are re-pointed rather than each rule rewritten, so every component
+     below inherits paper colours without knowing it is being printed. */
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"] {
+    --color-bg: #ffffff;
+    --color-canvas: #ffffff;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #ffffff;
+    --color-surface-sunken: #ffffff;
+    --color-surface-ghost: #ffffff;
+    --color-surface-hover: #ffffff;
+
+    /* These four are the text ramp, and the names matter: every heading in the
+       app is `color: var(--color-primary)`. An earlier version of this file
+       invented `--color-text-primary` and friends, which exist nowhere in
+       tokens.css and so overrode nothing — the
+       headings kept their dark-theme near-white and printed as pale grey on
+       white, all but invisible. The body copy looked fine throughout, so the
+       page read as working. Print previews are not optional. */
+    --color-primary: #000000;
+    --color-secondary: #2b2b2b;
+    --color-muted: #4a4a4a;
+    --color-faint: #6a6a6a;
+
+    --color-accent: #000000;
+    --color-accent-hover: #000000;
+    --color-accent-soft: #ffffff;
+    --color-accent-border: #767676;
+    --color-on-accent: #ffffff;
+
+    --color-border: #b8b8b8;
+    --color-border-strong: #767676;
+    --color-border-focus: #767676;
+  }
+
+  /* THE SECOND PALETTE, and the one that actually decides most of this page.
+     features.css gives #panel-me its own set of legacy short names —
+     `--text`, `--muted`, `--border`, `--accent` — hardcoded DARK, with light
+     values supplied only under `:root[data-theme="light"] #panel-me`.
+     Re-pointing the --color-* tokens above does not reach them: they are set on
+     the panel itself, at higher specificity, and they do not read from --color-*.
+
+     So for a reader in dark mode — or on system default with a dark OS — the
+     chart panel printed `--text: #e6e9ff` onto white paper. Near-white on
+     white: the reading, the placements and the table headers, gone. The
+     symptom that led here was milder (lavender table headers in light mode)
+     and the same root cause.
+
+     Matched on #panel-me so the specificity ties, and won on source order
+     because this file is linked last. */
+  #panel-me,
+  #panel-more,
+  #panel-tools,
+  .auth-gate,
+  .o-modal,
+  :root[data-theme="light"] #panel-me,
+  :root[data-theme="dark"] #panel-me {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --border: #b8b8b8;
+    --text: #000000;
+    --muted: #3a3a3a;
+    --dim: #5a5a5a;
+    --accent: #000000;
+    --gold: #5a4410;
+    --violet: #3a2a6a;
+  }
+
+  html, body {
+    background: #ffffff;
+    color: #000000;
+    /* Points, not rem: the reader's interface text-size preference should not
+       decide how many pages their chart costs to print. */
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+
+  /* Colour-managed backgrounds are dropped by default in most browsers, which
+     is usually right. The wheel needs its aspect strokes, so it opts in. */
+  .orbit-wheel {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── What does not print ───────────────────────────────────────────────
+     Navigation, controls and anything that only makes sense when tappable.
+     A printed page with a "Save as PDF" button on it is a small joke at the
+     reader's expense. */
+
+  .app-nav, .app-tabbar, .workspace-nav, .navigation, nav,
+  .chart-subnav, .chart-switcher, .me-head-actions, .o-btn,
+  .me-status, .app-footer, footer,
+  [role="tablist"], [role="navigation"],
+  #me-export-pdf, #me-edit-chart, #me-add-chart {
+    display: none;
+  }
+
+  /* Only the chart panel prints, whatever else the single-page app has
+     rendered into the document behind it. */
+  .workspace-panel:not(#panel-me) {
+    display: none;
+  }
+
+  #panel-me[hidden] {
+    display: block;
+  }
+
+  /* ── Disclosures ───────────────────────────────────────────────────────
+     The positions table is folded by default on a phone, and a folded section
+     prints as its summary line and nothing else — which would silently drop
+     the most data-dense part of the chart from the PDF.
+
+     Opening it is NOT done here: a closed <details> hides its content through
+     the user-agent shadow tree, so no `display` rule in this file can reach
+     it. openDisclosuresForPrint() in app.js sets the `open` attribute on
+     beforeprint and restores it afterwards. What is left here is only the
+     styling of a section once it is open. */
+
+  details {
+    display: block;
+  }
+
+  details > summary {
+    display: block;
+    font-weight: 600;
+    list-style: none;
+    margin-bottom: 0.4em;
+  }
+
+  details > summary::-webkit-details-marker,
+  details > summary::marker {
+    display: none;
+    content: "";
+  }
+
+  /* The app's own disclosure chevron, which means nothing on paper. Opening
+     the section itself is JavaScript's job — see openDisclosuresForPrint() in
+     app.js, and the note there on why a stylesheet cannot do it. */
+  .chart-details > summary::before,
+  .reading-card__more > summary::before,
+  .o-disclosure-row > summary::after {
+    display: none;
+    content: "";
+  }
+
+  /* Scroll containers have no meaning on paper; let the table size itself. */
+  .table-scroll {
+    overflow: visible;
+    max-height: none;
+  }
+
+  /* ── Detail level ──────────────────────────────────────────────────────
+     THE PRINTED CHART IS ALWAYS THE FULL ONE.
+
+     Simple/Advanced (data-detail on <html>) decides what a beginner sees on
+     screen, and Simple is the default — `:root:not([data-detail="Advanced"])`
+     hides `.me-panel--advanced` and `.advanced-only`, which is the exact
+     degrees, the calculated-positions table, and the calculation metadata.
+
+     Left alone, that rule follows the page into the printer: a reader who had
+     never opened the detail control — most of them — would save a "full chart"
+     PDF with its data table, its degrees and its engine version silently
+     missing, and nothing on the page to say so. The same failure as a folded
+     <details>, arriving by a different route.
+
+     A printout is a keepsake and a reference; the reading is the substance and
+     the table is what makes it checkable years later, when the app that drew it
+     is not to hand. So the export is complete regardless of the on-screen
+     preference. The preference is untouched — it means what it always meant on
+     screen. */
+
+  :root[data-detail="Simple"] #panel-me .advanced-only,
+  :root[data-detail="Simple"] #panel-me .me-panel--advanced,
+  :root:not([data-detail="Advanced"]) #panel-me .advanced-only,
+  :root:not([data-detail="Advanced"]) #panel-me .me-panel--advanced {
+    display: revert;
+  }
+
+  /* ── Flow ──────────────────────────────────────────────────────────────
+     The app lays the reading out as a grid. On paper it is a document: one
+     column, top to bottom, in reading order. */
+
+  .me-grid {
+    display: block;
+  }
+
+  .me-panel,
+  .me-panel--bare {
+    display: block;
+    width: auto;
+    margin: 0 0 7mm;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+    /* Advisory, not absolute: a placement list longer than a page still has to
+       break somewhere, and forbidding it outright leaves a page half empty. */
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* A heading stranded at the foot of a page is the most common print defect
+     and the easiest to prevent. */
+  h1, h2, h3, h4 {
+    break-after: avoid;
+    page-break-after: avoid;
+    break-inside: avoid;
+  }
+
+  h1 { font-size: 19pt; }
+  h2 { font-size: 13pt; margin-top: 0; }
+  h3 { font-size: 11pt; }
+
+  p, li, dd, dt, td, th {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ── The wheel ─────────────────────────────────────────────────────────
+     It opens the document and gets a page of its own, because a wheel worth
+     printing is a wheel worth looking at whole. */
+
+  #section-wheel {
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+  }
+
+  .orbit-wheel {
+    width: 100%;
+    max-width: 165mm;
+    max-height: 200mm;
+    margin: 4mm auto 0;
+  }
+
+  /* On paper the wheel carries the ink alone — no theme, no accent. The
+     aspect colours stay (they are a redundant channel, the dash pattern is
+     the carrier) but everything structural goes to black. */
+  .ow-rim { stroke: #000000; stroke-width: 2.5; }
+  .ow-ring { stroke: #9a9a9a; }
+  .ow-sign-divide { stroke: #9a9a9a; }
+  .ow-tick { stroke: #6a6a6a; opacity: 1; }
+  .ow-cusp { stroke: #7a7a7a; }
+  .ow-cusp--angular { stroke: #000000; }
+  .ow-sign-glyph { fill: #1a1a1a; }
+  .ow-body-glyph { fill: #000000; }
+  .ow-body-tick { stroke: #000000; }
+  .ow-body-leader { stroke: #6a6a6a; }
+  .ow-house-number, .ow-body-degree, .ow-body-retro { fill: #3a3a3a; }
+  .ow-angle-label { fill: #000000; }
+  .ow-aspects { opacity: 0.8; }
+
+  /* ── Tables ────────────────────────────────────────────────────────────
+     The positions table is the reference half of the document: the wheel says
+     where things are relative to each other, this says exactly where. */
+
+  table.placements {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  table.placements th,
+  table.placements td {
+    border-bottom: 0.4pt solid #c8c8c8;
+    padding: 1.6mm 2mm;
+    text-align: left;
+  }
+
+  table.placements thead th {
+    border-bottom: 0.8pt solid #000000;
+    font-weight: 600;
+  }
+
+  /* Repeat the header when a table crosses a page, or the second page is a
+     grid of numbers with nothing to say which column is which. */
+  thead { display: table-header-group; }
+  tfoot { display: table-footer-group; }
+  tr { break-inside: avoid; page-break-inside: avoid; }
+
+  /* ── Reading cards ─────────────────────────────────────────────────────
+     On screen these are cards in a grid. On paper a card is just a paragraph
+     with a heading, and the border around each one wastes a third of the
+     page. */
+
+  .reading-grid {
+    display: block;
+  }
+
+  .reading-card,
+  .reading-grid > * {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 4mm;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* ── Links ─────────────────────────────────────────────────────────────
+     Underlines without the URL: this document has no navigation in it, and
+     printing "(https://…)" after every link would be noise. */
+  a { color: #000000; text-decoration: none; }
+
+  /* ── Provenance ────────────────────────────────────────────────────────
+     What the screen says beside the reading has to travel with the paper: the
+     birth data it was calculated from, the engine and content versions, and
+     the note that none of this came from a model. A printout outlives the
+     screen that would have explained it. */
+
+  .me-muted, .me-facts {
+    font-size: 9pt;
+    color: #3a3a3a;
+  }
+
+  #chart-limitation {
+    border: 0.6pt solid #767676;
+    padding: 3mm 4mm;
+    break-inside: avoid;
+  }
+}

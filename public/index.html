@@ -41,9 +41,13 @@
   <link rel="stylesheet" href="/styles/compatibility.css" />
   <link rel="stylesheet" href="/styles/symbol-atlas.css" />
   <link rel="stylesheet" href="/styles/tarot.css" />
+  <link rel="stylesheet" href="/styles/chart-wheel.css" />
   <link rel="stylesheet" href="/styles/motion.css" />
   <!-- Last, so its container corrections win over the base primitives. -->
   <link rel="stylesheet" href="/styles/native.css" />
+  <!-- Last on purpose: everything in print.css is inside @media print, and it
+       has to be able to override any rule above it without !important. -->
+  <link rel="stylesheet" href="/styles/print.css" />
   <link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
 </head>
 <body>
@@ -370,6 +374,9 @@
                 <span class="chart-avatar chart-avatar--sm" id="chart-switcher-avatar" aria-hidden="true" hidden></span>
                 <select class="chart-switcher__select" id="chart-switcher-select"></select>
               </div>
+              <!-- Hidden until a chart is actually rendered: an export button
+                   on an empty page offers to save nothing. -->
+              <button type="button" class="o-btn o-btn--utility" id="me-export-pdf" hidden>Save as PDF</button>
               <button type="button" class="o-btn o-btn--utility" id="me-edit-chart" hidden>Edit</button>
               <button type="button" class="o-btn o-btn--primary" id="me-add-chart">Add chart</button>
             </div>
@@ -399,6 +406,18 @@
 
             <!-- 2. Birth-time limitations (rendered high; see note above) -->
             <div class="me-panel--bare" id="chart-limitation"></div>
+
+            <!-- 2b. The wheel.
+                 After the limitation, never before it: a chart drawn without a
+                 birth time is drawn without houses, and the reader should have
+                 been told why before they look at it. -->
+            <section class="me-panel me-panel--wheel" id="section-wheel" aria-labelledby="me-wheel-title">
+              <div class="me-section-head">
+                <h2 id="me-wheel-title">The wheel</h2>
+                <p>Every placement at once. The Ascendant is at the left and the signs run counterclockwise, which is how a chart is conventionally drawn.</p>
+              </div>
+              <div id="chart-wheel"></div>
+            </section>
 
             <!-- 3. Big Three -->
             <section class="me-panel me-panel--placements" id="section-bigthree" aria-labelledby="me-chart-keys-title">

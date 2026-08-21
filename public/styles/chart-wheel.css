@@ -1,0 +1,142 @@
+/* Orbit Axis :: the natal wheel.
+ *
+ * Geometry lives in public/chart-wheel.js; this file decides only how the
+ * strokes look. The split matters: a wheel is redrawn for print at a different
+ * ink weight, and doing that in CSS means the print sheet and the screen panel
+ * are the SAME SVG rather than two renderers that will drift apart.
+ *
+ * Everything is stroke-based and token-driven, so the wheel follows the theme
+ * on screen and is overridden wholesale for paper in print.css. */
+
+.orbit-wheel {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  margin-inline: auto;
+  height: auto;
+  /* The glyph stack from tokens.css. Astrological signs have emoji
+     presentations that Apple platforms prefer, and inside an SVG there is no
+     second chance to fix it — see the note on --font-glyph. */
+  font-family: var(--font-glyph);
+  font-variant-emoji: text;
+}
+
+/* ── Structure ───────────────────────────────────────────────────────────── */
+
+.orbit-wheel circle {
+  fill: none;
+}
+
+.ow-rim {
+  stroke: var(--color-primary, var(--ink));
+  stroke-width: 2.5;
+}
+
+.ow-ring {
+  stroke: var(--color-border, var(--paper-hairline));
+  stroke-width: 1.5;
+}
+
+.ow-ring--faint {
+  stroke: var(--color-border, var(--paper-hairline));
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.ow-sign-divide {
+  stroke: var(--color-border, var(--paper-hairline));
+  stroke-width: 1.2;
+}
+
+.ow-tick {
+  stroke: var(--color-muted, var(--ink-48));
+  stroke-width: 0.8;
+  opacity: 0.7;
+}
+
+.ow-tick--long {
+  stroke-width: 1.2;
+  opacity: 1;
+}
+
+/* ── Houses ──────────────────────────────────────────────────────────────── */
+
+.ow-cusp {
+  stroke: var(--color-border-strong, var(--ink-48));
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+/* The angular cusps are the chart's spine and are drawn solid and heavier, so
+   ASC / IC / DSC / MC read at a glance rather than being counted to. */
+.ow-cusp--angular {
+  stroke: var(--color-secondary, var(--ink-60));
+  stroke-width: 1.8;
+  stroke-dasharray: none;
+}
+
+.ow-house-number {
+  fill: var(--color-muted, var(--ink-48));
+  font-family: var(--font-text);
+  font-weight: 500;
+}
+
+.ow-angle-label {
+  fill: var(--color-secondary, var(--ink-60));
+  font-family: var(--font-text);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ── Signs and bodies ────────────────────────────────────────────────────── */
+
+.ow-sign-glyph {
+  fill: var(--color-secondary, var(--ink-60));
+}
+
+.ow-body-glyph {
+  fill: var(--color-primary, var(--ink));
+}
+
+.ow-body-degree {
+  fill: var(--color-muted, var(--ink-48));
+  font-family: var(--font-mono);
+}
+
+/* The tick is where the body actually is; the leader admits that the glyph was
+   nudged off it to stay legible in a stellium. */
+.ow-body-tick {
+  stroke: var(--color-primary, var(--ink));
+  stroke-width: 1.8;
+}
+
+.ow-body-leader {
+  stroke: var(--color-muted, var(--ink-48));
+  stroke-width: 0.8;
+}
+
+/* ── Aspects ─────────────────────────────────────────────────────────────── */
+
+/* Width and dash come from the SVG itself (ASPECT_STYLE), because the aspect
+   TYPE must survive greyscale — colour here is a redundant second channel, not
+   the carrier. Opacity is the one thing left to CSS, so the chords sit behind
+   the glyphs rather than competing with them. */
+.ow-aspects {
+  opacity: 0.62;
+}
+
+.ow-aspect {
+  fill: none;
+  stroke-linecap: round;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orbit-wheel .ow-body { transition: opacity 120ms ease; }
+}
+
+/* Retrograde, on its own line inward of the degree. Width is the enemy inside
+   the wheel: appending it to the degree nearly doubles the caption's arc. */
+.ow-body-retro {
+  fill: var(--color-muted, var(--ink-48));
+  font-family: var(--font-glyph);
+}

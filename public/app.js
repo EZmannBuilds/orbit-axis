@@ -8,6 +8,7 @@
    ========================================================================== */
 
 import { renderMoonSVG } from "./moon-phase.js";
+import { renderChartWheel } from "./chart-wheel.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
   relationshipDisplay, chartInitials, validateName,
@@ -21,7 +22,7 @@ import {
 } from "./moon-scene.js";
 import { decideStartupView, STARTUP_VIEW } from "./startup-state.js";
 import { ICON_PATHS } from "./icons.js";
-import { apiUrl, authHeaders, rememberSession } from "./platform.js";
+import { apiUrl, authHeaders, isNativeApp, rememberSession } from "./platform.js";
 import { cacheGet, cachePut, cacheClear, cacheStats, setCacheNamespace } from "./storage.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -6499,6 +6500,96 @@ function renderChartData(chart, readingPayload) {
   applyDisclosureDefaults(target);
 }
 
+/**
+ * The wheel panel.
+ *
+ * The SVG is built by public/chart-wheel.js, which is pure and tested; this
+ * only puts it on the page. Nothing is calculated here and nothing should be:
+ * every longitude the wheel draws came from the engine.
+ */
+function renderChartWheelPanel(chart) {
+  const target = $("#chart-wheel");
+  if (!target) return;
+  // A chart that will not draw must not take the page down with it. The reading
+  // beneath is the substance; the wheel is a picture of it, and a picture that
+  // fails is a missing picture, not a missing reading.
+  try {
+    target.innerHTML = renderChartWheel(chart, { titleId: "chart-wheel-title", descId: "chart-wheel-desc" });
+  } catch {
+    target.innerHTML = "";
+  }
+  const section = $("#section-wheel");
+  if (section) section.hidden = !target.innerHTML;
+}
+
+/**
+ * Open every folded section before printing, and fold them back afterwards.
+ *
+ * WHY THIS IS NOT CSS. A closed <details> hides its content through the
+ * user-agent shadow tree, not through a `display` the page can override — so
+ * `details > *:not(summary) { display: revert }` in a print stylesheet looks
+ * exactly like a fix and does nothing at all. What prints is the summary line
+ * alone. In this chart that is the calculated-positions table: the single most
+ * data-dense thing in the document, folded by default on a phone, silently
+ * absent from the PDF.
+ *
+ * `beforeprint` is the right hook rather than the button handler, because a
+ * reader who presses Cmd-P instead of finding the button must get the same
+ * document. The button and the keyboard shortcut both route through here.
+ *
+ * Only sections this function opened are closed again, so a reader who had
+ * already expanded the table finds it still expanded when the dialog closes.
+ */
+const disclosuresOpenedForPrint = new Set();
+
+function openDisclosuresForPrint() {
+  document.querySelectorAll("#panel-me details:not([open])").forEach((d) => {
+    disclosuresOpenedForPrint.add(d);
+    d.open = true;
+  });
+}
+
+function restoreDisclosuresAfterPrint() {
+  disclosuresOpenedForPrint.forEach((d) => { d.open = false; });
+  disclosuresOpenedForPrint.clear();
+}
+
+function bindPrintHooks() {
+  globalThis.addEventListener?.("beforeprint", openDisclosuresForPrint);
+  globalThis.addEventListener?.("afterprint", restoreDisclosuresAfterPrint);
+}
+
+/**
+ * Save the chart as a PDF.
+ *
+ * WEB: the browser's own print pipeline, styled by print.css. It produces
+ * selectable, searchable text at the reader's paper size, with glyphs resolved
+ * by their own fonts — none of which a generated PDF would give us without
+ * embedding a font and rebuilding the layout a second time.
+ *
+ * THE NATIVE APP IS DIFFERENT, and silently so, which is the trap. `print`
+ * exists on window inside an iOS WKWebView and does nothing when called: a
+ * feature test passes and the button dies quietly. So this asks the platform
+ * rather than the function.
+ *
+ * Sending the reader to the system browser instead is not the fix it looks
+ * like. Their session lives in the app's own storage under a different origin,
+ * so they would arrive signed out, at an empty chart. Saying plainly that the
+ * export is not in the app yet is worse than a working button and better than
+ * one that appears to do nothing at all.
+ */
+function exportChartAsPdf() {
+  if (isNativeApp()) {
+    toast("Saving as PDF isn't available in the app yet — open Orbit Axis in a browser to save your chart.");
+    return;
+  }
+  if (typeof globalThis.print !== "function") {
+    toast("This browser can't print. Try Orbit Axis in Safari, Chrome, or Edge.");
+    return;
+  }
+  globalThis.print();
+}
+
 // ── Composition ─────────────────────────────────────────────────────────────
 
 /**
@@ -6517,6 +6608,7 @@ function renderChart(chart, name, profile = null, readingPayload = null) {
 
   renderChartHeader(profile, chart, name, readingPayload.context);
   renderLimitation(readingPayload.limitation);
+  renderChartWheelPanel(chart);
   renderBigThree(readingPayload.bigThree);
   renderPatterns(readingPayload.patterns);
   renderPlacements(readingPayload.remainingPlacements, readingPayload.pointPlacements);
@@ -6529,6 +6621,10 @@ function renderChart(chart, name, profile = null, readingPayload = null) {
     edit.hidden = !profile?.id;
     if (profile?.id) edit.dataset.id = profile.id;
   }
+  // Only offered once a chart is actually on the page. An export button above
+  // a placeholder offers to save nothing.
+  const exportButton = $("#me-export-pdf");
+  if (exportButton) exportButton.hidden = false;
   setReadingState("ready");
 }
 
@@ -6679,9 +6775,14 @@ function wireChartReading() {
     }
   });
 
+  // Cmd-P must produce the same document as the button, so the print hooks are
+  // bound with the panel rather than inside the button's handler.
+  bindPrintHooks();
+
   panel.addEventListener("click", (event) => {
     const retry = event.target.closest('[data-action="retry-reading"]');
     if (retry) { loadChartReading(activeChart()); return; }
+    if (event.target.closest("#me-export-pdf")) { exportChartAsPdf(); return; }
     const edit = event.target.closest("#me-edit-chart");
     if (edit?.dataset.id) {
       // The form needs the chart RECORD; handing it the bare id string left
