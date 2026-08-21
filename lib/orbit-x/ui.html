@@ -37,6 +37,9 @@
   .x-facts strong { color: var(--color-accent); }
   .x-status { color: var(--color-muted); font-size: var(--type-caption); min-height: 1.2em; }
   .x-hist { font-size: var(--type-caption); width: 100%; display: block; overflow-x: auto; }
+  .x-gate { max-width: 420px; margin-top: var(--space-lg); }
+  .x-gate label { display: block; margin-bottom: var(--space-sm); }
+  .x-who { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-sm); font-size: var(--type-caption); color: var(--color-muted); }
   .x-hist td, .x-hist th { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
   .x-hist svg { width: 56px; height: auto; border-radius: 4px; display: block; }
   .x-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
@@ -69,8 +72,30 @@
 <header class="x-head">
   <h1>Orbit X</h1>
   <p style="color:var(--color-muted)">Internal content desk — calculate → select → explain → visualize → reflect. Nothing publishes from here.</p>
+  <span class="x-who" id="x-who" hidden>
+    <span id="x-who-email"></span>
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-signout">Sign out</button>
+  </span>
 </header>
 
+<!-- The desk's own sign-in. The session is the same HttpOnly cookie the rest
+     of the web application uses; this form only posts to /api/auth/signin and
+     never stores, echoes, or logs what is typed into it. -->
+<section class="x-panel x-gate" id="x-gate" hidden aria-label="Sign in">
+  <h2>Sign in to Orbit Axis</h2>
+  <p class="x-status" id="x-gate-note">This browser has no Orbit Axis session. Sign in with your Orbit Axis account to open the desk.</p>
+  <form id="x-signin" autocomplete="on">
+    <label>Email <input type="email" id="x-email" class="o-input" autocomplete="username" required /></label>
+    <label>Password <input type="password" id="x-password" class="o-input" autocomplete="current-password" required /></label>
+    <div class="x-row">
+      <button type="submit" class="o-btn o-btn--primary o-btn--sm" id="x-signin-go">Sign in</button>
+      <a class="x-status" href="/" target="_blank" rel="noopener">Open the main app instead</a>
+    </div>
+    <p class="x-warn" id="x-gate-error" role="alert"></p>
+  </form>
+</section>
+
+<div class="x-desk" id="x-desk" hidden>
 <div class="x-row">
   <label>Date <input type="date" id="x-date" /></label>
   <button class="o-btn o-btn--secondary o-btn--sm" id="x-today">Today</button>
@@ -99,6 +124,7 @@
     <div id="x-editor"><p class="x-status">Start a draft from a candidate to begin.</p></div>
   </section>
 </div>
+</div>
 
 <script type="module">
 import { renderPost, normalizeDesign, TEMPLATES, ASPECTS, DENSITIES, REQUIRED_ROLES, humanDate }
@@ -112,9 +138,13 @@ const api = async (path, options = {}) => {
     headers: { "Content-Type": "application/json" }, ...options });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
-    if (res.status === 401) throw Object.assign(
-      new Error("You're not signed in to Orbit Axis in this browser — sign in on the site, then come back here."),
-      { body, status: 401 });
+    // A 401 mid-session means the cookie expired underneath the editor. Show
+    // the gate again rather than a dead-end status line — the draft in the
+    // editor is untouched and survives the sign-in.
+    if (res.status === 401) {
+      showGate("Your session expired. Sign in again to continue — your draft is still here.");
+      throw Object.assign(new Error("Sign-in required."), { body, status: 401 });
+    }
     throw Object.assign(new Error(body.error || `HTTP ${res.status}`), { body, status: res.status });
   }
   return body;
@@ -130,6 +160,77 @@ let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
 let lastSky = [];     // current-sky strip data from the candidates response
 let previewMode = "full"; // full | feed | sim
+
+/* ── The session gate ──────────────────────────────────────────────────────
+   The desk is admin-only and the SERVER decides that: this gate only answers
+   "is there a session in this browser". A signed-in non-admin still gets 404
+   from every Orbit X endpoint, exactly as before — nothing here widens
+   access, it removes a dead end. */
+
+function showGate(note = null) {
+  $("#x-desk").hidden = true;
+  $("#x-who").hidden = true;
+  $("#x-gate").hidden = false;
+  if (note) $("#x-gate-note").textContent = note;
+  $("#x-email").focus();
+}
+
+function showDesk(email) {
+  $("#x-gate").hidden = true;
+  $("#x-desk").hidden = false;
+  $("#x-who").hidden = false;
+  $("#x-who-email").textContent = email ? `Signed in as ${email}` : "Signed in";
+  $("#x-password").value = ""; // never keep it in the DOM after use
+}
+
+async function checkSession() {
+  try {
+    const res = await fetch("/api/auth/session", { credentials: "same-origin" });
+    const body = await res.json().catch(() => ({}));
+    const signedIn = body?.signed_in === true || body?.data?.signed_in === true;
+    const email = body?.user?.email || body?.data?.user?.email || null;
+    if (signedIn) { showDesk(email); return true; }
+  } catch { /* fall through to the gate */ }
+  showGate();
+  return false;
+}
+
+$("#x-signin").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = $("#x-signin-go");
+  $("#x-gate-error").textContent = "";
+  button.disabled = true;
+  button.textContent = "Signing in…";
+  try {
+    const res = await fetch("/api/auth/signin", {
+      method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: $("#x-email").value, password: $("#x-password").value }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.signed_in) {
+      // The server's message is deliberately non-enumerating; pass it through
+      // rather than inventing a friendlier one that leaks which half failed.
+      $("#x-gate-error").textContent = body.error || "Sign-in failed.";
+      return;
+    }
+    showDesk(body.user?.email || $("#x-email").value);
+    load();
+  } catch (error) {
+    $("#x-gate-error").textContent = "Sign-in could not reach the server.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Sign in";
+  }
+});
+
+$("#x-signout").onclick = async () => {
+  await fetch("/api/auth/signout", { method: "POST", credentials: "same-origin" }).catch(() => {});
+  current = null;
+  $("#x-candidates").innerHTML = `<p class="x-status">Pick a date and load.</p>`;
+  $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
+  showGate("Signed out.");
+};
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 $("#x-date").value = todayIso();
@@ -593,6 +694,10 @@ function debounce(fn, ms) {
   let t = null;
   return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
+
+// Bootstrap: decide gate-or-desk before anything requests a candidate, so a
+// signed-out visit opens on a sign-in form instead of an error line.
+checkSession().then((signedIn) => { if (signedIn) load(); });
 </script>
 </body>
 </html>
