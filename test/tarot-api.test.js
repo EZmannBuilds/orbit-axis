@@ -203,6 +203,46 @@ test("the day belongs to the reader, and yesterday's card does not carry over", 
   assert.notEqual(nextDay.source, "remembered");
 });
 
+/* A deck that offers both halves, which the plain fixture does not: presentCard
+   refuses to show a card reversed unless the deck actually holds a reversed
+   meaning, so a reversal test needs a deck that supports reversals. */
+const REVERSIBLE_DECK = DECK.map((card) => ({
+  ...card,
+  reversed_meaning: `Fixture reversed meaning for ${card.name}.`,
+  reversed_prompt: `Fixture reversed prompt for ${card.name}?`,
+}));
+
+test("a card that lands reversed is remembered as reversed, even with reversals off", async () => {
+  // The bug this pins: orientation used to be decided by the reader's setting
+  // at draw time, so with reversals off every card was written down as upright
+  // and the reversal was gone for good — the daily seed is not kept, so
+  // nothing could recover it. What is drawn is now recorded either way, and
+  // only the display honours the setting.
+  const drawn = [];
+  for (let i = 0; i < 200; i += 1) {
+    const reading = await dailyCard({
+      deck: REVERSIBLE_DECK, deckVersion: FIXTURE_DECK_VERSION, reversals: false,
+      now: new Date("2026-08-15T14:00:00Z"),
+    });
+    // Shown upright, always — that part is the reader's setting doing its job.
+    assert.equal(reading.cards[0].card.orientation, "upright");
+    drawn.push(reading.remember);
+  }
+  const reversed = drawn.find((r) => r.orientation === "reversed");
+  assert.ok(reversed, "200 draws with reversals off recorded no reversal at all");
+
+  // Turn the setting on and hand back the same remembered card: it comes back
+  // the way it was actually drawn, not upright.
+  const shown = await dailyCard({
+    deck: REVERSIBLE_DECK, deckVersion: FIXTURE_DECK_VERSION, reversals: true,
+    now: new Date("2026-08-15T14:00:00Z"), remembered: reversed,
+  });
+  assert.equal(shown.source, "remembered");
+  assert.equal(shown.cards[0].card.slug, reversed.card_slug);
+  assert.equal(shown.cards[0].card.orientation, "reversed");
+  assert.equal(shown.remember.orientation, "reversed", "the record still holds the truth");
+});
+
 test("a remembered card that is no longer in the deck yields a fresh draw", async () => {
   // The deck changed under the reader. Better a new card than an error page
   // about one that no longer exists.

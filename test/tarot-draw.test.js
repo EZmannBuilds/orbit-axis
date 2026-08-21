@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   DRAW_CONTRACT_VERSION, drawCards, drawDailyCard, drawSpread,
-  isLocalDate, manualSeed, unbiasedIndex,
+  isLocalDate, isReversed, manualSeed, shownOrientation, unbiasedIndex,
 } from "../lib/tarot/draw.js";
 import { FULL_DECK_SIZE, SPREAD_POSITIONS } from "../lib/tarot/deck.js";
 import { FIXTURE_DECK, FIXTURE_DECK_VERSION } from "./fixtures/tarot-deck.js";
@@ -176,4 +176,65 @@ test("a given seed reproduces a given spread", () => {
   const first = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed });
   const second = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed });
   assert.deepEqual(first.cards.map((c) => c.card.slug), second.cards.map((c) => c.card.slug));
+});
+
+/* ── Orientation ──────────────────────────────────────────────────────────────
+   Which way a card landed is a fact about the draw. Whether the reader is
+   shown it is a preference. These used to be one decision, and the cost was
+   that a card drawn with reversals off recorded `upright` and — because the
+   daily seed is not kept — could never afterwards be told apart from a card
+   that genuinely landed upright. Half the reversals were lost at that seam. */
+
+test("orientation is recorded even when reversals are off", () => {
+  const orientations = new Set();
+  for (let i = 0; i < 200; i += 1) orientations.add(daily({ reversals: false }).orientation);
+  assert.deepEqual([...orientations].sort(), ["reversed", "upright"],
+    "with reversals off the draw still landed some cards reversed");
+});
+
+test("the reversals setting changes nothing about the draw", () => {
+  // Not just the card — the orientation too. The setting is a lens over a
+  // reading that already happened, so both halves of it must be identical.
+  const seed = "c".repeat(64);
+  const off = daily({ reversals: false, seed });
+  const on = daily({ reversals: true, seed });
+  assert.equal(off.card.slug, on.card.slug);
+  assert.equal(off.orientation, on.orientation);
+
+  const spreadOff = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed, reversals: false });
+  const spreadOn = drawSpread({ deck: FIXTURE_DECK, spreadType: "three_card", seed, reversals: true });
+  assert.deepEqual(
+    spreadOff.cards.map((c) => [c.card.slug, c.orientation]),
+    spreadOn.cards.map((c) => [c.card.slug, c.orientation]),
+  );
+});
+
+test("reversals off shows every card upright, whatever it drew", () => {
+  assert.equal(shownOrientation("reversed", false), "upright");
+  assert.equal(shownOrientation("upright", false), "upright");
+  assert.equal(shownOrientation("reversed", true), "reversed");
+  assert.equal(shownOrientation("upright", true), "upright");
+});
+
+test("a card drawn reversed is still reversed when the setting is turned on", () => {
+  // The point of recording the orientation: the reader who enables reversals
+  // sees the orientation their card actually had, rather than an upright-only
+  // history that quietly began the day they found the setting.
+  const seed = "d".repeat(64);
+  const position = Array.from({ length: 64 }, (_, i) => i).find((i) => isReversed(seed, i));
+  assert.ok(position !== undefined, "no reversed position in 64 — the stream is broken");
+  assert.equal(shownOrientation(isReversed(seed, position) ? "reversed" : "upright", true), "reversed");
+});
+
+test("reversals are an even split", () => {
+  // A house rule making reversals rarer is somebody's tradition, not a fact,
+  // and is deliberately not smuggled into the arithmetic. 50/50 is the claim,
+  // so 50/50 is what is checked.
+  const N = 20000;
+  let reversed = 0;
+  for (let i = 0; i < N; i += 1) if (isReversed(`seed-${i}`, 0)) reversed += 1;
+  // Binomial: sd = sqrt(N/4) = ~70.7, so 4 sd is ~283. A fair coin lands
+  // outside once in ~16,000 runs; a weighted one lands outside every time.
+  assert.ok(Math.abs(reversed - N / 2) < 283,
+    `${reversed}/${N} reversed — that is not an even split`);
 });
