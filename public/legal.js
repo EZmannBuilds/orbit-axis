@@ -38,6 +38,11 @@ async function applyLegalConfig() {
     const resolved = value(key);
 
     if (!resolved) {
+      // The repository URLs are checked-in public facts. If the runtime config
+      // cannot be reached, keep those working static links instead of replacing
+      // them with a stale publication state. An explicit invalid override is
+      // blocked by deploy:check before a public deployment.
+      if ((key === "sourceApp" || key === "sourceEngine") && el.getAttribute("href") !== "#") continue;
       el.textContent = el.dataset.legalPending || PENDING;
       el.classList.add("legal__pending");
       continue;

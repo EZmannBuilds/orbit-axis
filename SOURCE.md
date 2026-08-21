@@ -19,29 +19,24 @@ rather than a number written into a document.
 
 ## Repositories
 
-| Component | Contents |
-| --- | --- |
-| Orbit Axis | Application: interface, API, readings, accounts |
-| Orbit Axis Engine | Deterministic astrology calculation engine |
+| Component | Contents | Public repository |
+| --- | --- | --- |
+| Orbit Axis | Application: interface, API, readings, accounts | <https://github.com/EZmannBuilds/orbit-axis> |
+| Orbit Axis Engine | Deterministic astrology calculation engine | <https://github.com/EZmannBuilds/orbit-axis-engine> |
 
-**Both are complete and licensed but not yet published.** Until they are, the
-source page says exactly that instead of showing a link that would not resolve.
+Both repositories are public and distributed as `AGPL-3.0-or-later`. The
+checked-in URLs above are also the defaults used by `/source`,
+`/api/v1/source`, and `/api/legal/config`.
 
-Publication does not change the obligation, only its convenience: if you are
-using an Orbit Axis instance now and want its source, ask the operator and they
-must provide it.
-
-Once published, the URLs come from validated configuration rather than a code
-change:
+Validated overrides are available if either repository moves:
 
 ```
 ORBIT_SOURCE_APP_URL      https URL on a known code host
 ORBIT_SOURCE_ENGINE_URL   https URL on a known code host
 ```
 
-Anything else — http, an unknown host, a malformed URL — is rejected and the page
-falls back to "publication pending". An unvalidated URL here would be a
-destination Orbit vouches for.
+Anything else — HTTP, an unknown host, or a malformed URL — is rejected. An
+unvalidated URL here would be a destination Orbit Axis vouches for.
 
 ## Corresponding source
 

@@ -39,7 +39,7 @@ test/
 # Vercel functions are Linux x64. The macOS executable is ~820 KB of dead
 # weight there, and shipping a binary for another operating system into a
 # public deployment is exactly the kind of thing that should be deliberate.
-# lib/astro/bin/linux-x64/ and lib/astro/ephe/ are NOT excluded — they are
+# vendor/orbit-axis-engine/bin/linux-x64/ and ephemeris/ are NOT excluded — they are
 # force-included by "includeFiles" in vercel.json, because they are opened by
 # path at runtime and so are invisible to Vercel's import tracing.
 vendor/orbit-axis-engine/bin/darwin-arm64/

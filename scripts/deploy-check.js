@@ -31,6 +31,7 @@ import { modelBundle } from "../lib/deploy/bundle.js";
 import { checkoutPortability, inspectVercelLink, vercelArtifactsIgnored } from "../lib/deploy/vercel-link.js";
 import { inspectVercelOutput, architectureWarning } from "../lib/deploy/vercel-output.js";
 import { envFileStatus } from "../lib/local-llm/config.js";
+import { auditSourcePosture } from "../lib/legal/source-posture.js";
 
 const findings = [];
 const add = (level, area, message, action = null) => findings.push({ level, area, message, action });
@@ -326,7 +327,8 @@ const linux = resolveRuntime({ platform: "linux", arch: "x64", verifyChecksum: t
 if (!linux.ok) {
   blocker("runtime", `No usable linux-x64 Swiss Ephemeris runtime: ${linux.detail}`,
     "Vercel functions run Linux x64. Without this, every astrology feature fails on a deployment. "
-    + "Build it from official Astrodienst source and record its checksum in lib/astro/runtime/manifest.json.");
+    + "Build it from official Astrodienst source and record its checksum in "
+    + "vendor/orbit-axis-engine/src/adapters/swiss-ephemeris/manifest.json.");
 } else {
   info("runtime", `linux-x64 runtime present and checksum-verified (${linux.linkage}ally linked, ${manifest.runtimes["linux-x64"].version}).`);
   if (linux.linkage !== "static") {
@@ -363,11 +365,25 @@ if (process.platform === "linux" && process.arch === "x64") {
     + "`npm run orbit:runtime:check` and `npm run orbit:core:smoke` inside a linux/amd64 container. "
     + "See docs/deployment/orbit-core-runtime.md for the exact commands and recorded results.");
 }
-warn("legal", "Swiss Ephemeris licensing is UNRESOLVED and undocumented in this repository.",
-  "Swiss Ephemeris is dual-licensed (AGPL or a paid commercial licence). Deploying it in a publicly "
-  + "reachable app has obligations under either choice. Keeping this Git repository private does NOT "
-  + "by itself establish that a publicly reachable hosted service complies with either licence. "
-  + "Resolve and document the licence before any public Production launch. This check cannot verify a licence.");
+// ── 6b. AGPL licensing posture and the source offer ────────────────────────
+// Orbit uses the Swiss Ephemeris under its AGPL option (recorded in
+// docs/deployment/swiss-ephemeris-licensing.md). This verifies the repository
+// artifacts implementing its source offer and is deliberately NOT a legal
+// opinion — see the note below.
+const posture = auditSourcePosture({
+  root: REPO_ROOT, env: process.env, manifest,
+  requireSourceUrls: Boolean(env.isDeployed || env.isVercel),
+});
+for (const finding of posture.findings) {
+  if (finding.level === "BLOCKER") blocker("licensing", finding.message, finding.action);
+  else warn("licensing", finding.message, finding.action);
+}
+if (!posture.findings.length) {
+  info("licensing", "AGPL source offer intact: licence files, upstream notices, /source page and both "
+    + "repository links are present and consistent with the recorded AGPL option.");
+}
+info("licensing", "These are source-availability and posture checks, NOT a legal compliance "
+  + "certification. No script can determine licence compliance, and this one does not try.");
 
 // ── 7. Vercel project link (added after the Update 4.0.4.1 incident) ────────
 // `npx vercel link` run in this repository attached it to `the-lorehouse` — a

@@ -213,14 +213,20 @@ modes, a workspace navigation model, and a ⌘K command palette. See
 **AGPL-3.0-or-later.** See `LICENSE` for the full text and `NOTICE` for
 attribution.
 
-This is inherited rather than chosen. Orbit Axis calculates with Swiss Ephemeris
-(Astrodienst AG), which is dual-licensed under the AGPL or a paid professional
-licence. Orbit Axis uses the AGPL option, and the AGPL is viral: the whole
-application carries it.
+Orbit Axis calculates with Swiss Ephemeris (Astrodienst AG), which is
+dual-licensed under the AGPL or a paid Professional License. Orbit Axis has
+selected the AGPL-3.0 option, and both the application and engine are
+distributed as AGPL-3.0-or-later.
 
 Because Orbit Axis is offered over a network, AGPL section 13 entitles anyone who
 uses it remotely to its complete corresponding source. `/api/v1/source` and the
 `/source` page exist to satisfy that. See `SOURCE.md`.
 
-Neither repository has been published yet. The licence applies regardless — it is
-about the terms the code carries, not about where it is hosted.
+Both source repositories are public:
+
+- <https://github.com/EZmannBuilds/orbit-axis>
+- <https://github.com/EZmannBuilds/orbit-axis-engine>
+
+The selected route and decision date are recorded in
+`docs/deployment/swiss-ephemeris-licensing.md`. That record is factual project
+documentation, not legal advice or a compliance certification.

@@ -133,7 +133,7 @@ const failed = checks.filter((c) => !c.ok);
 const fatal = failed.filter((c) => !(c.name.startsWith("artifact:") && c.name !== `artifact:${key}`));
 
 if (printChecksums) {
-  console.log("Recomputed checksums (paste into lib/astro/runtime/manifest.json):\n");
+  console.log("Recomputed checksums (paste into vendor/orbit-axis-engine/src/adapters/swiss-ephemeris/manifest.json):\n");
   for (const [k, r] of Object.entries(manifest.runtimes)) {
     const path = join(ASTRO_ROOT, r.executable);
     if (existsSync(path)) console.log(`  ${k.padEnd(16)} ${sha256File(path)}`);
@@ -155,7 +155,7 @@ if (asJson) {
   console.log("");
   console.log(`  Platform:          ${key}`);
   console.log(`  Swiss Ephemeris:   ${manifest.swissEphemerisVersion}`);
-  console.log(`  Runtime selected:  ${resolved.ok ? resolved.executable.replace(ASTRO_ROOT, "lib/astro") : "none"}`);
+  console.log(`  Runtime selected:  ${resolved.ok ? resolved.executable.replace(ASTRO_ROOT, "vendor/orbit-axis-engine") : "none"}`);
   console.log("");
   for (const c of checks) {
     console.log(`  ${c.ok ? "ok  " : "FAIL"}  ${c.name.padEnd(18)} ${c.detail}`);
