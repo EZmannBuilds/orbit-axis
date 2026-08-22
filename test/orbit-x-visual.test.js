@@ -21,6 +21,7 @@ import {
   TOKENS, ASPECTS, ASPECT_IDS, DENSITIES, TEMPLATES, TEMPLATE_IDS,
   recommendTemplate, fitText, humanDate, utcTime, normalizeDesign,
   renderSlide, renderPost, SLIDE_ROLES, REQUIRED_ROLES, SAFE_LIMITS, TITLE_BANKS,
+  BODY_SPECS, bodySpecFor, bodyCapacity,
 } from "../lib/orbit-x/templates.js";
 import {
   FRAMING_BANK, REFLECTION_EXAMPLES, CTA_CLASSES, pick,
@@ -232,8 +233,11 @@ test("every fixture renders every aspect with correct dimensions and no leaks", 
     const formatId = candidate.eventType === "daily_sky" ? "daily_signal"
       : candidate.eventType === "educational" ? "without_the_fog" : "something_changed";
     const { post } = buildScaffold(candidate, formatId, {});
+    // Slide one's body is the HOOK, not a paragraph: filling it with body copy
+    // renders two lines where one belongs, and the renderer says so.
     const filled = { ...post, slides: post.slides.map((s) => s.body ? s : { ...s,
-      body: "Tradition reads this as a moment worth noticing — interpretation, not fate." }) };
+      body: ["hero", "cover"].includes(s.role) ? "One movement, calculated."
+        : "Tradition reads this as a moment worth noticing — interpretation, not fate." }) };
     for (const aspectId of ASPECT_IDS) {
       const A = ASPECTS[aspectId];
       const rendered = renderPost({ ...filled, design: { aspect: aspectId } },
@@ -273,7 +277,7 @@ test("slides carry role-specific layouts under one format's control (§46)", () 
     slides: post.slides.map((s) => s.body ? s : { ...s, body: "Attributed to tradition." }) };
   const r = renderPost(filled, { eventType: "full_moon", title: FULL_MOON.title, facts: FULL_MOON.facts });
   const [hero, fact, symbolic] = r.slides.map((s) => s.svg);
-  assert.ok(hero.includes('r="200"'), "slide 1: hero Moon");
+  assert.match(hero, /aria-label="Moon, [\d.]+% illuminated"/, "slide 1: hero Moon");
   assert.ok(fact.includes("180°"), "slide 2: the Sun–Moon opposition, drawn");
   assert.ok(symbolic.includes("PISCES"), "slide 3: the sign, named and drawn");
   assert.ok(hero.includes("FULL MOON"), "the event badge anchors slide 1");
@@ -603,4 +607,143 @@ test("a reading's first two slides are editable, or their copy has nowhere to la
   assert.match(importer, /headlineField\(\)/);
   assert.ok(!/querySelector\(`\[data-sb=/.test(importer),
     "no direct field lookup survives in the importer");
+});
+
+/* ── What a slide can hold (Dev Update 5.5) ─────────────────────────────── */
+
+const READING_FACTS = Object.freeze({
+  period: Object.freeze({ type: "daily", key: "daily:2026-08-22", label: "August 22, 2026",
+    timezone: "America/Chicago", start_date: "2026-08-22", end_date: "2026-08-22" }),
+  local_date: "2026-08-22", moon_phase_name: "Waxing Gibbous", illumination_percent: 69.5,
+  is_waxing: true, moon_sign: "Sagittarius", selected_events: Object.freeze([]),
+  planets: Object.freeze([
+    { name: "Sun", sign: "Leo", degrees: 29, retrograde: false },
+    { name: "Moon", sign: "Sagittarius", degrees: 22, retrograde: false },
+    { name: "Mercury", sign: "Leo", degrees: 23, retrograde: false },
+    { name: "Venus", sign: "Libra", degrees: 14, retrograde: false },
+    { name: "Mars", sign: "Cancer", degrees: 7, retrograde: false },
+    { name: "Jupiter", sign: "Leo", degrees: 11, retrograde: false },
+    { name: "Saturn", sign: "Aries", degrees: 14, retrograde: true },
+    { name: "Uranus", sign: "Gemini", degrees: 5, retrograde: false },
+    { name: "Neptune", sign: "Aries", degrees: 3, retrograde: true },
+    { name: "Pluto", sign: "Aquarius", degrees: 3, retrograde: true },
+  ]),
+});
+
+const readingPost = (bodies) => ({
+  format: "daily_reading", headline: "A daily reading",
+  reading: { type: "daily", theme: "A daily reading", oneSentence: bodies.one_sentence || "",
+    periodLabel: READING_FACTS.period.label },
+  slides: ROLE_SEQUENCES.daily_reading.map((role) => ({ role, heading: "", body: bodies[role] || "" })),
+  caption: "", cta: "", altText: "",
+});
+
+const renderReading = (bodies, design = {}) => renderPost({ ...readingPost(bodies), design },
+  { eventType: "collective_reading", title: "Daily Reading", facts: READING_FACTS, sky: READING_FACTS.planets });
+
+/** Where the drawn body copy ends, and where the positions grid begins. */
+function bodyAndStrip(svg) {
+  const strip = /<g transform="translate\((?:[\d.]+) ([\d.]+)\)" aria-label="Current sky positions"/.exec(svg);
+  const before = strip ? svg.slice(0, strip.index) : svg;
+  const ys = [...before.matchAll(new RegExp(`<text[^>]*fill="${TOKENS.body}"[^>]*>`, "g"))]
+    .map((m) => Number(/\by="(-?[\d.]+)"/.exec(m[0])[1]));
+  return { bodyBottom: ys.length ? Math.max(...ys) : null, stripTop: strip ? Number(strip[1]) : null };
+}
+
+test("body copy is fitted to the room the positions grid leaves, never drawn through it", () => {
+  // The grid is calculated; the prose is not. So the grid keeps its space and
+  // the copy fits above it. Seven lines of body used to print straight over
+  // the ten positions with no warning of any kind — the render was wrong AND
+  // silent, which is the pair this renderer exists to make impossible.
+  const long = "Sun 29 Leo, Mercury 23 Leo and Jupiter 11 Leo share a sign. The Moon is at 22 "
+    + "Sagittarius, Waxing Gibbous, 69.5% illuminated and still growing. Saturn (14 Aries), "
+    + "Neptune (3 Aries) and Pluto (3 Aquarius) are retrograde. No exact events are listed for today.";
+  const r = renderReading({ movements: long, evidence: long });
+  for (const i of [2, 5]) {
+    const { bodyBottom, stripTop } = bodyAndStrip(r.slides[i].svg);
+    assert.ok(stripTop, `slide ${i + 1} draws the calculated positions`);
+    assert.ok(bodyBottom < stripTop, `slide ${i + 1} body clears the grid (${bodyBottom} < ${stripTop})`);
+  }
+
+  // And copy that cannot fit that room is NAMED, not quietly cropped.
+  const flood = { movements: Array(40).fill("retrograde").join(" ") };
+  assert.ok(renderReading(flood).warnings.some((w) => /Slide 3 body exceeds the safe area/.test(w)),
+    "unfittable copy is flagged");
+});
+
+test("fitText obeys the vertical room a region states, not just its line count", () => {
+  const text = Array(40).fill("word").join(" ");
+  const tall = fitText(text, { tiers: [44], maxLines: 8, width: 860, font: "sans", lineGap: 1.4 });
+  const short = fitText(text, { tiers: [44], maxLines: 8, width: 860, font: "sans", lineGap: 1.4, maxHeight: 200 });
+  assert.ok(short.lines.length < tall.lines.length, "a shorter region takes fewer lines");
+  assert.ok(short.lines.length * 44 * 1.4 <= 200 + 44, "and the block stays inside the room it was given");
+  assert.equal(short.overflow, true, "the copy that did not fit is flagged, not dropped in silence");
+  assert.deepEqual(fitText(text, { tiers: [44], maxLines: 8, width: 860, maxHeight: Infinity }).lines,
+    tall.lines, "no stated height is the historical behaviour, unchanged");
+});
+
+test("bodyCapacity reports the geometry the renderer actually draws with", () => {
+  // One source of truth: the specs the renderer fits with are the specs the
+  // desk quotes. A budget nobody can verify is how 300-character copy got
+  // written for a 72-character hook.
+  for (const role of ["cover", "one_sentence", "movements", "reading", "reflection", "evidence"]) {
+    const spec = bodySpecFor(role);
+    assert.ok(BODY_SPECS[Object.keys(BODY_SPECS).find((k) => BODY_SPECS[k] === spec)],
+      `${role} resolves to a designed spec`);
+    // The budget a writer is given is the smaller of the two limits: what the
+    // format allows and what the slide can physically keep.
+    const capacity = Math.min(FORMATS.daily_reading.limits.slideBody,
+      bodyCapacity(role, { aspect: "portrait" }));
+    assert.ok(capacity > 0, `${role} has a real budget`);
+    const atCapacity = "notice ".repeat(Math.floor(capacity / 7)).trim();
+    const r = renderReading({ [role]: atCapacity });
+    assert.deepEqual(r.warnings, [], `${role} copy written to its stated budget fits`);
+  }
+  assert.equal(bodyCapacity("cover"), SAFE_LIMITS.hookChars, "the cover slot is the hook budget");
+  assert.ok(bodyCapacity("movements", { aspect: "square" }) < bodyCapacity("movements", { aspect: "portrait" }),
+    "a square slide has less room, and says so");
+});
+
+test("the desk quotes the slide's budget, not one flat number per format", () => {
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.match(page, /bodyCapacity/, "the editor reads the renderer's capacity");
+  const brief = page.slice(page.indexOf("function handoffBrief("), page.indexOf("function parseHandoff("));
+  assert.match(brief, /maxCharacters: budgetFor\(slide\.role\)/, "per slot, per role");
+  assert.match(page, /function budgetFor\(role\)[\s\S]{0,400}Math\.min\(/,
+    "the budget is the smaller of the format ceiling and what the slide holds");
+});
+
+test("the desk script parses — a grep-only suite cannot see a broken brace", () => {
+  // Every other assertion about this page is a regex over its source, which
+  // is exactly how a syntax error inside a template literal ships green. This
+  // one PARSES the module: imports resolve only in the browser, so they are
+  // stripped and the remaining program is compiled without being run.
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  const open = page.indexOf('<script type="module">');
+  assert.ok(open > -1, "the desk ships one module script");
+  const body = page.slice(page.indexOf(">", open) + 1, page.lastIndexOf("</script>"));
+  const program = body.replace(/^import[\s\S]*?from\s+"[^"]+";$/gm, "");
+  assert.doesNotThrow(() => new Function(program), "the desk script is valid JavaScript");
+});
+
+test("the hero's celestial anchor clears its headline in every aspect", () => {
+  // Slide one is bottom-clamped: a tall copy block reaches UP. The disc used
+  // to be laid out at one radius (285) and drawn at another (200), so the
+  // clearance the hero calculated was never the clearance on screen — the
+  // headline printed across the lit half of the Moon, perfectly rendered and
+  // unreadable. Copy is measured first now; the disc takes the room that is
+  // left, and says so when there is none.
+  const bodies = { cover: "Most of this sky is moving forward. Three slow planets are not." };
+  for (const aspect of ASPECT_IDS) {
+    const r = renderReading(bodies, { aspect });
+    const svg = r.slides[0].svg;
+    const disc = /<g transform="translate\((?:[\d.]+) ([\d.]+)\)" role="img" aria-label="Moon[^"]*">.*?r="([\d.]+)"/.exec(svg);
+    assert.ok(disc, `${aspect} draws the calculated Moon on slide one`);
+    const discBottom = Number(disc[1]) + Number(disc[2]);
+    const headline = /<text x="[\d.]+" y="([\d.]+)" font-family="Georgia[^"]*" font-size="([\d.]+)"/.exec(svg);
+    assert.ok(headline, `${aspect} draws the headline`);
+    const capTop = Number(headline[1]) - Number(headline[2]);
+    assert.ok(discBottom < capTop, `${aspect}: the disc ends (${discBottom}) above the headline (${capTop})`);
+    assert.deepEqual(r.warnings, [], `${aspect} hero fits`);
+  }
 });

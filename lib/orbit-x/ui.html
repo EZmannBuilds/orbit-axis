@@ -155,7 +155,7 @@
 
 <script type="module">
 import { renderPost, normalizeDesign, TEMPLATES, TEMPLATE_FAMILY_IDS, ASPECTS, DENSITIES,
-  REQUIRED_ROLES, LOGO_POSITIONS, HEADLINE_ALIGNMENTS, humanDate }
+  REQUIRED_ROLES, LOGO_POSITIONS, HEADLINE_ALIGNMENTS, humanDate, bodyCapacity }
   from "/admin/orbit-x/templates.js";
 import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
 import { adviseCopy, CONSTITUTION } from "/admin/orbit-x/editorial.js";
@@ -447,6 +447,18 @@ function suggestionFor(role) {
   return current.suggestions?.slides?.find((s) => s.role === role) || null;
 }
 
+/* What a slot may hold, stated once. TWO limits bind a body: the format's
+   editorial ceiling and the room the template actually draws. The desk used
+   to quote only the first, so a brief promised 300 characters for a cover
+   hook the renderer keeps 72 of, and the writer's line came back cropped.
+   The budget is the smaller of the two, and it is the number shown wherever
+   a writer is asked for words. */
+function budgetFor(role) {
+  const fmt = formats[current.post?.format] || FORMATS[current.post?.format];
+  return Math.min(fmt?.limits?.slideBody ?? 240,
+    bodyCapacity(role, { aspect: current.design?.aspect }));
+}
+
 function renderEditor() {
   const { candidate, post } = current;
   const fmt = formats[post.format] || FORMATS[post.format];
@@ -465,9 +477,12 @@ function renderEditor() {
       <label>Theme <input type="text" id="e-theme" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before approval" /></label>
       <div class="x-helper">The Intro/Cover hook. Editorial copy—not engine output.</div>
       <label>Reading in one sentence <textarea id="e-one" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
-      <div class="x-helper">The independent second hook and thesis.</div>
+      <div class="x-helper">The independent second hook and thesis. Fits about
+        ${budgetFor("one_sentence")} characters at this size.</div>
       <label>Cover hook line <input type="text" id="e-hook" class="o-input" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." /></label>
-      <div class="x-helper">Optional, and drawn under the theme on slide 1 — the line that earns the swipe. The cover slide carries it; without a field it could never be written.</div>
+      <div class="x-helper">Optional, and drawn under the theme on slide 1 — the line that earns the swipe.
+        The cover slide carries it; without a field it could never be written. Keep it to about
+        ${budgetFor("cover")} characters — past that it stops reading as a hook.</div>
       ${(suggestionFor("cover")?.suggestions || []).length ? `<div class="x-chips">${suggestionFor("cover").suggestions.map((h) =>
         `<button type="button" class="x-chip" data-hook="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
     </div>` : `<label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>`}
@@ -601,6 +616,7 @@ function slideSection(s, i) {
   return `<div class="x-section ${empty ? "x-section--empty" : ""}" data-slide-section="${i}">
     <div class="x-row"><strong style="font-size:var(--type-caption)">Slide ${i + 1}${s.role ? ` · ${esc(s.role)}` : ""}${required ? "" : " · optional"}</strong></div>
     ${sugg?.helper ? `<div class="x-helper">${esc(sugg.helper)}</div>` : ""}
+    <div class="x-helper">Fits about ${budgetFor(s.role)} characters at this size.</div>
     <label>Heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
     <label>Body <textarea class="o-input" data-sb="${i}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea></label>
     ${sugg?.suggestions?.length ? `<div class="x-chips">
@@ -957,7 +973,10 @@ function handoffBrief() {
       required,
       currentlyEmpty: !String(slide.body || "").trim(),
       needs: sugg?.helper || "",
-      maxCharacters: fmt?.limits?.slideBody ?? 240,
+      // The budget a slot can actually KEEP. A flat per-format number told
+      // writers 300 characters for a cover hook the renderer draws 72 of,
+      // and the difference came back as truncated type on the slide.
+      maxCharacters: budgetFor(slide.role),
     };
   });
   return [
