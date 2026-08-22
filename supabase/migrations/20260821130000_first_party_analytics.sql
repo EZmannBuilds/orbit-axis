@@ -108,6 +108,15 @@ alter table public.analytics_events enable row level security;
 -- person's events, because a foreign-key cascade is a referential action and
 -- does not consult policies.
 
+-- Dropped first so this migration can be re-run safely. Tables and indexes are
+-- guarded by `if not exists`; policies have no such form in Postgres, so a
+-- retry after a partial application would otherwise fail on "policy already
+-- exists" and look like a broken migration rather than a repeated one.
+drop policy if exists analytics_sessions_insert_any on public.analytics_sessions;
+drop policy if exists analytics_events_insert_any on public.analytics_events;
+drop policy if exists analytics_sessions_select_admin on public.analytics_sessions;
+drop policy if exists analytics_events_select_admin on public.analytics_events;
+
 create policy analytics_sessions_insert_any on public.analytics_sessions
   for insert to anon, authenticated
   with check (true);
@@ -191,3 +200,17 @@ grant select on public.analytics_events to service_role;
 -- MANUAL REVOCATION
 --
 -- revoke select on public.analytics_events from service_role;
+
+-- ── MANUAL ROLLBACK (whole migration) ───────────────────────────────────────
+--
+-- Nothing here is destructive to existing data: every object is new. Reversing
+-- it therefore means dropping what it created, which DISCARDS COLLECTED
+-- COUNTS — that is the only data loss involved, and it is analytics, not
+-- anyone's content.
+--
+-- drop function if exists public.orbit_beta_account_totals();
+-- drop table if exists public.analytics_events;
+-- drop table if exists public.analytics_sessions;
+--
+-- The service_role grant above disappears with the table it names, so it needs
+-- no separate revoke in this path.
