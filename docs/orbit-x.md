@@ -214,7 +214,14 @@ Three isomorphic modules run identically in Node tests and the desk browser
   its own layout under the format's control, and deterministic **text
   fitting**: designed type tiers step down, and copy that still cannot fit
   comes back as a named warning ("Headline exceeds the hero safe area") —
-  never silently shrunk. Dates render for humans (`August 27`, `AUG 27`);
+  never silently shrunk. A region may also state the vertical room it has, so
+  a body sharing a slide with the positions grid is fitted to the space above
+  it rather than drawn through it, and the hero's Moon is sized to the room
+  the headline leaves rather than laid out at one radius and drawn at another.
+  `BODY_SPECS` holds those tiers and line counts once; `bodyCapacity(role)`
+  reports the same geometry as a character budget, which is what the desk and
+  the writer brief quote — a per-slot number, not one flat limit per format.
+  Dates render for humans (`August 27`, `AUG 27`);
   exact instants stay in the facts panel or appear UTC-labelled.
 - **`language.js`** — the editorial voice as data: the approved interpretive
   framing bank (§ rotation, attribution never erased), reflection style

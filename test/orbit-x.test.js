@@ -202,6 +202,15 @@ test("the packet carries facts and editorial context — and nothing personal", 
     assert.ok(!text.toLowerCase().includes(banned.toLowerCase()), `packet must not carry ${banned}`);
   }
   assert.ok(text.includes("orbit-engine") || text.includes("orbit-sky-tables"), "facts arrive attributed");
+  // The model is told what each SLOT can hold, not one number for the format:
+  // a hero hook keeps a fraction of what a body slide does, and a budget the
+  // renderer cannot honour produces copy that arrives cropped.
+  assert.ok(packet.slideBudgets.hero < packet.slideBudgets.symbolic,
+    "the hook's budget is the hook's, not the format's");
+  for (const [role, budget] of Object.entries(packet.slideBudgets)) {
+    assert.ok(budget > 0 && budget <= FORMATS.something_changed.limits.slideBody,
+      `${role} budget (${budget}) sits inside the format ceiling`);
+  }
   assert.match(systemPrompt(), /never calculate positions/i);
   assert.match(systemPrompt(), /symbolic reflection/i);
 });
