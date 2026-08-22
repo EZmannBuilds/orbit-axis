@@ -15,6 +15,8 @@
 //     avatar.
 //   · FAVICON.ICO exists because scrapers and older Safari request that exact
 //     path and read a 404 as "no icon", whatever the document declares.
+//   · THE PAGE COVER is cropped twice, differently, by Facebook — see
+//     lib/brand/social-cover.js. It is written as SVG because it carries type.
 //
 //   node scripts/build-social-images.js
 //
@@ -27,6 +29,7 @@ import {
   ROOT, CANVAS, RING, AXIS, OBSERVER, ORBITAL,
   assertSourceMatches, raster, rasterFrame, encodePng, encodeIco,
 } from "../lib/brand/mark-raster.js";
+import { coverSvg, COVER } from "../lib/brand/social-cover.js";
 
 /** How far the mark reaches from its own centre, stroke included. */
 export function markExtent() {
@@ -86,10 +89,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   })));
   writeFileSync(join(publicDir, "favicon.ico"), ico);
 
+  // 5. The page cover. SVG, not PNG: it carries TYPE, and the rasteriser above
+  //    draws geometry only — which is exactly what lets the icon rebuild with
+  //    no toolchain installed. Render this one to PNG when a platform asks for
+  //    pixels; the SVG is the source either way.
+  writeFileSync(join(publicDir, "brand", "orbit-axis-cover.svg"), `${coverSvg()}\n`);
+
   console.log(`Wrote assets/social/orbit-axis-avatar-1080.png (${AVATAR_SIZE}x${AVATAR_SIZE}, `
     + `mark at ${Math.round(FILL * 100)}% of the circular crop)`);
   console.log(`Wrote public/brand/orbit-axis-card.png (${CARD.width}x${CARD.height})`);
   console.log("Wrote public/apple-touch-icon.png (180x180)");
   console.log(`Wrote public/favicon.ico (32 + 64, ${ico.length} bytes)`);
+  console.log(`Wrote public/brand/orbit-axis-cover.svg (${COVER.width}x${COVER.height}, `
+    + `safe zone ${COVER.safe.w}x${COVER.safe.h})`);
   if (CANVAS !== 1024) throw new Error("design grid changed; re-check every framing above");
 }
