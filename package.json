@@ -20,6 +20,7 @@
     "build": "node scripts/build.js",
     "icons:build": "node scripts/build-icons.js",
     "app:icon": "node scripts/build-app-icon.js",
+    "social:avatar": "node scripts/build-social-avatar.js",
     "app:config": "node scripts/app-config.js",
     "app:check": "node scripts/app-check.js",
     "app:build": "npm run build && npm run app:check -- --native && npx cap sync ios",

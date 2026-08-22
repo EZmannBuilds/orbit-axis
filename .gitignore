@@ -53,3 +53,9 @@ public/qa-local-session.json
 .claude/*
 !.claude/launch.json
 
+
+# Rendered social exports. The carousel for one date is an artifact of a draft,
+# not source: the desk regenerates it from the saved packet (Export carousel).
+# The AVATAR is different and IS committed — it is brand identity, rendered
+# from assets/icon.svg by scripts/build-social-avatar.js.
+out/

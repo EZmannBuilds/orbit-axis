@@ -75,6 +75,28 @@ test("the native icon is opaque RGB and derived from Pure Orbit", () => {
   assert.equal(png[25], 2, "PNG colour type 2 is opaque RGB with no alpha channel");
 });
 
+test("the social avatar is the same mark, and clears the circular crop", async () => {
+  // Every social platform masks a profile picture to the inscribed circle. The
+  // app icon's 62deg axis runs corner to corner, so reusing it would clip both
+  // tips — the avatar renders the same geometry with the camera pulled back.
+  const { RING, AXIS } = await import("../lib/brand/mark-raster.js");
+  const { SPAN, FILL, markExtent } = await import("../scripts/build-social-avatar.js");
+
+  const png = readFileSync(join(ROOT, "assets", "social", "orbit-axis-avatar-1080.png"));
+  assert.equal(png.readUInt32BE(16), 1080);
+  assert.equal(png.readUInt32BE(20), 1080);
+  assert.equal(png[25], 2, "PNG colour type 2 is opaque RGB with no alpha channel");
+
+  // The crop circle is inscribed in the square: its radius is half the window
+  // onto the design grid. Nothing the mark draws may reach it.
+  const cropRadius = SPAN / 2;
+  assert.ok(markExtent() < cropRadius, "the mark fits inside the circular crop");
+  assert.equal(Math.round((markExtent() / cropRadius) * 100), Math.round(FILL * 100),
+    "and fills the designed share of it");
+  const axisTip = Math.hypot(AXIS.x2 - RING.x, AXIS.y2 - RING.y) + AXIS.stroke / 2;
+  assert.ok(cropRadius - axisTip > 100, "the axis tips keep real clearance, not a hairline");
+});
+
 test("brand motion is finite and withdraws under reduced motion", () => {
   const css = read("public", "styles", "orbit-mark.css");
   const loader = read("public", "brand", "orbit-logo-motion-orbital-relay.svg");
