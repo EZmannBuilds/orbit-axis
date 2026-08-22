@@ -80,7 +80,7 @@ test("the social avatar is the same mark, and clears the circular crop", async (
   // app icon's 62deg axis runs corner to corner, so reusing it would clip both
   // tips — the avatar renders the same geometry with the camera pulled back.
   const { RING, AXIS } = await import("../lib/brand/mark-raster.js");
-  const { SPAN, FILL, markExtent } = await import("../scripts/build-social-avatar.js");
+  const { SPAN, FILL, markExtent } = await import("../scripts/build-social-images.js");
 
   const png = readFileSync(join(ROOT, "assets", "social", "orbit-axis-avatar-1080.png"));
   assert.equal(png.readUInt32BE(16), 1080);
@@ -95,6 +95,40 @@ test("the social avatar is the same mark, and clears the circular crop", async (
     "and fills the designed share of it");
   const axisTip = Math.hypot(AXIS.x2 - RING.x, AXIS.y2 - RING.y) + AXIS.stroke / 2;
   assert.ok(cropRadius - axisTip > 100, "the axis tips keep real clearance, not a hairline");
+});
+
+test("a pasted link carries a preview card that actually exists", () => {
+  // Without these the link renders as a bare URL everywhere that unfurls one.
+  // The failure is silent — the page looks perfect, and only the paste is
+  // wrong — so the contract is asserted rather than eyeballed once.
+  const html = read("public", "index.html");
+  const tag = (property) =>
+    new RegExp(`<meta property="${property}" content="([^"]+)"`).exec(html)?.[1] ?? null;
+
+  const image = tag("og:image");
+  const url = tag("og:url");
+  assert.ok(image && url, "og:image and og:url are declared");
+  for (const value of [image, url]) {
+    assert.match(value, /^https:\/\//, `${value} is absolute — X and Slack will not resolve a relative one`);
+  }
+  assert.equal(new URL(image).host, new URL(url).host,
+    "the card and the canonical URL name the same host, or one of them is stale");
+
+  // The declared image must exist in public/ and be the size it claims: a
+  // mismatch is how a card silently becomes a grey box in someone's DMs.
+  const png = readFileSync(join(ROOT, "public", new URL(image).pathname));
+  assert.equal(png.readUInt32BE(16), Number(tag("og:image:width")));
+  assert.equal(png.readUInt32BE(20), Number(tag("og:image:height")));
+  assert.match(html, /<meta name="twitter:card" content="summary_large_image"/);
+  assert.match(html, /<meta property="og:image:alt" content="[^"]{40,}"/, "the card is described, not just shown");
+
+  // /favicon.ico is requested by path regardless of what the document says.
+  const ico = readFileSync(join(ROOT, "public", "favicon.ico"));
+  assert.equal(ico.readUInt16LE(0), 0);
+  assert.equal(ico.readUInt16LE(2), 1, "ICO type 1 = icon");
+  assert.ok(ico.readUInt16LE(4) >= 1, "at least one size is packed");
+  assert.match(html, /<link rel="icon" href="\/favicon.ico"/);
+  assert.match(html, /<link rel="apple-touch-icon" href="\/apple-touch-icon.png"/);
 });
 
 test("brand motion is finite and withdraws under reduced motion", () => {

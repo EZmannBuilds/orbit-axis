@@ -7,6 +7,32 @@
   <meta name="theme-color" id="meta-theme-color" content="#080a12" />
   <title>Orbit Axis — your daily sky</title>
   <meta name="description" content="Orbit Axis — a calm, beginner-friendly daily astrology companion." />
+
+  <!-- Icons. The SVG is what modern browsers draw; favicon.ico exists because
+       link-preview scrapers and older Safari request that exact path and read
+       a 404 as "this site has no icon", whatever the document declares. All
+       three are rendered from assets/icon.svg by scripts/build-social-images.js. -->
+  <link rel="icon" href="/favicon.ico" sizes="32x32" />
+  <link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- The link preview. Without these, a pasted Orbit Axis link renders as a
+       bare URL everywhere that unfurls one — Threads, iMessage, WhatsApp,
+       Slack. og:image MUST be absolute (X and Slack will not resolve a
+       relative one), so the host below is the deployment's own and has to
+       change with the domain. A test holds og:url and og:image to the same
+       host and to a file that exists in public/. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Orbit Axis" />
+  <meta property="og:title" content="Orbit Axis — your daily sky" />
+  <meta property="og:description" content="Astrology with its arithmetic shown: positions calculated from a real ephemeris, meaning offered as reflection rather than prediction." />
+  <meta property="og:url" content="https://orbit-axis-omega.vercel.app/" />
+  <meta property="og:image" content="https://orbit-axis-omega.vercel.app/brand/orbit-axis-card.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The Orbit Axis mark: a violet orbit crossed by a diagonal axis, an observer point at its centre and a smaller point on the orbit." />
+  <meta name="twitter:card" content="summary_large_image" />
   <!-- Theme resolution BEFORE first paint. Three choices — system (default),
        light, dark — persisted locally so the right theme applies before any
        network request and before app.js loads. Inline and tiny on purpose:
