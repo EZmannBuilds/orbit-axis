@@ -17,7 +17,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 import { auditSourcePosture, describeSourcePostureScope } from "../lib/legal/source-posture.js";
-import { legalConfig, REQUIRED_BEFORE_PUBLIC } from "../lib/legal/config.js";
+import {
+  DEFAULT_SOURCE_URLS, legalConfig, REQUIRED_BEFORE_PUBLIC, sourceRepositoryUrls,
+} from "../lib/legal/config.js";
 
 const CONFIGURED = {
   ORBIT_SOURCE_APP_URL: "https://github.com/EZmannBuilds/orbit-axis",
@@ -159,4 +161,96 @@ test("the four public legal values are still required, and still refused when ab
   });
   assert.deepEqual(complete.missing, []);
   assert.equal(complete.readyForPublicRelease, true);
+});
+
+/* ── Canonical source URLs, and what a default may and may not do ──────────── */
+//
+// Added while reconciling two concurrent implementations of this update. The
+// question they disagreed on is worth pinning: repository URLs now have
+// canonical defaults in source, and that is a deliberate exception to Orbit's
+// rule that it never invents facts. These tests draw the line the exception
+// stops at.
+
+test("orbit-axis is the canonical application repository", () => {
+  // The older EZmannBuilds/orbit URL still redirects, but a redirect is not a
+  // canonical name. Everything that advertises the source says the same thing.
+  assert.equal(DEFAULT_SOURCE_URLS.application, "https://github.com/EZmannBuilds/orbit-axis");
+  assert.equal(DEFAULT_SOURCE_URLS.engine, "https://github.com/EZmannBuilds/orbit-axis-engine");
+
+  const page = readFileSync(join(REPO_ROOT, "public", "source.html"), "utf8");
+  assert.match(page, /href="https:\/\/github\.com\/EZmannBuilds\/orbit-axis"/);
+  assert.match(page, /href="https:\/\/github\.com\/EZmannBuilds\/orbit-axis-engine"/);
+
+  const doc = readFileSync(join(REPO_ROOT, "docs", "deployment", "swiss-ephemeris-licensing.md"), "utf8");
+  assert.match(doc, /github\.com\/EZmannBuilds\/orbit-axis\b/);
+});
+
+test("configuration still wins over the canonical default", () => {
+  // A default exists so a deployment cannot accidentally hide the
+  // corresponding-source path. It must not become a hardcoded value that
+  // outranks configuration — that would make the two source offers disagree the
+  // moment the repository moved, which is the exact divergence this update fixed
+  // between lib/legal/config.js and the v1 source endpoint.
+  const moved = sourceRepositoryUrls({
+    ORBIT_SOURCE_APP_URL: "https://gitlab.com/example/moved",
+    ORBIT_SOURCE_ENGINE_URL: "https://codeberg.org/example/moved-engine",
+  });
+  assert.equal(moved.application, "https://gitlab.com/example/moved");
+  assert.equal(moved.engine, "https://codeberg.org/example/moved-engine");
+
+  // And with nothing configured, the canonical repositories answer.
+  const defaulted = sourceRepositoryUrls({});
+  assert.equal(defaulted.application, DEFAULT_SOURCE_URLS.application);
+  assert.equal(defaulted.engine, DEFAULT_SOURCE_URLS.engine);
+
+  // An override that is not a valid public repository is refused rather than
+  // echoed — the endpoint may only advertise a link Orbit vouches for.
+  const bogus = sourceRepositoryUrls({ ORBIT_SOURCE_APP_URL: "javascript:alert(1)" });
+  assert.equal(bogus.application, null);
+});
+
+test("both source offers resolve the repositories the same way", () => {
+  // /source (the page) and /api/v1/source (the machine-readable offer) were
+  // reading DIFFERENT environment variable names, so configuring publication
+  // could satisfy one and leave the other reporting pending. One resolver now
+  // serves both, and both accept the same alternate names.
+  const platform = readFileSync(join(REPO_ROOT, "lib", "api", "v1", "handlers", "platform.js"), "utf8");
+  assert.match(platform, /sourceRepositoryUrls/,
+    "the v1 source endpoint must use the shared resolver, not its own copy");
+
+  const alternates = sourceRepositoryUrls({
+    ORBIT_SOURCE_URL: "https://github.com/example/app-alternate",
+    ORBIT_ENGINE_SOURCE_URL: "https://github.com/example/engine-alternate",
+  });
+  assert.equal(alternates.application, "https://github.com/example/app-alternate");
+  assert.equal(alternates.engine, "https://github.com/example/engine-alternate");
+});
+
+test("the source page keeps a working link when configuration says nothing", () => {
+  // The page ships real hrefs so it works with no JavaScript and no
+  // configuration. legal.js overwrites them when configuration resolves a
+  // value, and leaves them alone when it does not — a pending state here would
+  // be a lie now that the repositories are public.
+  const client = readFileSync(join(REPO_ROOT, "public", "legal.js"), "utf8");
+  const guard = client.indexOf('key === "sourceApp" || key === "sourceEngine"');
+  const unresolved = client.indexOf("if (!resolved)");
+  assert.ok(unresolved >= 0 && guard > unresolved,
+    "the static link is preserved only on the unresolved path");
+  assert.match(client, /el\.href = resolved/,
+    "a resolved configuration value must still be written to the link");
+});
+
+test("a canonical default must not leak into the four owner decisions", () => {
+  // The exception is repository URLs, and only repository URLs. A support
+  // address, publisher, jurisdiction or minimum age invented by Orbit would be a
+  // promise nobody made — that rule is unchanged and is asserted here so a
+  // future "sensible default" cannot quietly extend to them.
+  const config = legalConfig({});
+  assert.equal(config.supportEmail, null);
+  assert.equal(config.legalEntity, null);
+  assert.equal(config.jurisdiction, null);
+  assert.equal(config.minimumAge, null);
+  assert.equal(config.readyForPublicRelease, false);
+  // But the source offer still resolves, because that is a repository fact.
+  assert.equal(config.sourceUrls.application, DEFAULT_SOURCE_URLS.application);
 });
