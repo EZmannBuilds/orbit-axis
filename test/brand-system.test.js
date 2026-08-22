@@ -131,13 +131,15 @@ test("a pasted link carries a preview card that actually exists", () => {
   assert.match(html, /<link rel="apple-touch-icon" href="\/apple-touch-icon.png"/);
 });
 
-test("the page cover survives both of Facebook's crops", async () => {
-  // One upload, two boxes, two different centre-crops. The only region that
-  // survives both is their intersection, and type outside it is type nobody
-  // on that device ever sees — a failure invisible from the machine that
-  // uploaded it.
-  const { COVER, coverSvg } = await import("../lib/brand/social-cover.js");
-  const { width: W, height: H, safe } = COVER;
+test("the page cover survives both crops AND the profile picture on top", async () => {
+  // Two failures, not one. The crops are arithmetic: Facebook fills each box
+  // and centre-crops, so only the intersection is on every screen. The profile
+  // picture is NOT arithmetic — it lands over the bottom CENTRE, and the first
+  // version of this cover put the wordmark and tagline exactly there. The
+  // preview read "Calc———nted." Both are asserted here because neither is
+  // visible from the machine that uploads the file.
+  const { COVER, LEFT_STRIP, coverSvg } = await import("../lib/brand/social-cover.js");
+  const { width: W, height: H, safe, avatar } = COVER;
 
   const shows = (boxW, boxH) => {
     const scale = Math.max(boxW / W, boxH / H);   // fill, then centre-crop
@@ -149,37 +151,28 @@ test("the page cover survives both of Facebook's crops", async () => {
   assert.equal(Math.round(Math.min(desktop.h, mobile.h)), safe.h, "safe height is the crops' intersection");
   assert.equal(safe.x, Math.round((W - safe.w) / 2), "and it is centred");
   assert.equal(safe.y, Math.round((H - safe.h) / 2));
+  assert.equal(LEFT_STRIP.w, avatar.x - safe.x, "the clear column ends where the avatar begins");
 
   const svg = coverSvg();
   assert.match(svg, new RegExp(`viewBox="0 0 ${W} ${H}"`));
+  assert.ok(!/aria-label="Orbit Axis"/.test(svg.replace(/aria-label="Orbit Axis — [^"]*"/, "")),
+    "the mark is NOT drawn: the profile picture is already the mark, inches away");
 
-  // Every drawn baseline must sit inside the safe band. The wordmark rides
-  // INSIDE the logo lockup, so its y is in the group's own coordinates and
-  // has to be pushed through the transform before it means anything — the
-  // first version of this check read the raw attribute and put the wordmark
-  // at y=79, which is not where any pixel of it lands.
-  const lockup = /<g role="img" aria-label="Orbit Axis" transform="translate\(([-\d.]+) ([\d.]+)\) scale\(([\d.]+)\)"/.exec(svg);
-  assert.ok(lockup, "the cover carries the logo lockup");
-  const [, , lockupY, lockupScale] = lockup.map(Number);
-  // The lockup nests groups, so "up to the next </g>" finds the wrong close.
-  // Position is the reliable discriminator instead: the tagline is appended
-  // last, and every <text> between the lockup and it belongs to the lockup.
-  const texts = [...svg.matchAll(/<text [^>]*y="([\d.]+)"/g)];
-  assert.ok(texts.length >= 2, "the cover carries the wordmark and a tagline");
-  const tagline = texts[texts.length - 1];
-  assert.ok(tagline.index > lockup.index, "the tagline follows the lockup");
+  // Same width model the slide renderer fits with, so the two agree about what
+  // a string costs. Conservative on purpose — an overestimate here is a margin,
+  // an underestimate is type sliding under a profile picture.
+  const FACTOR = { serif: 0.54, sans: 0.50 };
+  const texts = [...svg.matchAll(/<text x="([\d.]+)" y="([\d.]+)"[^>]*font-family="([^"]+)"[^>]*font-size="([\d.]+)"[^>]*>([^<]+)</g)];
+  assert.ok(texts.length >= 2, "the cover carries an eyebrow and a statement");
 
-  const baselines = [
-    // The lockup's own top and bottom edge: the mark is 128 units tall.
-    lockupY, lockupY + 128 * lockupScale,
-    ...texts.map((m) => (m.index > lockup.index && m !== tagline
-      ? lockupY + Number(m[1]) * lockupScale     // inside the lockup's frame
-      : Number(m[1]))),
-  ];
-  for (const y of baselines) {
-    assert.ok(y > safe.y && y < safe.y + safe.h, `a baseline at ${y} is inside the safe band`);
+  for (const [, x, y, family, size, label] of texts) {
+    const width = label.length * Number(size) * (/Georgia/.test(family) ? FACTOR.serif : FACTOR.sans);
+    const right = Number(x) + width;
+    assert.ok(Number(x) >= safe.x, `"${label}" starts inside the safe zone`);
+    assert.ok(Number(y) > safe.y && Number(y) < safe.y + safe.h, `"${label}" sits in the safe band`);
+    assert.ok(avatar.x - right >= 48,
+      `"${label}" ends at ${right.toFixed(0)}, which crowds the profile picture at ${avatar.x}`);
   }
-  assert.match(svg, /aria-label="Orbit Axis — [^"]+"/, "the cover describes itself");
 });
 
 test("brand motion is finite and withdraws under reduced motion", () => {
