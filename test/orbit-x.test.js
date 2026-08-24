@@ -18,6 +18,7 @@ import { parseModelJson, validateGeneratedPost, draftCompleteness, OrbitXValidat
 import { buildScaffold } from "../lib/orbit-x/language.js";
 import { handleOrbitXRoute, orbitXEnabled } from "../lib/orbit-x/api.js";
 import { orbitXStore } from "../lib/orbit-x/store.js";
+import { editorialDate } from "../lib/orbit-x/readings.js";
 
 /* ── Fixtures: engine-SHAPED, never presented as live sky ─────────────── */
 
@@ -281,6 +282,7 @@ test("the server wires the route behind requireAuth and the page outside public/
   // left the desk permanently off, which is exactly what this caught live.
   assert.match(block, /orbitXEnabled\(process\.env\)/);
   assert.match(src, /orbit-x\/ui\.html/, "the desk page is served from lib/, not shipped in the bundle");
+  assert.match(src, /editorial\|posting-package/, "the ZIP helper is on the explicit safe module allow-list");
   const fs = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
   assert.ok(!/sk_(live|test)|whsec_|ORBIT_X_AI_API_KEY|service.role/i.test(fs), "no secret shapes in the page");
 });
@@ -453,6 +455,18 @@ test("missing AI configuration is a state on the candidates response, never an e
   const withKey = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", new URLSearchParams("date=2026-03-05"), {},
     { ...AUTH }, { env: { ...ENV_ON, ORBIT_X_AI_API_KEY: "k", ORBIT_X_AI_PROVIDER: "anthropic" }, store });
   assert.equal(withKey.body.aiAvailable, true);
+});
+
+test("Today and Tomorrow are resolved in the server-controlled editorial timezone", async () => {
+  const store = stubStore();
+  const env = { ...ENV_ON, ORBIT_X_EDITORIAL_TIMEZONE: "America/Chicago" };
+  const today = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", new URLSearchParams("relative=today"), {},
+    { ...AUTH }, { env, store });
+  const tomorrow = await handleOrbitXRoute("GET", "/api/orbit-x/candidates", new URLSearchParams("relative=tomorrow"), {},
+    { ...AUTH }, { env, store });
+  assert.equal(today.body.localDate, editorialDate(new Date(), "America/Chicago"));
+  assert.equal(tomorrow.body.localDate, editorialDate(new Date(), "America/Chicago", 1));
+  assert.equal(today.body.editorialTimezone, "America/Chicago");
 });
 
 test("a manual draft saves through the full lifecycle and records human authorship", async () => {

@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 import {
   DEFAULT_EDITORIAL_TIMEZONE, READING_TYPES, READING_FORMATS,
-  calculateReadingPeriod, selectReadingEvents, buildReadingCandidate,
+  calculateReadingPeriod, editorialDate, selectReadingEvents, buildReadingCandidate,
 } from "../lib/orbit-x/readings.js";
 import { buildReadingScaffold } from "../lib/orbit-x/language.js";
 import { validateGeneratedPost, draftCompleteness } from "../lib/orbit-x/schemas.js";
@@ -13,6 +13,7 @@ import {
   renderPost, normalizeDesign, recommendTemplate,
 } from "../lib/orbit-x/templates.js";
 import { orbitLogo } from "../lib/orbit-x/celestial.js";
+import { crc32, zipStore } from "../lib/orbit-x/posting-package.js";
 import { auditCopy, verifyFactIntegrity } from "../lib/orbit-x/editorial.js";
 import { handleOrbitXRoute } from "../lib/orbit-x/api.js";
 import { READING_CONTEXT, READING_EVENTS } from "./fixtures/orbit-x-reading-fixtures.js";
@@ -34,6 +35,14 @@ test("reading periods are explicit, timezone-aware, and use exclusive UTC ends",
   const month = calculateReadingPeriod("monthly", "2026-08-20", DEFAULT_EDITORIAL_TIMEZONE);
   assert.equal(month.key, "monthly:2026-08");
   assert.equal(month.label, "August 2026");
+});
+
+test("editorial today never rolls over with UTC before Chicago does", () => {
+  const lateChicagoEvening = new Date("2026-08-24T03:16:00.000Z");
+  assert.equal(editorialDate(lateChicagoEvening, "America/Chicago"), "2026-08-23");
+  assert.equal(editorialDate(lateChicagoEvening, "America/Chicago", 1), "2026-08-24");
+  assert.equal(editorialDate(lateChicagoEvening, "UTC"), "2026-08-24",
+    "the helper is explicitly zone-sensitive rather than slicing an ISO string");
 });
 
 test("event curation selects supported movements inside the period and caps the narrative", () => {
@@ -161,6 +170,48 @@ test("Template Lab, library filters, and duplicate-period migration are present"
   const migration = readFileSync(new URL("../supabase/migrations/20260820200000_orbit_x_collective_readings.sql", import.meta.url), "utf8");
   assert.match(migration, /one_live_period/);
   assert.match(migration, /status in \('approved', 'exported', 'scheduled', 'published'\)/);
+});
+
+test("the desk workflow protects the date, the draft, and the posting handoff", () => {
+  const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.doesNotMatch(page, /new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/,
+    "Today is never derived from UTC in the browser");
+  assert.match(page, /relative: "today"/);
+  assert.match(page, /relative: "tomorrow"/);
+  assert.match(page, /data-continue/);
+  assert.match(page, /Continue \$\{esc\(covered\.status\)\}/);
+  assert.match(page, /indexedDB\.open\(RECOVERY_DB/);
+  assert.match(page, /beforeunload/);
+  assert.match(page, /saveDraft\(\{ quiet: true \}\)/, "draft changes autosave after a debounce");
+  for (const stage of ["write", "design", "preview", "review"]) assert.match(page, new RegExp(`data-stage="${stage}"`));
+  assert.match(page, /Approval preflight/);
+  assert.match(page, /Jump to first issue/);
+  assert.match(page, /Search drafts and notes/);
+  assert.match(page, /Recently edited/);
+  assert.match(page, /posting-package\.js/);
+  assert.match(page, /manifest\.json/);
+  assert.match(page, /posting-link\.txt/);
+  assert.match(page, /Explore other designs/);
+  assert.match(page, /Imported as one reviewable change/);
+  assert.match(page, /Undo import/);
+});
+
+test("the posting package is one valid store-mode ZIP with deterministic entries", async () => {
+  const encoder = new TextEncoder();
+  assert.equal(crc32(encoder.encode("123456789")), 0xcbf43926, "CRC-32 matches the standard vector");
+  const blob = zipStore([
+    { name: "caption.txt", data: "hello" },
+    { name: "slide-01.png", data: new Uint8Array([0x89, 0x50, 0x4e, 0x47]) },
+  ]);
+  assert.equal(blob.type, "application/zip");
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const view = new DataView(bytes.buffer);
+  assert.equal(view.getUint32(0, true), 0x04034b50, "local file header starts the archive");
+  assert.equal(view.getUint32(bytes.length - 22, true), 0x06054b50, "end-of-central-directory closes it");
+  assert.equal(view.getUint16(bytes.length - 14, true), 2, "both files are indexed");
+  const text = new TextDecoder().decode(bytes);
+  assert.match(text, /caption\.txt/);
+  assert.match(text, /slide-01\.png/);
 });
 
 test("the generated zodiac collection contains twelve attributed OpenMoji designs", () => {

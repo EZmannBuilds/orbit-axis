@@ -36,7 +36,7 @@
   .x-facts { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: var(--type-caption); overflow-wrap: anywhere; }
   .x-facts strong { color: var(--color-accent); }
   .x-status { color: var(--color-muted); font-size: var(--type-caption); min-height: 1.2em; }
-  .x-hist { font-size: var(--type-caption); width: 100%; display: block; overflow-x: auto; }
+  .x-hist { font-size: var(--type-caption); width: 100%; }
   .x-gate { max-width: 420px; margin-top: var(--space-lg); }
   .x-gate label { display: block; margin-bottom: var(--space-sm); }
   .x-who { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-sm); font-size: var(--type-caption); color: var(--color-muted); }
@@ -79,6 +79,39 @@
   .x-handoff summary { cursor: pointer; font-size: var(--type-caption); color: var(--color-accent); }
   .x-brief { max-height: 260px; overflow: auto; background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
   .x-demo-label { display: inline-block; color: var(--color-accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
+  .x-editor-nav, .x-editor-bar { position: sticky; z-index: 4; background: color-mix(in srgb, var(--color-surface) 94%, transparent); backdrop-filter: blur(12px); }
+  .x-editor-nav { top: 0; display: flex; gap: 6px; padding: 6px 0; border-bottom: 1px solid var(--color-border); }
+  .x-editor-nav button[aria-selected="true"] { background: var(--color-accent); color: var(--color-surface-sunken); border-color: var(--color-accent); }
+  .x-editor-bar { bottom: 0; display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; margin-top: var(--space-sm); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+  .x-save-state { font-size: var(--type-caption); color: var(--color-muted); }
+  .x-save-state.is-dirty { color: var(--color-accent); }
+  .x-stage[hidden] { display: none !important; }
+  .x-facts summary { cursor: pointer; color: var(--color-accent); font-weight: 600; }
+  .x-facts-raw { margin-top: var(--space-sm); max-height: 280px; overflow: auto; }
+  .x-fact-summary { color: var(--color-text); font-weight: 400; }
+  .x-template-current { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm); border: 1px solid var(--color-accent); border-radius: var(--radius-md); }
+  .x-template-current [data-thumb] { width: 92px; flex: 0 0 auto; }
+  .x-template-current svg { width: 100%; height: auto; display: block; border-radius: 4px; }
+  .x-template-picker > summary { cursor: pointer; margin: var(--space-sm) 0; color: var(--color-accent); }
+  .x-char { float: right; color: var(--color-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .x-char.is-over { color: var(--color-error); font-weight: 600; }
+  .x-preflight { display: grid; gap: 6px; margin: var(--space-sm) 0; }
+  .x-check { display: flex; justify-content: space-between; gap: var(--space-sm); padding: 8px 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+  .x-check.is-ok { border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border)); }
+  .x-queue { display: grid; gap: var(--space-sm); margin-top: var(--space-sm); }
+  .x-queue-group h3 { margin: var(--space-sm) 0 var(--space-xs); font-size: var(--type-caption); color: var(--color-muted); text-transform: uppercase; letter-spacing: .08em; }
+  .x-work-card { display: grid; grid-template-columns: 58px 1fr auto; gap: var(--space-sm); align-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-xs); }
+  .x-work-card svg { width: 56px; height: auto; display: block; border-radius: 4px; }
+  .x-work-title { font-weight: 600; overflow-wrap: anywhere; }
+  .x-badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .x-badge { display: inline-block; border: 1px solid var(--color-border); border-radius: 999px; padding: 1px 7px; font-size: 10px; color: var(--color-muted); }
+  .x-import-review { margin-top: var(--space-sm); padding: var(--space-sm); border: 1px solid var(--color-accent); border-radius: var(--radius-md); }
+  @media (max-width: 600px) {
+    .x-editor-nav { overflow-x: auto; }
+    .x-editor-nav button { flex: 0 0 auto; }
+    .x-work-card { grid-template-columns: 48px 1fr; }
+    .x-work-card > button { grid-column: 1 / -1; }
+  }
 </style>
 </head>
 <body>
@@ -141,9 +174,15 @@
         <option value="daily_reading">Daily</option><option value="weekly_reading">Weekly</option>
         <option value="monthly_reading">Monthly</option><option value="other">Other formats</option>
       </select>
+      <input id="x-hist-search" class="o-input" type="search" placeholder="Search drafts and notes" style="max-width:230px" />
+      <select id="x-hist-sort" class="o-select" style="max-width:180px">
+        <option value="updated">Recently edited</option>
+        <option value="event">Event date</option>
+        <option value="score">Highest score</option>
+      </select>
       <button class="o-btn o-btn--secondary o-btn--sm" id="x-hist-load">Refresh history</button>
     </div>
-    <table class="x-hist" id="x-history"></table>
+    <div class="x-hist" id="x-history"></div>
   </section>
 
   <section class="x-panel" aria-label="Draft editor">
@@ -159,6 +198,7 @@ import { renderPost, normalizeDesign, TEMPLATES, TEMPLATE_FAMILY_IDS, ASPECTS, D
   from "/admin/orbit-x/templates.js";
 import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
 import { adviseCopy, CONSTITUTION } from "/admin/orbit-x/editorial.js";
+import { zipStore } from "/admin/orbit-x/posting-package.js";
 
 const $ = (s) => document.querySelector(s);
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
@@ -189,6 +229,16 @@ let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
 let lastSky = [];     // current-sky strip data from the candidates response
 let previewMode = "full"; // full | feed | sim
+let editorStage = "write";
+let historyPosts = [];
+let editorialToday = null;
+let dirty = false;
+let saving = false;
+let autosaveTimer = null;
+let lastSavedAt = null;
+let lastImport = null;
+const RECOVERY_DB = "orbit-x-recovery";
+const RECOVERY_STORE = "drafts";
 
 /* ── The session gate ──────────────────────────────────────────────────────
    The desk is admin-only and the SERVER decides that: this gate only answers
@@ -264,17 +314,20 @@ $("#x-signout").onclick = async () => {
   $("#x-candidates").innerHTML = `<p class="x-status">Pick a date and load.</p>`;
   $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
   $("#x-history").innerHTML = "";
+  await clearRecovery();
   showGate("Signed out.");
 };
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
-$("#x-date").value = todayIso();
-$("#x-today").onclick = () => { $("#x-date").value = todayIso(); load(); };
-$("#x-tomorrow").onclick = () => {
-  const d = new Date(Date.now() + 86400000); $("#x-date").value = d.toISOString().slice(0, 10); load();
-};
+// Today and Tomorrow are resolved by the server in ORBIT_X_EDITORIAL_TIMEZONE.
+// UTC-derived browser dates created the wrong daily draft late in Chicago's evening.
+$("#x-today").onclick = () => load({ relative: "today" });
+$("#x-tomorrow").onclick = () => load({ relative: "tomorrow" });
 $("#x-load").onclick = load;
 $("#x-hist-load").onclick = loadHistory;
+$("#x-hist-filter").onchange = renderHistory;
+$("#x-hist-kind").onchange = renderHistory;
+$("#x-hist-sort").onchange = renderHistory;
+$("#x-hist-search").oninput = debounce(renderHistory, 180);
 for (const button of document.querySelectorAll("[data-reading]")) {
   button.onclick = () => loadReading(button.getAttribute("data-reading"));
 }
@@ -286,14 +339,19 @@ async function loadReading(type) {
     formats = data.formats; aiAvailable = data.aiAvailable === true;
     lastSky = data.candidate.facts?.planets || [];
     status(`${data.candidate.title} · ${data.candidate.facts.selected_events.length} curated movement(s) · ${data.editorialTimezone}`);
-    await manualDraft(data.candidate, data.format);
+    if (data.coverage?.[0]?.id) await openSavedPost(data.coverage[0].id);
+    else await manualDraft(data.candidate, data.format);
   } catch (error) { status(error.message); }
 }
 
-async function load() {
+async function load(options = {}) {
   status("Calculating…");
   try {
-    const data = await api(`/api/orbit-x/candidates?date=${$("#x-date").value}&tz=${encodeURIComponent(tz)}`);
+    const relative = options?.relative;
+    const query = relative ? `relative=${encodeURIComponent(relative)}` : `date=${encodeURIComponent($("#x-date").value)}`;
+    const data = await api(`/api/orbit-x/candidates?${query}&tz=${encodeURIComponent(tz)}`);
+    $("#x-date").value = data.localDate;
+    if (relative === "today" || !editorialToday) editorialToday = relative === "tomorrow" ? editorialToday : data.localDate;
     formats = data.formats; template = data.template;
     aiAvailable = data.aiAvailable === true;
     lastSky = data.sky || [];
@@ -303,6 +361,7 @@ async function load() {
       const recTpl = data.recommendedTemplates?.[candidate.eventKey];
       const div = document.createElement("div");
       div.className = "x-cand" + (score.duplicate || coverage.length ? " x-cand--dup" : "");
+      const covered = coverage[0] || null;
       div.innerHTML = `
         <div class="x-row"><strong>${esc(candidate.title)}</strong>
           <span class="x-score">${score.totalScore}/${score.maxScore}</span></div>
@@ -315,10 +374,15 @@ async function load() {
           <select class="o-select" data-fmt style="max-width:230px">
             ${compatibleFormats(candidate, suggestedFormat).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
           </select>
-          <button class="o-btn o-btn--secondary o-btn--sm" data-manual>Manual draft</button>
+          ${covered ? `<button class="o-btn o-btn--primary o-btn--sm" data-continue>Continue ${esc(covered.status)}</button>
+            <button class="o-btn o-btn--secondary o-btn--sm" data-manual>New treatment</button>`
+            : `<button class="o-btn o-btn--secondary o-btn--sm" data-manual>Manual draft</button>`}
           ${aiAvailable ? `<button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate (AI)</button>` : ""}
         </div>`;
-      div.querySelector("[data-manual]").onclick = () => manualDraft(candidate, div.querySelector("[data-fmt]").value);
+      const continueButton = div.querySelector("[data-continue]");
+      if (continueButton) continueButton.onclick = () => openSavedPost(covered.id);
+      div.querySelector("[data-manual]").onclick = () => manualDraft(candidate, div.querySelector("[data-fmt]").value,
+        { deliberateDuplicate: Boolean(covered) });
       div.querySelector("[data-gen]") && (div.querySelector("[data-gen]").onclick =
         () => generate(candidate, div.querySelector("[data-fmt]").value));
       box.appendChild(div);
@@ -347,7 +411,8 @@ function compatibleFormats(candidate, suggested) {
     : [...list, all.find((f) => f.id === suggested)].filter(Boolean);
 }
 
-async function manualDraft(candidate, format) {
+async function manualDraft(candidate, format, { deliberateDuplicate = false } = {}) {
+  if (!(await preserveCurrentDraft())) return;
   status("Building manual draft…");
   try {
     const data = await api("/api/orbit-x/manual", { method: "POST", body: JSON.stringify({
@@ -357,21 +422,25 @@ async function manualDraft(candidate, format) {
     current = { candidate: data.candidate, post: data.post, generatedCopy: null,
       calculationMetadata: data.calculationMetadata, savedId: null,
       suggestions: data.suggestions, notes: "",
+      status: "draft", deliberateDuplicate,
       design: normalizeDesign({ template: data.recommendedTemplate }, data.candidate.eventType, format) };
+    editorStage = "write"; dirty = false; lastSavedAt = null; lastImport = null;
     renderEditor();
     status("Draft ready — the facts are in place; the interpretation is yours.");
   } catch (error) { status(error.message); }
 }
 
 async function generate(candidate, format, instruction = "") {
+  if (!(await preserveCurrentDraft())) return;
   status("Generating…");
   try {
     const data = await api("/api/orbit-x/generate", { method: "POST", body: JSON.stringify({
       eventKey: candidate.eventKey, date: $("#x-date").value, tz, format, instruction }) });
     current = { candidate: data.candidate, post: data.post, generatedCopy: data.post,
       calculationMetadata: data.calculationMetadata, savedId: null, suggestions: null,
-      notes: "",
+      notes: "", status: "draft", deliberateDuplicate: false,
       design: normalizeDesign(data.post.design || {}, candidate.eventType, format) };
+    editorStage = "write"; dirty = false; lastSavedAt = null; lastImport = null;
     renderEditor();
     status(data.usage ? `Generated (${data.usage.input}+${data.usage.output} tokens)` : "Generated");
   } catch (error) {
@@ -419,15 +488,23 @@ function designControls() {
       <label><input type="checkbox" id="d-m-illum" ${d.metadata.illumination ? "checked" : ""}/> Illumination</label>
       <label><input type="checkbox" id="d-m-calc" ${d.metadata.calculated ? "checked" : ""}/> Calculated label</label>
     </div>
-    <div class="x-tpl-cards" id="d-templates">
-      ${tplChoices.map((t) => `
-        <button type="button" class="x-tpl-card ${t.id === d.template ? "is-active" : ""}" data-tpl="${t.id}">
-          <span data-thumb="${t.id}"></span>
-          <div class="t-name">${esc(t.name)}</div>
-          <div class="t-use">${esc(t.intendedUse)} · ${esc(t.density)}</div>
-        </button>`).join("")}
+    <div class="x-template-current">
+      <span data-thumb="${d.template}"></span>
+      <div><strong>${esc(TEMPLATES[d.template]?.name || d.template)}</strong>
+        <div class="x-helper">Recommended default selected · ${esc(TEMPLATES[d.template]?.intendedUse || "")}</div></div>
     </div>
-    ${isReading ? `<button type="button" class="o-btn o-btn--primary o-btn--sm" id="d-compare">Compare all five in Template Lab</button>` : ""}
+    <details class="x-template-picker">
+      <summary>Explore other designs</summary>
+      <div class="x-tpl-cards" id="d-templates">
+        ${tplChoices.map((t) => `
+          <button type="button" class="x-tpl-card ${t.id === d.template ? "is-active" : ""}" data-tpl="${t.id}">
+            <span data-thumb="${t.id}"></span>
+            <div class="t-name">${esc(t.name)}</div>
+            <div class="t-use">${esc(t.intendedUse)} · ${esc(t.density)}</div>
+          </button>`).join("")}
+      </div>
+      ${isReading ? `<button type="button" class="o-btn o-btn--secondary o-btn--sm" id="d-compare">Compare all five in Template Lab</button>` : ""}
+    </details>
   </div>`;
 }
 
@@ -447,6 +524,124 @@ function suggestionFor(role) {
   return current.suggestions?.slides?.find((s) => s.role === role) || null;
 }
 
+function conciseFacts(facts) {
+  const parts = [];
+  if (facts.period?.label) parts.push(facts.period.label);
+  if (facts.moon_phase_name) parts.push(facts.moon_phase_name);
+  if (facts.moon_sign) parts.push(`Moon in ${facts.moon_sign}`);
+  if (Number.isFinite(facts.illumination_percent)) parts.push(`${Math.round(facts.illumination_percent)}% illuminated`);
+  if (Array.isArray(facts.selected_events)) parts.push(`${facts.selected_events.length} curated movement${facts.selected_events.length === 1 ? "" : "s"}`);
+  return parts.slice(0, 4).join(" · ") || "Calculated source packet available";
+}
+
+function setEditorStage(stage) {
+  if (!["write", "design", "preview", "review"].includes(stage)) return;
+  editorStage = stage;
+  for (const section of document.querySelectorAll("[data-stage]")) section.hidden = section.getAttribute("data-stage") !== stage;
+  for (const button of document.querySelectorAll("[data-stage-go]")) {
+    button.setAttribute("aria-selected", String(button.getAttribute("data-stage-go") === stage));
+  }
+  if (stage === "preview") preview();
+  if (stage === "review") refresh();
+}
+
+function updateCharacterCounts() {
+  for (const field of document.querySelectorAll("[data-limit]")) {
+    const limit = Number(field.getAttribute("data-limit"));
+    const counter = field.id
+      ? document.querySelector(`[data-count-for="${field.id}"]`)
+      : document.querySelector(`[data-count-slide="${field.getAttribute("data-sb")}"]`);
+    if (!counter) continue;
+    const count = String(field.value || "").length;
+    counter.textContent = `${count}/${limit}`;
+    counter.classList.toggle("is-over", count > limit);
+  }
+}
+
+function updateSaveState() {
+  const el = $("#e-save-state");
+  if (!el) return;
+  el.classList.toggle("is-dirty", dirty);
+  el.textContent = saving ? "Saving…" : dirty ? "Unsaved changes"
+    : lastSavedAt ? `Saved ${lastSavedAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+      : current?.savedId ? "Saved" : "Not saved yet";
+}
+
+function markDirty({ autosave = true } = {}) {
+  if (!current) return;
+  dirty = true;
+  updateSaveState();
+  persistRecovery();
+  clearTimeout(autosaveTimer);
+  if (autosave && current.status === "draft") autosaveTimer = setTimeout(() => saveDraft({ quiet: true }), 1400);
+}
+
+function openRecoveryDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(RECOVERY_DB, 1);
+    request.onupgradeneeded = () => request.result.createObjectStore(RECOVERY_STORE);
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function persistRecovery() {
+  if (!current || !dirty) return;
+  try {
+    const db = await openRecoveryDb();
+    const snapshot = { current: { ...current, post: readCopy(), notes: $("#e-notes")?.value || current.notes },
+      date: $("#x-date").value, updatedAt: new Date().toISOString() };
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(RECOVERY_STORE, "readwrite");
+      tx.objectStore(RECOVERY_STORE).put(snapshot, "active");
+      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch { /* recovery is a safety net, never a reason editing should fail */ }
+}
+
+async function recoverySnapshot() {
+  try {
+    const db = await openRecoveryDb();
+    const value = await new Promise((resolve, reject) => {
+      const tx = db.transaction(RECOVERY_STORE, "readonly");
+      const request = tx.objectStore(RECOVERY_STORE).get("active");
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+    db.close(); return value;
+  } catch { return null; }
+}
+
+async function clearRecovery() {
+  try {
+    const db = await openRecoveryDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(RECOVERY_STORE, "readwrite");
+      tx.objectStore(RECOVERY_STORE).delete("active");
+      tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+    });
+    db.close();
+  } catch { /* nothing to clear */ }
+}
+
+async function restoreRecovery() {
+  const snapshot = await recoverySnapshot();
+  if (!snapshot?.current?.candidate || !snapshot?.current?.post) return false;
+  current = snapshot.current;
+  $("#x-date").value = snapshot.date || current.calculationMetadata?.local_date || $("#x-date").value;
+  dirty = true; lastSavedAt = null; editorStage = "write";
+  renderEditor();
+  status(`Recovered unsaved work from ${new Date(snapshot.updatedAt).toLocaleString()}`);
+  return true;
+}
+
+window.addEventListener("beforeunload", (event) => {
+  if (!dirty) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
+
 function renderEditor() {
   const { candidate, post } = current;
   const fmt = formats[post.format] || FORMATS[post.format];
@@ -455,22 +650,28 @@ function renderEditor() {
   const facts = Object.entries(candidate.facts || {})
     .map(([k, v]) => `<div><strong>${esc(k)}</strong>: ${esc(JSON.stringify(v))}</div>`).join("");
   const expandable = EXPANDABLE_ROLE[post.format];
+  const factSummary = conciseFacts(candidate.facts || {});
 
   $("#x-editor").innerHTML = `
-    <div class="x-facts" aria-label="Verified engine facts — read only">
-      <div><strong>VERIFIED FACTS (engine · read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}
-    </div>
-    ${designControls()}
+    <nav class="x-editor-nav" aria-label="Draft stages">
+      ${[["write", "1 · Write"], ["design", "2 · Design"], ["preview", "3 · Preview"], ["review", "4 · Review & Export"]]
+        .map(([id, name]) => `<button type="button" class="o-btn o-btn--secondary o-btn--sm" data-stage-go="${id}" aria-selected="${editorStage === id}">${name}</button>`).join("")}
+    </nav>
+    <details class="x-facts" aria-label="Verified engine facts — read only">
+      <summary>Verified facts · <span class="x-fact-summary">${esc(factSummary)}</span></summary>
+      <div class="x-facts-raw"><div><strong>ENGINE PACKET (read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}</div>
+    </details>
+    <section class="x-stage" data-stage="write" ${editorStage === "write" ? "" : "hidden"}>
     ${isReading ? `<div class="x-section">
-      <label>Theme <input type="text" id="e-theme" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before approval" /></label>
+      <label>Theme <span class="x-char" data-count-for="e-theme"></span><input type="text" id="e-theme" data-limit="${fmt.limits.headline}" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before approval" /></label>
       <div class="x-helper">The Intro/Cover hook. Editorial copy—not engine output.</div>
-      <label>Reading in one sentence <textarea id="e-one" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
+      <label>Reading in one sentence <span class="x-char" data-count-for="e-one"></span><textarea id="e-one" data-limit="${fmt.limits.slideBody}" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
       <div class="x-helper">The independent second hook and thesis.</div>
-      <label>Cover hook line <input type="text" id="e-hook" class="o-input" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." /></label>
+      <label>Cover hook line <span class="x-char" data-count-for="e-hook"></span><input type="text" id="e-hook" data-limit="72" class="o-input" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." /></label>
       <div class="x-helper">Optional, and drawn under the theme on slide 1 — the line that earns the swipe. The cover slide carries it; without a field it could never be written.</div>
       ${(suggestionFor("cover")?.suggestions || []).length ? `<div class="x-chips">${suggestionFor("cover").suggestions.map((h) =>
         `<button type="button" class="x-chip" data-hook="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
-    </div>` : `<label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>`}
+    </div>` : `<label>Headline <span class="x-char" data-count-for="e-headline"></span><input type="text" id="e-headline" data-limit="${fmt.limits.headline}" class="o-input" value="${esc(post.headline)}" /></label>`}
     ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
       `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
     <div id="e-slides">${post.slides.map((s, i) => isReading && ["cover", "one_sentence"].includes(s.role) ? "" : slideSection(s, i)).join("")}</div>
@@ -478,7 +679,7 @@ function renderEditor() {
       <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-add-slide">Add ${esc(expandable)} slide</button>
       <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-remove-slide">Remove last ${esc(expandable)} slide</button>
     </div>` : ""}
-    <label>Caption <textarea id="e-caption" class="o-input">${esc(post.caption)}</textarea></label>
+    <label>Caption <span class="x-char" data-count-for="e-caption"></span><textarea id="e-caption" data-limit="${fmt.limits.caption}" class="o-input">${esc(post.caption)}</textarea></label>
     ${current.suggestions?.caption?.helper ? `<div class="x-helper">${esc(current.suggestions.caption.helper)}</div>` : ""}
     <div class="x-row">
       <label style="flex:1">CTA <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" /></label>
@@ -493,10 +694,6 @@ function renderEditor() {
     <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
     <div class="x-helper">Describe what the graphic actually shows — not the symbolism.</div>
     <label>Editor notes <textarea id="e-notes" class="o-input">${esc(current.notes || "")}</textarea></label>
-    <div class="x-row">
-      <span class="x-meter" id="e-meter"></span>
-      <span class="x-warn" id="e-warnings"></span>
-    </div>
     <div class="x-advice" id="e-advice"></div>
     <details class="x-handoff" id="e-handoff">
       <summary>Hand off to a writer, then import the text</summary>
@@ -506,6 +703,7 @@ function renderEditor() {
         facts before it touches the draft.</p>
       <div class="x-row">
         <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-brief">Copy handoff brief</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-open-writer">Copy brief + open ChatGPT</button>
         <button class="o-btn o-btn--secondary o-btn--sm" id="e-show-brief">Show brief</button>
       </div>
       <pre class="x-brief" id="e-brief" hidden></pre>
@@ -516,53 +714,77 @@ function renderEditor() {
         <button class="o-btn o-btn--primary o-btn--sm" id="e-import-go">Import into draft</button>
         <span class="x-status" id="e-import-status"></span>
       </div>
+      <div id="e-import-review"></div>
     </details>
-    <div class="x-row">
+    </section>
+    <section class="x-stage" data-stage="design" ${editorStage === "design" ? "" : "hidden"}>
+      ${designControls()}
+      <div id="e-template-lab"></div>
+    </section>
+    <section class="x-stage" data-stage="preview" ${editorStage === "preview" ? "" : "hidden"}>
+      <div class="x-row">
+        <button class="o-btn o-btn--secondary o-btn--sm" data-pv="full">Full size</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" data-pv="feed">Feed size</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" data-pv="sim">Feed preview</button>
+      </div>
+      <div id="e-preview-box"></div>
+    </section>
+    <section class="x-stage" data-stage="review" ${editorStage === "review" ? "" : "hidden"}>
+      <h3>Approval preflight</h3>
+      <div class="x-preflight" id="e-preflight"></div>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-jump-issue">Jump to first issue</button>
+      <div class="x-row">
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-caption">Copy caption</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-alt">Copy alt text</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export posting package (.zip)</button>
+      </div>
+      <div class="x-row">
+        <button class="o-btn o-btn--primary o-btn--sm" id="e-approve" disabled>Approve</button>
+        <select id="e-reject-reason" class="o-select" style="max-width:200px">
+          <option value="">Reject: reason…</option>
+          <option>inaccurate interpretation</option><option>too predictive</option>
+          <option>too sensational</option><option>too much jargon</option><option>repetitive</option>
+          <option>poor visual fit</option><option>weak product connection</option><option>other</option>
+        </select>
+        <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
+      </div>
+    </section>
+    <div class="x-editor-bar">
       ${aiAvailable && !isReading ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
       <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
       <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
-      <span style="opacity:.4">|</span>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="full">Full size</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="feed">Feed size</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="sim">Feed preview</button>
-    </div>
-    <div class="x-row">
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-caption">Copy caption</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-alt">Copy alt text</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export carousel (PNG)</button>
-      <button class="o-btn o-btn--primary o-btn--sm" id="e-approve" disabled>Approve</button>
-      <select id="e-reject-reason" class="o-select" style="max-width:200px">
-        <option value="">Reject: reason…</option>
-        <option>inaccurate interpretation</option><option>too predictive</option>
-        <option>too sensational</option><option>too much jargon</option><option>repetitive</option>
-        <option>poor visual fit</option><option>weak product connection</option><option>other</option>
-      </select>
-      <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
-    </div>
-    <div id="e-template-lab"></div>
-    <div id="e-preview-box"></div>`;
+      <button class="o-btn o-btn--secondary o-btn--sm" id="e-next-missing">Next incomplete</button>
+      <span class="x-meter" id="e-meter"></span>
+      <span class="x-save-state" id="e-save-state"></span>
+      <span class="x-warn" id="e-warnings"></span>
+    </div>`;
 
   for (const chip of document.querySelectorAll("[data-hook]")) {
-    chip.onclick = () => { $("#e-hook").value = chip.getAttribute("data-hook"); refresh(); };
+    chip.onclick = () => { $("#e-hook").value = chip.getAttribute("data-hook"); markDirty(); refresh(); };
   }
   for (const chip of document.querySelectorAll("[data-headline]")) {
-    chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); refresh(); };
+    chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); markDirty(); refresh(); };
   }
   for (const chip of document.querySelectorAll("[data-insert]")) {
     chip.onclick = () => {
       const field = document.querySelector(`[data-sb="${chip.getAttribute("data-insert")}"]`);
-      field.value = chip.getAttribute("data-text"); refresh();
+      field.value = chip.getAttribute("data-text"); markDirty(); refresh();
     };
   }
   for (const el of document.querySelectorAll("#d-aspect, #d-density, #d-variant, #d-logo, #d-align, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
-    el.onchange = () => { current.design = readDesign(); refresh(); };
+    el.onchange = () => { current.design = readDesign(); markDirty(); refresh(); };
+  }
+  for (const button of document.querySelectorAll("[data-stage-go]")) {
+    button.onclick = () => setEditorStage(button.getAttribute("data-stage-go"));
   }
   const compare = $("#d-compare");
   if (compare) compare.onclick = renderTemplateLab;
   for (const card of document.querySelectorAll("[data-tpl]")) {
     card.onclick = () => {
+      current.post = readCopy();
       current.design = normalizeDesign({ ...current.design, template: card.getAttribute("data-tpl"), variant: 0 },
         candidate.eventType, post.format);
+      markDirty();
       renderEditor(); // variant list depends on template
     };
   }
@@ -574,12 +796,16 @@ function renderEditor() {
   }
   const regen = $("#e-regen");
   if (regen) regen.onclick = () => generate(candidate, post.format, $("#e-instruction").value);
-  $("#e-cta-pick").onchange = () => { $("#e-cta").value = $("#e-cta-pick").value; refresh(); };
+  $("#e-cta-pick").onchange = () => { $("#e-cta").value = $("#e-cta-pick").value; markDirty(); refresh(); };
   $("#e-save").onclick = saveDraft;
   $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
   $("#e-copy-alt").onclick = () => copyText(readCopy().altText, "Alt text copied");
   $("#e-export").onclick = exportSlides;
   $("#e-copy-brief").onclick = () => copyText(handoffBrief(), "Handoff brief copied");
+  $("#e-open-writer").onclick = () => {
+    window.open("https://chatgpt.com/", "_blank", "noopener");
+    copyText(handoffBrief(), "Handoff copied — ChatGPT opened in a new tab");
+  };
   $("#e-show-brief").onclick = () => {
     const box = $("#e-brief");
     box.hidden = !box.hidden;
@@ -588,9 +814,15 @@ function renderEditor() {
   $("#e-import-go").onclick = () => applyHandoff($("#e-import").value);
   $("#e-approve").onclick = () => decide("approved");
   $("#e-reject").onclick = () => decide("rejected");
+  $("#e-jump-issue").onclick = jumpToFirstIssue;
+  $("#e-next-missing").onclick = jumpToFirstIssue;
   $("#e-notes").oninput = () => { current.notes = $("#e-notes").value; };
-  $("#x-editor").oninput = debounce(refresh, 350); // assignment, not addEventListener — re-renders must not stack listeners
+  $("#x-editor").oninput = debounce((event) => {
+    if (!event.target.matches("#e-theme,#e-one,#e-hook,#e-headline,[data-sh],[data-sb],#e-caption,#e-cta,#e-alt,#e-notes")) return;
+    markDirty(); refresh();
+  }, 300); // assignment: re-renders must not stack listeners
   renderTemplateThumbs();
+  renderImportReview();
   refresh();
 }
 
@@ -602,7 +834,7 @@ function slideSection(s, i) {
     <div class="x-row"><strong style="font-size:var(--type-caption)">Slide ${i + 1}${s.role ? ` · ${esc(s.role)}` : ""}${required ? "" : " · optional"}</strong></div>
     ${sugg?.helper ? `<div class="x-helper">${esc(sugg.helper)}</div>` : ""}
     <label>Heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
-    <label>Body <textarea class="o-input" data-sb="${i}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea></label>
+    <label>Body <span class="x-char" data-count-slide="${i}"></span><textarea class="o-input" data-sb="${i}" data-limit="${FORMATS[current.post.format].limits.slideBody}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea></label>
     ${sugg?.suggestions?.length ? `<div class="x-chips">
       ${sugg.styleExamples ? `<span class="x-helper" style="width:100%">Style examples — adapt to this event, don't paste:</span>` : ""}
       ${sugg.suggestions.map((t) => `<button type="button" class="x-chip" data-insert="${i}" data-text="${esc(t)}">${esc(t)}</button>`).join("")}
@@ -623,6 +855,7 @@ function resizeSlides(delta) {
     if (lastIdx > 0) slides.splice(lastIdx, 1);
   } else return;
   current.post = { ...copy, slides };
+  markDirty();
   renderEditor();
 }
 
@@ -684,6 +917,39 @@ function renderContext(copy) {
     facts, sky: facts.planets || lastSky, design: current.design };
 }
 
+function renderPreflight(copy, complete, rendered, advisories) {
+  const box = $("#e-preflight");
+  if (!box) return;
+  const checks = [
+    [complete.complete, "Required copy", complete.complete ? "Complete" : complete.missing.join(", ")],
+    [rendered.warnings.length === 0, "Visual fit", rendered.warnings.length ? rendered.warnings.join(" · ") : "No renderer warnings"],
+    [advisories.length === 0, "Editorial review", advisories.length ? advisories.map((a) => a.why).join(" · ") : "No advisories"],
+    [Boolean(copy.caption.trim()), "Caption", copy.caption.trim() ? `${copy.caption.length} characters` : "Missing"],
+    [Boolean(copy.altText.trim()), "Alt text", copy.altText.trim() ? `${copy.altText.length} characters` : "Missing"],
+    [Boolean(current.savedId) && !dirty, "Saved version", current.savedId ? (dirty ? "Unsaved changes remain" : "Latest copy saved") : "Save the draft before approval"],
+  ];
+  box.innerHTML = checks.map(([ok, name, detail]) => `<div class="x-check ${ok ? "is-ok" : ""}">
+    <strong>${ok ? "✓" : "○"} ${esc(name)}</strong><span class="x-helper">${esc(detail)}</span></div>`).join("");
+}
+
+function jumpToFirstIssue() {
+  const copy = readCopy();
+  const first = completeness(copy).missing[0];
+  setEditorStage("write");
+  let field = null;
+  if (first === "theme") field = $("#e-theme");
+  else if (first === "reading in one sentence") field = $("#e-one");
+  else if (first === "headline") field = $("#e-headline");
+  else if (first === "caption") field = $("#e-caption");
+  else if (first === "alt text") field = $("#e-alt");
+  else {
+    const slide = Number(first?.match(/slide (\d+)/)?.[1]);
+    if (slide) field = document.querySelector(`[data-sb="${slide - 1}"]`);
+  }
+  if (field) { field.focus(); field.scrollIntoView({ behavior: "smooth", block: "center" }); }
+  else status("No incomplete required fields — review advisories and visual warnings.");
+}
+
 function refresh() {
   const copy = readCopy();
   const c = completeness(copy);
@@ -693,9 +959,13 @@ function refresh() {
   // Advisories update as you type. They used to appear only after a save,
   // which is the moment they are least useful — the point of a retention
   // warning is to change the draft, not to grade it afterwards.
-  showAdvisories(adviseCopy(copy));
-  $("#e-approve").disabled = !(current.savedId && c.complete);
+  const advisories = adviseCopy(copy);
+  showAdvisories(advisories);
+  $("#e-approve").disabled = !(current.savedId && c.complete && !dirty && current.status === "draft");
   $("#e-reject").disabled = !current.savedId;
+  renderPreflight(copy, c, rendered, advisories);
+  updateCharacterCounts();
+  updateSaveState();
   preview(rendered);
   for (const [i, s] of copy.slides.entries()) {
     const box = document.querySelector(`[data-slide-section="${i}"]`);
@@ -778,74 +1048,122 @@ function renderTemplateLab() {
     <div class="x-lab-grid">${cards}</div></section>`;
   for (const button of box.querySelectorAll("[data-use-family]")) {
     button.onclick = () => {
+      current.post = readCopy();
       current.design = normalizeDesign({ ...current.design, aspect: "portrait",
         template: button.getAttribute("data-use-family") }, current.candidate.eventType, current.post.format);
+      markDirty();
       renderEditor();
     };
   }
 }
 
-/* ── Export: deterministic filenames, aspect-aware dimensions ── */
+/* ── Export: one deterministic posting package, not 6–10 downloads ── */
+async function pngBytes(svg, aspect) {
+  const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
+    const canvas = Object.assign(document.createElement("canvas"), { width: aspect.width, height: aspect.height });
+    canvas.getContext("2d").drawImage(img, 0, 0);
+    const blob = await new Promise((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("PNG conversion failed")), "image/png"));
+    return new Uint8Array(await blob.arrayBuffer());
+  } finally { URL.revokeObjectURL(url); }
+}
+
+function postingLink(copy) {
+  const url = new URL(location.origin + "/");
+  url.searchParams.set("utm_source", "instagram");
+  url.searchParams.set("utm_medium", "social");
+  url.searchParams.set("utm_campaign", copy.reading?.type || copy.format);
+  url.searchParams.set("utm_content", current.candidate.eventKey);
+  return url.toString();
+}
+
 async function exportSlides() {
   const copy = readCopy();
   const r = renderPost(copy, renderContext(copy));
   const A = ASPECTS[current.design.aspect];
   const slug = current.candidate.eventKey.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "");
   const day = current.calculationMetadata?.local_date || $("#x-date").value;
+  status(`Building ${r.slides.length}-slide posting package…`);
+  const entries = [];
   for (let i = 0; i < r.slides.length; i += 1) {
-    const url = URL.createObjectURL(new Blob([r.slides[i].svg], { type: "image/svg+xml" }));
-    const img = new Image();
-    await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = url; });
-    const canvas = Object.assign(document.createElement("canvas"), { width: A.width, height: A.height });
-    canvas.getContext("2d").drawImage(img, 0, 0);
-    URL.revokeObjectURL(url);
-    const a = document.createElement("a");
-    a.download = `${template.filePrefix}_${day}_${slug}_${String(i + 1).padStart(2, "0")}${A.suffix}.png`;
-    a.href = canvas.toDataURL("image/png");
-    a.click();
+    entries.push({ name: `${template.filePrefix}_${day}_${slug}_${String(i + 1).padStart(2, "0")}${A.suffix}.png`,
+      data: await pngBytes(r.slides[i].svg, A) });
   }
-  if (current.savedId) {
+  const link = postingLink(copy);
+  entries.push({ name: "caption.txt", data: `${copy.caption.trim()}\n\n${link}\n` });
+  entries.push({ name: "alt-text.txt", data: `${copy.altText.trim()}\n` });
+  entries.push({ name: "posting-link.txt", data: `${link}\n` });
+  entries.push({ name: "manifest.json", data: JSON.stringify({
+    orbitXPostId: current.savedId || null, eventKey: current.candidate.eventKey,
+    title: current.candidate.title, date: day, format: copy.format,
+    statusAtExport: current.status || "draft", slideCount: r.slides.length,
+    aspect: current.design.aspect, width: A.width, height: A.height,
+    template: current.design.template, exportedAt: new Date().toISOString(), postingLink: link,
+  }, null, 2) });
+  entries.push({ name: "README.txt", data: "Orbit X posting package\n\nUpload the numbered PNG files in order. Caption, alt text, tracked posting link, and the deterministic render manifest are included beside them. Exported does not mean published.\n" });
+  const archiveUrl = URL.createObjectURL(zipStore(entries));
+  const a = document.createElement("a");
+  a.download = `${template.filePrefix}_${day}_${slug}${A.suffix}.zip`;
+  a.href = archiveUrl; a.click();
+  setTimeout(() => URL.revokeObjectURL(archiveUrl), 1000);
+  if (current.savedId && current.status === "approved") {
     await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH",
-      body: JSON.stringify({ status: "exported" }) }).catch(() => {});
+      body: JSON.stringify({ status: "exported" }) }).then(() => { current.status = "exported"; }).catch(() => {});
     loadHistory();
   }
-  status(`Exported ${r.slides.length} slide(s) · ${A.width}×${A.height}`);
+  status(`Exported one package · ${r.slides.length} slides · ${A.width}×${A.height}`);
 }
 
-async function saveDraft() {
-  status("Saving…");
+async function saveDraft({ quiet = false } = {}) {
+  if (saving || !current) return;
+  saving = true; updateSaveState();
+  if (!quiet) status("Saving…");
   const payload = () => ({ eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
     format: current.post.format, copy: readCopy(),
-    generatedCopy: current.generatedCopy, notes: $("#e-notes").value });
+    generatedCopy: current.generatedCopy, notes: $("#e-notes").value,
+    ...(current.deliberateDuplicate ? { allowDuplicate: true } : {}) });
   try {
     if (current.savedId) {
       const copy = readCopy();
       const notes = $("#e-notes").value;
       const data = await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH",
-        body: JSON.stringify({ copy, notes }) });
+        body: JSON.stringify({ copy, notes, ...(current.status === "rejected" ? { status: "draft" } : {}) }) });
       current.post = data.post.edited_copy || copy;
       current.notes = data.post.editor_notes ?? notes;
-      status("Draft updated");
+      if (current.status === "rejected") current.status = "draft";
+      dirty = false; lastSavedAt = new Date(); await clearRecovery();
+      if (!quiet) status("Draft updated");
       refresh(); loadHistory(); return;
     }
     const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify(payload()) });
     current.savedId = data.post.id;
+    current.status = data.post.status || "draft";
     current.notes = data.post.editor_notes || $("#e-notes").value;
+    dirty = false; lastSavedAt = new Date(); await clearRecovery();
     showAdvisories(data.advisories);
-    status(data.completeness?.complete ? "Draft saved" : `Draft saved — still missing: ${data.completeness.missing.join(", ")}`);
+    if (!quiet) status(data.completeness?.complete ? "Draft saved" : `Draft saved — still missing: ${data.completeness.missing.join(", ")}`);
     refresh(); loadHistory();
   } catch (error) {
     if (error.status === 409) {
+      if (quiet) { status("Autosave paused — this event already has coverage. Continue that draft or choose New treatment."); return; }
       if (confirm("This event already has living coverage. Save a deliberate fresh treatment anyway?")) {
         const data = await api("/api/orbit-x/posts", { method: "POST",
           body: JSON.stringify({ ...payload(), allowDuplicate: true }) });
         current.savedId = data.post.id;
+        current.status = data.post.status || "draft";
+        current.deliberateDuplicate = true;
+        dirty = false; lastSavedAt = new Date(); await clearRecovery();
         showAdvisories(data.advisories);
         status("Fresh treatment saved"); refresh(); loadHistory(); return;
       }
       status("Not saved — duplicate declined"); return;
     }
     status(error.body?.findings ? `Refused: ${error.body.findings.map((f) => f.why).join("; ")}` : error.message);
+  } finally {
+    saving = false;
+    updateSaveState();
   }
 }
 
@@ -866,7 +1184,8 @@ async function decide(to) {
   }
   try {
     await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH", body: JSON.stringify(body) });
-    status(to === "approved" ? "Approved" : "Rejected"); loadHistory();
+    current.status = to;
+    status(to === "approved" ? "Approved" : "Rejected"); refresh(); loadHistory();
   } catch (error) {
     status(error.body?.missing ? `${error.message} Missing: ${error.body.missing.join(", ")}` : error.message);
   }
@@ -874,38 +1193,88 @@ async function decide(to) {
 
 async function loadHistory() {
   try {
-    const filter = $("#x-hist-filter").value;
-    const data = await api(`/api/orbit-x/posts${filter ? `?status=${filter}` : ""}`);
-    const kind = $("#x-hist-kind").value;
-    const posts = data.posts.filter((p) => !kind ? true : kind === "other"
-      ? !["daily_reading", "weekly_reading", "monthly_reading"].includes(p.selected_format)
-      : p.selected_format === kind);
-    $("#x-history").innerHTML = `<tr><th></th><th>Date</th><th>Event</th><th>Status</th><th>Score</th><th></th></tr>`
-      + posts.map((p, i) => `<tr>
-        <td data-hist-thumb="${i}"></td>
-        <td>${esc((p.created_at || "").slice(0, 10))}</td>
-        <td>${esc(p.event_key)}<br><span class="x-reasons">${esc(p.selected_format)}</span></td>
-        <td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td>
-        <td>${esc(p.editorial_score ?? "")}</td>
-        <td><button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-post="${esc(p.id)}">Open</button></td></tr>`).join("");
-    // First-slide thumbnails: the history is a content library, not a table.
-    posts.forEach((p, i) => {
-      const cell = document.querySelector(`[data-hist-thumb="${i}"]`);
-      if (!cell || !p.edited_copy?.slides?.length) return;
-      try {
-        const cand = p.event_payload || {};
-        const r = renderPost(p.edited_copy, { eventType: cand.eventType, title: cand.title,
-          facts: cand.facts || {}, sky: cand.facts?.planets || [] });
-        cell.innerHTML = r.slides[0]?.svg || "";
-      } catch { /* a thumbnail is never worth an error */ }
-    });
-    for (const button of document.querySelectorAll("[data-open-post]")) {
-      button.onclick = () => openSavedPost(button.getAttribute("data-open-post"));
+    const data = await api("/api/orbit-x/posts?limit=200");
+    historyPosts = data.posts || [];
+    renderHistory();
+  } catch (error) { $("#x-history").innerHTML = `<p class="x-warn">${esc(error.message)}</p>`; }
+}
+
+async function preserveCurrentDraft() {
+  if (!current || !dirty) return true;
+  await saveDraft({ quiet: true });
+  if (!dirty) return true;
+  status("Could not leave this draft because its latest changes are not saved. They remain in recovery.");
+  return false;
+}
+
+function renderHistory() {
+  const statusFilter = $("#x-hist-filter").value;
+  const kind = $("#x-hist-kind").value;
+  const search = $("#x-hist-search").value.trim().toLowerCase();
+  const sort = $("#x-hist-sort").value;
+  const standard = ["daily_reading", "weekly_reading", "monthly_reading"];
+  let posts = historyPosts.filter((p) => (!statusFilter || p.status === statusFilter)
+    && (!kind || (kind === "other" ? !standard.includes(p.selected_format) : p.selected_format === kind))
+    && (!search || JSON.stringify([p.event_key, p.selected_format, p.status, p.editor_notes,
+      p.edited_copy?.headline, p.edited_copy?.caption, p.rejection_reason]).toLowerCase().includes(search)));
+  posts = [...posts].sort((a, b) => sort === "score"
+    ? Number(b.editorial_score || 0) - Number(a.editorial_score || 0)
+    : sort === "event" ? String(a.period_start_at || a.event_key).localeCompare(String(b.period_start_at || b.event_key))
+      : String(b.updated_at || b.created_at).localeCompare(String(a.updated_at || a.created_at)));
+
+  const groupFor = (p) => {
+    const due = editorialToday && p.status === "draft"
+      && (p.event_key.includes(editorialToday) || String(p.period_start_at || "").slice(0, 10) === editorialToday);
+    if (due) return "Due today";
+    if (p.status === "draft") {
+      try { if (completeness(p.edited_copy).complete) return "Ready for review"; } catch { /* old shape */ }
     }
-  } catch (error) { $("#x-history").innerHTML = `<tr><td>${esc(error.message)}</td></tr>`; }
+    return p.status === "approved" ? "Ready for export" : p.status === "exported" ? "Exported"
+      : p.status === "rejected" ? "Needs revision" : "In progress";
+  };
+  const order = ["Due today", "In progress", "Ready for review", "Ready for export", "Needs revision", "Exported"];
+  const grouped = Object.groupBy ? Object.groupBy(posts, groupFor)
+    : posts.reduce((all, post) => { (all[groupFor(post)] ||= []).push(post); return all; }, {});
+  $("#x-history").innerHTML = posts.length ? `<div class="x-queue">${order.filter((name) => grouped[name]?.length).map((name) => `
+    <section class="x-queue-group"><h3>${esc(name)} · ${grouped[name].length}</h3>
+      ${grouped[name].map((p) => workCard(p)).join("")}</section>`).join("")}</div>`
+    : `<p class="x-status">No saved work matches these filters.</p>`;
+
+  for (const p of posts) {
+    const cell = document.querySelector(`[data-hist-thumb="${p.id}"]`);
+    if (!cell || !p.edited_copy?.slides?.length) continue;
+    try {
+      const cand = p.event_payload || {};
+      const r = renderPost(p.edited_copy, { eventType: cand.eventType, title: cand.title,
+        facts: cand.facts || {}, sky: cand.facts?.planets || [] });
+      cell.innerHTML = r.slides[0]?.svg || "";
+    } catch { /* a thumbnail is never worth an error */ }
+  }
+  for (const button of document.querySelectorAll("[data-open-post]")) {
+    button.onclick = () => openSavedPost(button.getAttribute("data-open-post"));
+  }
+}
+
+function workCard(post) {
+  let progress = "—";
+  try {
+    const c = completeness(post.edited_copy);
+    progress = `${Math.round((c.done / c.total) * 100)}% complete`;
+  } catch { /* old rows may predate the current schema */ }
+  const updated = new Date(post.updated_at || post.created_at);
+  return `<article class="x-work-card">
+    <div data-hist-thumb="${esc(post.id)}"></div>
+    <div><div class="x-work-title">${esc(post.edited_copy?.headline || post.event_payload?.title || post.event_key)}</div>
+      <div class="x-helper">${esc(post.event_key)} · edited ${Number.isNaN(updated.valueOf()) ? "unknown" : updated.toLocaleString()}</div>
+      <div class="x-badges"><span class="x-badge">${esc(post.status)}</span><span class="x-badge">${esc(post.selected_format)}</span>
+        <span class="x-badge">${esc(progress)}</span>${post.template_family ? `<span class="x-badge">${esc(post.template_family)}</span>` : ""}</div></div>
+    <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-post="${esc(post.id)}">Continue</button>
+  </article>`;
 }
 
 async function openSavedPost(id) {
+  if (current?.savedId === id && !dirty) return;
+  if (!(await preserveCurrentDraft())) return;
   status("Opening saved work…");
   try {
     const data = await api(`/api/orbit-x/posts/${id}`);
@@ -920,9 +1289,11 @@ async function openSavedPost(id) {
       candidate, post, generatedCopy: row.generated_copy || null,
       calculationMetadata: row.calculation_metadata || null,
       savedId: row.id, suggestions: null, notes: row.editor_notes || "",
+      status: row.status || "draft", deliberateDuplicate: false,
       design: normalizeDesign({ template: row.template_family, ...(post.design || {}) },
         candidate.eventType, post.format || row.selected_format),
     };
+    editorStage = "write"; dirty = false; lastSavedAt = new Date(row.updated_at || row.created_at || Date.now()); lastImport = null;
     renderEditor();
     status(`Opened saved ${row.status || "draft"} · changes will update this item`);
   } catch (error) { status(error.message); }
@@ -1029,6 +1400,8 @@ function importedInventsFacts(incoming, facts) {
 
 function applyHandoff(text) {
   const status = (t) => { $("#e-import-status").textContent = t; };
+  const beforeCopy = readCopy();
+  const beforeNotes = $("#e-notes").value;
   let incoming;
   try { incoming = parseHandoff(text); }
   catch (error) { status(error.message); return; }
@@ -1043,9 +1416,10 @@ function applyHandoff(text) {
   const slides = Array.isArray(incoming.slides) ? incoming.slides : [];
   let filled = 0;
   const unplaced = [];
+  const changed = [];
   if (typeof incoming.headline === "string" && incoming.headline.trim()) {
     const head = headlineField();
-    if (head) { head.value = incoming.headline.trim(); filled += 1; }
+    if (head) { head.value = incoming.headline.trim(); filled += 1; changed.push("headline/theme"); }
     else unplaced.push("headline");
   }
   current.post.slides.forEach((slide, i) => {
@@ -1058,31 +1432,49 @@ function applyHandoff(text) {
     // A field that is not on the page means this text has nowhere to go. It
     // gets NAMED, never dropped quietly — a silent skip reads as "the import
     // did nothing", which is exactly how this went unnoticed before.
-    if (field) { field.value = body; filled += 1; }
+    if (field) { field.value = body; filled += 1; changed.push(`slide ${i + 1}${slide.role ? ` (${slide.role})` : ""}`); }
     else unplaced.push(`slide ${i + 1}${slide.role ? ` (${slide.role})` : ""}`);
   });
   if (typeof incoming.caption === "string" && incoming.caption.trim()) {
-    $("#e-caption").value = incoming.caption.trim(); filled += 1;
+    $("#e-caption").value = incoming.caption.trim(); filled += 1; changed.push("caption");
   }
   if (typeof incoming.altText === "string" && incoming.altText.trim()) {
-    $("#e-alt").value = incoming.altText.trim(); filled += 1;
+    $("#e-alt").value = incoming.altText.trim(); filled += 1; changed.push("alt text");
   }
   if (!filled) { status("Nothing usable in that JSON — expected headline, slides, caption, altText."); return; }
 
-  refresh();
+  const importedAt = new Date();
+  $("#e-notes").value = `${beforeNotes}${beforeNotes.trim() ? "\n" : ""}[Writer handoff imported ${importedAt.toISOString()} · ${changed.join(", ")}]`;
+  current.notes = $("#e-notes").value;
+  lastImport = { beforeCopy, beforeNotes, changed, at: importedAt };
+  markDirty({ autosave: false }); refresh(); renderImportReview();
   const advisories = adviseCopy(readCopy());
   status(`Imported ${filled} field(s). Every date checked against the packet.`
     + (unplaced.length ? ` COULD NOT PLACE: ${unplaced.join(", ")} — no field for it on this format.` : "")
     + (advisories.length ? ` ${advisories.length} advisory to review.` : " Nothing flagged."));
 }
 
-function copyText(text, done) {
-  navigator.clipboard.writeText(text).then(() => status(done), () => status("Copy failed — select manually"));
+function renderImportReview() {
+  const box = $("#e-import-review");
+  if (!box || !lastImport) return;
+  box.innerHTML = `<div class="x-import-review"><strong>Imported as one reviewable change</strong>
+    <p class="x-helper">${esc(lastImport.changed.join(" · "))} · ${esc(lastImport.at.toLocaleString())}</p>
+    <div class="x-row"><button type="button" class="o-btn o-btn--primary o-btn--sm" id="e-keep-import">Keep imported changes</button>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-undo-import">Undo import</button></div></div>`;
+  $("#e-keep-import").onclick = () => { lastImport = null; box.innerHTML = ""; markDirty(); status("Imported changes kept — autosave will preserve them."); };
+  $("#e-undo-import").onclick = () => {
+    current.post = lastImport.beforeCopy; current.notes = lastImport.beforeNotes; lastImport = null;
+    dirty = true; renderEditor(); markDirty(); status("Writer import reverted as a group.");
+  };
+}
+
+function copyText(text, done, after = null) {
+  navigator.clipboard.writeText(text).then(() => { status(done); if (after) after(); }, () => status("Copy failed — select manually"));
 }
 
 function debounce(fn, ms) {
   let t = null;
-  return () => { clearTimeout(t); t = setTimeout(fn, ms); };
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
 // Bootstrap, in this order deliberately:
@@ -1091,10 +1483,11 @@ function debounce(fn, ms) {
 //   2. Saved work loads on its own, because the library is useful before any
 //      candidate calculation and must survive one failing (load() refreshes
 //      history again on success, but never reaches it if the sky call throws).
-checkSession().then((signedIn) => {
+checkSession().then(async (signedIn) => {
   if (!signedIn) return;
   loadHistory();
-  load();
+  await load({ relative: "today" });
+  await restoreRecovery();
 });
 </script>
 </body>

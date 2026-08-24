@@ -1,5 +1,33 @@
 # Orbit X — Collective Readings + Template Lab (Dev Update 5.2)
 
+## Workflow update — 2026-08-23
+
+The internal desk now treats production continuity as part of editorial
+correctness:
+
+- Today and Tomorrow are resolved on the server in
+  `ORBIT_X_EDITORIAL_TIMEZONE`; a late Chicago evening can no longer open the
+  next UTC day by accident.
+- Covered candidates lead with **Continue**, while **New treatment** is an
+  explicit alternate path.
+- Draft changes autosave with a visible saved/unsaved state. IndexedDB keeps a
+  single account-free recovery snapshot through a tab crash or expired
+  session; an explicit sign-out clears it.
+- The editor is staged as Write → Design → Preview → Review & Export. Verified
+  facts collapse to a human summary, character counts stay beside authored
+  fields, and the sticky bar can jump to the next incomplete section.
+- Saved work is a searchable, sortable production queue grouped by due,
+  in-progress, review, export, revision, and exported states.
+- Approval has a compact preflight for completeness, renderer warnings,
+  editorial advisories, caption, alt text, and saved state.
+- Export produces one ZIP posting package containing ordered PNGs, caption,
+  alt text, an attributed posting link, and a deterministic manifest.
+- Writer imports are recorded in editor notes, summarized as one reviewable
+  change, and can be kept or reverted as a group before autosave.
+
+Nothing in this update publishes or schedules content. Export remains the
+boundary and human approval remains the decision.
+
 An AI-assisted editorial system built on deterministic Orbit calculations.
 It turns verified astronomical events into faceless, brand-voiced social
 content, with a human approving every word before anything leaves the desk.
