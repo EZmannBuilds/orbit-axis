@@ -26,28 +26,60 @@ import { USER_OWNED_TABLES } from "../lib/account/deletion.js";
 
 const MIGRATIONS = new URL("../supabase/migrations/", import.meta.url).pathname;
 
-/** The migration that grants the verification reads. */
-function grantMigration() {
-  const name = readdirSync(MIGRATIONS)
-    .find((f) => f.includes("service_role_deletion_verification_grants"));
-  assert.ok(name, "the service-role verification grant migration must exist");
-  return readFileSync(join(MIGRATIONS, name), "utf8");
+/**
+ * Every migration that grants a verification read.
+ *
+ * Originally there was exactly one, and this file assumed so. That stopped
+ * being true the moment a table was added to USER_OWNED_TABLES in a later
+ * update: its grant belongs in the migration that CREATES it, not bolted onto
+ * a historical migration that has already been applied to production. So the
+ * invariant is now enforced across every migration that grants, which is what
+ * it always meant.
+ */
+function grantSources() {
+  const sources = readdirSync(MIGRATIONS)
+    .filter((f) => f.endsWith(".sql"))
+    .map((file) => ({ file, sql: readFileSync(join(MIGRATIONS, file), "utf8") }))
+    // grantStatements() rather than GRANT.test(): a global regex advances
+    // lastIndex on .test(), so testing several files in a row would answer
+    // true/false alternately and silently drop half of them.
+    .filter(({ sql }) => grantStatements(sql).length > 0);
+  assert.ok(sources.length >= 1, "at least one service-role verification grant must exist");
+  return sources;
+}
+
+// Anchored so a statement cannot swallow the one before it: `[^;]*` stops at
+// the first semicolon, which is what kept an unrelated `grant ... to
+// authenticated` in the same file from being read as part of a service_role
+// grant.
+const GRANT = /grant\s+select\s+on\s+[^;]*?to\s+service_role\s*;/gi;
+
+/** Only the executable grant statements — never the commented revocation below them. */
+function grantStatements(sql) {
+  return (sql.match(GRANT) || []).join("\n");
+}
+
+/** Every table granted a verification read, across all migrations. */
+function grantedTables() {
+  const tables = new Set();
+  for (const { sql } of grantSources()) {
+    for (const match of grantStatements(sql).matchAll(/public\.([a-z_]+)/g)) tables.add(match[1]);
+  }
+  return tables;
 }
 
 test("every table the deletion path verifies is granted to service_role", () => {
-  const sql = grantMigration();
-  const granted = sql.slice(sql.indexOf("grant select on"));
+  const granted = grantedTables();
   const missing = USER_OWNED_TABLES
     .map(({ table }) => table)
-    .filter((table) => !granted.includes(`public.${table}`));
+    .filter((table) => !granted.has(table));
   assert.deepEqual(missing, [],
     "a verified table with no service_role grant makes deletion report "
     + "DELETION_INCOMPLETE even when the cascade fully succeeded");
 });
 
 test("the grant is read-only", () => {
-  const sql = grantMigration();
-  const grantLine = sql.slice(sql.indexOf("grant select on"));
+  const grantLine = grantSources().map(({ sql }) => grantStatements(sql)).join("\n");
   // The verification counts rows with HEAD; it never reads contents and never
   // writes. Deletion itself goes through the Auth Admin API and the database
   // cascade, neither of which needs a REST grant.
@@ -58,29 +90,30 @@ test("the grant is read-only", () => {
 });
 
 test("the grant names service_role and nothing broader", () => {
-  const sql = grantMigration();
-  assert.match(sql, /to service_role;/,
-    "the grant must target service_role explicitly");
-  assert.ok(!/to\s+(public|anon)\b/i.test(sql.slice(sql.indexOf("grant select on"))),
-    "these tables must never be readable by anon or PUBLIC");
+  for (const { file, sql } of grantSources()) {
+    const statements = grantStatements(sql);
+    assert.match(statements, /to service_role;/, `${file}: the grant must target service_role explicitly`);
+    assert.ok(!/to\s+(public|anon)\b/i.test(statements),
+      `${file}: verification reads must never be granted to anon or PUBLIC`);
+  }
 });
 
-test("the migration documents a narrow manual revocation", () => {
-  const sql = grantMigration();
-  assert.match(sql, /revoke select on public\.profiles,[\s\S]+from service_role;/i,
-    "rollback must document how to revoke the verification reads");
-  assert.ok(!/revoke\s+(usage|all)\b/i.test(sql),
-    "rollback must not remove broader pre-existing service_role privileges");
+test("every grant migration documents a narrow manual revocation", () => {
+  for (const { file, sql } of grantSources()) {
+    assert.match(sql, /revoke select on public\.[a-z_]+[\s\S]*?from service_role;/i,
+      `${file}: rollback must document how to revoke the verification reads it adds`);
+    assert.ok(!/revoke\s+(usage|all)\b/i.test(sql),
+      `${file}: rollback must not remove broader pre-existing service_role privileges`);
+  }
 });
 
-test("a table cannot be verified without appearing in the grant list", () => {
-  // Stated from the other direction so the pairing is enforced both ways: this
-  // is the assertion that fails when someone adds a table to USER_OWNED_TABLES
-  // six months from now and forgets the migration.
-  const sql = grantMigration();
-  assert.equal(
-    USER_OWNED_TABLES.length,
-    (sql.match(/^\s*public\.[a-z_]+,?$/gm) || []).length,
-    "USER_OWNED_TABLES and the grant migration must list the same tables",
-  );
+test("a table cannot be granted without appearing in the verified list", () => {
+  // Stated from the other direction so the pairing is enforced both ways. A
+  // count comparison used to stand here; it broke the moment the grants were
+  // spread across more than one migration, and a set comparison says what was
+  // actually meant — these two lists describe the same tables.
+  const granted = [...grantedTables()].sort();
+  const verified = USER_OWNED_TABLES.map(({ table }) => table).sort();
+  assert.deepEqual(granted, verified,
+    "USER_OWNED_TABLES and the service_role grants must describe the same tables");
 });

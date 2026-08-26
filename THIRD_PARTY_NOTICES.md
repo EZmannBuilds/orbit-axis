@@ -44,6 +44,41 @@ inlines the path data for the ~60 icons Orbit Axis actually draws into the
 committed `public/icons.js`, so the app ships no icon font, loads no CDN, and
 makes no third-party request to render its own navigation.
 
+## OpenMoji
+
+    Copyright (c) OpenMoji — the open-source emoji and icon project
+    https://openmoji.org
+    Licence: CC BY-SA 4.0
+
+The twelve zodiac glyphs, adapted from the official black SVG collection
+(`black/svg/2648.svg` through `black/svg/2653.svg`, retrieved 2026-08-20). Used
+in Orbit X templates, the generated standalone zodiac SVGs, and the reference
+sheet.
+
+**Two obligations that no other component on this list carries.**
+
+CC BY-SA 4.0 requires *attribution wherever the work appears*, which a file in a
+repository does not satisfy on its own for software served over a network — so
+the credit is also published on `/source`, where a reader can actually reach it.
+
+It is also *share-alike*, and that travels. Orbit's glyphs are adaptations, so
+the adaptations are themselves CC BY-SA 4.0. **This survives a relicence of
+Orbit Axis.** If the project ever leaves the AGPL — by buying a Swiss Ephemeris
+Professional Licence, for instance — these glyphs do not come with it. They stay
+CC BY-SA, or they get replaced.
+
+The adaptation: the square emoji container is removed, the artwork from
+OpenMoji's `line-supplement` group is kept, the 72×72 source canvas is cropped to
+its 48×48 symbol field, and stroke colour and display size follow Orbit's
+templates. Unmodified upstream files are preserved beside them in
+`public/brand/zodiac/openmoji-source/`, with the licence text, so the adaptation
+can always be compared against its source.
+
+Required credit, verbatim:
+
+> All emojis designed by OpenMoji – the open-source emoji and icon project.
+> License: CC BY-SA 4.0
+
 ## Orbit Axis Engine
 
     Copyright (C) 2026 EZmannBuilds

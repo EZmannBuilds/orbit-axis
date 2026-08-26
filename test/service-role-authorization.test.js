@@ -95,7 +95,12 @@ test("an unknown purpose is never authorized, however configured", () => {
   const verdict = serviceRoleVerdict("read-every-users-birth-data",
     authorizedEnv({ [PURPOSE_VAR]: "read-every-users-birth-data" }), prodContext);
   assert.equal(verdict.authorized, false);
-  assert.equal(SERVICE_ROLE_PURPOSES.length, 1, "widening this set must be a deliberate change");
+  // The tripwire. It fired when "billing-webhook" was added in Dev Update 3.10,
+  // which is exactly what it is for — the set is asserted by CONTENTS rather
+  // than by length, so a third purpose still has to come here and be argued
+  // for rather than sliding in under a number that happened to grow.
+  assert.deepEqual([...SERVICE_ROLE_PURPOSES], ["account-deletion", "billing-webhook"],
+    "widening this set must be a deliberate change");
 });
 
 test("no refusal reason ever contains key material", () => {

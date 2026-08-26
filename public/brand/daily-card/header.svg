@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#141833"/>
+      <stop offset="60%" stop-color="#0b0e1c"/>
+      <stop offset="100%" stop-color="#080a12"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.4" r="0.6">
+      <stop offset="0%" stop-color="#7657e8" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#7657e8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="moonlit" x1="0.1" y1="0" x2="1" y2="0.7">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#f4f2fa"/>
+      <stop offset="100%" stop-color="#b9a7ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" fill="url(#bg)"/>
+  <rect width="1200" height="360" fill="url(#glow)"/>
+
+  <g opacity="0.16" fill="none" stroke="#7657e8" stroke-linecap="round">
+    <circle cx="1002" cy="180" r="148" stroke-width="2.5"/>
+    <path d="M890 410 1114 -50" stroke-width="2"/>
+  </g>
+  <g transform="translate(1002,180)">
+    <circle r="74" fill="#0c0f1e" stroke="#2a2d36" stroke-width="1.2"/>
+    <path d="M 0,-74 A 74,74 0 0,1 0,74 A 62,74 0 0,1 0,-74 Z" fill="url(#moonlit)"/>
+  </g>
+  <circle cx="1094" cy="120" r="8" fill="#b9a7ff"/>
+
+  <g transform="translate(72,120) scale(0.72)">
+    <g fill="none" stroke="#7657e8" stroke-linecap="round">
+      <circle cx="64" cy="64" r="35" stroke-width="8"/>
+      <path d="M37 115 91 13" stroke-width="7"/>
+    </g>
+    <circle cx="64" cy="64" r="7" fill="#f4f2fa" stroke="#080a12" stroke-width="2"/>
+    <circle cx="89" cy="40" r="8" fill="#b9a7ff"/>
+  </g>
+
+  <text x="222" y="164" font-family="Helvetica Neue, Helvetica, Arial" font-size="46" letter-spacing="9" fill="#f4f2fa">DAILY READING</text>
+  <text x="224" y="216" font-family="Helvetica Neue, Helvetica, Arial" font-size="26" letter-spacing="4" fill="#8b9cf5">TUESDAY, AUGUST 25, 2026</text>
+  <rect x="224" y="248" width="230" height="2" fill="#7657e8" opacity="0.75"/>
+</svg>

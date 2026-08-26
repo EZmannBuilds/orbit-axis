@@ -9,6 +9,11 @@
     "becomes wrong and must be re-verified — that is the cost of recording a",
     "verification rather than repeating it.",
     "",
+    "Dev Update 6.0 found this file describing three applied migrations while the",
+    "hosted project had twenty-four. The record was stale, not the database. It is",
+    "now reconciled against the hosted migration history rather than re-applying",
+    "anything: production was already correct, and the documentation was not.",
+    "",
     "Never put keys, row contents, or user data in this file."
   ],
   "projectRef": "mtdrazdastcgiweauwoj",
@@ -42,6 +47,7 @@
   ],
   "rlsVerification": {
     "verifiedAt": "2026-07-21",
+    "staleSince": "2026-08-21",
     "method": "scripts/rls-check.js against the hosted project with two live disposable users",
     "checksPassed": 18,
     "checksTotal": 18,
@@ -52,6 +58,15 @@
       "anonymous callers receive no rows and cannot write",
       "a tampered token is refused"
     ],
+    "notCovered": [
+      "tarot_daily_draws",
+      "account_entitlements",
+      "orbit_x_admins",
+      "orbit_x_posts",
+      "analytics_sessions",
+      "analytics_events"
+    ],
+    "note": "This hosted run predates every table listed in notCovered. scripts/rls-check.js was extended in Dev Update 6.0 to cover all of them and passes 38/38 against the LOCAL stack; it has not been re-run against hosted. Policies for those tables exist in the applied migrations, but existing is not holding.",
     "cleanup": "disposable users deleted; hosted row counts returned to pre-test values"
   },
   "dataIntegrity": {
@@ -64,5 +79,40 @@
     "selectChecksPassed": 16,
     "schemaUsage": true,
     "importantContext": "The hosted platform had already granted service_role all ordinary table privileges on these tables before this migration. This migration added only the explicitly reviewed USAGE and SELECT grants; application code confines service-role construction to the production account-deletion path."
+  },
+  "migrationHistoryReconciliation": {
+    "reconciledAt": "2026-08-21",
+    "method": "Supabase management API list_migrations, compared name by name against supabase/migrations/",
+    "repositoryMigrations": 24,
+    "appliedToHosted": 24,
+    "note": "Timestamps in the hosted history differ from the repository filenames for migrations applied through the management API, which restamps them. They were matched by name, not by version.",
+    "unrecordedInHostedHistory": [
+      {
+        "file": "20260714123000_authenticated_table_grants.sql",
+        "finding": "Absent from the hosted migration history.",
+        "effectPresent": true,
+        "evidence": "information_schema.role_table_grants shows authenticated and anon already hold ordinary table privileges on the public tables this migration grants; Supabase grants these by default and RLS is what restricts access.",
+        "action": "None. Re-applying a grant that is already in place would be noise. Recorded so the gap is known rather than rediscovered."
+      }
+    ],
+    "pendingApplication": [
+      {
+        "file": "20260821130000_first_party_analytics.sql",
+        "status": "NOT APPLIED to hosted. Verified against the local stack only.",
+        "blocks": "First-party analytics, the beta metrics panel, and every measurement this update adds. The application degrades quietly without it — beacons fail and are swallowed by design — so nothing breaks, and nothing is counted either.",
+        "action": "Owner decision, as every hosted migration is. See docs/environment-safety.md."
+      }
+    ]
+  },
+  "securityAdvisors": {
+    "checkedAt": "2026-08-21",
+    "method": "Supabase management API advisors, security category, against the hosted project",
+    "findings": 0,
+    "note": "Clean at the time of checking. Must be re-run after the analytics migration is applied to hosted, because that is when new tables and a security-definer function reach the project."
+  },
+  "authenticationSettings": {
+    "emailConfirmationRequired": "UNVERIFIED",
+    "reason": "GoTrue's configuration lives in the service environment, not in a queryable table, so it cannot be read from SQL or the management API used here. It is deliberately NOT inferred from how many accounts have a confirmation timestamp, which would be a guess dressed as a fact.",
+    "action": "Owner: read Authentication → Sign In / Providers → Email → 'Confirm email' in the Supabase dashboard and record the answer here."
   }
 }

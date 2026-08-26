@@ -34,7 +34,7 @@
     <a class="legal__back" href="/">← Back to Orbit Axis</a>
 
     <h1 class="legal__title">Privacy Policy</h1>
-    <p class="legal__dates">Effective 21 July 2026 · Last updated 21 July 2026</p>
+    <p class="legal__dates">Effective 21 July 2026 · Last updated 21 August 2026</p>
 
     <p class="legal__lede">
       Orbit Axis calculates astrology charts from your birth details. Those details are
@@ -99,13 +99,70 @@
         Tarot marker records only that you revealed the card and for which date; the card
         itself is worked out from the date each time, so it is the same card whatever
         device you open. Nothing in this group is sent to Orbit, and clearing your browser
-        storage removes it.</li>
+        storage removes it. Orbit also keeps two random identifiers in browser storage for
+        the usage counts described below; unlike this group, those two <em>are</em> sent to
+        Orbit, and clearing your browser storage removes them as well.</li>
     </ul>
     <p>
-      <strong>There is no analytics, no advertising, no tracking pixel, and no third-party
+      <strong>There is no advertising, no tracking pixel, and no third-party
       profiling.</strong> Orbit does not sell or share your data, because there is nobody
       to share it with.
     </p>
+
+    <h2 id="usage">Understanding how Orbit is used</h2>
+    <p>
+      Orbit previously collected nothing at all about how it was used. That has changed,
+      and this section says exactly how, because a privacy page that quietly stops being
+      true is worse than one that never made the promise.
+    </p>
+    <p>
+      Orbit now counts a small number of things about its own use, on its own servers.
+      <strong>This is first-party only: no third-party analytics service, no SDK, no
+      advertising network, and nothing that can follow you to another site.</strong>
+    </p>
+    <p><strong>What is recorded</strong></p>
+    <ul>
+      <li><strong>A visit</strong> — when it happened, the page you landed on, and the
+        website that linked you, recorded as a host name such as
+        <code>instagram.com</code> rather than a full address.</li>
+      <li><strong>Campaign labels</strong> — if you followed a link Orbit published, the
+        <code>utm_source</code>, <code>utm_medium</code>, <code>utm_campaign</code> and
+        <code>utm_content</code> labels in it, plus an identifier for the Orbit post the
+        link came from. Only those five are read; the rest of the address is ignored, and
+        they are removed from your address bar once read.</li>
+      <li><strong>A short list of actions</strong> — that a screen was opened (Today, Sky,
+        Atlas, Tarot, Compatibility), that an account was created, that a chart was
+        created, that a reflection was saved, and that a visit was a return. Each is
+        stored as a name and a time, nothing else.</li>
+      <li><strong>Two random identifiers</strong> that your browser generates for itself
+        and stores: one for the visit, and one that persists so Orbit can tell whether
+        someone came back. They are random values, <strong>not</strong> derived from your
+        device, and they mean nothing outside Orbit.</li>
+    </ul>
+    <p><strong>What is never recorded</strong></p>
+    <ul>
+      <li><strong>Nothing you write or receive.</strong> No birth details, no chart, no
+        reading, no card, no question, no journal entry. An event is a name and a time.</li>
+      <li><strong>No IP address is stored.</strong> Orbit limits how often anyone can call
+        its calculation endpoints, and to do that it hashes the network address in memory
+        for a minute at a time. That is abuse protection, it is deliberately kept separate
+        from these counts, and it is never written down.</li>
+      <li><strong>No fingerprinting</strong>, no device profiling, no cross-site tracking,
+        and no attempt to identify you when you are signed out.</li>
+    </ul>
+    <p><strong>Why</strong> — to answer four questions while Orbit is in open beta: whether
+      anyone arrives, whether they make an account, whether they use it, and whether they
+      come back. Orbit is being shown to people for the first time, and without these
+      counts there is no way to tell whether it is working for anyone.</p>
+    <p><strong>Your choice</strong> — if your browser sends
+      <strong>Global Privacy Control</strong> or <strong>Do Not Track</strong>, Orbit
+      records none of this. Nothing is counted in a private window either, because the
+      identifiers have nowhere to live. Both are honoured in the code, not just here.</p>
+    <p><strong>How long</strong> — while you are signed in, these records are linked to
+      your account and are <strong>deleted with it</strong>. Records from signed-out visits
+      are not linked to any account and stay as counts. Orbit does not yet run an automatic
+      expiry for them, and this page will be updated when it does rather than promising one
+      now.</p>
 
     <h2 id="processors">Services Orbit relies on</h2>
     <div class="legal__scroll">
