@@ -19,6 +19,7 @@ import { REPO_ROOT } from "../lib/local-llm/config.js";
 import { featureEnabled, workspaceBlocked } from "../lib/features.js";
 import { DECK_VERSION, PRODUCTION_CARDS, deckStatus, deckSupportsReversals, validateCard, validateDeck } from "../lib/tarot/deck.js";
 import { DRAFT_CARDS } from "../lib/tarot/draft-deck.js";
+import { deckOrientations, drawSpread } from "../lib/tarot/draw.js";
 import { FIXTURE_DECK_REVIEWED } from "./fixtures/tarot-deck.js";
 import {
   EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, EXPORT_TAROT_FIELDS,
@@ -761,13 +762,49 @@ test("reversals are opt-in and off by default", () => {
 });
 
 test("turning reversals on never changes which card was drawn", () => {
-  // The orientation runs off its own labelled stream. If it shared the draw
-  // stream, toggling the setting would hand the reader a different card
-  // halfway through their day.
-  const draw = readFileSync(join(REPO_ROOT, "lib", "tarot", "draw.js"), "utf8");
-  assert.match(draw, /orientation-\$\{position\}/);
-  assert.match(draw, /draw-\$\{position\}/);
-  assert.notEqual(draw.indexOf("orientation-"), draw.indexOf("draw-"));
+  // Asserted on behaviour rather than on the source. Orientation comes from a
+  // separate shuffle stream, so toggling the setting must never hand the
+  // reader a different card halfway through their day. Checked across many
+  // seeds because one seed passing proves nothing about the seam.
+  for (let i = 0; i < 200; i += 1) {
+    const seed = `seam-${i}`;
+    const upright = drawSpread({ deck: FIXTURE_DECK_REVIEWED, spreadType: "three_card", seed, reversals: false });
+    const mixed = drawSpread({ deck: FIXTURE_DECK_REVIEWED, spreadType: "three_card", seed, reversals: true });
+    assert.deepEqual(
+      mixed.cards.map((c) => c.card.id),
+      upright.cards.map((c) => c.card.id),
+      `seed ${seed} drew different cards once reversals were on`,
+    );
+    assert.ok(upright.cards.every((c) => c.orientation === "upright"), "reversals off must yield upright only");
+  }
+});
+
+test("reversals come from turning part of the deck, not from a coin toss", () => {
+  // The distinguishing property of a shuffled deck is that orientation is NOT
+  // independent per card. A fresh deck is entirely upright, a cut-and-turn
+  // flips a contiguous block, and riffles never flip anything — so some decks
+  // come out wholly upright and spreads are overdispersed relative to 50/50.
+  const SIZE = 78;
+
+  // A deck nobody turned is entirely upright, and that must be reachable.
+  let sawUntouchedDeck = false;
+  let reversedCards = 0;
+  const SAMPLES = 4000;
+  for (let i = 0; i < SAMPLES; i += 1) {
+    const orientations = deckOrientations(`deck-${i}`, SIZE);
+    assert.equal(orientations.length, SIZE);
+    const reversed = orientations.filter(Boolean).length;
+    if (reversed === 0) sawUntouchedDeck = true;
+    reversedCards += reversed;
+  }
+  assert.ok(sawUntouchedDeck, "a deck nobody turned should sometimes come up all upright");
+
+  // Well away from the even split a per-card coin toss would pin it to.
+  const rate = reversedCards / (SAMPLES * SIZE);
+  assert.ok(rate > 0.25 && rate < 0.48, `deck reversal rate ${rate} should sit below an even split`);
+
+  // Same seed, same deck: the model is derived, never persisted.
+  assert.deepEqual(deckOrientations("stable", SIZE), deckOrientations("stable", SIZE));
 });
 
 test("orientation is decided where the draw is, not by the client", () => {
