@@ -1,6 +1,6 @@
 {
   "name": "@ezmannbuilds/orbit-axis-engine",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Deterministic astrology calculation engine for Orbit Axis. Natal charts, houses, aspects, transits, lunar phase, and structured evidence, computed locally with Swiss Ephemeris.",
   "type": "module",
   "main": "src/index.js",
