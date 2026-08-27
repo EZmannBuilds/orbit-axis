@@ -53,3 +53,6 @@ public/qa-local-session.json
 .claude/*
 !.claude/launch.json
 
+
+# Agent working notes live in the private Orbit vault, never here
+docs/agent-log.md
