@@ -174,6 +174,10 @@
           <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
 
+          <!-- Sharing the reading as an image. Mounted by the app once there
+               is a reading to share, so it never offers to export a shimmer. -->
+          <div id="today-share"></div>
+
           <!-- Whose chart the reading above belongs to.
                Just the picker: the "Reading for" label repeated what the select
                already says, and Manage and + were two routes to a screen the
@@ -830,6 +834,7 @@
             <!-- A drawn spread takes over this surface. Empty until then. -->
             <div class="tarot-spread" id="tarot-spread" hidden></div>
             <div class="tarot-save" id="tarot-save"></div>
+            <div id="tarot-share"></div>
           </section>
 
           <!-- ── Reflections ────────────────────────────────────────────────
@@ -1345,6 +1350,25 @@
                 <p class="chart-field__help" id="cm-avatar-note" role="status" aria-live="polite"></p>
                 <button type="button" class="o-btn o-btn--utility" id="cm-avatar-discard" hidden>Discard picture</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Asked once, during first-run only. Tarot is off until someone
+               says otherwise: it is a reflection tool, not astronomy, and it
+               should not appear in an astrology app without being chosen. The
+               answer writes the same `orbit.tarot` preference the Settings
+               switch writes, so there is one source of truth for it. -->
+          <div class="chart-field" id="cm-tarot-block" hidden>
+            <span class="chart-field__label" id="cm-tarot-label">Tarot</span>
+            <p class="chart-field__help" id="cm-tarot-help">
+              Orbit can show a daily tarot card beside your sky. It is a prompt
+              for reflection, not a prediction, and it is not calculated from
+              astronomy. You can change this any time in Settings.
+            </p>
+            <div class="o-segment" id="cm-tarot" role="group"
+                 aria-labelledby="cm-tarot-label" aria-describedby="cm-tarot-help">
+              <button type="button" data-value="on" aria-pressed="false">Show tarot</button>
+              <button type="button" data-value="off" aria-pressed="true">No thanks</button>
             </div>
           </div>
 

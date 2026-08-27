@@ -400,6 +400,17 @@
   align-content: start;
 }
 
+/* The card is capped at 200px but its column is 86% of the carousel, so on
+   anything wider than a phone the face sat hard against the left edge of a
+   column it was supposed to sit in the middle of — measured at 200px of card
+   in a 307px slot, 107px of it all on one side. Centre the FACE only: the
+   step label and the meaning stay left-aligned, because centred prose is
+   harder to read and the card is the thing that was off. */
+.tarot-carousel__item .tarot-card-slot {
+  display: grid;
+  justify-items: center;
+}
+
 .tarot-carousel__step {
   margin: 0;
   font-size: 0.8rem;

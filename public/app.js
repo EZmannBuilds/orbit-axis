@@ -7,6 +7,7 @@
    JSON API and paints the design-system components.
    ========================================================================== */
 
+import { SHARE_PRESETS, SHARE_PRESET_IDS, renderShareImage, deliverShareImage, shareFilename } from "/share-image.js";
 import { renderMoonSVG } from "./moon-phase.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
@@ -3384,6 +3385,7 @@ function openChartForm(mode, chart = null) {
 
   syncTimeCertainty();
   setupPlaceSearch("cm");
+  syncOnboardingTarotAsk(mode);
   openModal(modal, {
     initialFocus: $("#cm-nickname"),
     // First-run onboarding is dismissible: someone who is not ready to hand
@@ -3818,6 +3820,17 @@ function wireChartModal() {
   $("#cm-avatar-discard")?.addEventListener("click", resetChartFormAvatar);
   $("#cm-nickname")?.addEventListener("input", renderChartFormAvatar);
 
+  // The first-run tarot control. Deliberately not routed through
+  // wireSettings(): that map writes to localStorage on click, and this answer
+  // must not take effect until the chart it was asked alongside actually saves.
+  $("#cm-tarot")?.addEventListener("click", (event) => {
+    const btn = event.target.closest("button");
+    if (!btn) return;
+    onboardingTarotChoice = btn.dataset.value === "on" ? "on" : "off";
+    $$("#cm-tarot button").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.value === onboardingTarotChoice)));
+  });
+
   $("#chart-modal-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (chartForm.submitting) return;             // double-submit guard
@@ -3846,6 +3859,11 @@ function wireChartModal() {
       const saved = id
         ? await patch(`/api/charts/${id}`, payload)
         : await post("/api/charts", payload);
+
+      // The tarot answer is a device preference, not chart data — it is
+      // deliberately NOT in the payload. Applied only after the chart saves,
+      // so a failed save never silently changes what the app shows.
+      commitOnboardingTarotAsk();
 
       // The chart exists from here on. A picture that fails to upload must
       // not un-save it, duplicate it, or read as a failed creation — the
@@ -4651,9 +4669,192 @@ function tarotPref(key, fallback) {
   catch { return fallback; }
 }
 
-/** Is the reader showing Tarot at all? */
+/** Is the reader showing Tarot at all?
+ *
+ *  OFF until chosen. Tarot is a reflection prompt, not astronomy, and it does
+ *  not belong in an astrology app's navigation for someone who never asked for
+ *  it. First-run onboarding asks once; Settings owns it from then on. */
 function tarotEnabled() {
-  return tarotPref("tarot", "on") !== "off";
+  return tarotPref("tarot", "off") === "on";
+}
+
+/* ── The first-run tarot question ─────────────────────────────────────────
+   Asked once, inside first-run onboarding, because tarot is off until chosen.
+   The control writes nothing on its own: the answer is held here and applied
+   only when the chart actually saves, so abandoning the form leaves the
+   preference exactly as it was. Settings owns it from then on. */
+let onboardingTarotChoice = null;
+
+/** Show the question in first-run only, reset to "No thanks" each time. */
+function syncOnboardingTarotAsk(mode) {
+  const block = $("#cm-tarot-block");
+  if (!block) return;
+  const asking = mode === "first" && !tarotAlreadyAsked();
+  block.hidden = !asking;
+  onboardingTarotChoice = null;
+  if (!asking) return;
+  $$("#cm-tarot button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.value === "off")));
+}
+
+/** Has this device already been asked? A second chart is not a second ask. */
+function tarotAlreadyAsked() {
+  return tarotPref("tarotAsked", "") === "1";
+}
+
+/** Apply the held answer. Called only after a first-run chart saves. */
+function commitOnboardingTarotAsk() {
+  const block = $("#cm-tarot-block");
+  if (!block || block.hidden) return;
+  try { localStorage.setItem("orbit.tarotAsked", "1"); } catch { /* private mode */ }
+  // No answer touched means the default stands, and the default is off.
+  SettingsController.set("tarot", onboardingTarotChoice === "on" ? "on" : "off");
+  onboardingTarotChoice = null;
+}
+
+/* ── Sharing a reading as an image ────────────────────────────────────────
+   One control, two surfaces. The button builds a plain content object from
+   what is already on screen and hands it to the renderer; it never reaches
+   for a fact the page has not already shown, so a shared image and the app
+   can never disagree.
+
+   The preset row is inline rather than a dialog: three sizes is not a
+   decision worth a modal, and on iOS the share sheet has to open inside the
+   gesture that asked for it — a dialog in between spends that gesture. */
+
+/** Markup for the share control. `kind` becomes part of the filename. */
+function shareControlHtml(kind) {
+  return `<div class="share-control" data-share-kind="${esc(kind)}">
+      <button type="button" class="o-btn o-btn--utility" data-share-open>Share as image</button>
+      <div class="share-control__presets" data-share-presets hidden role="group" aria-label="Image size">
+        ${SHARE_PRESET_IDS.map((id) => {
+          const p = SHARE_PRESETS[id];
+          return `<button type="button" class="o-btn o-btn--utility o-btn--sm" data-share-preset="${id}">
+            ${esc(p.label)} <span class="u-meta">${p.w}×${p.h}</span></button>`;
+        }).join("")}
+      </div>
+      <p class="share-control__status u-meta" data-share-status role="status" aria-live="polite"></p>
+    </div>`;
+}
+
+/** Wire one mounted share control. Safe to call again after a re-render. */
+function wireShareControl(root, buildContent) {
+  const box = root?.querySelector?.("[data-share-kind]");
+  if (!box || box.dataset.shareWired === "1") return;
+  box.dataset.shareWired = "1";
+  const presets = box.querySelector("[data-share-presets]");
+  const status = box.querySelector("[data-share-status]");
+
+  box.querySelector("[data-share-open]")?.addEventListener("click", () => {
+    presets.hidden = !presets.hidden;
+    if (!presets.hidden) presets.querySelector("button")?.focus();
+  });
+
+  presets.addEventListener("click", async (event) => {
+    const btn = event.target.closest("[data-share-preset]");
+    if (!btn) return;
+    const presetId = btn.dataset.sharePreset;
+    status.textContent = "Making the image…";
+    try {
+      const content = buildContent();
+      if (!content) { status.textContent = "There is nothing to share yet."; return; }
+      const blob = await renderShareImage(content, presetId);
+      const name = shareFilename(box.dataset.shareKind, content.isoDate, presetId);
+      const result = await deliverShareImage(blob, name, content.shareText);
+      status.textContent = result === "shared" ? "Shared."
+        : result === "downloaded" ? "Saved to your downloads."
+        : "";
+      if (result !== "cancelled") presets.hidden = true;
+    } catch (error) {
+      // Say what failed. A silent share button is indistinguishable from a
+      // broken one, and this path runs offline where failures are likelier.
+      status.textContent = "The image could not be created on this device.";
+      console.error("share image", error);
+    }
+  });
+}
+
+/** Today's sky, as the page currently shows it.
+ *
+ *  Requires the REAL reading — `.fortune`, the deck. `#today-fortune` also
+ *  holds the "add your birth details" prompt for a reader with no chart, and
+ *  offering to share that would export an advert for the form they are
+ *  looking at. No reading, no button. */
+function buildSkyShareContent() {
+  const fortune = $("#today-fortune .fortune");
+  if (!fortune) return null;
+  const first = fortune.querySelector(".fortune-card2");
+  const body = text(fortune.querySelector(".fortune-closing"))
+    || text(first?.querySelector(".fortune-card2__body"))
+    || text(first?.querySelector(".fortune-card2__lede"));
+  if (!body) return null;
+  const date = text($("#today-date"));
+  const title = text($("#fortune-title")) || text($("#home-title")) || "Your sky today";
+  return {
+    eyebrow: "Daily reading",
+    title,
+    subtitle: date,
+    body,
+    meta: [text(first?.querySelector(".fortune-card2__label"))].filter(Boolean),
+    footer: "Calculated by the Orbit Axis engine.",
+    isoDate: todayIsoForShare(),
+    shareText: date ? `${title} — ${date}` : title,
+  };
+}
+
+/** A tarot card, as the page currently shows it. */
+function buildTarotShareContent() {
+  const scope = tarotState.manual ? "#tarot-spread" : "#tarot-daily-reading";
+  const root = $(scope);
+  const name = text(root?.querySelector("h3, h4, .tarot-meaning__name"));
+  const body = text(root?.querySelector(".tarot-meaning__text, p:not(.u-meta):not(.tarot-meaning__position)"));
+  if (!name && !body) return null;
+  const position = text(root?.querySelector(".tarot-meaning__position"));
+  // The artwork the page is showing, not a path rebuilt from a slug — a
+  // shared card and the card on screen have to be the same card.
+  const art = root?.closest("#tarot-daily, #tarot-spread")?.querySelector("img.tarot-card__art")
+    || $(`${scope === "#tarot-spread" ? "#tarot-spread" : "#tarot-daily"} img.tarot-card__art`);
+  return {
+    eyebrow: "Tarot",
+    image: art?.getAttribute("src") || null,
+    title: name || "Today's card",
+    subtitle: position || text($("#today-date")),
+    body,
+    meta: ["A prompt for reflection, not a prediction."],
+    footer: "Tarot in Orbit Axis is not calculated from the sky.",
+    isoDate: todayIsoForShare(),
+    shareText: name ? `${name} — Orbit Axis` : "Orbit Axis",
+  };
+}
+
+/** Put the share control under a reading, once there is one to share. */
+function mountShareControls() {
+  const sky = $("#today-share");
+  if (sky && buildSkyShareContent()) {
+    if (!sky.firstElementChild) sky.innerHTML = shareControlHtml("sky");
+    wireShareControl(sky, buildSkyShareContent);
+  } else if (sky) {
+    sky.innerHTML = "";
+  }
+
+  const tarot = $("#tarot-share");
+  if (tarot && tarotEnabled() && buildTarotShareContent()) {
+    if (!tarot.firstElementChild) tarot.innerHTML = shareControlHtml("tarot");
+    wireShareControl(tarot, buildTarotShareContent);
+  } else if (tarot) {
+    tarot.innerHTML = "";
+  }
+}
+
+/** Trimmed text content, or "". */
+function text(el) { return (el?.textContent || "").trim(); }
+
+/** The date the page is showing, as YYYY-MM-DD, for the filename only. */
+function todayIsoForShare() {
+  const attr = $("#today-days [aria-current=\"page\"]")?.dataset?.date;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(attr || ""))) return attr;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /** Which three-card labels this reader chose. */
@@ -5119,6 +5320,7 @@ function autoSaveTarotDaily() {
 
 /** Save is offered to everyone; the account is asked for only on the press. */
 function renderTarotDailySave() {
+  mountShareControls();
   const holder = $("#tarot-daily-actions");
   if (!holder) return;
   if (tarotState.saved) {
@@ -5419,6 +5621,7 @@ function backToTarotDaily() {
 }
 
 function renderTarotManualSave() {
+  mountShareControls();
   const holder = $("#tarot-save");
   if (!holder) return;
   if (tarotState.saved) {
@@ -5778,7 +5981,7 @@ const settings = {
    * looked inert because the handler died before it reached the control.
    */
   prefs: {
-    tarot: { default: "on", seg: "#set-tarot" },
+    tarot: { default: "off", seg: "#set-tarot" },
     tarotPositions: { default: "reflective", seg: "#set-tarot-positions" },
     tarotMeaning: { default: "ask", seg: "#set-tarot-meaning" },
     tarotReversed: { default: "off", seg: "#set-tarot-reversed" },
@@ -7131,6 +7334,7 @@ function axisRenderFortune(F) {
     </section>`;
 
   wireFortuneDeck(cards.length);
+  mountShareControls();
 }
 
 /* ── The reading deck ──────────────────────────────────────────────────────

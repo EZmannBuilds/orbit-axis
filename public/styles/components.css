@@ -982,3 +982,18 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   letter-spacing: var(--track-caption);
   color: var(--color-muted);
 }
+
+/* ── Share control ────────────────────────────────────────────────────────
+   One button that reveals three sizes. Inline rather than a dialog: three
+   presets is not a decision worth a modal, and on iOS the share sheet must
+   open inside the gesture that asked for it — a dialog in between spends it. */
+.share-control { margin-top: var(--space-lg); }
+.share-control__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+.share-control__presets .u-meta { margin-left: var(--space-xs); }
+.share-control__status:empty { display: none; }
+.share-control__status { margin: var(--space-sm) 0 0; }
