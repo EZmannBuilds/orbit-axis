@@ -7,6 +7,7 @@ import {
   calculateReadingPeriod, selectReadingEvents, buildReadingCandidate,
 } from "../lib/orbit-x/readings.js";
 import { buildReadingScaffold } from "../lib/orbit-x/language.js";
+import { buildPacket } from "../lib/orbit-x/prompts.js";
 import { validateGeneratedPost, draftCompleteness } from "../lib/orbit-x/schemas.js";
 import {
   ASPECTS, TEMPLATES, TEMPLATE_FAMILY_IDS, READING_TEMPLATE_DEFAULTS,
@@ -215,4 +216,83 @@ test("the real reading endpoint and manual draft lane work with no AI key", asyn
   assert.equal(inserted[0].template_family, "lunar_field");
   assert.equal(inserted[0].template_version, "v1");
   assert.equal(inserted[0].generated_copy, null);
+});
+
+test("a generated reading gets its metadata from the engine, not the model", async () => {
+  // The model returns publishable prose and NO `reading` object — which is
+  // exactly what the packet tells it to do, and what used to fail validation.
+  const modelPost = {
+    format: "daily_reading",
+    headline: "Let the Day Show Its Shape",
+    slides: [
+      { role: "cover", heading: "Daily reading", body: "" },
+      { role: "one_sentence", heading: "Today in one sentence",
+        body: "Today's sky holds a settled Moon against a Sun still early in its sign: enough light to see by, not yet enough to sort." },
+      { role: "movements", heading: "What's moving",
+        body: "Sun: 27 degrees Leo. Moon: 4 degrees Capricorn. Venus: 12 degrees Libra." },
+      { role: "reading", heading: "The reading",
+        body: "Astrologers traditionally associate Capricorn with structure and Leo with expression. With the Moon waxing, one symbolic reading is to notice which shape is forming before naming it." },
+      { role: "reflection", heading: "Carry this with you",
+        body: "What has taken on a shape clear enough to describe, but not yet one you would defend?" },
+      { role: "evidence", heading: "Sky behind the reading",
+        body: "Current sky: Sun 27 degrees Leo, Moon 4 degrees Capricorn, Venus 12 degrees Libra." },
+    ],
+    caption: "The Moon sits in Capricorn while the Sun is early in its sign. Traditionally, Capricorn is associated with structure. Held together, the day can invite reflection on what is taking shape. Positions calculated by the Orbit Axis engine; the symbolic reading is editorial.",
+    cta: "",
+    altText: "Orbit Axis daily reading carousel with a calculated Moon graphic, celestial glyphs, editorial copy and a current sky register.",
+  };
+  const fetchImpl = async () => ({
+    ok: true,
+    json: async () => ({ content: [{ type: "text", text: JSON.stringify(modelPost) }],
+      usage: { input_tokens: 10, output_tokens: 20 } }),
+  });
+  const store = { isAdmin: async () => true, coverageFor: async () => [], history: async () => [] };
+  const env = {
+    ORBIT_X_ENABLED: "true", ORBIT_X_EDITORIAL_TIMEZONE: "America/Chicago",
+    ORBIT_X_AI_PROVIDER: "anthropic", ORBIT_X_AI_API_KEY: "test-key-not-a-real-secret",
+  };
+  const auth = { ownerId: "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee" };
+
+  const reading = await handleOrbitXRoute("GET", "/api/orbit-x/readings",
+    new URLSearchParams("type=daily&date=2026-08-20"), {}, auth, { env, store });
+  assert.equal(reading.body.aiAvailable, true, "a configured key must light the AI lane up for readings");
+
+  const res = await handleOrbitXRoute("POST", "/api/orbit-x/generate", new URLSearchParams(), {
+    eventKey: reading.body.candidate.eventKey, date: "2026-08-20", format: "daily_reading",
+  }, auth, { env, store, fetchImpl });
+
+  assert.equal(res.status, 200, `generation should pass validation, got: ${JSON.stringify(res.body.problems || res.body.error || "")}`);
+  const { reading: meta } = res.body.post;
+  assert.ok(meta, "the server must attach reading metadata the model never wrote");
+  assert.equal(meta.type, "daily");
+  assert.equal(meta.periodKey, "daily:2026-08-20", "period key is an engine fact, echoed by nobody");
+  assert.equal(meta.periodLabel, reading.body.period.label);
+  assert.equal(meta.theme, modelPost.headline, "theme mirrors the headline structurally");
+  assert.equal(meta.oneSentence, modelPost.slides[1].body, "oneSentence mirrors the thesis slide structurally");
+});
+
+test("the packet asks a reading's writer for prose, never for period metadata", () => {
+  const period = calculateReadingPeriod("daily", "2026-08-20", DEFAULT_EDITORIAL_TIMEZONE);
+  const candidate = buildReadingCandidate({
+    type: "daily", period,
+    events: selectReadingEvents("daily", READING_EVENTS, period),
+    context: READING_CONTEXT,
+  });
+  const packet = buildPacket(candidate, "daily_reading", []);
+  assert.ok(packet.reading, "reading formats get a structural brief");
+  assert.equal(packet.reading.readingType, "daily");
+  assert.equal(packet.reading.periodLabel, period.label);
+  assert.ok(!("periodKey" in packet.reading), "the key is never shown, so it can never be echoed wrong");
+  assert.ok(packet.reading.structure.some((line) => line.includes("Do not output a \"reading\" object")),
+    "the brief must tell the writer the metadata is not its to author");
+
+  const moonPacket = buildPacket(candidate, "something_changed", []);
+  assert.ok(!moonPacket.reading, "non-reading formats are untouched");
+});
+
+test("the desk offers Regenerate on readings once a key is configured", () => {
+  const ui = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
+  assert.match(ui, /\$\{aiAvailable \? `<button[^>]*id="e-regen"/,
+    "the AI button must gate on the key alone — readings were excluded while their packet was unwired");
+  assert.ok(!/aiAvailable && !isReading/.test(ui), "the reading exclusion should be gone");
 });

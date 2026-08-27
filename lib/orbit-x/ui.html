@@ -533,7 +533,7 @@ function renderEditor() {
       </div>
     </details>
     <div class="x-row">
-      ${aiAvailable && !isReading ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
+      ${aiAvailable ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
       <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
       <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
       <span style="opacity:.4">|</span>
