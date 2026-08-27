@@ -58,7 +58,10 @@
     <nav class="rail" aria-label="Primary sections">
       <div class="rail__brand brand-lockup" aria-label="Orbit Axis">
         <img class="orbit-mark orbit-mark--rail" src="/brand/orbit-axis-mark.svg" alt="" />
-        <span class="rail__wordmark">ORBIT AXIS</span>
+        <span class="rail__brand-copy">
+          <span class="rail__wordmark">ORBIT AXIS</span>
+          <span class="rail__tagline">YOUR ACCESS TO THE SKY</span>
+        </span>
       </div>
 
       <div class="rail__section-label">Sections</div>
@@ -127,7 +130,34 @@
               <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
               <p class="axis-timezone" id="today-timezone" hidden></p>
             </div>
+            <!-- How much astrology to show. A display choice, never a different
+                 calculation: switching level re-reads what is already loaded and
+                 fetches nothing. Simple hides degrees and orbs, Balanced shows
+                 the moderate middle, Advanced shows everything the engine
+                 produced. Persisted like every other preference. -->
+            <div class="axis-today-head__controls">
+              <nav class="o-segment detail-segment" aria-label="Astrology detail level" id="detail-segment">
+                <button type="button" data-detail-level="Simple" aria-pressed="true">Simple</button>
+                <button type="button" data-detail-level="Balanced" aria-pressed="false">Balanced</button>
+                <button type="button" data-detail-level="Advanced" aria-pressed="false">Advanced</button>
+              </nav>
+              <button type="button" class="o-btn o-btn--utility" id="why-reading-btn" aria-expanded="false" aria-controls="why-reading">
+                Why this reading
+              </button>
+            </div>
           </div>
+
+          <!-- The promise, in the product's own words, with the engine's actual
+               factors under it. Rendered from the loaded fortune — nothing here
+               is written for this box. -->
+          <aside class="why-reading" id="why-reading" aria-label="How this reading was made" hidden>
+            <p class="why-reading__rule"><strong>Calculate first. Explain second. Generate last.</strong>
+              Orbit Axis calculates the current sky with its own astronomy engine, compares it with your
+              saved birth chart, and only then puts the strongest contacts into plain language.
+              Symbolic reflection — never prediction.</p>
+            <div id="why-reading-factors"></div>
+            <button type="button" class="o-btn o-btn--ghost o-btn--sm" id="why-reading-close">Close</button>
+          </aside>
 
           <!-- Two halves of one day. Real anchors with real hrefs, so Back,
                Forward, refresh and copy-link all work; aria-current carries the
@@ -1136,6 +1166,30 @@
         <span class="brand-wordmark">ORBIT AXIS</span>
       </div>
       <p class="startup-status" id="startup-status" role="status">Restoring your Orbit…</p>
+    </div>
+  </div>
+
+  <!-- ── Fortune detail sheet ────────────────────────────────────────────
+       One card of Today's Fortune, opened to full depth: the reading, the
+       engine factors that produced the day, how it was calculated, and the
+       standing symbolic-reflection note. A side sheet on desktop and a bottom
+       sheet on a phone — same element, different CSS. Content is filled from
+       the fortune already loaded; opening it fetches nothing. -->
+  <div class="o-modal o-modal--sheet" id="fortune-sheet" hidden role="dialog" aria-modal="true"
+       aria-labelledby="fortune-sheet-title">
+    <div class="o-modal__backdrop" data-modal-close></div>
+    <div class="o-modal__panel fortune-sheet__panel">
+      <header class="o-modal__head fortune-sheet__head">
+        <div>
+          <p class="fortune-sheet__eyebrow">Today’s Fortune</p>
+          <h2 id="fortune-sheet-title">Reading</h2>
+        </div>
+        <button type="button" class="o-modal__close" aria-label="Close" data-modal-close data-icon="x"></button>
+      </header>
+      <div class="o-modal__body fortune-sheet__body" id="fortune-sheet-body"></div>
+      <footer class="fortune-sheet__foot">
+        <a class="o-btn o-btn--secondary" href="#transits" id="fortune-sheet-sky">View in Sky</a>
+      </footer>
     </div>
   </div>
 

@@ -518,19 +518,63 @@ test("the season is stated once, not twice", () => {
     "Technical Sky states the Sun by degree, not by sign name");
 });
 
-test("no Simple/Advanced control survives anywhere", () => {
-  for (const relic of ['data-level="Simple"', 'data-level="Advanced"', 'axis-detail']) {
-    assert.ok(!html.includes(relic), `${relic} should be gone from the markup`);
+// ── Progressive depth (A2 redesign) ─────────────────────────────────────────
+//
+// Update 5.2 removed the detail switch entirely and these tests asserted its
+// absence. The A2 redesign restores three levels, so the assertions below now
+// guard the FINDING that motivated 5.2 rather than the removal it chose.
+//
+// 5.2's finding was specific and still binding: "Simple hid houses, degrees,
+// retrograde marks, and transit detail behind a switch most people never found
+// — so the app looked shallower than it is, and the people most likely to leave
+// it on Simple were exactly the ones who needed the plain-language
+// explanations." The failure was hiding the READING. Hiding raw degrees was
+// never the complaint.
+//
+// So: a level may hide numbers. A level may never hide a reading, and it may
+// never cost a network request.
+
+test("the detail control offers all three levels and is reachable", () => {
+  for (const level of ["Simple", "Balanced", "Advanced"]) {
+    assert.ok(html.includes(`data-detail-level="${level}"`), `${level} should be offered in the markup`);
   }
-  assert.ok(!appJs.includes("axisSetDetail(") || !html.includes("axis-detail"),
-    "no visible control should call the detail setter");
+  assert.match(appJs, /axisSetDetail\(btn\.dataset\.detailLevel\)/, "the control is wired to the setter");
+  // The relics of the OLD control must not come back alongside the new one.
+  for (const relic of ['data-level="Simple"', 'data-level="Advanced"', 'axis-detail']) {
+    assert.ok(!html.includes(relic), `${relic} is the superseded control and should stay gone`);
+  }
 });
 
-test("a stored Simple preference cannot hide content", () => {
-  // Backward compatibility: the saved value is read but not obeyed, and is
-  // deliberately not deleted.
-  assert.match(appJs, /AXIS\.detail = "Advanced"/,
-    "loading should resolve to the complete experience regardless of what is stored");
-  assert.match(appJs, /return "advanced"/,
-    "detailKeyFor should always select the advanced phrasing");
+test("a detail level never hides a plain-language reading", () => {
+  // This is 5.2's finding, kept. Both phrasings are always in the DOM and CSS
+  // chooses between them, so find-in-page and a screen reader reach the plain
+  // wording at every level — including Advanced.
+  const css = readFileSync(join(ROOT, "public", "styles", "orbit-axis.css"), "utf8");
+  assert.match(css, /html\[data-detail="Advanced"\] \.detail-plain \{ display: none; \}/,
+    "the plain phrasing is swapped by CSS, not removed from the document");
+  assert.match(css, /html\[data-detail="Simple"\] \.detail-tech \{ display: none !important; \}/,
+    "Simple hides technical VALUES");
+  // The reading cards themselves carry no level gate: every card body renders
+  // at every level. If a gate class ever lands on a card body, this fails.
+  const cards = appJs.slice(appJs.indexOf("function axisFortuneCards"), appJs.indexOf("function axisRenderFortune"));
+  assert.ok(!/detail-tech|detail-adv/.test(cards),
+    "a fortune reading must never be gated behind a detail level");
+});
+
+test("changing detail level costs no network request", () => {
+  // Switching level re-renders what is already loaded. If axisApplyDetail ever
+  // starts fetching, the level stops being a display choice.
+  const body = appJs.slice(appJs.indexOf("function axisApplyDetail"), appJs.indexOf("async function axisSetDetail"));
+  for (const call of ["await get(", "await post(", "await put(", "fetch("]) {
+    assert.ok(!body.includes(call), `axisApplyDetail must not call ${call}`);
+  }
+  assert.match(body, /axisRenderFortune\(AXIS\.lastFortune\)/, "it re-renders the fortune already in memory");
+});
+
+test("a stored preference is honoured, and an unknown one degrades safely", () => {
+  assert.match(appJs, /localStorage\.getItem\("oa_detail"\)/, "the device remembers the exact level");
+  // normalizeDetail is the only door in: anything unrecognised becomes Simple.
+  assert.match(appJs, /if \(v === "advanced"\) return "Advanced";/);
+  assert.match(appJs, /if \(v === "balanced"\) return "Balanced";/);
+  assert.match(appJs, /return "Simple";/);
 });

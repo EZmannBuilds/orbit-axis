@@ -310,3 +310,237 @@
      that fill is the one piece of chrome doing real work here. */
   .day-strip { background: none; border: 0; padding: 0; }
 }
+
+/* ══ A2 identity layer ═══════════════════════════════════════════════════════
+   The approved interactive prototype's direction, expressed in this system's
+   own tokens rather than beside them. Nothing here introduces a second design
+   language: the one accent stays Orbit Violet, elevation stays a surface
+   change, and the type ladder is untouched. What A2 adds is the identity —
+   the tagline in the rail, the orbit motif in selection and progress, and
+   restrained differentiation colours where information genuinely needs it.
+
+   The prototype's flat hexes are deliberately NOT copied in. A hardcoded
+   #0d1220 would be correct in dark and unreadable in light, and both themes
+   are supported. Every value below resolves through the semantic layer. */
+
+/* ── The rail's brand lockup ────────────────────────────────────────────── */
+.rail__brand-copy { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.rail__tagline {
+  font-size: var(--type-fine);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.11em;
+  color: var(--color-faint);
+  white-space: nowrap;
+}
+
+/* ── Today's header controls ────────────────────────────────────────────── */
+.axis-today-head__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* The detail selector. A segmented control rather than a select, because the
+   three levels are peers and the current one should be readable without
+   opening anything. */
+.detail-segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+.detail-segment button {
+  min-height: 38px;
+  padding: 0 var(--space-sm);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.detail-segment button:hover { color: var(--color-primary); background: var(--color-surface-ghost); }
+/* Selected is stated by weight and surface as well as tint — never colour alone. */
+.detail-segment button[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+/* ── "Why this reading" ─────────────────────────────────────────────────── */
+.why-reading {
+  display: grid;
+  gap: var(--space-sm);
+  margin: var(--space-sm) 0 var(--space-md);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+.why-reading[hidden] { display: none; }
+.why-reading__rule { margin: 0; color: var(--color-secondary); line-height: 1.6; }
+.why-reading__rule strong { color: var(--color-primary); }
+.why-reading__label {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.why-reading__factors { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-xs); }
+.why-factor {
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--color-accent-border);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-sunken);
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+}
+.why-reading .o-btn { justify-self: start; }
+
+/* ── The detail-level gates ─────────────────────────────────────────────────
+   The whole level system, in three rules. Both phrasings are always in the DOM
+   — so switching level is a repaint, never a refetch, and find-in-page and a
+   screen reader still reach the plain wording at any level. */
+.detail-tech-text { display: none; }
+html[data-detail="Advanced"] .detail-plain { display: none; }
+html[data-detail="Advanced"] .detail-tech-text { display: inline; }
+/* Technical values (degrees, orbs, applying/separating) appear from Balanced up. */
+html[data-detail="Simple"] .detail-tech { display: none !important; }
+/* Balanced shows states and houses but not raw orbs. */
+html[data-detail="Simple"] .detail-adv,
+html[data-detail="Balanced"] .detail-adv { display: none !important; }
+
+/* ── Fortune cards as controls ──────────────────────────────────────────── */
+.fortune-card2 {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+.fortune-card2:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-hover);
+}
+.fortune-card2:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+.fortune-card2__compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs);
+  font-size: var(--type-title, 1.5rem);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+}
+/* The lucky colour, shown as a swatch as well as named — the name is the
+   information, the swatch is the confirmation. Colour never carries it alone. */
+.fortune-swatch {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--swatch, var(--color-surface));
+}
+.fortune-card2__more {
+  margin-top: auto;
+  padding-top: var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.fortune-disclaimer {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--type-caption);
+  color: var(--color-faint);
+}
+
+/* ── The fortune detail sheet ───────────────────────────────────────────────
+   A side sheet on desktop, a bottom sheet on a phone. Same element, same modal
+   machinery (focus trap, Escape, focus restoration) — only the geometry moves. */
+.o-modal--sheet { align-items: stretch; justify-content: flex-end; padding: 0; }
+.fortune-sheet__panel {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(460px, 100vw);
+  max-inline-size: 100vw;
+  block-size: 100dvh;
+  max-block-size: 100dvh;
+  border-radius: 0;
+  border-inline-start: var(--border-width) solid var(--color-border);
+}
+.fortune-sheet__head { align-items: flex-start; }
+.fortune-sheet__eyebrow {
+  margin: 0 0 2px;
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.fortune-sheet__body { display: grid; gap: var(--space-md); overflow-y: auto; }
+.fortune-sheet__lede {
+  margin: 0;
+  font-size: var(--type-fine);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.fortune-sheet__reading { margin: 0; line-height: 1.65; color: var(--color-secondary); }
+.fortune-sheet__note { margin: 0; font-size: var(--type-caption); color: var(--color-faint); }
+.calculation-details > summary { cursor: pointer; color: var(--color-accent); font-size: var(--type-caption); }
+.calculation-details > summary:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; border-radius: 4px; }
+.calculation-details p { margin: var(--space-xs) 0 0; color: var(--color-secondary); font-size: var(--type-caption); line-height: 1.6; }
+.fortune-sheet__foot {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: var(--border-width) solid var(--color-border);
+}
+.fortune-sheet__foot .o-btn { flex: 1; }
+
+/* A phone gets a bottom sheet: reachable by thumb, and it never covers the
+   whole screen, so the page behind it still says where you are. */
+@media (max-width: 700px) {
+  .o-modal--sheet { align-items: flex-end; justify-content: center; }
+  .fortune-sheet__panel {
+    inline-size: 100vw;
+    block-size: auto;
+    max-block-size: 88dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-inline-start: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+@media (max-width: 640px) {
+  .axis-today-head__controls { width: 100%; }
+  .detail-segment { flex: 1; }
+  .detail-segment button { flex: 1; min-height: 44px; }
+}
+
+/* Reduced motion: the card lift and every transition above are decoration.
+   The base motion layer already zeroes durations globally; this states the
+   intent locally so a later edit does not reintroduce a transform here. */
+@media (prefers-reduced-motion: reduce) {
+  .fortune-card2, .detail-segment button { transition: none; }
+  .fortune-card2:hover { transform: none; }
+}

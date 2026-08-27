@@ -6911,33 +6911,33 @@ const AXIS = {
   // (session restore already loads it for a signed-in returning user).
   loadedOnce: false,
 };
-// Update Two removed "Balanced". Only two levels remain; Simple is the default.
-// Update 5.2: there is one experience, and it is the complete one.
+// The A2 redesign restores progressive depth as THREE DISPLAY LEVELS. This is
+// a different thing from what Update 5.2 removed, and the difference is the
+// contract: a level never changes the calculation, never refetches, and never
+// hides the plain-language reading — Simple is the complete reading with the
+// technical numbers folded away, not a shallower product. Update 5.2's finding
+// (plain language must sit beside the technical facts) is preserved in Advanced,
+// which shows both phrasings' content rather than switching to jargon alone.
 //
-// "Simple" hid houses, degrees, retrograde marks, and transit detail behind a
-// switch most people never found — so the app looked shallower than it is, and
-// the people most likely to leave it on Simple were exactly the ones who needed
-// the plain-language explanations that now sit BESIDE the technical facts.
-//
-// Advanced no longer means "more confusing". It means complete, with help text.
-const DETAILS = ["Advanced"];
+// Simple    — the reading, the Moon, no degrees, no orbs.
+// Balanced  — adds signs-and-states context: retrogrades, waxing/waning, houses.
+// Advanced  — adds every number the engine produced: degrees, orbs,
+//             applying/separating, the technical factor phrasing.
+const DETAILS = ["Simple", "Balanced", "Advanced"];
 
-// Coerce any value (including a legacy "Balanced" left in localStorage, a stale
-// cached API response, or an unknown string) to a supported level. Advanced is
-// preserved; everything else becomes Simple. Never crashes on bad input.
+// Coerce any value (stale localStorage, a cached API response, an unknown
+// string) to a supported level. Never crashes on bad input.
 function normalizeDetail(value) {
-  return String(value ?? "").trim().toLowerCase() === "advanced" ? "Advanced" : "Simple";
+  const v = String(value ?? "").trim().toLowerCase();
+  if (v === "advanced") return "Advanced";
+  if (v === "balanced") return "Balanced";
+  return "Simple";
 }
-// Which per-factor phrasing key a level reads. Balanced no longer exists, so any
-// non-Advanced level (including stale "Balanced") maps to the plain wording.
-// Kept as a function so the (many) call sites need no edit, and so a stored
-// "Simple" preference from before Update 5.2 resolves to the full experience
-// rather than hiding content. The saved value is not deleted — see
-// axisLoadDetail — because destroying a user preference to remove a feature is
-// worse than ignoring it.
+// Which per-factor phrasing key a level reads. The engine stores `simple` and
+// `advanced` phrasings per factor; Balanced reads the plain wording — its extra
+// depth is shown structurally (chips, states), not by switching sentences.
 function detailKeyFor(level) {
-  void level;              // deliberately ignored: there is only one level now
-  return "advanced";
+  return level === "Advanced" ? "advanced" : "simple";
 }
 
 // The user's *current* (browsing) timezone — always distinct from a saved
@@ -6989,33 +6989,49 @@ function axisGetBirth() {
 function axisSetBirth(b) { localStorage.setItem("oa_birth", JSON.stringify(b)); }
 
 async function axisLoadDetail() {
-  // Update 5.2: the stored preference is READ but no longer obeyed. Anyone who
-  // saved "Simple" before this update gets the complete experience without
-  // having to find a setting and change it.
-  //
-  // The stored value is left alone rather than rewritten or deleted. It costs
-  // nothing to keep, and silently overwriting a preference somebody set is a
-  // worse habit than ignoring one that no longer applies. The Supabase column
-  // is likewise retained and simply unused — see the deprecation note in the
-  // vault.
-  AXIS.detail = "Advanced";
+  // The device remembers the exact level. The server profile is the fallback
+  // for a fresh device — its contract stores only Simple | Advanced (it
+  // migrates "Balanced" to Simple by its own rule), so Balanced lives in
+  // localStorage and degrades to Simple on a device that has never chosen it.
+  // Deliberately NOT a contract change.
+  const local = localStorage.getItem("oa_detail");
+  if (local) {
+    AXIS.detail = normalizeDetail(local);
+  } else if (authSignedIn()) {
+    try {
+      const r = await get("/api/settings/detail");
+      AXIS.detail = normalizeDetail(r?.astrology_detail_level);
+    } catch { AXIS.detail = "Simple"; }
+  } else {
+    AXIS.detail = "Simple";
+  }
   axisApplyDetail(false);
 }
 function axisApplyDetail(rerender = true) {
-  // The attribute stays: some CSS still keys off it, and pinning it to Advanced
-  // is what makes those rules always apply.
-  document.documentElement.setAttribute("data-detail", "Advanced");
+  // CSS keys off this attribute for the display gates — html[data-detail="Simple"]
+  // hides .detail-tech, and so on. Most of the level system is that one line.
+  document.documentElement.setAttribute("data-detail", AXIS.detail);
+  // The segmented control mirrors the state wherever it is mounted.
+  document.querySelectorAll("[data-detail-level]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", btn.dataset.detailLevel === AXIS.detail ? "true" : "false");
+  });
   if (rerender) {
     if (AXIS.lastFortune) axisRenderFortune(AXIS.lastFortune);
     if (AXIS.lastSky) axisRenderSky(AXIS.lastSky, { highlights: AXIS.lastHighlights, moon: AXIS.lastMoon });
+    axisRenderWhyFactors();
   }
 }
 async function axisSetDetail(level) {
   const next = normalizeDetail(level);
+  if (next === AXIS.detail) return;
   AXIS.detail = next;
+  localStorage.setItem("oa_detail", next);
   axisApplyDetail(true);
+  if (!authSignedIn()) return;
   try {
-    await put("/api/settings/detail", { astrology_detail_level: next });
+    // The server accepts Simple | Advanced only; Balanced maps to Simple by the
+    // server's own migration rule. The exact level lives in localStorage above.
+    await put("/api/settings/detail", { astrology_detail_level: next === "Advanced" ? "Advanced" : "Simple" });
   } catch { /* best effort */ }
 }
 
@@ -7083,13 +7099,105 @@ function axisWireSkyControls() {
   });
 }
 
+/* ── "Why this reading" ─────────────────────────────────────────────────────
+   The product rule, in the product's own words, with the engine's actual
+   factors under it. Factors come from the fortune already loaded — both
+   phrasings are rendered and CSS shows the one the level asks for, so
+   switching level swaps sentences without a render or a request. */
+function axisRenderWhyFactors() {
+  const host = $("#why-reading-factors");
+  if (!host) return;
+  const factors = AXIS.lastFortune?.factors;
+  if (!Array.isArray(factors) || !factors.length) { host.innerHTML = ""; return; }
+  host.innerHTML = `
+    <p class="why-reading__label">What the engine saw today</p>
+    <ul class="why-reading__factors">${factors.map((f) => `
+      <li class="why-factor why-factor--${esc(f.type || "fact")}">
+        <span class="detail-plain">${esc(f.simple || "")}</span>
+        <span class="detail-tech-text">${esc(f.advanced || f.simple || "")}</span>
+      </li>`).join("")}</ul>`;
+}
+
+function axisWireWhyReading() {
+  const btn = $("#why-reading-btn");
+  const panel = $("#why-reading");
+  if (!btn || !panel || btn._axisWired) return;
+  btn._axisWired = true;
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) axisRenderWhyFactors();
+  };
+  btn.addEventListener("click", () => setOpen(panel.hidden));
+  $("#why-reading-close")?.addEventListener("click", () => { setOpen(false); btn.focus(); });
+  panel.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") { setOpen(false); btn.focus(); }
+  });
+}
+
+/* ── The fortune detail sheet ───────────────────────────────────────────────
+   One card, opened to full depth. Built on the shared modal (focus trap,
+   Escape, focus restoration); a side sheet on desktop and a bottom sheet on a
+   phone by CSS alone. Everything shown is already in AXIS.lastFortune —
+   opening the sheet fetches nothing. */
+function axisSheetCard(cardId) {
+  const F = AXIS.lastFortune;
+  if (!F) return null;
+  const found = axisFortuneCards(F).find((c) => c.id === cardId);
+  return found || null;
+}
+
+function axisOpenFortuneSheet(cardId) {
+  const sheet = $("#fortune-sheet");
+  const card = axisSheetCard(cardId);
+  if (!sheet || !card) return;
+  const F = AXIS.lastFortune;
+  $("#fortune-sheet-title").textContent = card.label;
+  const factors = Array.isArray(F.factors) ? F.factors : [];
+  $("#fortune-sheet-body").innerHTML = `
+    <p class="fortune-sheet__lede">${esc(card.lede)}</p>
+    <p class="fortune-sheet__reading">${esc(card.body)}</p>
+    ${factors.length ? `
+      <div class="fortune-sheet__evidence">
+        <p class="why-reading__label">Why Orbit said this</p>
+        <ul class="why-reading__factors">${factors.map((f) => `
+          <li class="why-factor why-factor--${esc(f.type || "fact")}">
+            <span class="detail-plain">${esc(f.simple || "")}</span>
+            <span class="detail-tech-text">${esc(f.advanced || f.simple || "")}</span>
+          </li>`).join("")}</ul>
+      </div>` : ""}
+    <details class="calculation-details">
+      <summary>How Orbit calculated this</summary>
+      <p>The current sky was calculated by Orbit’s own astronomy engine for your timezone, then compared
+         with the active saved chart. The lucky number and color come from a stable daily seed, so the
+         reading does not change when you reload. Nothing on this card is written by an AI model.</p>
+    </details>
+    <p class="fortune-sheet__note">Symbolic reflection only — never prediction, medical, financial,
+       legal, or relationship advice.</p>`;
+  openModal(sheet);
+}
+
+function axisWireFortuneSheet() {
+  const mount = $("#today-fortune");
+  if (!mount || mount._sheetWired) return;
+  mount._sheetWired = true;
+  mount.addEventListener("click", (event) => {
+    const opener = event.target.closest("[data-fortune-open]");
+    if (opener) axisOpenFortuneSheet(opener.dataset.fortuneOpen);
+  });
+  // The footer link navigates; the sheet must not stay over the Sky page.
+  $("#fortune-sheet-sky")?.addEventListener("click", () => closeModal($("#fortune-sheet")));
+}
+
 async function axisInit() {
   if (!$("#panel-home")) return;
   const today = new Date();
   $("#today-date").textContent = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  for (const btn of $$(".axis-detail button")) {
-    btn.addEventListener("click", () => axisSetDetail(btn.dataset.level));
+  for (const btn of $$("[data-detail-level]")) {
+    btn.addEventListener("click", () => axisSetDetail(btn.dataset.detailLevel));
   }
+  axisWireWhyReading();
+  axisWireFortuneSheet();
   const scope = $("#history-scope");
   if (scope) scope.addEventListener("change", () => axisLoadHistory(scope.value));
   // History loads from renderRoute(), and ONLY from renderRoute().
@@ -7257,8 +7365,16 @@ function axisShowReadingFor(name) {
    says what the day may feel like, and Technical Sky below it says why —
    without the fortune ever naming a planet. */
 
-/** The reading cards, in the order they are read. */
+/** The reading cards, in the order they are read.
+ *
+ * Six fields, because six is what the engine produces. The lucky number and
+ * colour were previously a one-line footnote under the deck; they are part of
+ * the deterministic fortune and now take their own cards, with the footnote
+ * removed rather than duplicated. Both stay confined to the fortune and history
+ * surfaces — nothing else in Orbit is tinted by a lucky colour.
+ */
 function axisFortuneCards(F) {
+  const colorName = F.lucky_color?.name;
   return [
     {
       id: "mood",
@@ -7270,6 +7386,25 @@ function axisFortuneCards(F) {
     { id: "love", label: "Connection", lede: "Relationships and communication", body: F.love_reading },
     { id: "luck", label: "Momentum", lede: "Where things may open up", body: F.luck_reading },
     { id: "watch", label: "Watch for", lede: "What may create friction", body: F.watch_out, caution: true },
+    {
+      id: "number",
+      label: "Lucky number",
+      lede: "A reflection cue, not a prediction",
+      body: F.lucky_number != null
+        ? `${F.lucky_number} — carry it as a prompt to notice something, not as a guarantee.`
+        : "",
+      compact: F.lucky_number != null ? String(F.lucky_number) : "",
+    },
+    {
+      id: "color",
+      label: "Lucky color",
+      lede: "A visual anchor for the day",
+      body: colorName
+        ? `${colorName} — use it as a visual anchor, the way you would a favourite mug.`
+        : "",
+      compact: colorName || "",
+      swatch: F.lucky_color?.value || "",
+    },
   ].filter((card) => typeof card.body === "string" && card.body.trim().length > 0);
 }
 
@@ -7280,11 +7415,12 @@ function axisFortuneCards(F) {
  * engine already produced. Inventing a new sentence here would be the one place
  * in Orbit where reading text was not traceable to engine evidence.
  */
-function axisFortuneClosing(F) {
-  const bits = [];
-  if (F.lucky_number != null) bits.push(`Lucky number ${F.lucky_number}`);
-  if (F.lucky_color?.name) bits.push(F.lucky_color.name);
-  return bits.join(" · ");
+// The lucky number and colour used to be a footnote under the deck. They are
+// cards now (see axisFortuneCards), and printing them twice would be the same
+// fact told two ways on one screen. Kept as a function returning nothing so the
+// call site and the history renderer need no edit.
+function axisFortuneClosing() {
+  return "";
 }
 
 function axisRenderFortune(F) {
@@ -7302,19 +7438,23 @@ function axisRenderFortune(F) {
     </header>`;
 
   const slides = cards.map((card, index) => `
-    <article class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
-             id="fortune-card-${esc(card.id)}"
-             role="group"
-             aria-roledescription="card"
-             aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}">
+    <button type="button"
+            class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
+            id="fortune-card-${esc(card.id)}"
+            data-fortune-open="${esc(card.id)}"
+            aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}. Open full reading.">
       <!-- Reserved for the artwork that is coming. Empty and zero-height until
            there is something to put in it, so the deck does not sit on a band
            of nothing in the meantime. -->
       <div class="fortune-card2__art" data-card="${esc(card.id)}" aria-hidden="true"></div>
       <h3 class="fortune-card2__label">${esc(card.label)}</h3>
       <p class="fortune-card2__lede">${esc(card.lede)}</p>
+      ${card.compact ? `<p class="fortune-card2__compact">${
+        card.swatch ? `<span class="fortune-swatch" style="--swatch:${esc(card.swatch)}" aria-hidden="true"></span>` : ""
+      }${esc(card.compact)}</p>` : ""}
       <p class="fortune-card2__body">${esc(card.body)}</p>
-    </article>`).join("");
+      <span class="fortune-card2__more" aria-hidden="true">Open</span>
+    </button>`).join("");
 
   const dots = cards.map((card, index) => `
     <button type="button" class="fortune-dot${index === 0 ? " is-current" : ""}"
@@ -7325,12 +7465,13 @@ function axisRenderFortune(F) {
       ${heading.replace('class="fortune-head__title"', 'class="fortune-head__title" id="fortune-title"')}
       <div class="fortune-deck">
         <div class="fortune-deck__track" id="fortune-track"
-             tabindex="0" role="region" aria-label="Your reading, ${cards.length} cards. Scroll sideways, or use the left and right arrow keys.">
+             role="group" aria-label="Your reading, ${cards.length} cards. Each card opens its full explanation.">
           ${slides}
         </div>
         <div class="fortune-deck__dots" id="fortune-dots" role="tablist" aria-label="Reading cards">${dots}</div>
       </div>
       ${closing ? `<p class="fortune-closing">${esc(closing)}</p>` : ""}
+      <p class="fortune-disclaimer">Symbolic reflection — never prediction, medical, financial, legal, or relationship advice.</p>
     </section>`;
 
   wireFortuneDeck(cards.length);
@@ -7702,7 +7843,14 @@ function axisRenderTechnicalSky(sky) {
       <div class="tech-sky__head">
         <div class="tech-sky__heading">
           <h2 class="axis-section-title" id="tech-sky-title">Technical Sky</h2>
-          <p class="tech-sky__summary">${[sun, moon].filter(Boolean).map(esc).join(" · ")}</p>
+          <p class="tech-sky__summary">
+            <span class="detail-plain">${esc([
+              sky.sun ? `Sun in ${sky.sun.sign}` : "",
+              sky.moon ? `Moon in ${sky.moon.sign}` : "",
+            ].filter(Boolean).join(" · "))}</span><span class="detail-tech-text">${
+              esc([sun, moon].filter(Boolean).join(" · "))
+            }</span>
+          </p>
         </div>
         <img class="orbit-instrument" src="/brand/orbit-axis-instrument.svg" alt="" aria-hidden="true" />
       </div>
@@ -7710,11 +7858,12 @@ function axisRenderTechnicalSky(sky) {
         <summary><span>How this was calculated</span></summary>
         <div class="tech-sky__body">
           <dl class="tech-sky__facts">
-            ${sun ? `<div><dt>Sun</dt><dd>${esc(pos(sky.sun))}</dd></div>` : ""}
-            ${moon ? `<div><dt>Moon</dt><dd>${esc(pos(sky.moon))}</dd></div>` : ""}
+            ${sun ? `<div class="detail-tech"><dt>Sun</dt><dd>${esc(pos(sky.sun))}</dd></div>` : ""}
+            ${moon ? `<div class="detail-tech"><dt>Moon</dt><dd>${esc(pos(sky.moon))}</dd></div>` : ""}
             ${sky.timezone_name ? `<div><dt>Local time</dt><dd>${esc(sky.timezone_name)}</dd></div>` : ""}
             ${updated ? `<div><dt>Calculated</dt><dd>${esc(updated)}</dd></div>` : ""}
             ${retro.length ? `<div><dt>Retrograde</dt><dd>${esc(retro.join(", "))}</dd></div>` : ""}
+            <div><dt>Ephemeris</dt><dd>Swiss Ephemeris</dd></div>
           </dl>
           <p class="tech-sky__help">Every position on this page is calculated by Orbit’s own astronomy engine. Nothing here is written by an AI model.</p>
           <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">See every position in Current Positions</a>

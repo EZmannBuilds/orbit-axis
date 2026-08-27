@@ -178,8 +178,24 @@ test("the fortune three-factor path is gone, with no hidden fallback", () => {
   // than three contacts. A fallback would hide a broken endpoint behind three
   // plausible cards.
   assert.ok(!appJs.includes("transitsFromFortune"), "the fortune-derived reader is removed");
-  assert.ok(!/lastFortune\?\.factors/.test(appJs.slice(appJs.indexOf("const TRANSITS ="))),
-    "the transits workspace must not reach for fortune factors");
+  // Scoped to the transits workspace's own functions, by name.
+  //
+  // This used to slice from `const TRANSITS =` to the end of the file, which
+  // made it a test of everything defined below that line — including Today's
+  // surfaces, which read fortune factors LEGITIMATELY, because Today is where
+  // the fortune's factors belong. A proxy that broad reports a violation for
+  // code that is doing the right thing in the right place.
+  //
+  // The invariant is about this workspace: it must calculate from the
+  // dedicated endpoint, never from the fortune engine's top-three slice.
+  for (const fn of [
+    "loadTransits", "renderTransits", "renderTransitsWorkspace",
+    "renderTransitsSwitcher", "transitsClear",
+  ]) {
+    const body = bodyOf(appJs, fn);
+    assert.ok(body, `${fn} should be findable`);
+    assert.ok(!/lastFortune/.test(body), `${fn} must not reach for fortune factors`);
+  }
   assert.match(appJs, /\/api\/charts\/\$\{chart\.id\}\/transits/,
     "it consumes the dedicated endpoint");
 });
@@ -333,11 +349,15 @@ test("the Atlas needs no way back, because it is a destination now", () => {
 
 // ── Update 5.2a must survive ────────────────────────────────────────────────
 
-test("the 5.2a redesign is untouched", () => {
+test("the 5.2a redesign survives the A2 restyle", () => {
   assert.ok(appJs.includes("axisFortuneCards"), "fortune cards remain");
   assert.ok(!appJs.includes("fortune-carousel"), "the carousel stays gone");
-  assert.ok(!html.includes('data-level="Simple"'), "the mode switch stays gone");
-  assert.match(appJs, /return "advanced"/, "one complete experience remains");
+  assert.ok(!html.includes('data-level="Simple"'), "the superseded mode switch stays gone");
+  // 5.2a's substance was that the reading is never hidden behind an
+  // interaction. The A2 sheet adds DEPTH on top of a card whose reading is
+  // already fully rendered — so the card body must still be printed inline.
+  assert.match(appJs, /class="fortune-card2__body">\$\{esc\(card\.body\)\}/,
+    "every reading is still printed on the card itself, not only in the sheet");
 });
 
 // ── Boot-critical DOM contract ──────────────────────────────────────────────
