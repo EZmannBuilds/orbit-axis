@@ -204,15 +204,22 @@ const HTML = readFileSync(join(ROOT, "public", "index.html"), "utf8");
 const APP = readFileSync(join(ROOT, "public", "app.js"), "utf8");
 
 test("Today renders its hierarchy in order", () => {
-  // The reading leads because it is why someone opens the app; the sky that
-  // produced it follows; the technical detail is folded away near the end.
+  // THE MOON LEADS, as of 2026-08-28.
+  //
+  // It is the only section that needs no account, no saved chart and no
+  // reading — the same sky for everyone who opens the app. That is why it can
+  // hold the top while the personal reading loads underneath: a first-time
+  // visitor sees something true and finished immediately instead of a shimmer.
+  //
+  // The reading follows, because it is why someone RETURNS to the app; then the
+  // sky that produced it; then the technical detail, folded away near the end.
   //
   // `today-explore` is gone from this list. It was a five-item "Continue
   // exploring" card at the foot of the page, restating destinations that are
   // one tap away in the tab bar — navigation dressed as content. The week strip
-  // took its place at the TOP, because "which day am I reading" is a question
-  // someone has before the reading, not after it.
-  const order = ["today-days", "today-fortune", "today-moon",
+  // took its place, because "which day am I reading" is a question someone has
+  // before the reading, not after it.
+  const order = ["today-moon", "today-days", "today-fortune",
                  "today-highlights", "today-sky", "today-secondary"];
   const at = order.map((id) => {
     const i = HTML.indexOf(`id="${id}"`);
