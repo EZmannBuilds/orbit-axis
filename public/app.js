@@ -749,9 +749,15 @@ function transitsRenderSignedOut() {
   const body = $("#transits-body");
   if (body) body.innerHTML = "";
   transitsStatus("");
+  // Same reasoning as Positions: Refresh reloads nothing without a session, and
+  // a control that cannot act is worse than an absent one.
+  const refresh = $("#transits-refresh");
+  if (refresh) refresh.hidden = true;
 }
 
 function transitsRenderLoading(name) {
+  const refresh = $("#transits-refresh");
+  if (refresh) refresh.hidden = false;
   const body = $("#transits-body");
   if (body) {
     body.innerHTML = `<div class="axis-shimmer" style="height:280px" role="status" aria-live="polite"
@@ -2052,7 +2058,11 @@ function renderEvents(events) {
    delegated from here, so a card action and a navigation link cannot drift
    apart. Bound once, after the first data load. */
 function wireGlobalActions() {
-  $("#transits-refresh")?.addEventListener("click", () => refreshData(true));
+  // #transits-refresh is NOT bound here. wireTransits() already binds it to
+  // loadTransits(), and this line bound a second listener to the same button —
+  // so one press ran the workspace's own loader AND a whole-app refreshData().
+  // Two requests, one click, from before Transits got its dedicated endpoint.
+  // The workspace owns its refresh; the global layer should not reach into it.
   $("#history-scope")?.addEventListener("change", (event) => axisLoadHistory(event.target.value));
   $$("[data-goto]").forEach(btn => btn.addEventListener("click", () => navigate(btn.dataset.goto)));
 }
@@ -8179,7 +8189,18 @@ function clearPositions() {
     const el = $(sel);
     if (el) el.innerHTML = "";
   }
-  for (const sel of ["#positions-summary", "#positions-calc"]) {
+  // The Refresh control goes with them. Signed out it reloads nothing, and the
+  // decision this pairs with names it directly: a signed-out visitor should not
+  // get "a heading, a ten-row planetary list, a live region and a refresh
+  // control". The heading and the control were the two still shipping.
+  const refresh = $("#positions-refresh");
+  if (refresh) refresh.hidden = true;
+  // #positions-list joins the two panels that were already hidden. Clearing
+  // only its BODY left the static "Planetary positions" heading standing over
+  // nothing — which is what a signed-out visitor actually met, and it reads as
+  // a broken page rather than as a boundary. "Renders nothing" now includes
+  // the heading.
+  for (const sel of ["#positions-summary", "#positions-calc", "#positions-list"]) {
     const el = $(sel);
     if (el) el.hidden = true;
   }
@@ -8189,7 +8210,16 @@ function clearPositions() {
   if (status) status.textContent = "";
 }
 
+/** Reveal the list card. Paired with clearPositions(), which hides it. */
+function positionsShowList() {
+  const card = $("#positions-list");
+  if (card) card.hidden = false;
+  const refresh = $("#positions-refresh");
+  if (refresh) refresh.hidden = false;
+}
+
 function positionsRenderSkeleton() {
+  positionsShowList();
   const body = $("#positions-list-body");
   if (body) body.innerHTML = `<div class="axis-shimmer" style="height:320px" role="status" aria-live="polite" aria-label="Loading planetary positions"></div>`;
 }
@@ -8199,6 +8229,7 @@ function positionsRenderError(message) {
   if (status) status.textContent = "";
   // Keep any positions we already have — a failed refresh is not a reason to
   // blank data the reader was looking at. It is labelled as older instead.
+  positionsShowList();
   const target = POSITIONS.data ? $("#positions-status") : $("#positions-list-body");
   if (!target) return;
   target.innerHTML = `<div class="axis-section-error" role="alert">
@@ -8208,6 +8239,7 @@ function positionsRenderError(message) {
 }
 
 function renderPositions(payload) {
+  positionsShowList();
   const sky = payload?.sky;
   const positions = payload?.positions || [];
   if (!sky) throw new Error("renderPositions called without a sky");

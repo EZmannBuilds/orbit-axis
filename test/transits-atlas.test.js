@@ -349,6 +349,43 @@ test("the Atlas needs no way back, because it is a destination now", () => {
 
 // ── Update 5.2a must survive ────────────────────────────────────────────────
 
+test("one control, one listener — Refresh cannot fire two loaders", () => {
+  // wireGlobalActions() bound #transits-refresh to refreshData(true) while
+  // wireTransits() bound the same button to loadTransits(). One press ran both:
+  // the workspace's own endpoint AND a whole-app refresh. It survived because
+  // nothing counted the listeners — a duplicate binding looks like working code.
+  const bindings = appJs.match(/\$\("#transits-refresh"\)\?\.addEventListener/g) || [];
+  assert.equal(bindings.length, 1,
+    `#transits-refresh must have exactly one listener, found ${bindings.length}`);
+  const wire = bodyOf(appJs, "wireTransits");
+  assert.ok(wire && wire.includes('$("#transits-refresh")'),
+    "and the workspace that owns the data owns the control");
+});
+
+test("a control that cannot act is not shown", () => {
+  // Signed out, Refresh reloads nothing. Both sky surfaces hide it rather than
+  // offering a button whose only outcome is nothing happening.
+  const pos = bodyOf(appJs, "clearPositions");
+  assert.match(pos, /#positions-refresh[\s\S]{0,60}hidden = true/,
+    "Positions hides its refresh when it clears");
+  const tr = bodyOf(appJs, "transitsRenderSignedOut");
+  assert.match(tr, /#transits-refresh[\s\S]{0,60}hidden = true/,
+    "Your sky hides its refresh when signed out");
+  // And both bring it back when there is something to refresh.
+  assert.match(bodyOf(appJs, "positionsShowList"), /hidden = false/);
+  assert.match(bodyOf(appJs, "transitsRenderLoading"), /#transits-refresh[\s\S]{0,60}hidden = false/);
+});
+
+test("Positions renders nothing signed out — heading included", () => {
+  // The static "Planetary positions" card is in the markup, so clearing only
+  // its BODY left a heading standing over an absence. The card is hidden too.
+  const fn = bodyOf(appJs, "clearPositions");
+  assert.match(fn, /"#positions-summary", "#positions-calc", "#positions-list"/,
+    "the list card is hidden alongside the two that already were");
+  assert.match(bodyOf(appJs, "renderPositions"), /positionsShowList\(\)/,
+    "and revealed again when there is data");
+});
+
 test("the 5.2a redesign survives the A2 restyle", () => {
   assert.match(appJs, /return "advanced"/, "one complete experience remains");
   assert.ok(appJs.includes("axisFortuneCards"), "fortune cards remain");

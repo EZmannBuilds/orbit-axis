@@ -476,3 +476,193 @@
   .fortune-card2 { transition: none; }
   .fortune-card2:hover { transform: none; }
 }
+
+/* ══ A2 across Chart, Sky, Atlas and You ═════════════════════════════════════
+   Today got the A2 treatment first. These four were structurally sound and
+   visually inconsistent with it — two different segmented controls for the same
+   job, section heads with no shared rhythm, and category tiles that did not use
+   the identity at all.
+
+   This layer unifies them. It restyles what exists; it does not restructure.
+   Nothing here adds a colour outside the token set, and the one accent rule
+   still holds — Orbit Violet says "interactive", and never anything else. */
+
+/* ── One section-head rhythm ────────────────────────────────────────────────
+   Every destination now opens the same way: a small uppercase eyebrow, the
+   title, then one line saying what the page is for. The eyebrow is hierarchy
+   only — it never carries information the page needs. */
+.a2-eyebrow {
+  display: block;
+  margin: 0 0 2px;
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/* ── One segmented control ──────────────────────────────────────────────────
+   Chart used underlined text links; Sky used a full-width block segment. Same
+   job, two visual languages. Both now read as the control Today established:
+   a sunken track, a raised current segment, and the selection stated by
+   surface and weight as well as tint — never by colour alone.
+
+   These stay ANCHORS with real hrefs. They are navigation, not a tablist, and
+   the repository is right that calling them tabs would hand a screen reader
+   semantics they do not honour. */
+.chart-subnav,
+.subnav .o-segment--block {
+  display: inline-flex;
+  gap: 2px;
+  width: auto;
+  max-width: 100%;
+  padding: 3px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chart-subnav::-webkit-scrollbar,
+.subnav .o-segment--block::-webkit-scrollbar { display: none; }
+
+.chart-subnav a,
+.subnav .o-segment--block a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--space-md);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.chart-subnav a:hover,
+.subnav .o-segment--block a:hover {
+  background: var(--color-surface-ghost);
+  color: var(--color-primary);
+}
+/* The current view, stated three ways: surface, weight, and the orbit edge. */
+.chart-subnav a[aria-current="page"],
+.subnav .o-segment--block a[aria-current="page"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.chart-subnav a:focus-visible,
+.subnav .o-segment--block a:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── Chart ──────────────────────────────────────────────────────────────────
+   The Big Three is the strongest entry point on the page, so its panel is the
+   one that gets the accent edge. Everything below it is a quieter tile, which
+   is what makes the top of the reading feel like a beginning rather than the
+   first of eight equal boxes. */
+#section-bigthree {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-elevated);
+}
+#section-bigthree .me-section-head h2 { color: var(--color-primary); }
+
+/* The remaining reading panels alternate against the canvas rather than
+   stacking identical cards — elevation by surface, per the design system. */
+.me-panel {
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.me-panel:hover { border-color: var(--color-border-strong); }
+
+/* Chart data is the densest section and the least often wanted. It reads as
+   reference rather than reading. */
+.me-panel--advanced { background: var(--color-surface-sunken); }
+
+/* ── Sky ────────────────────────────────────────────────────────────────────
+   A transit is a contact, not a verdict. There is deliberately no severity
+   colour ramp here and no "challenging" red: the wording carries the meaning,
+   and tinting a transit by how hard it sounds is how an astrology app starts
+   frightening people. */
+.tr-switcher,
+#positions-summary { border-radius: var(--radius-lg); }
+
+/* A signed-out visitor met a "Planetary positions" heading with nothing under
+   it — Current Positions is authenticated by design, so the body stayed empty
+   while the static heading rendered anyway. The state now explains itself. */
+.positions-gate {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: start;
+  padding: var(--space-md) 0 var(--space-xs);
+  color: var(--color-secondary);
+}
+.positions-gate p { margin: 0; max-width: 58ch; line-height: var(--lead-body); }
+
+/* ── Atlas ──────────────────────────────────────────────────────────────────
+   The glyph tile is where the orbit motif earns its place: a symbol resting in
+   a ring, which is what the whole product does. Used here and in navigation,
+   not sprinkled on every surface. */
+.atlas-category-card,
+.atlas-card { border-radius: var(--radius-lg); }
+.atlas-category-card__glyph,
+.atlas-card__glyph {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 38px;
+  block-size: 38px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-accent);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard);
+}
+.atlas-category-card:hover .atlas-category-card__glyph,
+.atlas-card:hover .atlas-card__glyph {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+}
+.atlas-category-card:focus-visible,
+.atlas-card:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── You ────────────────────────────────────────────────────────────────────
+   A settings surface, so the rows stay a scannable list and only the group
+   labels change: they were competing with the row titles beneath them. */
+.more-section > .o-group__label {
+  margin-bottom: var(--space-xs);
+  color: var(--color-faint);
+}
+.account-offer {
+  border: var(--border-width) solid var(--color-accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+/* ── Narrow widths ─────────────────────────────────────────────────────────
+   The segment scrolls inside its own track rather than stretching the page.
+   Tables and grids already reflow; this is the one control that could not. */
+@media (max-width: 640px) {
+  .chart-subnav,
+  .subnav .o-segment--block { display: flex; width: 100%; }
+  .chart-subnav a,
+  .subnav .o-segment--block a { flex: 1 0 auto; min-height: 44px; padding: 0 var(--space-sm); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-subnav a,
+  .subnav .o-segment--block a,
+  .me-panel,
+  .atlas-category-card__glyph,
+  .atlas-card__glyph { transition: none; }
+}
