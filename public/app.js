@@ -7,6 +7,7 @@
    JSON API and paints the design-system components.
    ========================================================================== */
 
+import { SHARE_PRESETS, SHARE_PRESET_IDS, renderShareImage, deliverShareImage, shareFilename } from "/share-image.js";
 import { renderMoonSVG } from "./moon-phase.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
@@ -748,9 +749,15 @@ function transitsRenderSignedOut() {
   const body = $("#transits-body");
   if (body) body.innerHTML = "";
   transitsStatus("");
+  // Same reasoning as Positions: Refresh reloads nothing without a session, and
+  // a control that cannot act is worse than an absent one.
+  const refresh = $("#transits-refresh");
+  if (refresh) refresh.hidden = true;
 }
 
 function transitsRenderLoading(name) {
+  const refresh = $("#transits-refresh");
+  if (refresh) refresh.hidden = false;
   const body = $("#transits-body");
   if (body) {
     body.innerHTML = `<div class="axis-shimmer" style="height:280px" role="status" aria-live="polite"
@@ -2051,7 +2058,11 @@ function renderEvents(events) {
    delegated from here, so a card action and a navigation link cannot drift
    apart. Bound once, after the first data load. */
 function wireGlobalActions() {
-  $("#transits-refresh")?.addEventListener("click", () => refreshData(true));
+  // #transits-refresh is NOT bound here. wireTransits() already binds it to
+  // loadTransits(), and this line bound a second listener to the same button —
+  // so one press ran the workspace's own loader AND a whole-app refreshData().
+  // Two requests, one click, from before Transits got its dedicated endpoint.
+  // The workspace owns its refresh; the global layer should not reach into it.
   $("#history-scope")?.addEventListener("change", (event) => axisLoadHistory(event.target.value));
   $$("[data-goto]").forEach(btn => btn.addEventListener("click", () => navigate(btn.dataset.goto)));
 }
@@ -3384,6 +3395,7 @@ function openChartForm(mode, chart = null) {
 
   syncTimeCertainty();
   setupPlaceSearch("cm");
+  syncOnboardingTarotAsk(mode);
   openModal(modal, {
     initialFocus: $("#cm-nickname"),
     // First-run onboarding is dismissible: someone who is not ready to hand
@@ -3818,6 +3830,17 @@ function wireChartModal() {
   $("#cm-avatar-discard")?.addEventListener("click", resetChartFormAvatar);
   $("#cm-nickname")?.addEventListener("input", renderChartFormAvatar);
 
+  // The first-run tarot control. Deliberately not routed through
+  // wireSettings(): that map writes to localStorage on click, and this answer
+  // must not take effect until the chart it was asked alongside actually saves.
+  $("#cm-tarot")?.addEventListener("click", (event) => {
+    const btn = event.target.closest("button");
+    if (!btn) return;
+    onboardingTarotChoice = btn.dataset.value === "on" ? "on" : "off";
+    $$("#cm-tarot button").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.value === onboardingTarotChoice)));
+  });
+
   $("#chart-modal-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (chartForm.submitting) return;             // double-submit guard
@@ -3846,6 +3869,11 @@ function wireChartModal() {
       const saved = id
         ? await patch(`/api/charts/${id}`, payload)
         : await post("/api/charts", payload);
+
+      // The tarot answer is a device preference, not chart data — it is
+      // deliberately NOT in the payload. Applied only after the chart saves,
+      // so a failed save never silently changes what the app shows.
+      commitOnboardingTarotAsk();
 
       // The chart exists from here on. A picture that fails to upload must
       // not un-save it, duplicate it, or read as a failed creation — the
@@ -4651,9 +4679,192 @@ function tarotPref(key, fallback) {
   catch { return fallback; }
 }
 
-/** Is the reader showing Tarot at all? */
+/** Is the reader showing Tarot at all?
+ *
+ *  OFF until chosen. Tarot is a reflection prompt, not astronomy, and it does
+ *  not belong in an astrology app's navigation for someone who never asked for
+ *  it. First-run onboarding asks once; Settings owns it from then on. */
 function tarotEnabled() {
-  return tarotPref("tarot", "on") !== "off";
+  return tarotPref("tarot", "off") === "on";
+}
+
+/* ── The first-run tarot question ─────────────────────────────────────────
+   Asked once, inside first-run onboarding, because tarot is off until chosen.
+   The control writes nothing on its own: the answer is held here and applied
+   only when the chart actually saves, so abandoning the form leaves the
+   preference exactly as it was. Settings owns it from then on. */
+let onboardingTarotChoice = null;
+
+/** Show the question in first-run only, reset to "No thanks" each time. */
+function syncOnboardingTarotAsk(mode) {
+  const block = $("#cm-tarot-block");
+  if (!block) return;
+  const asking = mode === "first" && !tarotAlreadyAsked();
+  block.hidden = !asking;
+  onboardingTarotChoice = null;
+  if (!asking) return;
+  $$("#cm-tarot button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.value === "off")));
+}
+
+/** Has this device already been asked? A second chart is not a second ask. */
+function tarotAlreadyAsked() {
+  return tarotPref("tarotAsked", "") === "1";
+}
+
+/** Apply the held answer. Called only after a first-run chart saves. */
+function commitOnboardingTarotAsk() {
+  const block = $("#cm-tarot-block");
+  if (!block || block.hidden) return;
+  try { localStorage.setItem("orbit.tarotAsked", "1"); } catch { /* private mode */ }
+  // No answer touched means the default stands, and the default is off.
+  SettingsController.set("tarot", onboardingTarotChoice === "on" ? "on" : "off");
+  onboardingTarotChoice = null;
+}
+
+/* ── Sharing a reading as an image ────────────────────────────────────────
+   One control, two surfaces. The button builds a plain content object from
+   what is already on screen and hands it to the renderer; it never reaches
+   for a fact the page has not already shown, so a shared image and the app
+   can never disagree.
+
+   The preset row is inline rather than a dialog: three sizes is not a
+   decision worth a modal, and on iOS the share sheet has to open inside the
+   gesture that asked for it — a dialog in between spends that gesture. */
+
+/** Markup for the share control. `kind` becomes part of the filename. */
+function shareControlHtml(kind) {
+  return `<div class="share-control" data-share-kind="${esc(kind)}">
+      <button type="button" class="o-btn o-btn--utility" data-share-open>Share as image</button>
+      <div class="share-control__presets" data-share-presets hidden role="group" aria-label="Image size">
+        ${SHARE_PRESET_IDS.map((id) => {
+          const p = SHARE_PRESETS[id];
+          return `<button type="button" class="o-btn o-btn--utility o-btn--sm" data-share-preset="${id}">
+            ${esc(p.label)} <span class="u-meta">${p.w}×${p.h}</span></button>`;
+        }).join("")}
+      </div>
+      <p class="share-control__status u-meta" data-share-status role="status" aria-live="polite"></p>
+    </div>`;
+}
+
+/** Wire one mounted share control. Safe to call again after a re-render. */
+function wireShareControl(root, buildContent) {
+  const box = root?.querySelector?.("[data-share-kind]");
+  if (!box || box.dataset.shareWired === "1") return;
+  box.dataset.shareWired = "1";
+  const presets = box.querySelector("[data-share-presets]");
+  const status = box.querySelector("[data-share-status]");
+
+  box.querySelector("[data-share-open]")?.addEventListener("click", () => {
+    presets.hidden = !presets.hidden;
+    if (!presets.hidden) presets.querySelector("button")?.focus();
+  });
+
+  presets.addEventListener("click", async (event) => {
+    const btn = event.target.closest("[data-share-preset]");
+    if (!btn) return;
+    const presetId = btn.dataset.sharePreset;
+    status.textContent = "Making the image…";
+    try {
+      const content = buildContent();
+      if (!content) { status.textContent = "There is nothing to share yet."; return; }
+      const blob = await renderShareImage(content, presetId);
+      const name = shareFilename(box.dataset.shareKind, content.isoDate, presetId);
+      const result = await deliverShareImage(blob, name, content.shareText);
+      status.textContent = result === "shared" ? "Shared."
+        : result === "downloaded" ? "Saved to your downloads."
+        : "";
+      if (result !== "cancelled") presets.hidden = true;
+    } catch (error) {
+      // Say what failed. A silent share button is indistinguishable from a
+      // broken one, and this path runs offline where failures are likelier.
+      status.textContent = "The image could not be created on this device.";
+      console.error("share image", error);
+    }
+  });
+}
+
+/** Today's sky, as the page currently shows it.
+ *
+ *  Requires the REAL reading — `.fortune`, the deck. `#today-fortune` also
+ *  holds the "add your birth details" prompt for a reader with no chart, and
+ *  offering to share that would export an advert for the form they are
+ *  looking at. No reading, no button. */
+function buildSkyShareContent() {
+  const fortune = $("#today-fortune .fortune");
+  if (!fortune) return null;
+  const first = fortune.querySelector(".fortune-card2");
+  const body = text(fortune.querySelector(".fortune-closing"))
+    || text(first?.querySelector(".fortune-card2__body"))
+    || text(first?.querySelector(".fortune-card2__lede"));
+  if (!body) return null;
+  const date = text($("#today-date"));
+  const title = text($("#fortune-title")) || text($("#home-title")) || "Your sky today";
+  return {
+    eyebrow: "Daily reading",
+    title,
+    subtitle: date,
+    body,
+    meta: [text(first?.querySelector(".fortune-card2__label"))].filter(Boolean),
+    footer: "Calculated by the Orbit Axis engine.",
+    isoDate: todayIsoForShare(),
+    shareText: date ? `${title} — ${date}` : title,
+  };
+}
+
+/** A tarot card, as the page currently shows it. */
+function buildTarotShareContent() {
+  const scope = tarotState.manual ? "#tarot-spread" : "#tarot-daily-reading";
+  const root = $(scope);
+  const name = text(root?.querySelector("h3, h4, .tarot-meaning__name"));
+  const body = text(root?.querySelector(".tarot-meaning__text, p:not(.u-meta):not(.tarot-meaning__position)"));
+  if (!name && !body) return null;
+  const position = text(root?.querySelector(".tarot-meaning__position"));
+  // The artwork the page is showing, not a path rebuilt from a slug — a
+  // shared card and the card on screen have to be the same card.
+  const art = root?.closest("#tarot-daily, #tarot-spread")?.querySelector("img.tarot-card__art")
+    || $(`${scope === "#tarot-spread" ? "#tarot-spread" : "#tarot-daily"} img.tarot-card__art`);
+  return {
+    eyebrow: "Tarot",
+    image: art?.getAttribute("src") || null,
+    title: name || "Today's card",
+    subtitle: position || text($("#today-date")),
+    body,
+    meta: ["A prompt for reflection, not a prediction."],
+    footer: "Tarot in Orbit Axis is not calculated from the sky.",
+    isoDate: todayIsoForShare(),
+    shareText: name ? `${name} — Orbit Axis` : "Orbit Axis",
+  };
+}
+
+/** Put the share control under a reading, once there is one to share. */
+function mountShareControls() {
+  const sky = $("#today-share");
+  if (sky && buildSkyShareContent()) {
+    if (!sky.firstElementChild) sky.innerHTML = shareControlHtml("sky");
+    wireShareControl(sky, buildSkyShareContent);
+  } else if (sky) {
+    sky.innerHTML = "";
+  }
+
+  const tarot = $("#tarot-share");
+  if (tarot && tarotEnabled() && buildTarotShareContent()) {
+    if (!tarot.firstElementChild) tarot.innerHTML = shareControlHtml("tarot");
+    wireShareControl(tarot, buildTarotShareContent);
+  } else if (tarot) {
+    tarot.innerHTML = "";
+  }
+}
+
+/** Trimmed text content, or "". */
+function text(el) { return (el?.textContent || "").trim(); }
+
+/** The date the page is showing, as YYYY-MM-DD, for the filename only. */
+function todayIsoForShare() {
+  const attr = $("#today-days [aria-current=\"page\"]")?.dataset?.date;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(attr || ""))) return attr;
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 /** Which three-card labels this reader chose. */
@@ -5119,6 +5330,7 @@ function autoSaveTarotDaily() {
 
 /** Save is offered to everyone; the account is asked for only on the press. */
 function renderTarotDailySave() {
+  mountShareControls();
   const holder = $("#tarot-daily-actions");
   if (!holder) return;
   if (tarotState.saved) {
@@ -5419,6 +5631,7 @@ function backToTarotDaily() {
 }
 
 function renderTarotManualSave() {
+  mountShareControls();
   const holder = $("#tarot-save");
   if (!holder) return;
   if (tarotState.saved) {
@@ -5778,7 +5991,7 @@ const settings = {
    * looked inert because the handler died before it reached the control.
    */
   prefs: {
-    tarot: { default: "on", seg: "#set-tarot" },
+    tarot: { default: "off", seg: "#set-tarot" },
     tarotPositions: { default: "reflective", seg: "#set-tarot-positions" },
     tarotMeaning: { default: "ask", seg: "#set-tarot-meaning" },
     tarotReversed: { default: "off", seg: "#set-tarot-reversed" },
@@ -6083,7 +6296,7 @@ const reading = {
   chartId: null,
 };
 
-const READING_SECTIONS = ["#section-bigthree", "#section-patterns", "#section-planets",
+const READING_SECTIONS = ["#section-bigthree", "#section-wheel", "#section-patterns", "#section-planets",
                           "#section-aspects", "#section-houses", "#section-data"];
 
 function setReadingState(next) {
@@ -6111,8 +6324,9 @@ function clearChartReading() {
   state.activeNatalChart = null;
   state.activeProfile = null;
   state.activeReading = null;
-  ["#bigthree", "#chart-patterns", "#key-placements", "#chart-aspects",
-   "#chart-houses", "#chart-placements", "#chart-limitation"].forEach((sel) => {
+  ["#bigthree", "#chart-wheel", "#chart-wheel-selected", "#chart-patterns",
+   "#key-placements", "#chart-aspects", "#chart-houses", "#chart-placements",
+   "#chart-limitation"].forEach((sel) => {
     const el = $(sel);
     if (el) el.innerHTML = "";
   });
@@ -6233,6 +6447,187 @@ function renderBigThree(bigThree) {
   const target = $("#bigthree");
   if (!target) return;
   target.innerHTML = (bigThree || []).map((p) => readingCardHtml(p, { role: p.role })).join("");
+}
+
+// ── 4. The wheel ────────────────────────────────────────────────────────────
+//
+// A DATA VISUALISATION, NOT DECORATION. Every glyph sits at the longitude the
+// engine calculated; nothing here is placed for looks. If a body has no sign or
+// degree it is omitted rather than positioned at a guess, because a wheel whose
+// arrangement is partly invented is worse than one that admits a gap.
+//
+// The drawing is redundant by design: the same placements are listed as text
+// directly beneath it, and the SVG carries a full text alternative. Nobody has
+// to read the picture to get the information.
+
+const ZODIAC_ORDER = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+
+/**
+ * Absolute ecliptic longitude, derived from what the client already holds.
+ *
+ * The reading payload carries sign + degrees + minutes rather than a raw
+ * longitude, and those three are exact — sign index × 30 plus the degree within
+ * the sign IS the longitude. Deriving it here avoids a contract change for a
+ * number the server already sent in another form.
+ *
+ * Returns null when any part is missing, so callers can drop the body instead
+ * of drawing it at zero.
+ */
+function placementLongitude(p) {
+  if (!p || p.unavailable) return null;
+  const index = ZODIAC_ORDER.indexOf(p.sign);
+  if (index < 0 || p.degrees == null) return null;
+  return index * 30 + Number(p.degrees) + (Number(p.minutes) || 0) / 60;
+}
+
+/**
+ * Longitude → SVG point.
+ *
+ * Astrological wheels run ANTICLOCKWISE from the left-hand horizon, which is
+ * the opposite of how SVG measures angles. Getting this backwards produces a
+ * chart that looks plausible and mirrors every placement, so it is stated once
+ * here and used everywhere rather than re-derived per call site.
+ */
+function wheelPoint(longitude, radius, rotation) {
+  const angle = ((180 - (longitude - rotation)) * Math.PI) / 180;
+  // y ADDS the sine rather than subtracting it. From the Ascendant at the left
+  // horizon, increasing longitude must run DOWN the screen toward the IC and
+  // round to the Descendant on the right — the direction house numbers count.
+  // Subtracting mirrored the whole chart vertically, which still looked like a
+  // chart. Caught by test/chart-wheel.test.js, not by looking at it.
+  return { x: 200 + radius * Math.cos(angle), y: 200 + radius * Math.sin(angle) };
+}
+
+/**
+ * Spread glyphs that would otherwise overlap.
+ *
+ * Bodies within a few degrees of one another collide into an unreadable blob —
+ * a stellium is exactly when the wheel matters most, so this nudges each one
+ * outward along its own radius instead of hiding the crowding.
+ */
+function wheelSpread(bodies) {
+  const sorted = [...bodies].sort((a, b) => a.longitude - b.longitude);
+  let run = 0;
+  return sorted.map((body, i) => {
+    const prev = sorted[i - 1];
+    run = prev && Math.abs(body.longitude - prev.longitude) < 7 ? run + 1 : 0;
+    return { ...body, tier: run % 3 };
+  });
+}
+
+function renderChartWheel(chart, readingPayload) {
+  const section = $("#section-wheel");
+  const mount = $("#chart-wheel");
+  if (!section || !mount) return;
+
+  const bodies = [];
+  for (const name of STANDARD_PLANET_ORDER) {
+    const p = chart?.planets?.[name];
+    const longitude = placementLongitude(p);
+    if (longitude != null) {
+      bodies.push({ key: name, label: name, glyph: PLACEMENT_GLYPHS[name] || name,
+        sign: p.sign, deg: degLabel(p), retrograde: Boolean(p.retrograde),
+        house: chart?.planet_houses?.[name] || null, longitude });
+    }
+  }
+
+  // The Ascendant is a birth-TIME product. With an unknown time it is not
+  // merely uncertain, it is unfounded — so it is left off the wheel entirely
+  // rather than drawn with a caveat, and the wheel keeps its default rotation.
+  const accuracy = chart?.time_accuracy || "unknown";
+  const timeKnown = accuracy !== "unknown";
+  const ascLongitude = timeKnown ? placementLongitude(chart?.angles?.ascendant) : null;
+
+  if (!bodies.length) { section.hidden = true; mount.innerHTML = ""; return; }
+  section.hidden = false;
+
+  // Rotate so the Ascendant sits on the left horizon, which is how a chart is
+  // conventionally drawn. Without a birth time there is no horizon to align to,
+  // so 0° Aries stays on the left and the wheel is honest about being a zodiac
+  // map rather than a house chart.
+  const rotation = ascLongitude ?? 0;
+  const placed = wheelSpread(bodies);
+
+  const signSegments = ZODIAC_ORDER.map((sign, i) => {
+    const mid = wheelPoint(i * 30 + 15, 185, rotation);
+    const edge = wheelPoint(i * 30, 196, rotation);
+    const inner = wheelPoint(i * 30, 172, rotation);
+    return `
+      <line x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${edge.x.toFixed(1)}" y2="${edge.y.toFixed(1)}" class="cw-tick" />
+      <text x="${mid.x.toFixed(1)}" y="${mid.y.toFixed(1)}" class="cw-sign" dominant-baseline="central" text-anchor="middle">${SIGN_GLYPH[sign] || ""}</text>`;
+  }).join("");
+
+  const glyphs = placed.map((b) => {
+    const r = 140 - b.tier * 26;
+    const at = wheelPoint(b.longitude, r, rotation);
+    const tickIn = wheelPoint(b.longitude, 168, rotation);
+    const tickOut = wheelPoint(b.longitude, 172, rotation);
+    return `
+      <line x1="${tickIn.x.toFixed(1)}" y1="${tickIn.y.toFixed(1)}" x2="${tickOut.x.toFixed(1)}" y2="${tickOut.y.toFixed(1)}" class="cw-degree-tick" />
+      <g class="cw-body" tabindex="0" role="button"
+         data-body="${esc(b.key)}"
+         aria-label="${esc(`${b.label} in ${b.sign}, ${b.deg}${b.retrograde ? ", retrograde" : ""}${b.house ? `, house ${b.house}` : ""}`)}">
+        <circle cx="${at.x.toFixed(1)}" cy="${at.y.toFixed(1)}" r="15" class="cw-body__hit" />
+        <text x="${at.x.toFixed(1)}" y="${at.y.toFixed(1)}" class="cw-glyph" dominant-baseline="central" text-anchor="middle">${esc(b.glyph)}</text>
+      </g>`;
+  }).join("");
+
+  // The horizon line only exists when there is a birth time to put it at.
+  const horizon = ascLongitude == null ? "" : (() => {
+    const a = wheelPoint(ascLongitude, 172, rotation);
+    const d = wheelPoint(ascLongitude + 180, 172, rotation);
+    return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${d.x.toFixed(1)}" y2="${d.y.toFixed(1)}" class="cw-horizon" />
+            <text x="${(a.x - 14).toFixed(1)}" y="${a.y.toFixed(1)}" class="cw-angle" dominant-baseline="central" text-anchor="middle">AC</text>`;
+  })();
+
+  // The text alternative IS the chart, in words. Screen-reader users get the
+  // same placements in the same order, not "chart wheel image".
+  const description = placed
+    .map((b) => `${b.label} in ${b.sign} at ${b.deg}${b.retrograde ? " retrograde" : ""}${b.house ? `, house ${b.house}` : ""}`)
+    .join(". ");
+
+  mount.innerHTML = `
+    <svg class="cw" viewBox="0 0 400 400" role="img" aria-labelledby="cw-title cw-desc">
+      <title id="cw-title">Birth chart wheel${readingPayload?.nickname ? ` for ${esc(readingPayload.nickname)}` : ""}</title>
+      <desc id="cw-desc">${esc(description)}</desc>
+      <circle cx="200" cy="200" r="196" class="cw-ring cw-ring--outer" />
+      <circle cx="200" cy="200" r="172" class="cw-ring" />
+      <circle cx="200" cy="200" r="62" class="cw-ring cw-ring--inner" />
+      ${signSegments}
+      ${horizon}
+      ${glyphs}
+    </svg>
+    <p class="chart-wheel__note">${timeKnown
+      ? "Rotated so your Ascendant sits on the left horizon."
+      : "No birth time saved, so this is drawn from 0° Aries. Houses and the Ascendant are not shown."}</p>`;
+
+  wireChartWheel(placed);
+}
+
+/** Selecting a glyph names it underneath. Pointer and keyboard, same handler. */
+function wireChartWheel(bodies) {
+  const mount = $("#chart-wheel");
+  const out = $("#chart-wheel-selected");
+  if (!mount || !out) return;
+  const byKey = new Map(bodies.map((b) => [b.key, b]));
+
+  const select = (key) => {
+    const b = byKey.get(key);
+    if (!b) return;
+    mount.querySelectorAll(".cw-body").forEach((g) => g.classList.toggle("is-selected", g.dataset.body === key));
+    out.textContent = `${b.label} in ${b.sign} · ${b.deg}${b.retrograde ? " · retrograde" : ""}${b.house ? ` · house ${b.house}` : ""}`;
+  };
+
+  mount.addEventListener("click", (event) => {
+    const g = event.target.closest(".cw-body");
+    if (g) select(g.dataset.body);
+  });
+  mount.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const g = event.target.closest(".cw-body");
+    if (g) { select(g.dataset.body); event.preventDefault(); }
+  });
 }
 
 // ── 3. Chart patterns ───────────────────────────────────────────────────────
@@ -6518,6 +6913,7 @@ function renderChart(chart, name, profile = null, readingPayload = null) {
   renderChartHeader(profile, chart, name, readingPayload.context);
   renderLimitation(readingPayload.limitation);
   renderBigThree(readingPayload.bigThree);
+  renderChartWheel(chart, readingPayload);
   renderPatterns(readingPayload.patterns);
   renderPlacements(readingPayload.remainingPlacements, readingPayload.pointPlacements);
   renderAspects(readingPayload.aspects);
@@ -6708,32 +7104,29 @@ const AXIS = {
   // (session restore already loads it for a signed-in returning user).
   loadedOnce: false,
 };
-// Update Two removed "Balanced". Only two levels remain; Simple is the default.
-// Update 5.2: there is one experience, and it is the complete one.
+// ONE EXPERIENCE, AND IT IS THE COMPLETE ONE.
 //
-// "Simple" hid houses, degrees, retrograde marks, and transit detail behind a
-// switch most people never found — so the app looked shallower than it is, and
-// the people most likely to leave it on Simple were exactly the ones who needed
-// the plain-language explanations that now sit BESIDE the technical facts.
+// The A2 pass briefly restored a Simple/Balanced/Advanced selector. It was
+// removed again on 2026-08-27 at Erik's direction, and Update 5.2's original
+// reasoning stands: a switch most people never find, whose Simple side makes
+// the product look shallower than it is, is worse than no switch. Depth is
+// disclosed where it is asked for instead — the fortune sheet explains any one
+// card on demand, and Technical Sky stays folded until opened.
 //
-// Advanced no longer means "more confusing". It means complete, with help text.
+// The stored preference is read-tolerant but not obeyed. It is deliberately
+// neither rewritten nor deleted: silently destroying a preference somebody set
+// is a worse habit than ignoring one that no longer applies.
 const DETAILS = ["Advanced"];
 
-// Coerce any value (including a legacy "Balanced" left in localStorage, a stale
-// cached API response, or an unknown string) to a supported level. Advanced is
-// preserved; everything else becomes Simple. Never crashes on bad input.
+// Coerce any stored value — including a legacy "Simple" or "Balanced" — without
+// crashing. Everything resolves to the complete experience.
 function normalizeDetail(value) {
-  return String(value ?? "").trim().toLowerCase() === "advanced" ? "Advanced" : "Simple";
+  void value;
+  return "Advanced";
 }
-// Which per-factor phrasing key a level reads. Balanced no longer exists, so any
-// non-Advanced level (including stale "Balanced") maps to the plain wording.
-// Kept as a function so the (many) call sites need no edit, and so a stored
-// "Simple" preference from before Update 5.2 resolves to the full experience
-// rather than hiding content. The saved value is not deleted — see
-// axisLoadDetail — because destroying a user preference to remove a feature is
-// worse than ignoring it.
+// Which per-factor phrasing key to read. One level, one key.
 function detailKeyFor(level) {
-  void level;              // deliberately ignored: there is only one level now
+  void level;
   return "advanced";
 }
 
@@ -6786,21 +7179,12 @@ function axisGetBirth() {
 function axisSetBirth(b) { localStorage.setItem("oa_birth", JSON.stringify(b)); }
 
 async function axisLoadDetail() {
-  // Update 5.2: the stored preference is READ but no longer obeyed. Anyone who
-  // saved "Simple" before this update gets the complete experience without
-  // having to find a setting and change it.
-  //
-  // The stored value is left alone rather than rewritten or deleted. It costs
-  // nothing to keep, and silently overwriting a preference somebody set is a
-  // worse habit than ignoring one that no longer applies. The Supabase column
-  // is likewise retained and simply unused — see the deprecation note in the
-  // vault.
   AXIS.detail = "Advanced";
   axisApplyDetail(false);
 }
 function axisApplyDetail(rerender = true) {
-  // The attribute stays: some CSS still keys off it, and pinning it to Advanced
-  // is what makes those rules always apply.
+  // The attribute stays: the CSS phrasing swap keys off it, and pinning it to
+  // Advanced is what makes those rules always apply.
   document.documentElement.setAttribute("data-detail", "Advanced");
   if (rerender) {
     if (AXIS.lastFortune) axisRenderFortune(AXIS.lastFortune);
@@ -6880,13 +7264,62 @@ function axisWireSkyControls() {
   });
 }
 
+/* ── The fortune detail sheet ───────────────────────────────────────────────
+   One card, opened to full depth. Built on the shared modal (focus trap,
+   Escape, focus restoration); a side sheet on desktop and a bottom sheet on a
+   phone by CSS alone. Everything shown is already in AXIS.lastFortune —
+   opening the sheet fetches nothing. */
+function axisSheetCard(cardId) {
+  const F = AXIS.lastFortune;
+  if (!F) return null;
+  const found = axisFortuneCards(F).find((c) => c.id === cardId);
+  return found || null;
+}
+
+function axisOpenFortuneSheet(cardId) {
+  const sheet = $("#fortune-sheet");
+  const card = axisSheetCard(cardId);
+  if (!sheet || !card) return;
+  const F = AXIS.lastFortune;
+  $("#fortune-sheet-title").textContent = card.label;
+  const factors = Array.isArray(F.factors) ? F.factors : [];
+  $("#fortune-sheet-body").innerHTML = `
+    <p class="fortune-sheet__lede">${esc(card.lede)}</p>
+    <p class="fortune-sheet__reading">${esc(card.body)}</p>
+    ${factors.length ? `
+      <div class="fortune-sheet__evidence">
+        <p class="why-reading__label">Why Orbit said this</p>
+        <ul class="why-reading__factors">${factors.map((f) => `
+          <li class="why-factor why-factor--${esc(f.type || "fact")}">${esc(f.simple || f.advanced || "")}</li>`).join("")}</ul>
+      </div>` : ""}
+    <details class="calculation-details">
+      <summary>How Orbit calculated this</summary>
+      <p>The current sky was calculated by Orbit’s own astronomy engine for your timezone, then compared
+         with the active saved chart. The lucky number and color come from a stable daily seed, so the
+         reading does not change when you reload. Nothing on this card is written by an AI model.</p>
+    </details>
+    <p class="fortune-sheet__note">Symbolic reflection only — never prediction, medical, financial,
+       legal, or relationship advice.</p>`;
+  openModal(sheet);
+}
+
+function axisWireFortuneSheet() {
+  const mount = $("#today-fortune");
+  if (!mount || mount._sheetWired) return;
+  mount._sheetWired = true;
+  mount.addEventListener("click", (event) => {
+    const opener = event.target.closest("[data-fortune-open]");
+    if (opener) axisOpenFortuneSheet(opener.dataset.fortuneOpen);
+  });
+  // The footer link navigates; the sheet must not stay over the Sky page.
+  $("#fortune-sheet-sky")?.addEventListener("click", () => closeModal($("#fortune-sheet")));
+}
+
 async function axisInit() {
   if (!$("#panel-home")) return;
   const today = new Date();
   $("#today-date").textContent = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  for (const btn of $$(".axis-detail button")) {
-    btn.addEventListener("click", () => axisSetDetail(btn.dataset.level));
-  }
+  axisWireFortuneSheet();
   const scope = $("#history-scope");
   if (scope) scope.addEventListener("change", () => axisLoadHistory(scope.value));
   // History loads from renderRoute(), and ONLY from renderRoute().
@@ -7054,19 +7487,81 @@ function axisShowReadingFor(name) {
    says what the day may feel like, and Technical Sky below it says why —
    without the fortune ever naming a planet. */
 
-/** The reading cards, in the order they are read. */
+/**
+ * A chip-sized version of a reading, taken from the reading itself.
+ *
+ * Deliberately EXTRACTIVE, never generative: it returns the opening clause of
+ * the sentence the deterministic engine wrote, so the chip cannot say anything
+ * the reading does not. Summarising with a model here would put unverifiable
+ * text on the most glanceable surface in the product.
+ *
+ * Returns "" when there is nothing short enough to be honest about, and the
+ * card simply shows no chip line.
+ */
+function firstClause(text, max = 46) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  const clause = s.split(/[.—;:]/)[0].trim();
+  if (!clause) return "";
+  if (clause.length <= max) return clause;
+  // Too long to be a chip. Returning "" here left four of six cards showing a
+  // label and nothing else — worse than the paragraphs the chips replaced. The
+  // card falls back to its full reading instead; see fortuneCardHasChip.
+  return "";
+}
+
+/** A card with no honest chip shows its reading, so it is never blank. */
+function fortuneCardHasChip(card) {
+  return Boolean(card.compact && String(card.compact).trim());
+}
+
+/** The reading cards, in the order they are read.
+ *
+ * Six fields, because six is what the engine produces. The lucky number and
+ * colour were previously a one-line footnote under the deck; they are part of
+ * the deterministic fortune and now take their own cards, with the footnote
+ * removed rather than duplicated. Both stay confined to the fortune and history
+ * surfaces — nothing else in Orbit is tinted by a lucky colour.
+ */
 function axisFortuneCards(F) {
+  const colorName = F.lucky_color?.name;
   return [
     {
       id: "mood",
       label: "Overall",
       lede: "What today may feel like",
       body: F.mood,
+      // The headline the engine already wrote. Falling back to the first few
+      // words of the reading keeps a chip from being blank, and never invents
+      // a summary — an unearned one-word verdict is the thing to avoid here.
+      compact: F.mood_headline || firstClause(F.mood),
       primary: true,
     },
-    { id: "love", label: "Connection", lede: "Relationships and communication", body: F.love_reading },
-    { id: "luck", label: "Momentum", lede: "Where things may open up", body: F.luck_reading },
-    { id: "watch", label: "Watch for", lede: "What may create friction", body: F.watch_out, caution: true },
+    { id: "love", label: "Connection", lede: "Relationships and communication",
+      body: F.love_reading, compact: firstClause(F.love_reading) },
+    { id: "luck", label: "Momentum", lede: "Where things may open up",
+      body: F.luck_reading, compact: firstClause(F.luck_reading) },
+    { id: "watch", label: "Watch for", lede: "What may create friction",
+      body: F.watch_out, compact: firstClause(F.watch_out), caution: true },
+    {
+      id: "number",
+      label: "Lucky number",
+      lede: "A reflection cue, not a prediction",
+      body: F.lucky_number != null
+        ? `${F.lucky_number} — carry it as a prompt to notice something, not as a guarantee.`
+        : "",
+      compact: F.lucky_number != null ? String(F.lucky_number) : "",
+    },
+    {
+      id: "color",
+      label: "Lucky color",
+      lede: "A visual anchor for the day",
+      body: colorName
+        ? `${colorName} — use it as a visual anchor, the way you would a favourite mug.`
+        : "",
+      compact: colorName || "",
+      swatch: F.lucky_color?.value || "",
+    },
   ].filter((card) => typeof card.body === "string" && card.body.trim().length > 0);
 }
 
@@ -7077,11 +7572,12 @@ function axisFortuneCards(F) {
  * engine already produced. Inventing a new sentence here would be the one place
  * in Orbit where reading text was not traceable to engine evidence.
  */
-function axisFortuneClosing(F) {
-  const bits = [];
-  if (F.lucky_number != null) bits.push(`Lucky number ${F.lucky_number}`);
-  if (F.lucky_color?.name) bits.push(F.lucky_color.name);
-  return bits.join(" · ");
+// The lucky number and colour used to be a footnote under the deck. They are
+// cards now (see axisFortuneCards), and printing them twice would be the same
+// fact told two ways on one screen. Kept as a function returning nothing so the
+// call site and the history renderer need no edit.
+function axisFortuneClosing() {
+  return "";
 }
 
 function axisRenderFortune(F) {
@@ -7099,19 +7595,28 @@ function axisRenderFortune(F) {
     </header>`;
 
   const slides = cards.map((card, index) => `
-    <article class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
-             id="fortune-card-${esc(card.id)}"
-             role="group"
-             aria-roledescription="card"
-             aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}">
+    <button type="button"
+            class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
+            id="fortune-card-${esc(card.id)}"
+            data-fortune-open="${esc(card.id)}"
+            data-chip="${fortuneCardHasChip(card) ? "yes" : "no"}"
+            aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}. Open full reading.">
       <!-- Reserved for the artwork that is coming. Empty and zero-height until
            there is something to put in it, so the deck does not sit on a band
            of nothing in the meantime. -->
       <div class="fortune-card2__art" data-card="${esc(card.id)}" aria-hidden="true"></div>
       <h3 class="fortune-card2__label">${esc(card.label)}</h3>
       <p class="fortune-card2__lede">${esc(card.lede)}</p>
+      ${card.compact ? `<p class="fortune-card2__compact">${
+        card.swatch ? `<span class="fortune-swatch" style="--swatch:${esc(card.swatch)}" aria-hidden="true"></span>` : ""
+      }${esc(card.compact)}</p>` : ""}
+      <!-- The full reading stays in the DOM on every card. Only the primary
+           card SHOWS it; the rest reveal it in the sheet. Hiding it with CSS
+           rather than omitting it keeps find-in-page and screen readers whole,
+           which is the objection that removed the last carousel. -->
       <p class="fortune-card2__body">${esc(card.body)}</p>
-    </article>`).join("");
+      <span class="fortune-card2__more" aria-hidden="true">Open</span>
+    </button>`).join("");
 
   const dots = cards.map((card, index) => `
     <button type="button" class="fortune-dot${index === 0 ? " is-current" : ""}"
@@ -7122,15 +7627,17 @@ function axisRenderFortune(F) {
       ${heading.replace('class="fortune-head__title"', 'class="fortune-head__title" id="fortune-title"')}
       <div class="fortune-deck">
         <div class="fortune-deck__track" id="fortune-track"
-             tabindex="0" role="region" aria-label="Your reading, ${cards.length} cards. Scroll sideways, or use the left and right arrow keys.">
+             role="group" aria-label="Your reading, ${cards.length} cards. Each card opens its full explanation.">
           ${slides}
         </div>
         <div class="fortune-deck__dots" id="fortune-dots" role="tablist" aria-label="Reading cards">${dots}</div>
       </div>
       ${closing ? `<p class="fortune-closing">${esc(closing)}</p>` : ""}
+      <p class="fortune-disclaimer">Symbolic reflection — never prediction, medical, financial, legal, or relationship advice.</p>
     </section>`;
 
   wireFortuneDeck(cards.length);
+  mountShareControls();
 }
 
 /* ── The reading deck ──────────────────────────────────────────────────────
@@ -7295,9 +7802,10 @@ function axisRenderMoon(moon, sky) {
     : `<p class="moon-state__next">The next lunar event isn’t available right now.</p>`;
 
   body.innerHTML = `
-    <div class="moon-state">
+    <div class="moon-state moon-state--hero">
       ${visual}
       <div class="moon-state__text">
+        <p class="moon-state__kicker">The Moon right now</p>
         <p class="moon-state__phase">${
           // Without a phase name the " in Pisces" suffix used to render on its
           // own, leaving a heading that began mid-sentence.
@@ -7511,6 +8019,7 @@ function axisRenderTechnicalSky(sky) {
             ${sky.timezone_name ? `<div><dt>Local time</dt><dd>${esc(sky.timezone_name)}</dd></div>` : ""}
             ${updated ? `<div><dt>Calculated</dt><dd>${esc(updated)}</dd></div>` : ""}
             ${retro.length ? `<div><dt>Retrograde</dt><dd>${esc(retro.join(", "))}</dd></div>` : ""}
+            <div><dt>Ephemeris</dt><dd>Swiss Ephemeris</dd></div>
           </dl>
           <p class="tech-sky__help">Every position on this page is calculated by Orbit’s own astronomy engine. Nothing here is written by an AI model.</p>
           <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">See every position in Current Positions</a>
@@ -7904,7 +8413,18 @@ function clearPositions() {
     const el = $(sel);
     if (el) el.innerHTML = "";
   }
-  for (const sel of ["#positions-summary", "#positions-calc"]) {
+  // The Refresh control goes with them. Signed out it reloads nothing, and the
+  // decision this pairs with names it directly: a signed-out visitor should not
+  // get "a heading, a ten-row planetary list, a live region and a refresh
+  // control". The heading and the control were the two still shipping.
+  const refresh = $("#positions-refresh");
+  if (refresh) refresh.hidden = true;
+  // #positions-list joins the two panels that were already hidden. Clearing
+  // only its BODY left the static "Planetary positions" heading standing over
+  // nothing — which is what a signed-out visitor actually met, and it reads as
+  // a broken page rather than as a boundary. "Renders nothing" now includes
+  // the heading.
+  for (const sel of ["#positions-summary", "#positions-calc", "#positions-list"]) {
     const el = $(sel);
     if (el) el.hidden = true;
   }
@@ -7914,7 +8434,16 @@ function clearPositions() {
   if (status) status.textContent = "";
 }
 
+/** Reveal the list card. Paired with clearPositions(), which hides it. */
+function positionsShowList() {
+  const card = $("#positions-list");
+  if (card) card.hidden = false;
+  const refresh = $("#positions-refresh");
+  if (refresh) refresh.hidden = false;
+}
+
 function positionsRenderSkeleton() {
+  positionsShowList();
   const body = $("#positions-list-body");
   if (body) body.innerHTML = `<div class="axis-shimmer" style="height:320px" role="status" aria-live="polite" aria-label="Loading planetary positions"></div>`;
 }
@@ -7924,6 +8453,7 @@ function positionsRenderError(message) {
   if (status) status.textContent = "";
   // Keep any positions we already have — a failed refresh is not a reason to
   // blank data the reader was looking at. It is labelled as older instead.
+  positionsShowList();
   const target = POSITIONS.data ? $("#positions-status") : $("#positions-list-body");
   if (!target) return;
   target.innerHTML = `<div class="axis-section-error" role="alert">
@@ -7933,6 +8463,7 @@ function positionsRenderError(message) {
 }
 
 function renderPositions(payload) {
+  positionsShowList();
   const sky = payload?.sky;
   const positions = payload?.positions || [];
   if (!sky) throw new Error("renderPositions called without a sky");

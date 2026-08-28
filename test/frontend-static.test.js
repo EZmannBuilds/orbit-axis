@@ -518,19 +518,37 @@ test("the season is stated once, not twice", () => {
     "Technical Sky states the Sun by degree, not by sign name");
 });
 
-test("no Simple/Advanced control survives anywhere", () => {
-  for (const relic of ['data-level="Simple"', 'data-level="Advanced"', 'axis-detail']) {
+// ── One experience, and it is the complete one ──────────────────────────────
+//
+// Update 5.2 removed the Simple/Advanced switch. The A2 pass briefly restored a
+// three-level selector; it was removed again on 2026-08-27 at Erik's direction,
+// so 5.2's reasoning is once more the standing decision and these tests guard
+// it. Depth is still disclosed — the fortune sheet explains any one card on
+// demand — but never behind a global mode the reader has to find.
+
+test("no detail-level control survives anywhere", () => {
+  for (const relic of ['data-level="Simple"', 'data-level="Advanced"', "axis-detail", "data-detail-level"]) {
     assert.ok(!html.includes(relic), `${relic} should be gone from the markup`);
   }
-  assert.ok(!appJs.includes("axisSetDetail(") || !html.includes("axis-detail"),
-    "no visible control should call the detail setter");
+  const css = readFileSync(join(ROOT, "public", "styles", "orbit-axis.css"), "utf8");
+  assert.ok(!css.includes(".detail-segment"), "the segmented control's styles go with it");
 });
 
-test("a stored Simple preference cannot hide content", () => {
+test("a stored preference cannot hide content", () => {
   // Backward compatibility: the saved value is read but not obeyed, and is
   // deliberately not deleted.
   assert.match(appJs, /AXIS\.detail = "Advanced"/,
     "loading should resolve to the complete experience regardless of what is stored");
   assert.match(appJs, /return "advanced"/,
     "detailKeyFor should always select the advanced phrasing");
+});
+
+test("depth is disclosed per card instead, and costs no request", () => {
+  // What replaced the switch: a sheet that explains ONE card, opened on demand.
+  assert.match(appJs, /function axisOpenFortuneSheet\(/, "the per-card sheet exists");
+  const body = appJs.slice(appJs.indexOf("function axisOpenFortuneSheet"), appJs.indexOf("function axisWireFortuneSheet"));
+  for (const call of ["await get(", "await post(", "await put(", "fetch("]) {
+    assert.ok(!body.includes(call), `opening the sheet must not call ${call}`);
+  }
+  assert.match(body, /AXIS\.lastFortune/, "it reads the fortune already in memory");
 });

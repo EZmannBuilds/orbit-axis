@@ -58,7 +58,10 @@
     <nav class="rail" aria-label="Primary sections">
       <div class="rail__brand brand-lockup" aria-label="Orbit Axis">
         <img class="orbit-mark orbit-mark--rail" src="/brand/orbit-axis-mark.svg" alt="" />
-        <span class="rail__wordmark">ORBIT AXIS</span>
+        <span class="rail__brand-copy">
+          <span class="rail__wordmark">ORBIT AXIS</span>
+          <span class="rail__tagline">YOUR ACCESS TO THE SKY</span>
+        </span>
       </div>
 
       <div class="rail__section-label">Sections</div>
@@ -174,6 +177,10 @@
           <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
 
+          <!-- Sharing the reading as an image. Mounted by the app once there
+               is a reading to share, so it never offers to export a shimmer. -->
+          <div id="today-share"></div>
+
           <!-- Whose chart the reading above belongs to.
                Just the picker: the "Reading for" label repeated what the select
                already says, and Manage and + were two routes to a screen the
@@ -197,7 +204,10 @@
                  or returned to, so the only way to see a stale Moon is to
                  watch this screen for long enough that it stops being now. -->
             <div class="moon-head">
-              <h2 class="axis-section-title" id="today-moon-title">The Moon right now</h2>
+              <!-- Visually hidden: the hero below prints this same line as its
+                   kicker. Removing the heading outright would strip the card of
+                   its accessible name, which aria-labelledby depends on. -->
+              <h2 class="axis-section-title sr-only" id="today-moon-title">The Moon right now</h2>
             </div>
             <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
             <div id="today-moon-body"></div>
@@ -226,6 +236,7 @@
         <section class="workspace-panel" id="panel-transits" role="region" aria-labelledby="transits-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
+              <span class="a2-eyebrow">The moving sky</span>
               <h1 class="u-title" id="transits-title" tabindex="-1">The sky today</h1>
               <p class="u-caption">Where the planets are, and what they are touching in <strong id="transits-chart-name">your chart</strong>.</p>
             </div>
@@ -275,6 +286,7 @@
         <section class="workspace-panel" id="panel-positions" role="region" aria-labelledby="positions-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
+              <span class="a2-eyebrow">The sky everyone shares</span>
               <h1 class="u-title" id="positions-title" tabindex="-1">Everyone's sky</h1>
               <p class="u-caption">Where the planets are in the zodiac right now. These positions are the same for everyone.</p>
               <p class="u-meta" id="positions-time"></p>
@@ -331,6 +343,7 @@
           <div class="o-section-head">
             <div class="o-section-head__text">
               <nav class="atlas-crumbs" id="atlas-crumbs" aria-label="Atlas location"></nav>
+              <span class="a2-eyebrow">Plain-language reference</span>
               <h1 class="u-title sr-only-mobile" id="symbol-atlas-title" tabindex="-1">Atlas</h1>
               <p class="u-caption" id="atlas-subtitle">Every symbol Orbit Axis uses, in plain language.</p>
             </div>
@@ -357,6 +370,7 @@
         <section class="workspace-panel" id="panel-me" role="region" aria-labelledby="mychart-title" hidden>
           <div class="o-section-head me-page-head">
             <div class="o-section-head__text">
+              <span class="a2-eyebrow">Your birth chart</span>
               <h1 class="u-title" id="mychart-title" tabindex="-1">Your chart</h1>
               <p class="u-caption">Your birth chart, explained placement by placement.</p>
               <div class="me-active-line">
@@ -409,7 +423,22 @@
               <div class="reading-grid reading-grid--keys" id="bigthree"></div>
             </section>
 
-            <!-- 4. Chart patterns -->
+            <!-- 4. The wheel ────────────────────────────────────────────
+                 Reading, wheel and placements on ONE page, not behind tabs.
+                 The wheel sits under the Big Three because it is the picture
+                 of what was just named — and above the detailed placements,
+                 which are the same information as a list. Tabs would have hidden
+                 two of the three from anyone who did not find the control. -->
+            <section class="me-panel me-panel--wheel" id="section-wheel" aria-labelledby="me-wheel-title" hidden>
+              <div class="me-section-head">
+                <h2 id="me-wheel-title">The wheel</h2>
+                <p>The sky at your birth, drawn to scale. Every glyph sits at its calculated degree.</p>
+              </div>
+              <div class="chart-wheel" id="chart-wheel"></div>
+              <p class="chart-wheel__selected" id="chart-wheel-selected" role="status" aria-live="polite"></p>
+            </section>
+
+            <!-- 5. Chart patterns -->
             <section class="me-panel" id="section-patterns" aria-labelledby="me-patterns-title">
               <div class="me-section-head">
                 <h2 id="me-patterns-title">Chart patterns</h2>
@@ -418,7 +447,7 @@
               <div id="chart-patterns"></div>
             </section>
 
-            <!-- 5. Planet placements -->
+            <!-- 6. Planet placements -->
             <section class="me-panel me-panel--placements" id="section-planets" aria-labelledby="me-planets-title">
               <div class="me-section-head">
                 <h2 id="me-planets-title">Placements</h2>
@@ -427,7 +456,7 @@
               <div class="reading-grid reading-grid--planets" id="key-placements"></div>
             </section>
 
-            <!-- 6. Major aspects -->
+            <!-- 7. Major aspects -->
             <section class="me-panel" id="section-aspects" aria-labelledby="me-aspects-title">
               <div class="me-section-head">
                 <h2 id="me-aspects-title">Major aspects</h2>
@@ -436,7 +465,7 @@
               <div id="chart-aspects"></div>
             </section>
 
-            <!-- 7. Houses and angles -->
+            <!-- 8. Houses and angles -->
             <section class="me-panel" id="section-houses" aria-labelledby="me-houses-title">
               <div class="me-section-head">
                 <h2 id="me-houses-title">Houses and angles</h2>
@@ -445,7 +474,7 @@
               <div id="chart-houses"></div>
             </section>
 
-            <!-- 8. Chart data and source information -->
+            <!-- 9. Chart data and source information -->
             <section class="me-panel me-panel--advanced" id="section-data" aria-labelledby="me-advanced-title">
               <div class="me-section-head">
                 <h2 id="me-advanced-title">Chart data</h2>
@@ -555,6 +584,7 @@
         <section class="workspace-panel" id="panel-more" role="region" aria-labelledby="more-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
+              <span class="a2-eyebrow">Your orbit</span>
               <h1 class="u-title sr-only-mobile" id="more-title" tabindex="-1">You</h1>
               <p class="u-caption">Your account, what Orbit Axis stores, and how it looks.</p>
             </div>
@@ -830,6 +860,7 @@
             <!-- A drawn spread takes over this surface. Empty until then. -->
             <div class="tarot-spread" id="tarot-spread" hidden></div>
             <div class="tarot-save" id="tarot-save"></div>
+            <div id="tarot-share"></div>
           </section>
 
           <!-- ── Reflections ────────────────────────────────────────────────
@@ -1134,6 +1165,30 @@
     </div>
   </div>
 
+  <!-- ── Fortune detail sheet ────────────────────────────────────────────
+       One card of Today's Fortune, opened to full depth: the reading, the
+       engine factors that produced the day, how it was calculated, and the
+       standing symbolic-reflection note. A side sheet on desktop and a bottom
+       sheet on a phone — same element, different CSS. Content is filled from
+       the fortune already loaded; opening it fetches nothing. -->
+  <div class="o-modal o-modal--sheet" id="fortune-sheet" hidden role="dialog" aria-modal="true"
+       aria-labelledby="fortune-sheet-title">
+    <div class="o-modal__backdrop" data-modal-close></div>
+    <div class="o-modal__panel fortune-sheet__panel">
+      <header class="o-modal__head fortune-sheet__head">
+        <div>
+          <p class="fortune-sheet__eyebrow">Today’s Fortune</p>
+          <h2 id="fortune-sheet-title">Reading</h2>
+        </div>
+        <button type="button" class="o-modal__close" aria-label="Close" data-modal-close data-icon="x"></button>
+      </header>
+      <div class="o-modal__body fortune-sheet__body" id="fortune-sheet-body"></div>
+      <footer class="fortune-sheet__foot">
+        <a class="o-btn o-btn--secondary" href="#transits" id="fortune-sheet-sky">View in Sky</a>
+      </footer>
+    </div>
+  </div>
+
   <!-- ── Permanent account deletion ──────────────────────────────────────
        Typed confirmation rather than a yes/no button: this is irreversible,
        and the friction is the point. The submit button stays disabled until
@@ -1345,6 +1400,25 @@
                 <p class="chart-field__help" id="cm-avatar-note" role="status" aria-live="polite"></p>
                 <button type="button" class="o-btn o-btn--utility" id="cm-avatar-discard" hidden>Discard picture</button>
               </div>
+            </div>
+          </div>
+
+          <!-- Asked once, during first-run only. Tarot is off until someone
+               says otherwise: it is a reflection tool, not astronomy, and it
+               should not appear in an astrology app without being chosen. The
+               answer writes the same `orbit.tarot` preference the Settings
+               switch writes, so there is one source of truth for it. -->
+          <div class="chart-field" id="cm-tarot-block" hidden>
+            <span class="chart-field__label" id="cm-tarot-label">Tarot</span>
+            <p class="chart-field__help" id="cm-tarot-help">
+              Orbit can show a daily tarot card beside your sky. It is a prompt
+              for reflection, not a prediction, and it is not calculated from
+              astronomy. You can change this any time in Settings.
+            </p>
+            <div class="o-segment" id="cm-tarot" role="group"
+                 aria-labelledby="cm-tarot-label" aria-describedby="cm-tarot-help">
+              <button type="button" data-value="on" aria-pressed="false">Show tarot</button>
+              <button type="button" data-value="off" aria-pressed="true">No thanks</button>
             </div>
           </div>
 

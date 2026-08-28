@@ -22,8 +22,10 @@
 // the upload for Vercel's function to find them.
 //
 // The cost of vendoring is drift: two copies that can silently disagree. This
-// script is the answer to that, and a test runs the same check so drift cannot
-// pass CI.
+// script is the answer to that, and test/engine-vendor.test.js runs the same
+// check — fully wherever the engine repository is checked out (or
+// ORBIT_ENGINE_PATH points at one), and structurally everywhere else, so a
+// missing or version-skewed vendor copy still fails CI.
 //
 // TEMPORARY. Once the engine is published this is deleted and the dependency
 // becomes: "@ezmannbuilds/orbit-axis-engine": "github:EZmannBuilds/orbit-axis-engine#v0.1.0"
@@ -39,12 +41,18 @@ export const VENDOR_DIR = join(REPO_ROOT, "vendor", "orbit-axis-engine");
 // not every contributor will check it out beside this one, and NEVER used at
 // runtime or in a build — only by these two commands.
 export function engineSourceDir(env = process.env) {
-  return env.ORBIT_ENGINE_PATH || join(REPO_ROOT, "..", "..", "..", "orbit-axis-engine");
+  // "Beside this repository" means one level up — ~/Projects/orbit and
+  // ~/Projects/orbit-axis-engine. The old default climbed three levels and
+  // landed outside anyone's checkout, so the check silently skipped on every
+  // machine that had not set ORBIT_ENGINE_PATH.
+  return env.ORBIT_ENGINE_PATH || join(REPO_ROOT, "..", "orbit-axis-engine");
 }
 
 // The engine's publishable surface. Tests, dev scripts, and git metadata are
 // deliberately excluded: the application consumes the package, not the repo.
-const EXCLUDED_TOP_LEVEL = new Set([".git", "node_modules", "tests", "scripts", ".gitignore"]);
+// CLAUDE.md is agent guidance for people working IN the engine repository; the
+// application consumes the package, so it has no business in vendor/.
+const EXCLUDED_TOP_LEVEL = new Set([".git", "node_modules", "tests", "scripts", ".gitignore", "CLAUDE.md"]);
 
 function walk(dir, base, out = []) {
   for (const name of readdirSync(dir)) {

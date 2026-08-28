@@ -178,8 +178,24 @@ test("the fortune three-factor path is gone, with no hidden fallback", () => {
   // than three contacts. A fallback would hide a broken endpoint behind three
   // plausible cards.
   assert.ok(!appJs.includes("transitsFromFortune"), "the fortune-derived reader is removed");
-  assert.ok(!/lastFortune\?\.factors/.test(appJs.slice(appJs.indexOf("const TRANSITS ="))),
-    "the transits workspace must not reach for fortune factors");
+  // Scoped to the transits workspace's own functions, by name.
+  //
+  // This used to slice from `const TRANSITS =` to the end of the file, which
+  // made it a test of everything defined below that line — including Today's
+  // surfaces, which read fortune factors LEGITIMATELY, because Today is where
+  // the fortune's factors belong. A proxy that broad reports a violation for
+  // code that is doing the right thing in the right place.
+  //
+  // The invariant is about this workspace: it must calculate from the
+  // dedicated endpoint, never from the fortune engine's top-three slice.
+  for (const fn of [
+    "loadTransits", "renderTransits", "renderTransitsWorkspace",
+    "renderTransitsSwitcher", "transitsClear",
+  ]) {
+    const body = bodyOf(appJs, fn);
+    assert.ok(body, `${fn} should be findable`);
+    assert.ok(!/lastFortune/.test(body), `${fn} must not reach for fortune factors`);
+  }
   assert.match(appJs, /\/api\/charts\/\$\{chart\.id\}\/transits/,
     "it consumes the dedicated endpoint");
 });
@@ -333,11 +349,53 @@ test("the Atlas needs no way back, because it is a destination now", () => {
 
 // ── Update 5.2a must survive ────────────────────────────────────────────────
 
-test("the 5.2a redesign is untouched", () => {
+test("one control, one listener — Refresh cannot fire two loaders", () => {
+  // wireGlobalActions() bound #transits-refresh to refreshData(true) while
+  // wireTransits() bound the same button to loadTransits(). One press ran both:
+  // the workspace's own endpoint AND a whole-app refresh. It survived because
+  // nothing counted the listeners — a duplicate binding looks like working code.
+  const bindings = appJs.match(/\$\("#transits-refresh"\)\?\.addEventListener/g) || [];
+  assert.equal(bindings.length, 1,
+    `#transits-refresh must have exactly one listener, found ${bindings.length}`);
+  const wire = bodyOf(appJs, "wireTransits");
+  assert.ok(wire && wire.includes('$("#transits-refresh")'),
+    "and the workspace that owns the data owns the control");
+});
+
+test("a control that cannot act is not shown", () => {
+  // Signed out, Refresh reloads nothing. Both sky surfaces hide it rather than
+  // offering a button whose only outcome is nothing happening.
+  const pos = bodyOf(appJs, "clearPositions");
+  assert.match(pos, /#positions-refresh[\s\S]{0,60}hidden = true/,
+    "Positions hides its refresh when it clears");
+  const tr = bodyOf(appJs, "transitsRenderSignedOut");
+  assert.match(tr, /#transits-refresh[\s\S]{0,60}hidden = true/,
+    "Your sky hides its refresh when signed out");
+  // And both bring it back when there is something to refresh.
+  assert.match(bodyOf(appJs, "positionsShowList"), /hidden = false/);
+  assert.match(bodyOf(appJs, "transitsRenderLoading"), /#transits-refresh[\s\S]{0,60}hidden = false/);
+});
+
+test("Positions renders nothing signed out — heading included", () => {
+  // The static "Planetary positions" card is in the markup, so clearing only
+  // its BODY left a heading standing over an absence. The card is hidden too.
+  const fn = bodyOf(appJs, "clearPositions");
+  assert.match(fn, /"#positions-summary", "#positions-calc", "#positions-list"/,
+    "the list card is hidden alongside the two that already were");
+  assert.match(bodyOf(appJs, "renderPositions"), /positionsShowList\(\)/,
+    "and revealed again when there is data");
+});
+
+test("the 5.2a redesign survives the A2 restyle", () => {
+  assert.match(appJs, /return "advanced"/, "one complete experience remains");
   assert.ok(appJs.includes("axisFortuneCards"), "fortune cards remain");
   assert.ok(!appJs.includes("fortune-carousel"), "the carousel stays gone");
-  assert.ok(!html.includes('data-level="Simple"'), "the mode switch stays gone");
-  assert.match(appJs, /return "advanced"/, "one complete experience remains");
+  assert.ok(!html.includes('data-level="Simple"'), "the superseded mode switch stays gone");
+  // 5.2a's substance was that the reading is never hidden behind an
+  // interaction. The A2 sheet adds DEPTH on top of a card whose reading is
+  // already fully rendered — so the card body must still be printed inline.
+  assert.match(appJs, /class="fortune-card2__body">\$\{esc\(card\.body\)\}/,
+    "every reading is still printed on the card itself, not only in the sheet");
 });
 
 // ── Boot-critical DOM contract ──────────────────────────────────────────────

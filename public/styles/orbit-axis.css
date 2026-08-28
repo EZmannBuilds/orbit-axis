@@ -310,3 +310,478 @@
      that fill is the one piece of chrome doing real work here. */
   .day-strip { background: none; border: 0; padding: 0; }
 }
+
+/* ══ A2 identity layer ═══════════════════════════════════════════════════════
+   The approved interactive prototype's direction, expressed in this system's
+   own tokens rather than beside them. Nothing here introduces a second design
+   language: the one accent stays Orbit Violet, elevation stays a surface
+   change, and the type ladder is untouched. What A2 adds is the identity —
+   the tagline in the rail, the orbit motif in selection and progress, and
+   restrained differentiation colours where information genuinely needs it.
+
+   The prototype's flat hexes are deliberately NOT copied in. A hardcoded
+   #0d1220 would be correct in dark and unreadable in light, and both themes
+   are supported. Every value below resolves through the semantic layer. */
+
+/* ── The rail's brand lockup ────────────────────────────────────────────── */
+.rail__brand-copy { display: flex; flex-direction: column; min-width: 0; gap: 4px; }
+.rail__tagline {
+  font-size: var(--type-fine);
+  font-weight: var(--weight-regular);
+  letter-spacing: 0.11em;
+  color: var(--color-faint);
+  white-space: nowrap;
+}
+
+/* ── Evidence lists ─────────────────────────────────────────────────────────
+   Used by the fortune detail sheet to show the engine's own factors. The
+   Today-level "Why this reading" panel these were first written for was removed
+   on 2026-08-27; the explanation now lives per card, in the sheet, where it is
+   asked for rather than offered to everyone at once. */
+.why-reading__label {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.why-reading__factors { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-xs); }
+.why-factor {
+  padding: var(--space-xs) var(--space-sm);
+  border-left: 2px solid var(--color-accent-border);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--color-surface-sunken);
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+}
+
+/* ── Fortune cards as controls ──────────────────────────────────────────── */
+.fortune-card2 {
+  position: relative;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard),
+              transform var(--duration-fast) var(--ease-standard);
+}
+.fortune-card2:hover {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-hover);
+}
+.fortune-card2:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+.fortune-card2__compact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0 0 var(--space-xs);
+  font-size: var(--type-title, 1.5rem);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+}
+/* The lucky colour, shown as a swatch as well as named — the name is the
+   information, the swatch is the confirmation. Colour never carries it alone. */
+.fortune-swatch {
+  inline-size: 18px;
+  block-size: 18px;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--color-border-strong);
+  background: var(--swatch, var(--color-surface));
+}
+.fortune-card2__more {
+  margin-top: auto;
+  padding-top: var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.fortune-disclaimer {
+  margin: var(--space-sm) 0 0;
+  font-size: var(--type-caption);
+  color: var(--color-faint);
+}
+
+/* ── The fortune detail sheet ───────────────────────────────────────────────
+   A side sheet on desktop, a bottom sheet on a phone. Same element, same modal
+   machinery (focus trap, Escape, focus restoration) — only the geometry moves. */
+.o-modal--sheet { align-items: stretch; justify-content: flex-end; padding: 0; }
+.fortune-sheet__panel {
+  display: flex;
+  flex-direction: column;
+  inline-size: min(460px, 100vw);
+  max-inline-size: 100vw;
+  block-size: 100dvh;
+  max-block-size: 100dvh;
+  border-radius: 0;
+  border-inline-start: var(--border-width) solid var(--color-border);
+}
+.fortune-sheet__head { align-items: flex-start; }
+.fortune-sheet__eyebrow {
+  margin: 0 0 2px;
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.fortune-sheet__body { display: grid; gap: var(--space-md); overflow-y: auto; }
+.fortune-sheet__lede {
+  margin: 0;
+  font-size: var(--type-fine);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.fortune-sheet__reading { margin: 0; line-height: 1.65; color: var(--color-secondary); }
+.fortune-sheet__note { margin: 0; font-size: var(--type-caption); color: var(--color-faint); }
+.calculation-details > summary { cursor: pointer; color: var(--color-accent); font-size: var(--type-caption); }
+.calculation-details > summary:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; border-radius: 4px; }
+.calculation-details p { margin: var(--space-xs) 0 0; color: var(--color-secondary); font-size: var(--type-caption); line-height: 1.6; }
+.fortune-sheet__foot {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-top: var(--border-width) solid var(--color-border);
+}
+.fortune-sheet__foot .o-btn { flex: 1; }
+
+/* A phone gets a bottom sheet: reachable by thumb, and it never covers the
+   whole screen, so the page behind it still says where you are. */
+@media (max-width: 700px) {
+  .o-modal--sheet { align-items: flex-end; justify-content: center; }
+  .fortune-sheet__panel {
+    inline-size: 100vw;
+    block-size: auto;
+    max-block-size: 88dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    border-inline-start: 0;
+    border-top: var(--border-width) solid var(--color-border);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* Reduced motion: the card lift and every transition above are decoration.
+   The base motion layer already zeroes durations globally; this states the
+   intent locally so a later edit does not reintroduce a transform here. */
+@media (prefers-reduced-motion: reduce) {
+  .fortune-card2 { transition: none; }
+  .fortune-card2:hover { transform: none; }
+}
+
+/* ══ A2 across Chart, Sky, Atlas and You ═════════════════════════════════════
+   Today got the A2 treatment first. These four were structurally sound and
+   visually inconsistent with it — two different segmented controls for the same
+   job, section heads with no shared rhythm, and category tiles that did not use
+   the identity at all.
+
+   This layer unifies them. It restyles what exists; it does not restructure.
+   Nothing here adds a colour outside the token set, and the one accent rule
+   still holds — Orbit Violet says "interactive", and never anything else. */
+
+/* ── One section-head rhythm ────────────────────────────────────────────────
+   Every destination now opens the same way: a small uppercase eyebrow, the
+   title, then one line saying what the page is for. The eyebrow is hierarchy
+   only — it never carries information the page needs. */
+.a2-eyebrow {
+  display: block;
+  margin: 0 0 2px;
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/* ── One segmented control ──────────────────────────────────────────────────
+   Chart used underlined text links; Sky used a full-width block segment. Same
+   job, two visual languages. Both now read as the control Today established:
+   a sunken track, a raised current segment, and the selection stated by
+   surface and weight as well as tint — never by colour alone.
+
+   These stay ANCHORS with real hrefs. They are navigation, not a tablist, and
+   the repository is right that calling them tabs would hand a screen reader
+   semantics they do not honour. */
+.chart-subnav,
+.subnav .o-segment--block {
+  display: inline-flex;
+  gap: 2px;
+  width: auto;
+  max-width: 100%;
+  padding: 3px;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.chart-subnav::-webkit-scrollbar,
+.subnav .o-segment--block::-webkit-scrollbar { display: none; }
+
+.chart-subnav a,
+.subnav .o-segment--block a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 0 var(--space-md);
+  border: 0;
+  border-radius: calc(var(--radius-md) - 3px);
+  background: transparent;
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-standard),
+              color var(--duration-fast) var(--ease-standard);
+}
+.chart-subnav a:hover,
+.subnav .o-segment--block a:hover {
+  background: var(--color-surface-ghost);
+  color: var(--color-primary);
+}
+/* The current view, stated three ways: surface, weight, and the orbit edge. */
+.chart-subnav a[aria-current="page"],
+.subnav .o-segment--block a[aria-current="page"] {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: var(--weight-semibold);
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.chart-subnav a:focus-visible,
+.subnav .o-segment--block a:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── Chart ──────────────────────────────────────────────────────────────────
+   The Big Three is the strongest entry point on the page, so its panel is the
+   one that gets the accent edge. Everything below it is a quieter tile, which
+   is what makes the top of the reading feel like a beginning rather than the
+   first of eight equal boxes. */
+#section-bigthree {
+  border-color: var(--color-accent-border);
+  background: var(--color-surface-elevated);
+}
+#section-bigthree .me-section-head h2 { color: var(--color-primary); }
+
+/* The remaining reading panels alternate against the canvas rather than
+   stacking identical cards — elevation by surface, per the design system. */
+.me-panel {
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+.me-panel:hover { border-color: var(--color-border-strong); }
+
+/* Chart data is the densest section and the least often wanted. It reads as
+   reference rather than reading. */
+.me-panel--advanced { background: var(--color-surface-sunken); }
+
+/* ── Sky ────────────────────────────────────────────────────────────────────
+   A transit is a contact, not a verdict. There is deliberately no severity
+   colour ramp here and no "challenging" red: the wording carries the meaning,
+   and tinting a transit by how hard it sounds is how an astrology app starts
+   frightening people. */
+.tr-switcher,
+#positions-summary { border-radius: var(--radius-lg); }
+
+/* A signed-out visitor met a "Planetary positions" heading with nothing under
+   it — Current Positions is authenticated by design, so the body stayed empty
+   while the static heading rendered anyway. The state now explains itself. */
+.positions-gate {
+  display: grid;
+  gap: var(--space-sm);
+  justify-items: start;
+  padding: var(--space-md) 0 var(--space-xs);
+  color: var(--color-secondary);
+}
+.positions-gate p { margin: 0; max-width: 58ch; line-height: var(--lead-body); }
+
+/* ── Atlas ──────────────────────────────────────────────────────────────────
+   The glyph tile is where the orbit motif earns its place: a symbol resting in
+   a ring, which is what the whole product does. Used here and in navigation,
+   not sprinkled on every surface. */
+.atlas-category-card,
+.atlas-card { border-radius: var(--radius-lg); }
+.atlas-category-card__glyph,
+.atlas-card__glyph {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 38px;
+  block-size: 38px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-accent);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+              background var(--duration-fast) var(--ease-standard);
+}
+.atlas-category-card:hover .atlas-category-card__glyph,
+.atlas-card:hover .atlas-card__glyph {
+  border-color: var(--color-accent-border);
+  background: var(--color-accent-soft);
+}
+.atlas-category-card:focus-visible,
+.atlas-card:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+/* ── You ────────────────────────────────────────────────────────────────────
+   A settings surface, so the rows stay a scannable list and only the group
+   labels change: they were competing with the row titles beneath them. */
+.more-section > .o-group__label {
+  margin-bottom: var(--space-xs);
+  color: var(--color-faint);
+}
+.account-offer {
+  border: var(--border-width) solid var(--color-accent-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+}
+
+/* ── Narrow widths ─────────────────────────────────────────────────────────
+   The segment scrolls inside its own track rather than stretching the page.
+   Tables and grids already reflow; this is the one control that could not. */
+@media (max-width: 640px) {
+  .chart-subnav,
+  .subnav .o-segment--block { display: flex; width: 100%; }
+  .chart-subnav a,
+  .subnav .o-segment--block a { flex: 1 0 auto; min-height: 44px; padding: 0 var(--space-sm); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-subnav a,
+  .subnav .o-segment--block a,
+  .me-panel,
+  .atlas-category-card__glyph,
+  .atlas-card__glyph { transition: none; }
+}
+
+/* ══ The chart wheel ═════════════════════════════════════════════════════════
+   A real drawing of calculated positions, sharing the page with the reading it
+   illustrates and the placement list that repeats it as text. It is redundant
+   on purpose: nobody has to read the picture to get the information. */
+.me-panel--wheel { background: var(--color-surface-sunken); }
+.chart-wheel { display: grid; place-items: center; padding: var(--space-sm) 0; }
+.cw {
+  inline-size: 100%;
+  max-inline-size: 420px;
+  block-size: auto;
+  /* The one drop shadow the system allows belongs to objects resting on a
+     surface — the wheel and the Moon. Cards and rows never take it. */
+  filter: drop-shadow(var(--shadow-object));
+}
+.cw-ring { fill: none; stroke: var(--color-border); stroke-width: 1; }
+.cw-ring--outer { stroke: var(--color-border-strong); }
+.cw-ring--inner { fill: var(--color-surface); }
+.cw-tick { stroke: var(--color-border); stroke-width: 1; }
+.cw-degree-tick { stroke: var(--color-border-strong); stroke-width: 1; }
+.cw-sign { font-size: 15px; fill: var(--color-secondary); }
+.cw-horizon { stroke: var(--color-accent); stroke-width: 1.5; stroke-dasharray: 4 4; opacity: 0.75; }
+.cw-angle { font-size: 10px; font-weight: var(--weight-semibold); fill: var(--color-accent); letter-spacing: 0.04em; }
+
+.cw-body { cursor: pointer; }
+.cw-body__hit { fill: var(--color-surface-elevated); stroke: var(--color-border); stroke-width: 1;
+  transition: fill var(--duration-fast) var(--ease-standard), stroke var(--duration-fast) var(--ease-standard); }
+.cw-glyph { font-size: 15px; fill: var(--color-primary); pointer-events: none; }
+.cw-body:hover .cw-body__hit { fill: var(--color-surface-hover); stroke: var(--color-border-strong); }
+/* Selection is stated by fill AND stroke, never by colour alone. */
+.cw-body.is-selected .cw-body__hit { fill: var(--color-accent-soft); stroke: var(--color-accent); stroke-width: 2; }
+.cw-body:focus-visible { outline: none; }
+.cw-body:focus-visible .cw-body__hit { stroke: var(--color-border-focus); stroke-width: 2.5; }
+
+.chart-wheel__note,
+.chart-wheel__selected { margin: var(--space-xs) 0 0; font-size: var(--type-caption); color: var(--color-faint); text-align: center; }
+.chart-wheel__selected:not(:empty) { color: var(--color-secondary); font-weight: var(--weight-semibold); }
+
+/* A phone gets a smaller wheel and larger hit targets — the glyph ring is the
+   one thing here that cannot simply reflow. */
+@media (max-width: 640px) {
+  .cw { max-inline-size: 320px; }
+  .cw-body__hit { r: 17; }
+}
+
+/* ══ Today's Fortune as chips ════════════════════════════════════════════════
+   Six cards that fit one row instead of six paragraphs that fill a screen. The
+   chip line is extracted from the reading, never generated, and the reading
+   itself stays in the DOM on every card — hidden with CSS, not omitted, so
+   find-in-page and screen readers still reach every word. */
+/* Only a card that HAS a chip hides its reading. A card whose reading has no
+   short honest summary shows the reading — a label over empty space is worse
+   than the paragraph the chip was meant to replace. */
+.fortune-card2[data-chip="yes"] .fortune-card2__body { display: none; }
+/* The lead card shows its READING, not its chip.
+   The chip is extracted from the opening clause of the reading, so printing
+   both made the headline card say the same words twice in a row. The chip
+   exists to compress the other five; the card that has room for the sentence
+   should show the sentence. */
+.fortune-card2--primary[data-chip="yes"] .fortune-card2__body,
+.fortune-card2--primary .fortune-card2__body { display: block; }
+.fortune-card2--primary .fortune-card2__compact { display: none; }
+.fortune-card2__compact {
+  font-size: var(--type-body);
+  line-height: 1.3;
+}
+.fortune-card2--primary .fortune-card2__compact { font-size: var(--type-title, 1.4rem); }
+
+/* Above phone widths all six fit a single row, so the deck stops scrolling. */
+@media (min-width: 900px) {
+  .fortune-deck__track { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .fortune-card2--primary { grid-column: span 2; }
+}
+
+/* ══ The Moon, as a hero ═════════════════════════════════════════════════════
+   The scene was a card illustration beside a paragraph. It is the first thing
+   worth looking at on the page, so the art carries the panel and the phase name
+   takes a display size. */
+.moon-state--hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: var(--space-lg);
+  min-block-size: 260px;
+}
+.moon-state--hero .moon-state__text { order: -1; min-width: 0; }
+.moon-state__kicker {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--type-fine);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+/* The one editorial moment in the product: the phase name is the headline. */
+.moon-state--hero .moon-state__phase {
+  margin: 0 0 var(--space-xs);
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--color-primary);
+}
+.moon-state--hero .moon-scene {
+  block-size: 100%;
+  min-block-size: 240px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .moon-state--hero { grid-template-columns: 1fr; gap: var(--space-md); }
+  .moon-state--hero .moon-scene { min-block-size: 190px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-body__hit { transition: none; }
+}

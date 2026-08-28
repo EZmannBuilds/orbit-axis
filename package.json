@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "AGPL-3.0-or-later",
   "private": true,
-  "description": "Orbit — standalone astrology app and API.",
+  "description": "Orbit \u2014 standalone astrology app and API.",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "dev:local": "node scripts/dev-local.js",
     "env:check": "node scripts/env-check.js",
     "env:check:production": "node scripts/env-check.js --production",
-    "lint": "node --check server.js && node --check api/*.js && node --check lib/*.js && node --check lib/auth/*.js && node --check lib/env/*.js && node --check lib/server/*.js && node --check lib/deploy/*.js && node --check lib/api/*.js && node --check lib/api/v1/*.js && node --check lib/api/v1/*/*.js && node --check lib/local-llm/*.js && node --check lib/astro/*.js && node --check lib/astro/runtime/*.js && node --check lib/charts/*.js && node --check lib/entitlements/*.js && node --check lib/compatibility/*.js && node --check lib/tarot/*.js && node --check lib/symbol-atlas/*.js && node --check public/symbol-atlas/*.js && node --check lib/fortune/*.js && node --check lib/interpretation/*.js && node --check lib/ask-orbit/*.js && node --check lib/locations/*.js && node --check public/app.js && node --check public/icons.js && node --check public/moon-phase.js && node --check public/chart-identity.js && node --check public/avatar-normalize.js && node --check public/chart-avatar-limits.js && node --check public/startup-state.js && node --check public/platform.js && node --check public/native-shell.js && node --check public/app-config.js && node --check scripts/*.js",
+    "lint": "node --check server.js && node --check api/*.js && node --check lib/*.js && node --check lib/auth/*.js && node --check lib/env/*.js && node --check lib/server/*.js && node --check lib/deploy/*.js && node --check lib/api/*.js && node --check lib/api/v1/*.js && node --check lib/api/v1/*/*.js && node --check lib/local-llm/*.js && node --check lib/astro/*.js && node --check lib/astro/runtime/*.js && node --check lib/charts/*.js && node --check lib/entitlements/*.js && node --check lib/compatibility/*.js && node --check lib/tarot/*.js && node --check lib/symbol-atlas/*.js && node --check public/symbol-atlas/*.js && node --check lib/fortune/*.js && node --check lib/interpretation/*.js && node --check lib/ask-orbit/*.js && node --check lib/locations/*.js && node --check public/app.js && node --check public/share-image.js && node --check public/icons.js && node --check public/moon-phase.js && node --check public/chart-identity.js && node --check public/avatar-normalize.js && node --check public/chart-avatar-limits.js && node --check public/startup-state.js && node --check public/platform.js && node --check public/native-shell.js && node --check public/app-config.js && node --check scripts/*.js",
     "typecheck": "npm run lint",
     "pretest": "node scripts/test-guard.js",
     "test": "node --test",
