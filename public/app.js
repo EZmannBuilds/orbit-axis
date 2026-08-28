@@ -6296,7 +6296,7 @@ const reading = {
   chartId: null,
 };
 
-const READING_SECTIONS = ["#section-bigthree", "#section-patterns", "#section-planets",
+const READING_SECTIONS = ["#section-bigthree", "#section-wheel", "#section-patterns", "#section-planets",
                           "#section-aspects", "#section-houses", "#section-data"];
 
 function setReadingState(next) {
@@ -6324,8 +6324,9 @@ function clearChartReading() {
   state.activeNatalChart = null;
   state.activeProfile = null;
   state.activeReading = null;
-  ["#bigthree", "#chart-patterns", "#key-placements", "#chart-aspects",
-   "#chart-houses", "#chart-placements", "#chart-limitation"].forEach((sel) => {
+  ["#bigthree", "#chart-wheel", "#chart-wheel-selected", "#chart-patterns",
+   "#key-placements", "#chart-aspects", "#chart-houses", "#chart-placements",
+   "#chart-limitation"].forEach((sel) => {
     const el = $(sel);
     if (el) el.innerHTML = "";
   });
@@ -6446,6 +6447,187 @@ function renderBigThree(bigThree) {
   const target = $("#bigthree");
   if (!target) return;
   target.innerHTML = (bigThree || []).map((p) => readingCardHtml(p, { role: p.role })).join("");
+}
+
+// ── 4. The wheel ────────────────────────────────────────────────────────────
+//
+// A DATA VISUALISATION, NOT DECORATION. Every glyph sits at the longitude the
+// engine calculated; nothing here is placed for looks. If a body has no sign or
+// degree it is omitted rather than positioned at a guess, because a wheel whose
+// arrangement is partly invented is worse than one that admits a gap.
+//
+// The drawing is redundant by design: the same placements are listed as text
+// directly beneath it, and the SVG carries a full text alternative. Nobody has
+// to read the picture to get the information.
+
+const ZODIAC_ORDER = ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+  "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"];
+
+/**
+ * Absolute ecliptic longitude, derived from what the client already holds.
+ *
+ * The reading payload carries sign + degrees + minutes rather than a raw
+ * longitude, and those three are exact — sign index × 30 plus the degree within
+ * the sign IS the longitude. Deriving it here avoids a contract change for a
+ * number the server already sent in another form.
+ *
+ * Returns null when any part is missing, so callers can drop the body instead
+ * of drawing it at zero.
+ */
+function placementLongitude(p) {
+  if (!p || p.unavailable) return null;
+  const index = ZODIAC_ORDER.indexOf(p.sign);
+  if (index < 0 || p.degrees == null) return null;
+  return index * 30 + Number(p.degrees) + (Number(p.minutes) || 0) / 60;
+}
+
+/**
+ * Longitude → SVG point.
+ *
+ * Astrological wheels run ANTICLOCKWISE from the left-hand horizon, which is
+ * the opposite of how SVG measures angles. Getting this backwards produces a
+ * chart that looks plausible and mirrors every placement, so it is stated once
+ * here and used everywhere rather than re-derived per call site.
+ */
+function wheelPoint(longitude, radius, rotation) {
+  const angle = ((180 - (longitude - rotation)) * Math.PI) / 180;
+  // y ADDS the sine rather than subtracting it. From the Ascendant at the left
+  // horizon, increasing longitude must run DOWN the screen toward the IC and
+  // round to the Descendant on the right — the direction house numbers count.
+  // Subtracting mirrored the whole chart vertically, which still looked like a
+  // chart. Caught by test/chart-wheel.test.js, not by looking at it.
+  return { x: 200 + radius * Math.cos(angle), y: 200 + radius * Math.sin(angle) };
+}
+
+/**
+ * Spread glyphs that would otherwise overlap.
+ *
+ * Bodies within a few degrees of one another collide into an unreadable blob —
+ * a stellium is exactly when the wheel matters most, so this nudges each one
+ * outward along its own radius instead of hiding the crowding.
+ */
+function wheelSpread(bodies) {
+  const sorted = [...bodies].sort((a, b) => a.longitude - b.longitude);
+  let run = 0;
+  return sorted.map((body, i) => {
+    const prev = sorted[i - 1];
+    run = prev && Math.abs(body.longitude - prev.longitude) < 7 ? run + 1 : 0;
+    return { ...body, tier: run % 3 };
+  });
+}
+
+function renderChartWheel(chart, readingPayload) {
+  const section = $("#section-wheel");
+  const mount = $("#chart-wheel");
+  if (!section || !mount) return;
+
+  const bodies = [];
+  for (const name of STANDARD_PLANET_ORDER) {
+    const p = chart?.planets?.[name];
+    const longitude = placementLongitude(p);
+    if (longitude != null) {
+      bodies.push({ key: name, label: name, glyph: PLACEMENT_GLYPHS[name] || name,
+        sign: p.sign, deg: degLabel(p), retrograde: Boolean(p.retrograde),
+        house: chart?.planet_houses?.[name] || null, longitude });
+    }
+  }
+
+  // The Ascendant is a birth-TIME product. With an unknown time it is not
+  // merely uncertain, it is unfounded — so it is left off the wheel entirely
+  // rather than drawn with a caveat, and the wheel keeps its default rotation.
+  const accuracy = chart?.time_accuracy || "unknown";
+  const timeKnown = accuracy !== "unknown";
+  const ascLongitude = timeKnown ? placementLongitude(chart?.angles?.ascendant) : null;
+
+  if (!bodies.length) { section.hidden = true; mount.innerHTML = ""; return; }
+  section.hidden = false;
+
+  // Rotate so the Ascendant sits on the left horizon, which is how a chart is
+  // conventionally drawn. Without a birth time there is no horizon to align to,
+  // so 0° Aries stays on the left and the wheel is honest about being a zodiac
+  // map rather than a house chart.
+  const rotation = ascLongitude ?? 0;
+  const placed = wheelSpread(bodies);
+
+  const signSegments = ZODIAC_ORDER.map((sign, i) => {
+    const mid = wheelPoint(i * 30 + 15, 185, rotation);
+    const edge = wheelPoint(i * 30, 196, rotation);
+    const inner = wheelPoint(i * 30, 172, rotation);
+    return `
+      <line x1="${inner.x.toFixed(1)}" y1="${inner.y.toFixed(1)}" x2="${edge.x.toFixed(1)}" y2="${edge.y.toFixed(1)}" class="cw-tick" />
+      <text x="${mid.x.toFixed(1)}" y="${mid.y.toFixed(1)}" class="cw-sign" dominant-baseline="central" text-anchor="middle">${SIGN_GLYPH[sign] || ""}</text>`;
+  }).join("");
+
+  const glyphs = placed.map((b) => {
+    const r = 140 - b.tier * 26;
+    const at = wheelPoint(b.longitude, r, rotation);
+    const tickIn = wheelPoint(b.longitude, 168, rotation);
+    const tickOut = wheelPoint(b.longitude, 172, rotation);
+    return `
+      <line x1="${tickIn.x.toFixed(1)}" y1="${tickIn.y.toFixed(1)}" x2="${tickOut.x.toFixed(1)}" y2="${tickOut.y.toFixed(1)}" class="cw-degree-tick" />
+      <g class="cw-body" tabindex="0" role="button"
+         data-body="${esc(b.key)}"
+         aria-label="${esc(`${b.label} in ${b.sign}, ${b.deg}${b.retrograde ? ", retrograde" : ""}${b.house ? `, house ${b.house}` : ""}`)}">
+        <circle cx="${at.x.toFixed(1)}" cy="${at.y.toFixed(1)}" r="15" class="cw-body__hit" />
+        <text x="${at.x.toFixed(1)}" y="${at.y.toFixed(1)}" class="cw-glyph" dominant-baseline="central" text-anchor="middle">${esc(b.glyph)}</text>
+      </g>`;
+  }).join("");
+
+  // The horizon line only exists when there is a birth time to put it at.
+  const horizon = ascLongitude == null ? "" : (() => {
+    const a = wheelPoint(ascLongitude, 172, rotation);
+    const d = wheelPoint(ascLongitude + 180, 172, rotation);
+    return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${d.x.toFixed(1)}" y2="${d.y.toFixed(1)}" class="cw-horizon" />
+            <text x="${(a.x - 14).toFixed(1)}" y="${a.y.toFixed(1)}" class="cw-angle" dominant-baseline="central" text-anchor="middle">AC</text>`;
+  })();
+
+  // The text alternative IS the chart, in words. Screen-reader users get the
+  // same placements in the same order, not "chart wheel image".
+  const description = placed
+    .map((b) => `${b.label} in ${b.sign} at ${b.deg}${b.retrograde ? " retrograde" : ""}${b.house ? `, house ${b.house}` : ""}`)
+    .join(". ");
+
+  mount.innerHTML = `
+    <svg class="cw" viewBox="0 0 400 400" role="img" aria-labelledby="cw-title cw-desc">
+      <title id="cw-title">Birth chart wheel${readingPayload?.nickname ? ` for ${esc(readingPayload.nickname)}` : ""}</title>
+      <desc id="cw-desc">${esc(description)}</desc>
+      <circle cx="200" cy="200" r="196" class="cw-ring cw-ring--outer" />
+      <circle cx="200" cy="200" r="172" class="cw-ring" />
+      <circle cx="200" cy="200" r="62" class="cw-ring cw-ring--inner" />
+      ${signSegments}
+      ${horizon}
+      ${glyphs}
+    </svg>
+    <p class="chart-wheel__note">${timeKnown
+      ? "Rotated so your Ascendant sits on the left horizon."
+      : "No birth time saved, so this is drawn from 0° Aries. Houses and the Ascendant are not shown."}</p>`;
+
+  wireChartWheel(placed);
+}
+
+/** Selecting a glyph names it underneath. Pointer and keyboard, same handler. */
+function wireChartWheel(bodies) {
+  const mount = $("#chart-wheel");
+  const out = $("#chart-wheel-selected");
+  if (!mount || !out) return;
+  const byKey = new Map(bodies.map((b) => [b.key, b]));
+
+  const select = (key) => {
+    const b = byKey.get(key);
+    if (!b) return;
+    mount.querySelectorAll(".cw-body").forEach((g) => g.classList.toggle("is-selected", g.dataset.body === key));
+    out.textContent = `${b.label} in ${b.sign} · ${b.deg}${b.retrograde ? " · retrograde" : ""}${b.house ? ` · house ${b.house}` : ""}`;
+  };
+
+  mount.addEventListener("click", (event) => {
+    const g = event.target.closest(".cw-body");
+    if (g) select(g.dataset.body);
+  });
+  mount.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const g = event.target.closest(".cw-body");
+    if (g) { select(g.dataset.body); event.preventDefault(); }
+  });
 }
 
 // ── 3. Chart patterns ───────────────────────────────────────────────────────
@@ -6731,6 +6913,7 @@ function renderChart(chart, name, profile = null, readingPayload = null) {
   renderChartHeader(profile, chart, name, readingPayload.context);
   renderLimitation(readingPayload.limitation);
   renderBigThree(readingPayload.bigThree);
+  renderChartWheel(chart, readingPayload);
   renderPatterns(readingPayload.patterns);
   renderPlacements(readingPayload.remainingPlacements, readingPayload.pointPlacements);
   renderAspects(readingPayload.aspects);
@@ -7304,6 +7487,34 @@ function axisShowReadingFor(name) {
    says what the day may feel like, and Technical Sky below it says why —
    without the fortune ever naming a planet. */
 
+/**
+ * A chip-sized version of a reading, taken from the reading itself.
+ *
+ * Deliberately EXTRACTIVE, never generative: it returns the opening clause of
+ * the sentence the deterministic engine wrote, so the chip cannot say anything
+ * the reading does not. Summarising with a model here would put unverifiable
+ * text on the most glanceable surface in the product.
+ *
+ * Returns "" when there is nothing short enough to be honest about, and the
+ * card simply shows no chip line.
+ */
+function firstClause(text, max = 46) {
+  const s = String(text || "").trim();
+  if (!s) return "";
+  const clause = s.split(/[.—;:]/)[0].trim();
+  if (!clause) return "";
+  if (clause.length <= max) return clause;
+  // Too long to be a chip. Returning "" here left four of six cards showing a
+  // label and nothing else — worse than the paragraphs the chips replaced. The
+  // card falls back to its full reading instead; see fortuneCardHasChip.
+  return "";
+}
+
+/** A card with no honest chip shows its reading, so it is never blank. */
+function fortuneCardHasChip(card) {
+  return Boolean(card.compact && String(card.compact).trim());
+}
+
 /** The reading cards, in the order they are read.
  *
  * Six fields, because six is what the engine produces. The lucky number and
@@ -7320,11 +7531,18 @@ function axisFortuneCards(F) {
       label: "Overall",
       lede: "What today may feel like",
       body: F.mood,
+      // The headline the engine already wrote. Falling back to the first few
+      // words of the reading keeps a chip from being blank, and never invents
+      // a summary — an unearned one-word verdict is the thing to avoid here.
+      compact: F.mood_headline || firstClause(F.mood),
       primary: true,
     },
-    { id: "love", label: "Connection", lede: "Relationships and communication", body: F.love_reading },
-    { id: "luck", label: "Momentum", lede: "Where things may open up", body: F.luck_reading },
-    { id: "watch", label: "Watch for", lede: "What may create friction", body: F.watch_out, caution: true },
+    { id: "love", label: "Connection", lede: "Relationships and communication",
+      body: F.love_reading, compact: firstClause(F.love_reading) },
+    { id: "luck", label: "Momentum", lede: "Where things may open up",
+      body: F.luck_reading, compact: firstClause(F.luck_reading) },
+    { id: "watch", label: "Watch for", lede: "What may create friction",
+      body: F.watch_out, compact: firstClause(F.watch_out), caution: true },
     {
       id: "number",
       label: "Lucky number",
@@ -7381,6 +7599,7 @@ function axisRenderFortune(F) {
             class="fortune-card2${card.primary ? " fortune-card2--primary" : ""}${card.caution ? " fortune-card2--caution" : ""}"
             id="fortune-card-${esc(card.id)}"
             data-fortune-open="${esc(card.id)}"
+            data-chip="${fortuneCardHasChip(card) ? "yes" : "no"}"
             aria-label="${esc(card.label)}, ${index + 1} of ${cards.length}. Open full reading.">
       <!-- Reserved for the artwork that is coming. Empty and zero-height until
            there is something to put in it, so the deck does not sit on a band
@@ -7391,6 +7610,10 @@ function axisRenderFortune(F) {
       ${card.compact ? `<p class="fortune-card2__compact">${
         card.swatch ? `<span class="fortune-swatch" style="--swatch:${esc(card.swatch)}" aria-hidden="true"></span>` : ""
       }${esc(card.compact)}</p>` : ""}
+      <!-- The full reading stays in the DOM on every card. Only the primary
+           card SHOWS it; the rest reveal it in the sheet. Hiding it with CSS
+           rather than omitting it keeps find-in-page and screen readers whole,
+           which is the objection that removed the last carousel. -->
       <p class="fortune-card2__body">${esc(card.body)}</p>
       <span class="fortune-card2__more" aria-hidden="true">Open</span>
     </button>`).join("");
@@ -7579,9 +7802,10 @@ function axisRenderMoon(moon, sky) {
     : `<p class="moon-state__next">The next lunar event isn’t available right now.</p>`;
 
   body.innerHTML = `
-    <div class="moon-state">
+    <div class="moon-state moon-state--hero">
       ${visual}
       <div class="moon-state__text">
+        <p class="moon-state__kicker">The Moon right now</p>
         <p class="moon-state__phase">${
           // Without a phase name the " in Pisces" suffix used to render on its
           // own, leaving a heading that began mid-sentence.

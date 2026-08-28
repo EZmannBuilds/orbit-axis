@@ -204,7 +204,10 @@
                  or returned to, so the only way to see a stale Moon is to
                  watch this screen for long enough that it stops being now. -->
             <div class="moon-head">
-              <h2 class="axis-section-title" id="today-moon-title">The Moon right now</h2>
+              <!-- Visually hidden: the hero below prints this same line as its
+                   kicker. Removing the heading outright would strip the card of
+                   its accessible name, which aria-labelledby depends on. -->
+              <h2 class="axis-section-title sr-only" id="today-moon-title">The Moon right now</h2>
             </div>
             <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
             <div id="today-moon-body"></div>
@@ -420,7 +423,22 @@
               <div class="reading-grid reading-grid--keys" id="bigthree"></div>
             </section>
 
-            <!-- 4. Chart patterns -->
+            <!-- 4. The wheel ────────────────────────────────────────────
+                 Reading, wheel and placements on ONE page, not behind tabs.
+                 The wheel sits under the Big Three because it is the picture
+                 of what was just named — and above the detailed placements,
+                 which are the same information as a list. Tabs would have hidden
+                 two of the three from anyone who did not find the control. -->
+            <section class="me-panel me-panel--wheel" id="section-wheel" aria-labelledby="me-wheel-title" hidden>
+              <div class="me-section-head">
+                <h2 id="me-wheel-title">The wheel</h2>
+                <p>The sky at your birth, drawn to scale. Every glyph sits at its calculated degree.</p>
+              </div>
+              <div class="chart-wheel" id="chart-wheel"></div>
+              <p class="chart-wheel__selected" id="chart-wheel-selected" role="status" aria-live="polite"></p>
+            </section>
+
+            <!-- 5. Chart patterns -->
             <section class="me-panel" id="section-patterns" aria-labelledby="me-patterns-title">
               <div class="me-section-head">
                 <h2 id="me-patterns-title">Chart patterns</h2>
@@ -429,7 +447,7 @@
               <div id="chart-patterns"></div>
             </section>
 
-            <!-- 5. Planet placements -->
+            <!-- 6. Planet placements -->
             <section class="me-panel me-panel--placements" id="section-planets" aria-labelledby="me-planets-title">
               <div class="me-section-head">
                 <h2 id="me-planets-title">Placements</h2>
@@ -438,7 +456,7 @@
               <div class="reading-grid reading-grid--planets" id="key-placements"></div>
             </section>
 
-            <!-- 6. Major aspects -->
+            <!-- 7. Major aspects -->
             <section class="me-panel" id="section-aspects" aria-labelledby="me-aspects-title">
               <div class="me-section-head">
                 <h2 id="me-aspects-title">Major aspects</h2>
@@ -447,7 +465,7 @@
               <div id="chart-aspects"></div>
             </section>
 
-            <!-- 7. Houses and angles -->
+            <!-- 8. Houses and angles -->
             <section class="me-panel" id="section-houses" aria-labelledby="me-houses-title">
               <div class="me-section-head">
                 <h2 id="me-houses-title">Houses and angles</h2>
@@ -456,7 +474,7 @@
               <div id="chart-houses"></div>
             </section>
 
-            <!-- 8. Chart data and source information -->
+            <!-- 9. Chart data and source information -->
             <section class="me-panel me-panel--advanced" id="section-data" aria-labelledby="me-advanced-title">
               <div class="me-section-head">
                 <h2 id="me-advanced-title">Chart data</h2>
