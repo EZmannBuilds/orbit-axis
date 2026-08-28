@@ -130,34 +130,7 @@
               <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
               <p class="axis-timezone" id="today-timezone" hidden></p>
             </div>
-            <!-- How much astrology to show. A display choice, never a different
-                 calculation: switching level re-reads what is already loaded and
-                 fetches nothing. Simple hides degrees and orbs, Balanced shows
-                 the moderate middle, Advanced shows everything the engine
-                 produced. Persisted like every other preference. -->
-            <div class="axis-today-head__controls">
-              <nav class="o-segment detail-segment" aria-label="Astrology detail level" id="detail-segment">
-                <button type="button" data-detail-level="Simple" aria-pressed="true">Simple</button>
-                <button type="button" data-detail-level="Balanced" aria-pressed="false">Balanced</button>
-                <button type="button" data-detail-level="Advanced" aria-pressed="false">Advanced</button>
-              </nav>
-              <button type="button" class="o-btn o-btn--utility" id="why-reading-btn" aria-expanded="false" aria-controls="why-reading">
-                Why this reading
-              </button>
-            </div>
           </div>
-
-          <!-- The promise, in the product's own words, with the engine's actual
-               factors under it. Rendered from the loaded fortune — nothing here
-               is written for this box. -->
-          <aside class="why-reading" id="why-reading" aria-label="How this reading was made" hidden>
-            <p class="why-reading__rule"><strong>Calculate first. Explain second. Generate last.</strong>
-              Orbit Axis calculates the current sky with its own astronomy engine, compares it with your
-              saved birth chart, and only then puts the strongest contacts into plain language.
-              Symbolic reflection — never prediction.</p>
-            <div id="why-reading-factors"></div>
-            <button type="button" class="o-btn o-btn--ghost o-btn--sm" id="why-reading-close">Close</button>
-          </aside>
 
           <!-- Two halves of one day. Real anchors with real hrefs, so Back,
                Forward, refresh and copy-link all work; aria-current carries the

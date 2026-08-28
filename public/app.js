@@ -6911,33 +6911,30 @@ const AXIS = {
   // (session restore already loads it for a signed-in returning user).
   loadedOnce: false,
 };
-// The A2 redesign restores progressive depth as THREE DISPLAY LEVELS. This is
-// a different thing from what Update 5.2 removed, and the difference is the
-// contract: a level never changes the calculation, never refetches, and never
-// hides the plain-language reading — Simple is the complete reading with the
-// technical numbers folded away, not a shallower product. Update 5.2's finding
-// (plain language must sit beside the technical facts) is preserved in Advanced,
-// which shows both phrasings' content rather than switching to jargon alone.
+// ONE EXPERIENCE, AND IT IS THE COMPLETE ONE.
 //
-// Simple    — the reading, the Moon, no degrees, no orbs.
-// Balanced  — adds signs-and-states context: retrogrades, waxing/waning, houses.
-// Advanced  — adds every number the engine produced: degrees, orbs,
-//             applying/separating, the technical factor phrasing.
-const DETAILS = ["Simple", "Balanced", "Advanced"];
+// The A2 pass briefly restored a Simple/Balanced/Advanced selector. It was
+// removed again on 2026-08-27 at Erik's direction, and Update 5.2's original
+// reasoning stands: a switch most people never find, whose Simple side makes
+// the product look shallower than it is, is worse than no switch. Depth is
+// disclosed where it is asked for instead — the fortune sheet explains any one
+// card on demand, and Technical Sky stays folded until opened.
+//
+// The stored preference is read-tolerant but not obeyed. It is deliberately
+// neither rewritten nor deleted: silently destroying a preference somebody set
+// is a worse habit than ignoring one that no longer applies.
+const DETAILS = ["Advanced"];
 
-// Coerce any value (stale localStorage, a cached API response, an unknown
-// string) to a supported level. Never crashes on bad input.
+// Coerce any stored value — including a legacy "Simple" or "Balanced" — without
+// crashing. Everything resolves to the complete experience.
 function normalizeDetail(value) {
-  const v = String(value ?? "").trim().toLowerCase();
-  if (v === "advanced") return "Advanced";
-  if (v === "balanced") return "Balanced";
-  return "Simple";
+  void value;
+  return "Advanced";
 }
-// Which per-factor phrasing key a level reads. The engine stores `simple` and
-// `advanced` phrasings per factor; Balanced reads the plain wording — its extra
-// depth is shown structurally (chips, states), not by switching sentences.
+// Which per-factor phrasing key to read. One level, one key.
 function detailKeyFor(level) {
-  return level === "Advanced" ? "advanced" : "simple";
+  void level;
+  return "advanced";
 }
 
 // The user's *current* (browsing) timezone — always distinct from a saved
@@ -6989,49 +6986,24 @@ function axisGetBirth() {
 function axisSetBirth(b) { localStorage.setItem("oa_birth", JSON.stringify(b)); }
 
 async function axisLoadDetail() {
-  // The device remembers the exact level. The server profile is the fallback
-  // for a fresh device — its contract stores only Simple | Advanced (it
-  // migrates "Balanced" to Simple by its own rule), so Balanced lives in
-  // localStorage and degrades to Simple on a device that has never chosen it.
-  // Deliberately NOT a contract change.
-  const local = localStorage.getItem("oa_detail");
-  if (local) {
-    AXIS.detail = normalizeDetail(local);
-  } else if (authSignedIn()) {
-    try {
-      const r = await get("/api/settings/detail");
-      AXIS.detail = normalizeDetail(r?.astrology_detail_level);
-    } catch { AXIS.detail = "Simple"; }
-  } else {
-    AXIS.detail = "Simple";
-  }
+  AXIS.detail = "Advanced";
   axisApplyDetail(false);
 }
 function axisApplyDetail(rerender = true) {
-  // CSS keys off this attribute for the display gates — html[data-detail="Simple"]
-  // hides .detail-tech, and so on. Most of the level system is that one line.
-  document.documentElement.setAttribute("data-detail", AXIS.detail);
-  // The segmented control mirrors the state wherever it is mounted.
-  document.querySelectorAll("[data-detail-level]").forEach((btn) => {
-    btn.setAttribute("aria-pressed", btn.dataset.detailLevel === AXIS.detail ? "true" : "false");
-  });
+  // The attribute stays: the CSS phrasing swap keys off it, and pinning it to
+  // Advanced is what makes those rules always apply.
+  document.documentElement.setAttribute("data-detail", "Advanced");
   if (rerender) {
     if (AXIS.lastFortune) axisRenderFortune(AXIS.lastFortune);
     if (AXIS.lastSky) axisRenderSky(AXIS.lastSky, { highlights: AXIS.lastHighlights, moon: AXIS.lastMoon });
-    axisRenderWhyFactors();
   }
 }
 async function axisSetDetail(level) {
   const next = normalizeDetail(level);
-  if (next === AXIS.detail) return;
   AXIS.detail = next;
-  localStorage.setItem("oa_detail", next);
   axisApplyDetail(true);
-  if (!authSignedIn()) return;
   try {
-    // The server accepts Simple | Advanced only; Balanced maps to Simple by the
-    // server's own migration rule. The exact level lives in localStorage above.
-    await put("/api/settings/detail", { astrology_detail_level: next === "Advanced" ? "Advanced" : "Simple" });
+    await put("/api/settings/detail", { astrology_detail_level: next });
   } catch { /* best effort */ }
 }
 
@@ -7099,42 +7071,6 @@ function axisWireSkyControls() {
   });
 }
 
-/* ── "Why this reading" ─────────────────────────────────────────────────────
-   The product rule, in the product's own words, with the engine's actual
-   factors under it. Factors come from the fortune already loaded — both
-   phrasings are rendered and CSS shows the one the level asks for, so
-   switching level swaps sentences without a render or a request. */
-function axisRenderWhyFactors() {
-  const host = $("#why-reading-factors");
-  if (!host) return;
-  const factors = AXIS.lastFortune?.factors;
-  if (!Array.isArray(factors) || !factors.length) { host.innerHTML = ""; return; }
-  host.innerHTML = `
-    <p class="why-reading__label">What the engine saw today</p>
-    <ul class="why-reading__factors">${factors.map((f) => `
-      <li class="why-factor why-factor--${esc(f.type || "fact")}">
-        <span class="detail-plain">${esc(f.simple || "")}</span>
-        <span class="detail-tech-text">${esc(f.advanced || f.simple || "")}</span>
-      </li>`).join("")}</ul>`;
-}
-
-function axisWireWhyReading() {
-  const btn = $("#why-reading-btn");
-  const panel = $("#why-reading");
-  if (!btn || !panel || btn._axisWired) return;
-  btn._axisWired = true;
-  const setOpen = (open) => {
-    panel.hidden = !open;
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
-    if (open) axisRenderWhyFactors();
-  };
-  btn.addEventListener("click", () => setOpen(panel.hidden));
-  $("#why-reading-close")?.addEventListener("click", () => { setOpen(false); btn.focus(); });
-  panel.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") { setOpen(false); btn.focus(); }
-  });
-}
-
 /* ── The fortune detail sheet ───────────────────────────────────────────────
    One card, opened to full depth. Built on the shared modal (focus trap,
    Escape, focus restoration); a side sheet on desktop and a bottom sheet on a
@@ -7161,10 +7097,7 @@ function axisOpenFortuneSheet(cardId) {
       <div class="fortune-sheet__evidence">
         <p class="why-reading__label">Why Orbit said this</p>
         <ul class="why-reading__factors">${factors.map((f) => `
-          <li class="why-factor why-factor--${esc(f.type || "fact")}">
-            <span class="detail-plain">${esc(f.simple || "")}</span>
-            <span class="detail-tech-text">${esc(f.advanced || f.simple || "")}</span>
-          </li>`).join("")}</ul>
+          <li class="why-factor why-factor--${esc(f.type || "fact")}">${esc(f.simple || f.advanced || "")}</li>`).join("")}</ul>
       </div>` : ""}
     <details class="calculation-details">
       <summary>How Orbit calculated this</summary>
@@ -7193,10 +7126,6 @@ async function axisInit() {
   if (!$("#panel-home")) return;
   const today = new Date();
   $("#today-date").textContent = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  for (const btn of $$("[data-detail-level]")) {
-    btn.addEventListener("click", () => axisSetDetail(btn.dataset.detailLevel));
-  }
-  axisWireWhyReading();
   axisWireFortuneSheet();
   const scope = $("#history-scope");
   if (scope) scope.addEventListener("change", () => axisLoadHistory(scope.value));
@@ -7843,14 +7772,7 @@ function axisRenderTechnicalSky(sky) {
       <div class="tech-sky__head">
         <div class="tech-sky__heading">
           <h2 class="axis-section-title" id="tech-sky-title">Technical Sky</h2>
-          <p class="tech-sky__summary">
-            <span class="detail-plain">${esc([
-              sky.sun ? `Sun in ${sky.sun.sign}` : "",
-              sky.moon ? `Moon in ${sky.moon.sign}` : "",
-            ].filter(Boolean).join(" · "))}</span><span class="detail-tech-text">${
-              esc([sun, moon].filter(Boolean).join(" · "))
-            }</span>
-          </p>
+          <p class="tech-sky__summary">${[sun, moon].filter(Boolean).map(esc).join(" · ")}</p>
         </div>
         <img class="orbit-instrument" src="/brand/orbit-axis-instrument.svg" alt="" aria-hidden="true" />
       </div>
@@ -7858,8 +7780,8 @@ function axisRenderTechnicalSky(sky) {
         <summary><span>How this was calculated</span></summary>
         <div class="tech-sky__body">
           <dl class="tech-sky__facts">
-            ${sun ? `<div class="detail-tech"><dt>Sun</dt><dd>${esc(pos(sky.sun))}</dd></div>` : ""}
-            ${moon ? `<div class="detail-tech"><dt>Moon</dt><dd>${esc(pos(sky.moon))}</dd></div>` : ""}
+            ${sun ? `<div><dt>Sun</dt><dd>${esc(pos(sky.sun))}</dd></div>` : ""}
+            ${moon ? `<div><dt>Moon</dt><dd>${esc(pos(sky.moon))}</dd></div>` : ""}
             ${sky.timezone_name ? `<div><dt>Local time</dt><dd>${esc(sky.timezone_name)}</dd></div>` : ""}
             ${updated ? `<div><dt>Calculated</dt><dd>${esc(updated)}</dd></div>` : ""}
             ${retro.length ? `<div><dt>Retrograde</dt><dd>${esc(retro.join(", "))}</dd></div>` : ""}

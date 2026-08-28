@@ -333,59 +333,11 @@
   white-space: nowrap;
 }
 
-/* ── Today's header controls ────────────────────────────────────────────── */
-.axis-today-head__controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-/* The detail selector. A segmented control rather than a select, because the
-   three levels are peers and the current one should be readable without
-   opening anything. */
-.detail-segment {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-sunken);
-}
-.detail-segment button {
-  min-height: 38px;
-  padding: 0 var(--space-sm);
-  border: 0;
-  border-radius: calc(var(--radius-md) - 3px);
-  background: transparent;
-  color: var(--color-secondary);
-  font-size: var(--type-caption);
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard),
-              color var(--duration-fast) var(--ease-standard);
-}
-.detail-segment button:hover { color: var(--color-primary); background: var(--color-surface-ghost); }
-/* Selected is stated by weight and surface as well as tint — never colour alone. */
-.detail-segment button[aria-pressed="true"] {
-  background: var(--color-accent-soft);
-  color: var(--color-accent);
-  font-weight: var(--weight-semibold);
-  box-shadow: inset 2px 0 0 var(--color-accent);
-}
-
-/* ── "Why this reading" ─────────────────────────────────────────────────── */
-.why-reading {
-  display: grid;
-  gap: var(--space-sm);
-  margin: var(--space-sm) 0 var(--space-md);
-  padding: var(--space-md);
-  border: var(--border-width) solid var(--color-accent-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-elevated);
-}
-.why-reading[hidden] { display: none; }
-.why-reading__rule { margin: 0; color: var(--color-secondary); line-height: 1.6; }
-.why-reading__rule strong { color: var(--color-primary); }
+/* ── Evidence lists ─────────────────────────────────────────────────────────
+   Used by the fortune detail sheet to show the engine's own factors. The
+   Today-level "Why this reading" panel these were first written for was removed
+   on 2026-08-27; the explanation now lives per card, in the sheet, where it is
+   asked for rather than offered to everyone at once. */
 .why-reading__label {
   margin: 0 0 var(--space-xs);
   font-size: var(--type-fine);
@@ -403,20 +355,6 @@
   color: var(--color-secondary);
   font-size: var(--type-caption);
 }
-.why-reading .o-btn { justify-self: start; }
-
-/* ── The detail-level gates ─────────────────────────────────────────────────
-   The whole level system, in three rules. Both phrasings are always in the DOM
-   — so switching level is a repaint, never a refetch, and find-in-page and a
-   screen reader still reach the plain wording at any level. */
-.detail-tech-text { display: none; }
-html[data-detail="Advanced"] .detail-plain { display: none; }
-html[data-detail="Advanced"] .detail-tech-text { display: inline; }
-/* Technical values (degrees, orbs, applying/separating) appear from Balanced up. */
-html[data-detail="Simple"] .detail-tech { display: none !important; }
-/* Balanced shows states and houses but not raw orbs. */
-html[data-detail="Simple"] .detail-adv,
-html[data-detail="Balanced"] .detail-adv { display: none !important; }
 
 /* ── Fortune cards as controls ──────────────────────────────────────────── */
 .fortune-card2 {
@@ -531,16 +469,10 @@ html[data-detail="Balanced"] .detail-adv { display: none !important; }
   }
 }
 
-@media (max-width: 640px) {
-  .axis-today-head__controls { width: 100%; }
-  .detail-segment { flex: 1; }
-  .detail-segment button { flex: 1; min-height: 44px; }
-}
-
 /* Reduced motion: the card lift and every transition above are decoration.
    The base motion layer already zeroes durations globally; this states the
    intent locally so a later edit does not reintroduce a transform here. */
 @media (prefers-reduced-motion: reduce) {
-  .fortune-card2, .detail-segment button { transition: none; }
+  .fortune-card2 { transition: none; }
   .fortune-card2:hover { transform: none; }
 }

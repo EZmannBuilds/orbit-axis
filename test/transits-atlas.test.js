@@ -350,6 +350,7 @@ test("the Atlas needs no way back, because it is a destination now", () => {
 // ── Update 5.2a must survive ────────────────────────────────────────────────
 
 test("the 5.2a redesign survives the A2 restyle", () => {
+  assert.match(appJs, /return "advanced"/, "one complete experience remains");
   assert.ok(appJs.includes("axisFortuneCards"), "fortune cards remain");
   assert.ok(!appJs.includes("fortune-carousel"), "the carousel stays gone");
   assert.ok(!html.includes('data-level="Simple"'), "the superseded mode switch stays gone");
