@@ -95,7 +95,35 @@ test("an unknown purpose is never authorized, however configured", () => {
   const verdict = serviceRoleVerdict("read-every-users-birth-data",
     authorizedEnv({ [PURPOSE_VAR]: "read-every-users-birth-data" }), prodContext);
   assert.equal(verdict.authorized, false);
-  assert.equal(SERVICE_ROLE_PURPOSES.length, 1, "widening this set must be a deliberate change");
+  // The tripwire. It asserted a count of 1 and fired when billing was added,
+  // which is exactly what it was for. Naming the members rather than counting
+  // them keeps it firing on the NEXT addition while saying what is authorized
+  // today — a count would have to be edited again and reveals nothing.
+  assert.deepEqual([...SERVICE_ROLE_PURPOSES].sort(), ["account-deletion", "billing-webhook"],
+    "widening this set must be a deliberate change");
+});
+
+test("a purpose list authorizes each member and nothing else", () => {
+  // The variable became a list when billing arrived: with two real purposes,
+  // authorizing one must not silently de-authorize the other.
+  const both = { [PURPOSE_VAR]: "account-deletion,billing-webhook" };
+  for (const purpose of ["account-deletion", "billing-webhook"]) {
+    assert.equal(serviceRoleVerdict(purpose, authorizedEnv(both), prodContext).authorized, true,
+      `${purpose} should be authorized when the list names it`);
+  }
+  // Naming only one still refuses the other. Least privilege survives the list.
+  const onlyDeletion = { [PURPOSE_VAR]: "account-deletion" };
+  assert.equal(serviceRoleVerdict("account-deletion", authorizedEnv(onlyDeletion), prodContext).authorized, true);
+  assert.equal(serviceRoleVerdict("billing-webhook", authorizedEnv(onlyDeletion), prodContext).authorized, false);
+});
+
+test("a typo in the purpose list fails closed rather than authorizing the rest", () => {
+  // Otherwise a mis-set variable quietly authorizes whichever entries happen to
+  // be spelled correctly, and the broken one is discovered during an incident.
+  const verdict = serviceRoleVerdict("account-deletion",
+    authorizedEnv({ [PURPOSE_VAR]: "account-deletion,billing-webook" }), prodContext);
+  assert.equal(verdict.authorized, false);
+  assert.match(verdict.reason, /does not authorize/);
 });
 
 test("no refusal reason ever contains key material", () => {
