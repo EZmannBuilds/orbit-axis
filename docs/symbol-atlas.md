@@ -209,8 +209,13 @@ canonical entries; combination content is Dev Update 3.1 territory.
 - **No database or Storage involvement** — reference content is repository
   data; nothing about the Atlas touches Supabase, and exports are unchanged
   (schema 1.2.0).
-- **No analytics, no tracking, no localStorage** — a search query lives as
-  long as the keystroke.
+- **Nothing you search or read is recorded** — a search query lives as long as
+  the keystroke. The Atlas contacts no analytics service, stores no reading
+  history, and keeps nothing in localStorage of its own.
+  Since Dev Update 6.0 one first-party event, `atlas_opened`, records that the
+  Atlas was opened — a name and a time, never an entry, a category, or a query.
+  It is counted by Orbit's own server, and not at all for a reader whose
+  browser sends Global Privacy Control or Do Not Track. See [[analytics.md]].
 - **Methodology note** (shown on entries and Atlas home): *"Symbol Atlas
   provides authored astrological reference material. It describes common
   interpretive traditions and does not guarantee personality traits, events,

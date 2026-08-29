@@ -1596,6 +1596,10 @@
   <!-- Container behavior: safe areas, external links, hardware back, resume.
        Every part of it is a no-op in a browser. -->
   <script src="/native-shell.js" type="module"></script>
+  <!-- First-party usage measurement. Loaded before the app so a landing is
+       recorded even if app.js is slow; it is optional by design, and every
+       call site degrades to a no-op if it does not load. -->
+  <script src="/analytics.js"></script>
   <script src="/app.js" type="module"></script>
 </body>
 </html>
