@@ -98,11 +98,15 @@ test("Home has a saved-chart selector wired to the activate endpoint", () => {
   assert.ok(!html.includes('id="today-chart-add"'), "the + button is gone");
 
   // And it sits BELOW the reading, which is the point of the move: the first
-  // question on Today is what the day says, not whose chart it is.
+  // question on Today is what the day says, not whose chart it is. That is
+  // still true and still asserted.
   assert.ok(html.indexOf('id="today-fortune"') < html.indexOf('id="today-chart-picker"'),
     "the picker must come after the reading");
-  assert.ok(html.indexOf('id="today-chart-picker"') < html.indexOf('id="today-moon"'),
-    "…and before the Moon");
+
+  // The companion assertion — picker before the Moon — was retired on
+  // 2026-08-28 when the Moon moved to the top of the page. It was never a claim
+  // about the picker; it pinned the Moon's position from a test about chart
+  // selection. Today's order now lives in one place, in home-highlights.test.js.
 });
 
 test("My Chart renders the eight-section reading hierarchy in order", () => {

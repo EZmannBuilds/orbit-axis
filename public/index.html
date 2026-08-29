@@ -157,6 +157,31 @@
                something and want it for someone else. -->
 
 
+          <!-- THE MOON LEADS THE PAGE.
+               It is the only section that needs no account, no saved chart and
+               no reading — it is the same sky for everyone who opens the app.
+               That is exactly why it can hold the top while the personal
+               reading loads underneath it: a first-time visitor sees something
+               true and finished immediately, instead of a shimmer.
+
+               The scene shell is always present so the layout does not shift
+               when canonical data arrives. The drawing is decorative; every
+               fact it depicts is also written beside it. -->
+          <section class="axis-card axis-rise-3" id="today-moon" aria-labelledby="today-moon-title" hidden>
+            <!-- No Refresh control: "right now" is a promise the panel should
+                 keep by itself. It re-reads the sky whenever the app is opened
+                 or returned to, so the only way to see a stale Moon is to
+                 watch this screen for long enough that it stops being now. -->
+            <div class="moon-head">
+              <!-- Visually hidden: the hero below prints this same line as its
+                   kicker. Removing the heading outright would strip the card of
+                   its accessible name, which aria-labelledby depends on. -->
+              <h2 class="axis-section-title sr-only" id="today-moon-title">The Moon right now</h2>
+            </div>
+            <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
+            <div id="today-moon-body"></div>
+          </section>
+
           <!-- Recoverable saved-chart error. Never mistaken for "you have no
                chart" — that distinction is why this element exists at all. -->
           <div class="axis-chart-error" id="today-chart-error" role="alert" hidden>
@@ -194,24 +219,6 @@
               <span class="sr-only" id="today-chart-name">My Chart</span>
             </div>
           </div>
-
-          <!-- The Moon. The scene shell is always present so the layout does
-               not shift when canonical data arrives. The drawing is decorative;
-               every fact it depicts is also written beside it. -->
-          <section class="axis-card axis-rise-3" id="today-moon" aria-labelledby="today-moon-title" hidden>
-            <!-- No Refresh control: "right now" is a promise the panel should
-                 keep by itself. It re-reads the sky whenever the app is opened
-                 or returned to, so the only way to see a stale Moon is to
-                 watch this screen for long enough that it stops being now. -->
-            <div class="moon-head">
-              <!-- Visually hidden: the hero below prints this same line as its
-                   kicker. Removing the heading outright would strip the card of
-                   its accessible name, which aria-labelledby depends on. -->
-              <h2 class="axis-section-title sr-only" id="today-moon-title">The Moon right now</h2>
-            </div>
-            <div class="moon-status" id="moon-status" role="status" aria-live="polite"></div>
-            <div id="today-moon-body"></div>
-          </section>
 
           <!-- What else is worth noticing, most personally relevant first. -->
           <section class="axis-card axis-rise-3" id="today-highlights" aria-labelledby="today-highlights-title" hidden>
