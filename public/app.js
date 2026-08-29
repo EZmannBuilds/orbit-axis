@@ -22,7 +22,7 @@ import {
 } from "./moon-scene.js";
 import { decideStartupView, STARTUP_VIEW } from "./startup-state.js";
 import { ICON_PATHS } from "./icons.js";
-import { apiUrl, authHeaders, rememberSession } from "./platform.js";
+import { apiUrl, authHeaders, isNativeApp, rememberSession } from "./platform.js";
 import { cacheGet, cachePut, cacheClear, cacheStats, setCacheNamespace } from "./storage.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -2485,6 +2485,7 @@ function wireAuth() {
   wireAccountPasswordReset();
   wireAccountDeletion();
   wireCacheClear();
+  wireBilling();
 }
 
 /* Dev Update 4.2. The roadmap control: a reader can empty the on-device cache
@@ -3047,9 +3048,66 @@ function finishStartup() {
   if (auth && !auth.hidden) $("#auth-email")?.focus();
 }
 
+/* ── Plan and billing (Dev Update 3.10) ───────────────────────────────────
+   The panel reads the LOCAL billing state through /api/billing/status — the
+   server's read model, never Stripe directly and never anything the client
+   asserts about itself. Purchase and portal are web-only: the native container
+   hides both rows, because a web checkout inside an iOS app is the door
+   Apple's rules close. The plan row itself renders everywhere — what you have
+   is yours to see on any device.
+
+   The redirect back from Stripe proves NOTHING and grants nothing: this panel
+   shows Pro when the webhook-written read model says so, which is usually
+   moments after returning. */
+async function refreshBillingPanel() {
+  const planEl = $("#account-plan");
+  if (!planEl) return;
+  const upgrade = $("#account-upgrade");
+  const manage = $("#account-billing-manage");
+  const detail = $("#account-plan-detail");
+  if (!authSignedIn()) { upgrade.hidden = true; manage.hidden = true; return; }
+  try {
+    const r = await get("/api/billing/status");
+    const b = r.billing || {};
+    planEl.textContent = b.label || "Orbit Free";
+    const native = isNativeApp();
+    upgrade.hidden = native || !r.available || b.plan !== "free";
+    manage.hidden = native || !b.manageable;
+    if (b.cancelAtPeriodEnd && b.endsAt) {
+      detail.hidden = false;
+      detail.textContent = `Cancelled — Pro until ${new Date(b.endsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.`;
+    } else if (b.status === "past_due") {
+      detail.hidden = false;
+      detail.textContent = "A payment didn't go through — update your card in Manage billing to keep Pro.";
+    } else if (b.renewsAt) {
+      detail.hidden = false;
+      detail.textContent = `Renews ${new Date(b.renewsAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}.`;
+    } else {
+      detail.hidden = true; detail.textContent = "";
+    }
+  } catch { /* the account page must render even if billing cannot answer */ }
+}
+
+function wireBilling() {
+  $("#account-billing-manage")?.addEventListener("click", async () => {
+    const message = $("#account-billing-message");
+    if (message) { message.hidden = false; message.textContent = "Opening Stripe's secure billing page…"; }
+    try {
+      const r = await post("/api/billing/portal", {});
+      if (r?.url) { window.location.href = r.url; return; }
+      if (message) message.textContent = "Billing couldn't be opened just now.";
+    } catch (error) {
+      if (message) message.textContent = error?.message || "Billing couldn't be opened just now.";
+    }
+  });
+}
+
 function renderAccount() {
   const signedIn = authSignedIn();
   $("#account-email").textContent = state.auth.user?.email || "Not signed in";
+  // Fire-and-forget: the plan row fills in when the read model answers, and
+  // the rest of the account card never waits on billing.
+  void refreshBillingPanel();
 
   // The "You" panel is reachable without an account now. Every control below is
   // one the server would refuse, and two of them are worse than a refusal:
