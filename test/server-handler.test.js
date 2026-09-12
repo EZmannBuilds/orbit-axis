@@ -25,6 +25,7 @@ import { resolveEnvironment } from "../lib/env/environment.js";
 import { EnvironmentSafetyError } from "../lib/env/guard.js";
 import { REPO_ROOT } from "../lib/local-llm/config.js";
 import { sessionCookie, clearSessionCookie, isSecureRequest } from "../lib/auth/supabase-auth.js";
+import { RATE_LIMITS } from "../lib/api/rate-limit.js";
 import { PRODUCTION_PROJECT_REF } from "../lib/env/known-targets.js";
 
 const LOCAL_URL = "http://127.0.0.1:55321";
@@ -35,6 +36,22 @@ const ANON = "anon-key-placeholder";
 
 const info = (over = {}) => resolveEnvironment({ env: { ...over }, loadEnvFiles: false });
 const localEnv = () => info({ ORBIT_ENVIRONMENT: "local", SUPABASE_URL: LOCAL_URL, SUPABASE_ANON_KEY: ANON });
+
+test("both public preview routes enforce the calculation budget before reading a body", async () => {
+  const handler = createOrbitApp({ env: localEnv() });
+  for (const [index, url] of ["/api/chart/preview", "/api/fortune/preview"].entries()) {
+    const peer = `192.0.2.${index + 40}`;
+    // Empty GETs avoid real ephemeris work but pass through the same route
+    // budget; the next POST must be refused before it waits for any body.
+    for (let i = 0; i < RATE_LIMITS.calculation.limit; i += 1) {
+      const res = await request(handler, { url, remoteAddress: peer });
+      assert.notEqual(res.statusCode, 429);
+    }
+    const refused = await request(handler, { method: "POST", url, remoteAddress: peer });
+    assert.equal(refused.statusCode, 429);
+    assert.ok(Number(refused.headers["Retry-After"]) > 0);
+  }
+});
 
 // ── mock request / response ──────────────────────────────────────────────────
 // Enough of Node's http objects for the handler: it reads method, url, headers,

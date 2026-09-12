@@ -50,6 +50,7 @@ try {
 // at a time against the stack they share. `--test-timeout` is the backstop —
 // with it a hang becomes a failed test with a name, rather than silence.
 const INTEGRATION_FILES = [
+  "test/billing-database.test.js",
   "test/account-deletion.test.js",
   "test/ask-supabase-integration.test.js",
   "test/auth-database.test.js",

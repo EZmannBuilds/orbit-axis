@@ -4,6 +4,7 @@ import {
   authenticateRequest,
   getSessionCookie,
   sessionCookie,
+  SESSION_COOKIE_MAX_AGE,
   signInWithPassword,
 } from "../lib/auth/supabase-auth.js";
 
@@ -26,6 +27,30 @@ function withEnv(values, fn) {
 function reqWithCookie(cookie) {
   return { headers: { cookie } };
 }
+
+test("returning after access-token expiry retains the cookie and refreshes the session", async () => {
+  const issuedAt = Date.now() - 2 * 3600_000;
+  const cookie = sessionCookie({ access_token: "expired-access", refresh_token: "refresh",
+    expires_at: Math.floor(issuedAt / 1000) + 3600, expires_in: 3600 });
+  const maxAge = Number(/Max-Age=(\d+)/.exec(cookie)[1]);
+  assert.equal(maxAge, SESSION_COOKIE_MAX_AGE);
+  assert.ok(issuedAt + maxAge * 1000 > Date.now(), "the browser still has its refresh credential two hours later");
+  await withEnv({ SUPABASE_URL: "https://example.supabase.co", SUPABASE_ANON_KEY: "anon" }, async () => {
+    const original = globalThis.fetch;
+    let refreshed = false;
+    globalThis.fetch = async (url) => {
+      assert.match(url, /grant_type=refresh_token/);
+      refreshed = true;
+      return new Response(JSON.stringify({ access_token: "new-access", refresh_token: "new-refresh", expires_in: 3600, user: { id: "synthetic" } }));
+    };
+    try {
+      const result = await authenticateRequest(reqWithCookie(cookie));
+      assert.equal(result.ok, true);
+      assert.equal(refreshed, true);
+      assert.match(result.setCookie, /HttpOnly; SameSite=Lax/);
+    } finally { globalThis.fetch = original; }
+  });
+});
 
 test("session cookie stores only session fields needed for restoration", () => {
   const cookie = sessionCookie({

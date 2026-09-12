@@ -122,6 +122,19 @@ test("a caller who is not signed in holds free", async () => {
   assert.equal(held.reason, "not_signed_in");
 });
 
+test("an older Stripe grant without a valid period fails closed until repaired", async () => {
+  const original = globalThis.fetch;
+  const auth = { ownerId: "synthetic", url: "https://example.test", anonKey: "synthetic", accessToken: "synthetic" };
+  try {
+    for (const period of [null, "invalid"]) {
+      globalThis.fetch = async () => new Response(JSON.stringify([{ plan: "consumer", status: "active", source: "stripe", current_period_end: period }]));
+      assert.equal((await holdingFor(auth)).reason, "stripe_period_missing");
+    }
+    globalThis.fetch = async () => new Response(JSON.stringify([{ plan: "consumer", status: "active", source: "stripe", current_period_end: "2030-01-01T00:00:00Z" }]));
+    assert.equal((await holdingFor(auth)).plan, "consumer");
+  } finally { globalThis.fetch = original; }
+});
+
 test("a lookup failure degrades to free rather than guessing", async () => {
   // No Supabase configuration is reachable in this process, so fetchEntitlement
   // fails. The requirement is that it ANSWERS, and answers conservatively.

@@ -37,24 +37,26 @@ export function engineVersion() {
  * @property {string} ephemerisProvider  Always "swiss-ephemeris" today.
  * @property {string} ephemerisVersion   Verified Swiss Ephemeris version.
  * @property {string} houseSystem        Requested house system.
- * @property {string} zodiacType         "tropical" — the only system implemented.
+ * @property {string} zodiacType         "tropical" or "sidereal".
+ * @property {string|null} ayanamsha       Named ayanamsha when sidereal; null otherwise.
  * @property {string|null} timezone      IANA zone when supplied by the caller.
  * @property {string} calculatedAt       ISO-8601 timestamp.
  */
 
 /**
  * Build the metadata block for a calculation response.
- * @param {{ houseSystem?: string, timezone?: string|null, now?: () => Date }} [options]
+ * @param {{ houseSystem?: string, zodiacType?: string, ayanamsha?: string|null, timezone?: string|null, now?: () => Date }} [options]
  * @returns {CalculationMetadata}
  */
-export function buildMetadata({ houseSystem = "placidus", timezone = null, now = () => new Date() } = {}) {
+export function buildMetadata({ houseSystem = "placidus", zodiacType = "tropical", ayanamsha = null, timezone = null, now = () => new Date() } = {}) {
   return {
     engineVersion: engineVersion(),
     contractVersion: CONTRACT_VERSION,
     ephemerisProvider: "swiss-ephemeris",
     ephemerisVersion: runtimeManifest().swissEphemerisVersion,
     houseSystem,
-    zodiacType: "tropical",
+    zodiacType,
+    ayanamsha,
     timezone,
     calculatedAt: now().toISOString(),
   };
