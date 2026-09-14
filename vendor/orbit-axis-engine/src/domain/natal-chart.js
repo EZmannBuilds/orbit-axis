@@ -5,7 +5,7 @@
 // unknown birth times — never fabricates a Rising sign or exact houses.
 
 import { createHash } from "node:crypto";
-import { positionsAtUT, localToUT, offsetToMinutes, zoneOffsetMinutes, SIGNS, PLANETS } from "../adapters/swiss-ephemeris/client.js";
+import { positionsAtUT, localToUT, offsetToMinutes, zoneOffsetMinutes, SIGNS, PLANETS, AYANAMSHAS, ZODIACS } from "../adapters/swiss-ephemeris/client.js";
 
 export const CALCULATION_VERSION = "natal-v1";
 
@@ -129,6 +129,10 @@ export function chartInputHash(input) {
     tz: input.timezone_name || null,
     off: input.utc_offset_at_birth != null ? String(input.utc_offset_at_birth) : null,
     zod: input.zodiac_system || "tropical",
+    // Part of the key because Lahiri and Fagan/Bradley are different charts:
+    // a cached tropical result must never answer a sidereal request, and one
+    // ayanamsha's chart must never answer another's.
+    aya: input.ayanamsha || null,
     hs: input.house_system || "placidus",
   };
   return createHash("sha256").update(JSON.stringify(norm)).digest("hex");
@@ -189,11 +193,33 @@ export function computeNatalChart(input) {
     warnings.push("utc_offset_assumed");
   }
   const ut = localToUT({ year: y, month: mo, day: d, hour, minute, offsetMinutes });
-  const houseSystem = HOUSE_SYSTEM_CODE[(input.house_system || "placidus").toLowerCase()] || "P";
+
+  // No `|| "P"` fallback any more. The map above was once SHORT of what the
+  // executable accepts, and the fallback quietly computed Placidus for any
+  // name it did not know — a chart that looks right and is wrong. An unknown
+  // name is now refused by name, the same contract the application's own
+  // validation already enforces upstream.
+  const houseName = (input.house_system || "placidus").toLowerCase();
+  const houseSystem = HOUSE_SYSTEM_CODE[houseName];
+  if (!houseSystem) {
+    throw new Error(`Unsupported house system: ${houseName}`);
+  }
+
+  // The zodiac. Tropical by default; sidereal requires a named ayanamsha and
+  // both are validated again at the adapter, where the -sid flag is built.
+  const zodiacSystem = (input.zodiac_system || "tropical").toLowerCase();
+  const ayanamsha = input.ayanamsha ? String(input.ayanamsha).toLowerCase() : null;
+  if (!ZODIACS.includes(zodiacSystem)) {
+    throw new Error(`Unsupported zodiac system: ${zodiacSystem}`);
+  }
+  if (zodiacSystem === "sidereal" && !(ayanamsha in AYANAMSHAS)) {
+    throw new Error("A sidereal chart requires a supported ayanamsha (lahiri or fagan-bradley).");
+  }
 
   const pos = positionsAtUT({
     ...ut, lat: input.latitude, lon: input.longitude,
     houseSystem, withHouses: timeKnown,
+    zodiac: zodiacSystem, ayanamsha: zodiacSystem === "sidereal" ? ayanamsha : null,
   });
 
   // planetary houses (only if we trust the time)
@@ -259,6 +285,11 @@ export function computeNatalChart(input) {
 
   return {
     calculation_version: CALCULATION_VERSION,
+    // The frame this chart is computed in, stated on the result rather than
+    // remembered beside it — a sidereal chart that does not say so reads as a
+    // tropical chart that disagrees with every other application.
+    zodiac_system: zodiacSystem,
+    ayanamsha: zodiacSystem === "sidereal" ? ayanamsha : null,
     time_known: timeKnown,
     time_accuracy: timeAccuracy,
     planets: pos.planets,

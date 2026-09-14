@@ -42,6 +42,29 @@ function fakeFetch(routes) {
 
 const CLEAN = { "/auth/v1/logout": { status: 204 }, "/auth/v1/admin/users/": { status: 200 } };
 
+test("billing cancellation completes before avatar removal or identity deletion", async () => {
+  const order = [];
+  await withServiceKey(() => deleteAccount({
+    accessToken: "t", confirmation: DELETION_CONFIRMATION, verifyUser: okUser,
+    cancelBilling: async ({ ownerId }) => { assert.equal(ownerId, USER_ID); order.push("billing"); },
+    fetchImpl: async (url, init) => { order.push(url); return fakeFetch(CLEAN)(url, init); },
+  }));
+  assert.equal(order[0], "billing");
+  assert.ok(order.some((url) => url.includes("/auth/v1/admin/users/")));
+});
+
+test("a failed billing cancellation leaves the identity, avatars, and session untouched", async () => {
+  let touched = false;
+  const error = await withServiceKey(() => caught(() => deleteAccount({
+    accessToken: "t", confirmation: DELETION_CONFIRMATION, verifyUser: okUser,
+    cancelBilling: async () => { throw new Error("Stripe unavailable"); },
+    fetchImpl: async () => { touched = true; throw new Error("unexpected request"); },
+  })));
+  assert.equal(error.stage, "billing");
+  assert.equal(error.retryable, true);
+  assert.equal(touched, false);
+});
+
 function withServiceKey(run) {
   const saved = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const savedUrl = process.env.SUPABASE_URL;
@@ -61,7 +84,7 @@ const caught = async (fn) => { try { await fn(); return null; } catch (e) { retu
 
 test("deletion refuses without the typed confirmation", async () => {
   for (const attempt of ["", "delete", "Delete", "yes", "DELETE ", null, undefined, true]) {
-    const error = await caught(() => deleteAccount({ accessToken: "t", confirmation: attempt }));
+    const error = await caught(() => deleteAccount({ cancelBilling: async () => {}, accessToken: "t", confirmation: attempt }));
     assert.ok(error instanceof AccountDeletionError, `"${attempt}" must not delete an account`);
     assert.equal(error.stage, "confirmation");
   }
@@ -72,7 +95,7 @@ test("the confirmation is checked before anything else happens", async () => {
   // would still cost a network round trip and, worse, imply the order of checks
   // is negotiable.
   let touched = false;
-  await caught(() => deleteAccount({
+  await caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: "nope",
     verifyUser: async () => { touched = true; return okUser(); },
@@ -84,13 +107,13 @@ test("the confirmation is checked before anything else happens", async () => {
 // ── Identity ────────────────────────────────────────────────────────────────
 
 test("deletion refuses without a token", async () => {
-  const error = await caught(() => deleteAccount({ accessToken: "", confirmation: DELETION_CONFIRMATION }));
+  const error = await caught(() => deleteAccount({ cancelBilling: async () => {}, accessToken: "", confirmation: DELETION_CONFIRMATION }));
   assert.equal(error.stage, "authentication");
 });
 
 test("an unverifiable token deletes nothing", async () => {
   let deleteAttempted = false;
-  const error = await caught(() => deleteAccount({
+  const error = await caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "stolen-or-expired",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: async () => ({ ok: false }),
@@ -106,7 +129,7 @@ test("an unverifiable token deletes nothing", async () => {
 test("the id comes from the verified token, never from the caller", async () => {
   const victim = "99999999-9999-9999-9999-999999999999";
   const urls = [];
-  await withServiceKey(() => deleteAccount({
+  await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "attacker-token",
     confirmation: DELETION_CONFIRMATION,
     // The attacker owns this identity...
@@ -126,7 +149,7 @@ test("the id comes from the verified token, never from the caller", async () => 
 // ── The cascade is verified, not trusted ────────────────────────────────────
 
 test("surviving rows are reported as an incomplete deletion, not as success", async () => {
-  const error = await withServiceKey(() => caught(() => deleteAccount({
+  const error = await withServiceKey(() => caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -146,7 +169,7 @@ test("surviving rows are reported as an incomplete deletion, not as success", as
 test("a table that cannot be checked counts as a survivor, not as clean", async () => {
   // "I could not verify" must never be reported as "verified empty", or the
   // verification step is decoration.
-  const error = await withServiceKey(() => caught(() => deleteAccount({
+  const error = await withServiceKey(() => caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -161,7 +184,7 @@ test("a table that cannot be checked counts as a survivor, not as clean", async 
 });
 
 test("a clean cascade reports success and says how much was checked", async () => {
-  const result = await withServiceKey(() => deleteAccount({
+  const result = await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -175,7 +198,7 @@ test("a clean cascade reports success and says how much was checked", async () =
 // ── Partial failure and retry ───────────────────────────────────────────────
 
 test("a failed identity delete does not claim success", async () => {
-  const error = await withServiceKey(() => caught(() => deleteAccount({
+  const error = await withServiceKey(() => caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -185,8 +208,8 @@ test("a failed identity delete does not claim success", async () => {
   assert.equal(error.retryable, true, "a 503 is worth retrying");
 });
 
-test("a network failure mid-delete says nothing was removed", async () => {
-  const error = await withServiceKey(() => caught(() => deleteAccount({
+test("a network failure mid-delete does not claim already-swept data was preserved", async () => {
+  const error = await withServiceKey(() => caught(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -196,14 +219,14 @@ test("a network failure mid-delete says nothing was removed", async () => {
     },
   })));
   assert.equal(error.stage, "auth_delete");
-  assert.match(error.message, /Nothing was removed/);
+  assert.doesNotMatch(error.message, /Nothing was removed/);
 });
 
 test("retrying after the identity is already gone succeeds", async () => {
   // A 404 means a previous attempt got there. The caller asked for the account
   // not to exist, and it does not — that is success, not an error to show
   // someone who has already deleted their account.
-  const result = await withServiceKey(() => deleteAccount({
+  const result = await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -220,7 +243,7 @@ test("retrying after the identity is already gone succeeds", async () => {
 test("a failed session revocation does not abort the deletion", async () => {
   // Deleting the identity invalidates tokens anyway. Aborting here would strand
   // someone who has already been told their account is going away.
-  const result = await withServiceKey(() => deleteAccount({
+  const result = await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -236,7 +259,7 @@ test("a failed session revocation does not abort the deletion", async () => {
 
 test("sessions are revoked before the identity is destroyed", async () => {
   const order = [];
-  await withServiceKey(() => deleteAccount({
+  await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "t",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -257,7 +280,7 @@ test("a missing service-role key fails closed", async () => {
   const saved = process.env.SUPABASE_SERVICE_ROLE_KEY;
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   try {
-    const error = await caught(() => deleteAccount({
+    const error = await caught(() => deleteAccount({ cancelBilling: async () => {},
       accessToken: "t", confirmation: DELETION_CONFIRMATION, verifyUser: okUser,
     }));
     assert.equal(error.stage, "configuration");
@@ -351,7 +374,7 @@ test("the account route is declared authenticated", () => {
 
 test("avatars are swept as the USER before sessions are revoked, and counted", async () => {
   const calls = [];
-  const result = await withServiceKey(() => deleteAccount({
+  const result = await withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "user-token",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -394,7 +417,7 @@ test("avatars are swept as the USER before sessions are revoked, and counted", a
 });
 
 test("storage leftovers are survivors: verification refuses to call this success", async () => {
-  const error = await caught(() => withServiceKey(() => deleteAccount({
+  const error = await caught(() => withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "user-token",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,
@@ -416,7 +439,7 @@ test("storage leftovers are survivors: verification refuses to call this success
 });
 
 test("an unverifiable bucket also refuses success — unknown is not clean", async () => {
-  const error = await caught(() => withServiceKey(() => deleteAccount({
+  const error = await caught(() => withServiceKey(() => deleteAccount({ cancelBilling: async () => {},
     accessToken: "user-token",
     confirmation: DELETION_CONFIRMATION,
     verifyUser: okUser,

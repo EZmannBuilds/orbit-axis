@@ -41,9 +41,22 @@ function memoryStore(seed = {}) {
       rows.set(ownerId, { ...(rows.get(ownerId) || {}), owner_id: ownerId,
         stripe_customer_id: cus, last_event_created: new Date(created * 1000).toISOString() });
     },
-    upsert: async (row) => { rows.set(row.owner_id, { ...(rows.get(row.owner_id) || {}), ...row }); },
-    entitle: async (ownerId, fields) => { entitlements.set(ownerId, fields); },
-    recordEvent: async (id) => { if (events.has(id)) return "replay"; events.add(id); return "new"; },
+    applyEvent: async ({ eventId, ownerId, mode, row, grant }) => {
+      if (events.has(eventId)) return { outcome: "replay" };
+      const existing = rows.get(ownerId);
+      let outcome = mode;
+      if (["subscription", "link"].includes(mode) && !ownerId) outcome = "orphan";
+      else if (mode === "subscription") {
+        if (existing?.last_event_created > row.last_event_created) outcome = "stale";
+        else {
+          rows.set(ownerId, row);
+          entitlements.set(ownerId, grant);
+          outcome = "applied";
+        }
+      }
+      events.add(eventId);
+      return { outcome };
+    },
   };
 }
 

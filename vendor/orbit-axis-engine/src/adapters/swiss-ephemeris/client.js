@@ -266,14 +266,56 @@ function run(args) {
 //
 // Inputs are validated before an argument string is built, so an out-of-range
 // coordinate is rejected by name instead of producing silently wrong astrology.
+/**
+ * The sidereal zodiacs Orbit offers, by name, mapped to Swiss Ephemeris
+ * -sid mode numbers. Two, deliberately: Lahiri because it is the Indian
+ * government's official ayanamsha and the default of most Vedic software, and
+ * Fagan/Bradley because it is Western sidereal astrology's standard. Each
+ * ships only with a reference test against an independently published value
+ * (tests/sidereal.test.js) — an ayanamsha that has not met that bar is not
+ * listed here, and an unknown name is refused rather than approximated.
+ */
+export const AYANAMSHAS = Object.freeze({
+  "fagan-bradley": 0,
+  lahiri: 1,
+});
+
+export const ZODIACS = Object.freeze(["tropical", "sidereal"]);
+
 export function positionsAtUT(input) {
   const { year, month, day, hour, minute, second, lat, lon, houseSystem, withHouses } =
     validateCalculationInput(input);
+
+  // Zodiac selection is validated HERE, where the -sid argument is built,
+  // so no caller can reach the ephemeris with a system the engine does not
+  // implement. Tropical is the default and takes no flag; sidereal requires a
+  // named ayanamsha because "sidereal" alone does not identify a zodiac —
+  // Lahiri and Fagan/Bradley disagree by nearly a degree.
+  const zodiac = input.zodiac ?? "tropical";
+  const ayanamsha = input.ayanamsha ?? null;
+  if (!ZODIACS.includes(zodiac)) {
+    throw new OrbitCalculationError("Unsupported zodiac system.", { code: "invalid_input" });
+  }
+  if (zodiac === "sidereal" && !(ayanamsha in AYANAMSHAS)) {
+    throw new OrbitCalculationError("A sidereal chart needs a supported ayanamsha.", { code: "invalid_input" });
+  }
+  if (zodiac === "tropical" && ayanamsha != null) {
+    // A tropical chart with an ayanamsha is a contradiction, and honouring
+    // half of it would compute a chart nobody asked for.
+    throw new OrbitCalculationError("An ayanamsha only applies to the sidereal zodiac.", { code: "invalid_input" });
+  }
+
   const runtime = requireRuntime();
 
   const dateStr = `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")}.${year}`;
   const timeStr = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(second).padStart(2, "0")}`;
   const args = [`-edir${runtime.ephemerisDir}`, `-b${dateStr}`, `-ut${timeStr}`, `-p${BODY_CODES}`, "-fPlZs", "-head"];
+  if (zodiac === "sidereal") {
+    // -sid switches every longitude in the run — planets, cusps, angles — to
+    // the named ayanamsha's sidereal frame. One flag, one frame: a chart can
+    // never come back half tropical and half sidereal.
+    args.push(`-sid${AYANAMSHAS[ayanamsha]}`);
+  }
   if (withHouses && lat != null && lon != null) {
     args.push(`-house${lon},${lat},${houseSystem}`);
   }

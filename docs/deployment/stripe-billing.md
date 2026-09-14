@@ -10,12 +10,12 @@ Store, and no purchase or portal control renders in the native container.
 | Tier | Internal plan | Price |
 | --- | --- | --- |
 | Orbit Free | `free` | $0 |
-| Orbit Pro | `consumer` | $4.99/month or **$39/year billed once** |
+| Orbit Pro | `consumer` | $9.99/month or **$79/year billed once** |
 
 "Orbit Pro" is the marketing name for the `consumer` plan the Dev Update 3.0
 matrix already defines — one mapping, in `lib/billing/config.js`, so the
 product is never coupled to a price id. Annual arithmetic, stated honestly:
-12 × $4.99 = $59.88, so $39/year saves $20.88.
+12 × $9.99 = $119.88, so $79/year saves $40.88.
 
 ## Environment variables (server only — never in `public/`)
 
@@ -23,8 +23,8 @@ product is never coupled to a price id. Annual arithmetic, stated honestly:
 | --- | --- |
 | `STRIPE_SECRET_KEY` | `sk_test_…` in test mode, `sk_live_…` in live. |
 | `STRIPE_WEBHOOK_SECRET` | The endpoint's `whsec_…` from the Stripe Dashboard. |
-| `STRIPE_PRICE_MONTHLY_ID` | `price_…` for $4.99/month. |
-| `STRIPE_PRICE_ANNUAL_ID` | `price_…` for $39/year. |
+| `STRIPE_PRICE_MONTHLY_ID` | `price_…` for $9.99/month. |
+| `STRIPE_PRICE_ANNUAL_ID` | `price_…` for $79/year. |
 | `ORBIT_BILLING_ORIGIN` | Pinned return origin for Checkout/Portal redirects, e.g. `https://orbit-axis-omega.vercel.app`. Localhost works unpinned; anything else refuses rather than echoing the Host header. |
 | `ORBIT_PRODUCTION_SERVICE_ROLE_PURPOSE` | Now a comma list. Production needs `account-deletion,stripe-billing`. |
 
@@ -33,8 +33,8 @@ same code, no mode flag.
 
 ## Stripe Dashboard configuration (founder)
 
-1. Create Product "Orbit Pro" with two recurring Prices: $4.99 monthly and
-   $39 yearly. Copy both `price_…` ids into the environment.
+1. Create Product "Orbit Pro" with two recurring Prices: $9.99 monthly and
+   $79 yearly. Copy both `price_…` ids into the environment.
 2. Developers → Webhooks → Add endpoint:
    `https://<origin>/api/stripe/webhook`, events:
    `checkout.session.completed`, `customer.subscription.created`,
@@ -103,7 +103,7 @@ webhook selects accounts by server-written metadata only.
 ## Deliberate behaviours
 
 - The success redirect grants nothing; only verified webhooks write state.
-- `past_due` = Pro in `grace` for max(period end, +7 days) while Stripe retries.
+- `past_due` = Pro in `grace` for max(period end, event time +7 days) while Stripe retries.
 - `cancel_at_period_end` keeps Pro until the paid period ends (clock-enforced
   by the evaluator even if the deletion webhook is late).
 - `incomplete`, `incomplete_expired`, `unpaid`, `canceled`, `paused` → Free.
@@ -113,9 +113,53 @@ webhook selects accounts by server-written metadata only.
 
 ## Release notes (draft)
 
-Orbit Pro is available on the web: $4.99/month or $39/year, through Stripe's
+Orbit Pro is available on the web: $9.99/month or $79/year, through Stripe's
 hosted checkout. Free keeps the complete product — your chart, today's sky,
 your daily reading, the daily card, and always your data. Pro deepens it:
 more saved charts, compatibility, expanded interpretation, full history.
 Manage or cancel any time from You → Manage billing; a cancelled subscription
 keeps Pro until the period you paid for ends.
+
+## Reliability migration — September 2026
+
+Apply `20260912153009_billing_reliability.sql` before deploying the updated
+server. Production migration and deployment require the owner's approval.
+The new server refuses billing writes if these functions are unavailable;
+it does not fall back to the old separate ledger and entitlement writes.
+
+Webhook receipts and both account updates now commit in one transaction,
+serialized per account. Failed updates leave no completed receipt. Existing
+receipts are version 0 and may be replayed once transactionally to repair an
+earlier partial failure. Do not clear the event ledger. During rollout, review
+failed deliveries and re-deliver affected subscription events through Stripe;
+historical failures outside the provider's redelivery window need a separately
+reviewed reconciliation against Stripe's authoritative subscription state.
+
+Checkout reserves one durable attempt per account. Retries use the same Stripe
+idempotency key and immutable parameters; open sessions last one hour. A second
+interval cannot open a second checkout. An expired session, or a completed
+session whose subscription Stripe confirms has ended, can be replaced. The
+server checks Stripe as well as its read model before offering another session.
+
+Deletion closes the checkout gate, recovers any in-flight checkout under its
+original key, expires open sessions, and cancels every non-terminal subscription
+before removing avatars or the identity. If billing cannot be confirmed, the
+account and billing mapping remain for retry. After a deletion attempt begins,
+new checkout remains blocked until deletion is completed.
+
+Stripe requests are pinned to `2026-08-26.dahlia`. The event mapper accepts both
+legacy subscription-level periods and newer item-level periods; mixed item
+periods use the earliest expiry. Missing active periods are refused. Existing
+Stripe entitlement rows without a valid expiry fail closed until repaired.
+Webhook endpoint API versions are configured independently in Stripe: verify
+the chosen version with the sandbox lifecycle checklist above before rollout.
+
+Browser cookies retain refresh credentials for 30 days, independently of the
+access token lifetime. Supabase continues to verify access tokens, revocation,
+and refresh eligibility. No hosted authentication settings were changed.
+
+Verification: `npm run test:local` covers the local suite, including real
+Postgres rollback, replay, permissions, checkout coordination, and a fresh
+installation of the checked-in migration. `npm run build` checks every source
+file individually through `scripts/lint.js`. Live Stripe and native-device
+acceptance still require their respective sandbox/device checks.

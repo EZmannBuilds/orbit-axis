@@ -154,7 +154,9 @@ export interface NatalInput {
    * over a hand-written offset, which is where one-hour errors come from.
    */
   timezone_name?: string;
-  zodiac_system?: "tropical";
+  zodiac_system?: "tropical" | "sidereal";
+  /** Required when zodiac_system is "sidereal". */
+  ayanamsha?: "lahiri" | "fagan-bradley";
   house_system?: HouseSystem;
 }
 
