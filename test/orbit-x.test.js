@@ -181,7 +181,10 @@ test("ranking is total-score first and fully deterministic", () => {
 /* ── Formats ────────────────────────────────────────────────────────────── */
 
 test("legacy formats plus three first-class reading formats keep explicit risk categories", () => {
-  assert.equal(FORMAT_IDS.length, 8);
+  // Eight legacy/reading formats plus the interactive post (Dev Update 5.6).
+  assert.equal(FORMAT_IDS.length, 9);
+  assert.equal(FORMATS.interactive_post.autonomyRisk, "yellow",
+    "a post that solicits an answer from real people is never autonomous");
   for (const f of Object.values(FORMATS)) {
     assert.ok(["green", "yellow", "red"].includes(f.autonomyRisk), f.id);
     assert.ok(f.slides.min >= 1 && f.slides.max >= f.slides.min, f.id);
@@ -380,7 +383,9 @@ test("the manual scaffold passes every gate a draft must — publishable or empt
     candidates.find((c) => c.eventType === "new_moon"),
   ];
   for (const candidate of samples) {
-    for (const formatId of FORMAT_IDS.filter((id) => !FORMATS[id].readingType)) {
+    // Readings and interactive posts have their own scaffold builders; this
+    // is the general-purpose lane.
+    for (const formatId of FORMAT_IDS.filter((id) => !FORMATS[id].readingType && !FORMATS[id].interactive)) {
       const { post: raw, suggestions } = buildScaffold(candidate, formatId, {});
       const post = validateGeneratedPost(raw, formatId, { requireComplete: false }); // throws if invalid
       assert.equal(post.format, formatId);
@@ -480,10 +485,20 @@ test("a manual draft saves through the full lifecycle and records human authorsh
 
 test("the desk page hides AI controls rather than rendering apologies", () => {
   const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
-  assert.ok(page.includes("data-manual"), "Manual draft is a first-class action");
+  // Manual authoring is not an action you opt into any more — it is the whole
+  // Choose stage. Every start action and every recommendation opens a manual
+  // draft; Generate is the addition a provider makes, never the default.
+  assert.match(page, /manualDraft\(entry\.candidate, entry\.suggestedFormat\)/,
+    "the primary action on a recommendation builds a manual draft");
+  assert.match(page, /data-start="\$\{action\.id\}"/, "and the five start actions do the same");
   assert.match(page, /aiAvailable \?/, "Generate and Regenerate render only when a provider exists");
-  assert.match(page, /manual drafting \(no AI provider configured\)/,
-    "absence is stated once, neutrally, in the status line — never as an error");
+  // Dev Update 5.6: the absence is a calm chip, not a sentence of provider
+  // plumbing appended to the founder's status line.
+  assert.ok(!/manual drafting \(no AI provider configured\)/.test(page),
+    "the old status-line apology is gone");
+  assert.match(page, /id="x-mode" hidden>Manual mode</,
+    "absence is stated once, neutrally, as a state — never as an error");
+  assert.match(page, /\$\("#x-mode"\)\.hidden = aiAvailable;/);
 });
 
 test("the desk signs itself in without ever widening who may enter", () => {

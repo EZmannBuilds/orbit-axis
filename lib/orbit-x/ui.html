@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="robots" content="noindex, nofollow" />
-<title>Orbit X — Content Desk</title>
+<title>Orbit X — Publishing Workspace</title>
 <link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
 <link rel="stylesheet" href="/styles/tokens.css" />
 <link rel="stylesheet" href="/styles/base.css" />
@@ -12,53 +12,141 @@
 <style>
   /* Desk chrome only — everything visual in the EXPORTS comes from the
      shared renderer modules (templates.js/celestial.js), not page styling. */
-  body { padding: var(--space-lg); max-width: 1280px; margin: 0 auto; }
-  .x-head { display: flex; align-items: baseline; gap: var(--space-md); flex-wrap: wrap; }
-  .x-head h1 { margin: 0; }
-  .x-grid { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(440px, 1.4fr); gap: var(--space-lg); margin-top: var(--space-lg); }
-  /* min-width:0 so a wide preview strip scrolls INSIDE its panel instead of
-     stretching the whole grid column off the phone screen. */
-  .x-grid > * { min-width: 0; }
-  @media (max-width: 900px) { .x-grid { grid-template-columns: 1fr; } body { padding: var(--space-md); } }
-  .x-panel { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg); padding: var(--space-md); background: var(--color-surface); }
-  .x-cand { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin-bottom: var(--space-sm); }
-  .x-cand--dup { border-color: var(--color-error); }
-  .x-score { font-variant-numeric: tabular-nums; color: var(--color-accent); font-weight: 600; }
-  .x-reasons { font-size: var(--type-caption); color: var(--color-muted); }
-  .x-row { display: flex; gap: var(--space-sm); align-items: center; flex-wrap: wrap; margin: var(--space-xs) 0; }
-  textarea, input[type="text"] { width: 100%; }
-  textarea { min-height: 64px; }
-  .x-slides { display: flex; gap: var(--space-sm); overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: var(--space-xs); }
-  .x-slides > * { scroll-snap-align: start; flex: 0 0 auto; }
-  .x-slides svg { border-radius: var(--radius-md); border: var(--border-width) solid var(--color-border); display: block; }
-  .x-slides--full svg { width: min(480px, 84vw); height: auto; }
-  .x-slides--feed svg { width: 375px; height: auto; }
-  .x-facts { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: var(--type-caption); overflow-wrap: anywhere; }
-  .x-facts strong { color: var(--color-accent); }
-  .x-status { color: var(--color-muted); font-size: var(--type-caption); min-height: 1.2em; }
-  .x-hist { font-size: var(--type-caption); width: 100%; display: block; overflow-x: auto; }
-  .x-gate { max-width: 420px; margin-top: var(--space-lg); }
-  .x-gate label { display: block; margin-bottom: var(--space-sm); }
-  .x-who { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-sm); font-size: var(--type-caption); color: var(--color-muted); }
-  .x-hist td, .x-hist th { padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
-  .x-hist svg { width: 56px; height: auto; border-radius: 4px; display: block; }
-  .x-section { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
-  .x-section--empty { border-left: 3px solid var(--color-accent); }
-  .x-helper { font-size: var(--type-caption); color: var(--color-muted); margin: 2px 0 6px; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  .x-shell { max-width: 1420px; margin: 0 auto; padding: var(--space-md); padding-bottom: 120px; }
+  /* Every grid/flex child gets min-width:0 so a wide preview strip or a long
+     unbroken key scrolls INSIDE its own panel instead of pushing the page
+     sideways. Horizontal overflow at 390px was the single most visible bug
+     in the old desk. */
+  .x-shell *, .x-modal * { min-width: 0; }
+  :focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; border-radius: var(--radius-xs); }
+
+  .x-skip { position: absolute; left: -9999px; }
+  .x-skip:focus { left: var(--space-md); top: var(--space-xs); z-index: 60; background: var(--color-surface-elevated); padding: var(--space-xs) var(--space-sm); border-radius: var(--radius-sm); }
+
+  /* ── Top bar: identity, views, session ─────────────────────────────────── */
+  .x-topbar { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap;
+    padding: var(--space-xs) 0 var(--space-sm); border-bottom: var(--border-width) solid var(--color-border); }
+  .x-topbar h1 { margin: 0; font-size: var(--type-tagline); letter-spacing: 1px; }
+  .x-views { display: flex; gap: 4px; }
+  .x-who { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-xs);
+    font-size: var(--type-fine); color: var(--color-secondary); flex-wrap: wrap; }
+
+  /* Pills: one shape for every state word on the page. */
+  .x-pill { display: inline-flex; align-items: center; gap: 5px; font-size: var(--type-fine);
+    border-radius: var(--radius-pill); padding: 3px 10px; border: 1px solid var(--color-border-strong);
+    color: var(--color-secondary); white-space: nowrap; }
+  .x-pill--ready { border-color: var(--color-accent-border); color: var(--color-accent-hover); }
+  .x-pill--done { border-color: var(--color-success); color: var(--color-success); }
+  .x-pill--warn { border-color: var(--color-error); color: var(--color-error); }
+  .x-pill--busy { border-color: var(--color-accent-border); color: var(--color-accent-hover); }
+
+  /* ── Stage navigator ───────────────────────────────────────────────────── */
+  .x-stages { display: flex; gap: 6px; margin: var(--space-md) 0 var(--space-sm); flex-wrap: wrap; }
+  .x-stages button { flex: 1 1 96px; display: flex; align-items: baseline; gap: 8px;
+    background: var(--color-surface); border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md); padding: var(--space-xs) var(--space-sm); color: var(--color-secondary);
+    font-size: var(--type-caption); cursor: pointer; text-align: left; }
+  .x-stages button[aria-current="step"] { border-color: var(--color-accent-border);
+    background: var(--color-accent-soft); color: var(--color-text); font-weight: 600; }
+  .x-stages button[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .x-stages .n { font-variant-numeric: tabular-nums; color: var(--color-accent-hover); font-weight: 700; }
+  .x-stages .hint { font-size: var(--type-micro); color: var(--color-muted); display: block; }
+
+  .x-status { color: var(--color-secondary); font-size: var(--type-caption); min-height: 1.3em; margin: 0 0 var(--space-sm); }
+  .x-panel { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-lg);
+    padding: var(--space-md); background: var(--color-surface); margin-bottom: var(--space-md); }
+  .x-panel h2 { margin: 0 0 var(--space-xs); font-size: var(--type-tagline); }
+  .x-panel h3 { margin: 0 0 var(--space-xs); font-size: var(--type-body); }
+  /* Helper copy: short, and a full contrast step above the old metadata grey. */
+  .x-help { font-size: var(--type-fine); color: var(--color-secondary); margin: 2px 0 var(--space-xs); }
+  .x-meta { font-size: var(--type-fine); color: var(--color-muted); }
+  .x-row { display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap; margin: var(--space-xs) 0; }
+
+  /* ── Choose ────────────────────────────────────────────────────────────── */
+  .x-when { display: flex; gap: var(--space-xs); align-items: end; flex-wrap: wrap; }
+  .x-when label { font-size: var(--type-fine); color: var(--color-secondary); display: block; }
+  .x-when input { max-width: 190px; }
+  .x-starts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-xs); }
+  .x-start { background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md); padding: var(--space-sm); color: var(--color-text); cursor: pointer; text-align: left; }
+  .x-start:hover, .x-start[aria-pressed="true"] { border-color: var(--color-accent-border); background: var(--color-accent-soft); }
+  .x-start .s-label { display: block; font-size: var(--type-body); font-weight: 600; }
+  .x-start .s-blurb { display: block; font-size: var(--type-fine); color: var(--color-secondary); margin-top: 2px; }
+
+  .x-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-sm); }
+  .x-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+    padding: var(--space-sm); background: var(--color-surface-sunken); display: flex; flex-direction: column; gap: 6px; }
+  .x-card h3 { margin: 0; font-size: var(--type-body); }
+  .x-card .c-when { font-size: var(--type-caption); color: var(--color-secondary); }
+  .x-card .c-reason { font-size: var(--type-fine); color: var(--color-secondary); }
+  .x-card details { margin-top: 2px; }
+  .x-card summary, .x-raw summary { cursor: pointer; font-size: var(--type-fine); color: var(--color-accent-hover); }
+  .x-card dl { margin: 6px 0 0; font-size: var(--type-fine); color: var(--color-muted); display: grid;
+    grid-template-columns: auto 1fr; gap: 2px var(--space-xs); overflow-wrap: anywhere; }
+  .x-card dt { color: var(--color-secondary); }
+  .x-card dd { margin: 0; overflow-wrap: anywhere; }
+
+  /* ── Write: editor beside a live preview ───────────────────────────────── */
+  .x-work { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); align-items: start; }
+  @media (min-width: 1000px) { .x-work { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); } }
+  .x-preview-col { position: sticky; top: var(--space-xs); }
+  /* Below this the preview would be a column of nothing beside a long form —
+     the Preview stage carries it instead. */
+  @media (max-width: 999px) { .x-preview-col { display: none; } }
+
+  .x-group { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface-sunken); margin-bottom: var(--space-xs); }
+  .x-group > summary { padding: var(--space-xs) var(--space-sm); cursor: pointer; font-weight: 600;
+    font-size: var(--type-caption); display: flex; gap: var(--space-xs); align-items: baseline; }
+  .x-group > summary .g-hint { font-weight: 400; font-size: var(--type-fine); color: var(--color-secondary); }
+  .x-group > div { padding: 0 var(--space-sm) var(--space-sm); }
+  .x-field { margin: var(--space-xs) 0 var(--space-sm); }
+  .x-field > label { display: block; font-size: var(--type-fine); color: var(--color-secondary); margin-bottom: 3px; }
+  .x-field textarea, .x-field input[type="text"] { width: 100%; }
+  .x-field textarea { min-height: 72px; }
+  .x-field--empty { border-left: 3px solid var(--color-accent); padding-left: var(--space-xs); }
   .x-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-  .x-chip { font-size: var(--type-caption); border: 1px solid var(--color-border); border-radius: 999px; padding: 3px 10px; background: none; color: var(--color-text); cursor: pointer; text-align: left; }
-  .x-chip:hover { border-color: var(--color-accent); }
-  .x-meter { font-size: var(--type-caption); color: var(--color-accent); font-weight: 600; }
-  .x-warn { color: var(--color-error); font-size: var(--type-caption); }
-  .x-advice { color: var(--color-muted); font-size: var(--type-caption); }
-  .x-controls { background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
-  .x-controls label { font-size: var(--type-caption); display: inline-flex; align-items: center; gap: 4px; }
-  .x-tpl-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-sm); margin: var(--space-sm) 0; }
-  .x-tpl-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-xs); cursor: pointer; background: none; color: var(--color-text); text-align: left; }
-  .x-tpl-card.is-active { border-color: var(--color-accent); }
-  .x-tpl-card svg { width: 100%; height: auto; border-radius: 4px; }
-  .x-tpl-card .t-name { font-weight: 600; font-size: var(--type-caption); margin-top: 4px; }
-  .x-tpl-card .t-use { font-size: 11px; color: var(--color-muted); }
+  .x-chip { font-size: var(--type-fine); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+    padding: 3px 10px; background: none; color: var(--color-secondary); cursor: pointer; text-align: left; }
+  .x-chip:hover { border-color: var(--color-accent-border); color: var(--color-text); }
+
+  /* The narrow-screen CTA fix: the text field and its picker each claim a
+     full row before either is squeezed to nothing. */
+  .x-split { display: flex; gap: var(--space-xs); flex-wrap: wrap; }
+  .x-split > * { flex: 1 1 240px; min-width: 0; }
+
+  /* ── Verified facts, readable ──────────────────────────────────────────── */
+  .x-facts { background: var(--color-surface-sunken); border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md); padding: var(--space-sm); margin-bottom: var(--space-sm); }
+  .x-facts h3 { display: flex; gap: var(--space-xs); align-items: baseline; flex-wrap: wrap; }
+  .x-facts dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-xs); margin: var(--space-xs) 0; }
+  .x-facts dl > div { min-width: 0; }
+  .x-facts dt { font-size: var(--type-micro); letter-spacing: 1px; text-transform: uppercase; color: var(--color-muted); }
+  .x-facts dd { margin: 0; font-size: var(--type-caption); color: var(--color-text); overflow-wrap: anywhere; }
+  .x-facts ul { list-style: none; margin: var(--space-xs) 0 0; padding: 0; display: flex; gap: 5px; flex-wrap: wrap; }
+  .x-facts li { font-size: var(--type-fine); border: 1px solid var(--color-border); border-radius: var(--radius-pill);
+    padding: 2px 9px; color: var(--color-secondary); }
+  .x-facts .f-events { display: block; }
+  .x-facts .f-events li { display: block; border-radius: var(--radius-xs); margin-bottom: 4px; padding: 4px 8px; }
+  .x-raw { margin-top: var(--space-xs); }
+  .x-raw pre { max-height: 280px; overflow: auto; background: var(--color-bg); border-radius: var(--radius-sm);
+    padding: var(--space-xs); font-size: var(--type-micro); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+  /* ── Template: one default, one way to change it ───────────────────────── */
+  .x-tpl-now { display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap; }
+  .x-tpl-now .t-thumb svg { width: 54px; height: auto; border-radius: 4px; display: block; }
+
+  /* ── Slide previews ────────────────────────────────────────────────────── */
+  .x-slides { display: flex; gap: var(--space-xs); overflow-x: auto; scroll-snap-type: x mandatory; padding: 2px 0 var(--space-xs); }
+  .x-slides > * { scroll-snap-align: start; flex: 0 0 auto; }
+  .x-slides svg { border-radius: var(--radius-sm); border: 2px solid transparent; display: block; }
+  .x-slides--full svg { width: min(430px, 78vw); height: auto; }
+  .x-slides--feed svg { width: 375px; max-width: 84vw; height: auto; }
+  .x-slides--mini svg { width: min(260px, 68vw); height: auto; }
+  .x-slides .is-focused svg { border-color: var(--color-accent); }
   .x-feedsim { max-width: 380px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: #000; }
   .x-feedsim .f-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px; font-size: 13px; color: #fff; background: #101010; }
   .x-feedsim .f-avatar { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #4a28b8, #7657e8); }
@@ -66,25 +154,79 @@
   .x-feedsim .f-dots .on { color: #7657e8; }
   .x-feedsim .f-caption { padding: 8px 10px 12px; font-size: 13px; color: #ddd; white-space: pre-wrap; }
   .x-feedsim svg { width: 100%; height: auto; display: block; }
-  .x-reading-bar { margin-top: var(--space-md); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
-  .x-reading-bar strong { margin-right: var(--space-sm); }
-  .x-lab { margin: var(--space-md) 0; padding: var(--space-md); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
-  .x-lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: var(--space-sm); }
-  .x-lab-card { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--color-surface); }
-  .x-lab-card h4 { margin: 0 0 4px; }
-  .x-lab-card p { min-height: 3.6em; color: var(--color-muted); font-size: var(--type-caption); }
+
+  /* ── Library ───────────────────────────────────────────────────────────── */
+  .x-lib-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: var(--space-sm); }
+  /* Thumbnail beside the text, not above it: a full portrait slide stacked on
+     top pushed "Open draft" a screen and a half down on a phone. */
+  .x-lib-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+    background: var(--color-surface-sunken); padding: var(--space-sm);
+    display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: var(--space-sm); align-items: start; }
+  .x-lib-card .l-body { display: flex; flex-direction: column; gap: 5px; min-height: 100%; }
+  .x-lib-card .l-thumb { background: var(--color-bg); border-radius: var(--radius-sm); overflow: hidden; }
+  .x-lib-card .l-thumb svg { width: 100%; height: auto; display: block; }
+  .x-lib-card .l-empty { font-size: var(--type-micro); color: var(--color-muted); padding: var(--space-md) 4px; text-align: center; }
+  .x-lib-card h3 { margin: 0; font-size: var(--type-caption); line-height: 1.35; }
+  .x-lib-card .l-meta { font-size: var(--type-fine); color: var(--color-secondary); }
+  .x-lib-card .l-key { font-size: var(--type-micro); color: var(--color-muted); overflow-wrap: anywhere; }
+  .x-lib-card button { margin-top: auto; }
+
+  /* ── Sticky draft actions ──────────────────────────────────────────────── */
+  .x-actionbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    background: var(--color-surface-elevated); border-top: var(--border-width) solid var(--color-border);
+    padding: var(--space-xs) var(--space-md); display: flex; gap: var(--space-xs); align-items: center; flex-wrap: wrap; }
+  .x-actionbar .a-state { margin-right: auto; }
+  .x-more { position: relative; }
+  .x-more > summary { list-style: none; cursor: pointer; font-size: var(--type-caption);
+    border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md); padding: 6px 12px; color: var(--color-text); }
+  .x-more > summary::-webkit-details-marker { display: none; }
+  .x-more-menu { position: absolute; bottom: calc(100% + 6px); right: 0; min-width: 220px; z-index: 31;
+    background: var(--color-surface-elevated); border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-md); padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+  .x-more-menu button { text-align: left; }
+
+  /* ── Template Lab: a real modal dialog ─────────────────────────────────── */
+  .x-modal { width: min(1180px, 96vw); max-height: 92vh; border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-xl); background: var(--color-surface); color: var(--color-text); padding: 0; overflow: hidden; }
+  .x-modal::backdrop { background: rgba(4, 5, 12, 0.78); }
+  .x-modal-head { display: flex; gap: var(--space-sm); align-items: baseline; flex-wrap: wrap;
+    padding: var(--space-md); border-bottom: var(--border-width) solid var(--color-border); }
+  .x-modal-head h2 { margin: 0; font-size: var(--type-tagline); }
+  .x-modal-head .m-close { margin-left: auto; }
+  .x-modal-body { padding: var(--space-md); overflow: auto; max-height: calc(92vh - 90px); }
+  .x-lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-sm); }
+  .x-lab-card { border: var(--border-width) solid var(--color-border); border-radius: var(--radius-md);
+    padding: var(--space-sm); background: var(--color-surface-sunken); }
+  .x-lab-card.is-active { border-color: var(--color-accent); }
+  .x-lab-card h4 { margin: 0 0 4px; font-size: var(--type-caption); }
+  .x-lab-card p { margin: 0 0 6px; min-height: 3.4em; color: var(--color-secondary); font-size: var(--type-fine); }
   .x-lab-slides { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
   .x-lab-slides svg { width: 100%; height: auto; display: block; border-radius: 4px; }
-  .x-handoff { margin: var(--space-sm) 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); }
-  .x-handoff summary { cursor: pointer; font-size: var(--type-caption); color: var(--color-accent); }
-  .x-brief { max-height: 260px; overflow: auto; background: var(--color-surface-sunken); border-radius: var(--radius-md); padding: var(--space-sm); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
-  .x-demo-label { display: inline-block; color: var(--color-accent); font-size: 10px; letter-spacing: 2px; margin-bottom: 5px; }
+  .x-demo-label { display: inline-block; color: var(--color-accent-hover); font-size: var(--type-micro); letter-spacing: 2px; margin-bottom: 5px; }
+
+  .x-gate { max-width: 420px; margin-top: var(--space-lg); }
+  .x-gate label { display: block; margin-bottom: var(--space-sm); }
+  .x-warn { color: var(--color-error); font-size: var(--type-caption); }
+  .x-advice { color: var(--color-secondary); font-size: var(--type-fine); }
+  .x-brief { max-height: 240px; overflow: auto; background: var(--color-bg); border-radius: var(--radius-sm);
+    padding: var(--space-xs); font-size: var(--type-micro); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .x-choices { display: grid; gap: 6px; }
+  .x-choice { display: flex; gap: 6px; align-items: center; }
+  .x-choice span { font-size: var(--type-fine); color: var(--color-secondary); width: 1.2em; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
-<header class="x-head">
+<a class="x-skip" href="#x-main">Skip to content</a>
+<div class="x-shell">
+
+<header class="x-topbar">
   <h1>Orbit X</h1>
-  <p style="color:var(--color-muted)">Internal content desk — calculate → select → explain → visualize → reflect. Nothing publishes from here.</p>
+  <span class="x-pill" id="x-mode" hidden>Manual mode</span>
+  <nav class="x-views" aria-label="Views" id="x-views" hidden>
+    <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-view="workspace" aria-current="page">Workspace</button>
+    <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-view="library">Library</button>
+  </nav>
   <span class="x-who" id="x-who" hidden>
     <span id="x-who-email"></span>
     <button class="o-btn o-btn--secondary o-btn--sm" id="x-signout">Sign out</button>
@@ -96,7 +238,7 @@
      never stores, echoes, or logs what is typed into it. -->
 <section class="x-panel x-gate" id="x-gate" hidden aria-label="Sign in">
   <h2>Sign in to Orbit Axis</h2>
-  <p class="x-status" id="x-gate-note">This browser has no Orbit Axis session. Sign in with your Orbit Axis account to open the desk.</p>
+  <p class="x-status" id="x-gate-note">This browser has no Orbit Axis session. Sign in with your Orbit Axis account to open the workspace.</p>
   <form id="x-signin" autocomplete="on">
     <label>Email <input type="email" id="x-email" class="o-input" autocomplete="username" required /></label>
     <label>Password <input type="password" id="x-password" class="o-input" autocomplete="current-password" required /></label>
@@ -108,49 +250,161 @@
   </form>
 </section>
 
-<div class="x-desk" id="x-desk" hidden>
-<div class="x-row">
-  <label>Date <input type="date" id="x-date" /></label>
-  <button class="o-btn o-btn--secondary o-btn--sm" id="x-today">Today</button>
-  <button class="o-btn o-btn--secondary o-btn--sm" id="x-tomorrow">Tomorrow</button>
-  <button class="o-btn o-btn--primary o-btn--sm" id="x-load">Load candidates</button>
-  <span class="x-status" id="x-status" role="status" aria-live="polite"></span>
-</div>
+<main id="x-main" hidden>
 
-<div class="x-reading-bar" aria-label="Collective readings">
-  <strong>Collective Readings</strong>
-  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="daily">Today</button>
-  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="weekly">This Week</button>
-  <button class="o-btn o-btn--secondary o-btn--sm" data-reading="monthly">This Month</button>
-  <span class="x-helper">Shared current sky · manual authoring · portrait first</span>
-</div>
+<!-- ── WORKSPACE ─────────────────────────────────────────────────────────── -->
+<div id="x-workspace">
+  <nav class="x-stages" aria-label="Workspace stages" id="x-stages"></nav>
+  <p class="x-status" id="x-status" role="status" aria-live="polite"></p>
 
-<div class="x-grid">
-  <section class="x-panel" aria-label="Candidates">
-    <h2>Candidates</h2>
-    <div id="x-candidates"><p class="x-status">Pick a date and load.</p></div>
-    <h2 style="margin-top:var(--space-lg)">Saved work</h2>
-    <p class="x-helper">Drafts and past decisions appear here automatically. Open any item to review or continue it.</p>
-    <div class="x-row">
-      <select id="x-hist-filter" class="o-select" style="max-width:180px">
-        <option value="">All statuses</option>
-        <option>draft</option><option>approved</option><option>rejected</option><option>exported</option>
-      </select>
-      <select id="x-hist-kind" class="o-select" style="max-width:190px">
-        <option value="">All content</option>
-        <option value="daily_reading">Daily</option><option value="weekly_reading">Weekly</option>
-        <option value="monthly_reading">Monthly</option><option value="other">Other formats</option>
-      </select>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="x-hist-load">Refresh history</button>
+  <!-- Stage 1 · Choose -->
+  <section class="x-stage" id="x-stage-choose" aria-labelledby="x-choose-h">
+    <div class="x-panel">
+      <h2 id="x-choose-h">Start a post</h2>
+      <div class="x-when">
+        <div>
+          <label for="x-date">Date</label>
+          <input type="date" id="x-date" class="o-input" />
+        </div>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="x-today">Today</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="x-reload">Refresh recommendations</button>
+      </div>
+      <div class="x-starts" id="x-starts" style="margin-top:var(--space-sm)"></div>
     </div>
-    <table class="x-hist" id="x-history"></table>
+
+    <section class="x-panel" id="x-interactive-setup" hidden aria-labelledby="x-ix-h">
+      <h2 id="x-ix-h">Interactive post</h2>
+      <p class="x-help">Pick how you want to ask. The sky stays calculated; the question is yours.</p>
+      <div class="x-field">
+        <label for="x-ix-format">Interaction format</label>
+        <select id="x-ix-format" class="o-select"></select>
+      </div>
+      <p class="x-help" id="x-ix-blurb"></p>
+      <div class="x-row">
+        <button class="o-btn o-btn--primary o-btn--sm" id="x-ix-start">Start interactive draft</button>
+        <button class="o-btn o-btn--secondary o-btn--sm" id="x-ix-cancel">Cancel</button>
+      </div>
+    </section>
+
+    <section class="x-panel" aria-labelledby="x-rec-h">
+      <h2 id="x-rec-h">Recommended</h2>
+      <p class="x-help" id="x-rec-help">Pick a date and refresh to see what the engine calculated.</p>
+      <div id="x-candidates" class="x-cards"></div>
+      <details class="x-raw" id="x-diagnostics">
+        <summary>Diagnostics</summary>
+        <dl class="x-meta" id="x-diagnostics-body"></dl>
+      </details>
+    </section>
   </section>
 
-  <section class="x-panel" aria-label="Draft editor">
-    <h2 id="x-editor-title">Draft</h2>
-    <div id="x-editor"><p class="x-status">Start a draft from a candidate to begin.</p></div>
+  <!-- Stage 2 · Write -->
+  <section class="x-stage" id="x-stage-write" hidden aria-labelledby="x-editor-title">
+    <div class="x-work">
+      <div>
+        <div class="x-row" style="margin-top:0">
+          <h2 id="x-editor-title" style="margin:0">Draft</h2>
+          <span class="x-pill" id="x-editor-format"></span>
+        </div>
+        <div id="x-editor"><p class="x-status">Start a draft from the Choose stage to begin.</p></div>
+      </div>
+      <aside class="x-preview-col" aria-label="Live preview">
+        <h3 style="margin:0 0 var(--space-xs)">Live preview</h3>
+        <p class="x-help" id="x-live-help">The slide you are editing is outlined.</p>
+        <div id="x-live-preview"></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Stage 3 · Preview -->
+  <section class="x-stage" id="x-stage-preview" hidden aria-labelledby="x-preview-h">
+    <div class="x-panel">
+      <h2 id="x-preview-h">Preview</h2>
+      <div class="x-field" style="max-width:280px">
+        <label for="x-preview-mode">Preview mode</label>
+        <select id="x-preview-mode" class="o-select"></select>
+      </div>
+      <div id="x-preview-box"></div>
+      <p class="x-warn" id="x-preview-warnings" role="status" aria-live="polite"></p>
+    </div>
+    <div class="x-panel">
+      <h2>Finish</h2>
+      <p class="x-help" id="x-finish-help"></p>
+      <div class="x-row">
+        <button class="o-btn o-btn--primary o-btn--sm" id="x-ready" disabled>Mark ready to post</button>
+      </div>
+      <details class="x-raw">
+        <summary>Review &amp; set aside</summary>
+        <p class="x-help">Optional. Use this when you want a record of why a draft was parked.</p>
+        <div class="x-split">
+          <div class="x-field">
+            <label for="x-reject-reason">Reason</label>
+            <select id="x-reject-reason" class="o-select">
+              <option value="">Choose a reason…</option>
+              <option>inaccurate interpretation</option><option>too predictive</option>
+              <option>too sensational</option><option>too much jargon</option><option>repetitive</option>
+              <option>poor visual fit</option><option>weak product connection</option><option>other</option>
+            </select>
+          </div>
+          <div class="x-field" style="align-self:end">
+            <button class="o-btn o-btn--secondary o-btn--sm" id="x-reject" disabled>Set aside with reason</button>
+          </div>
+        </div>
+      </details>
+    </div>
   </section>
 </div>
+
+<!-- ── LIBRARY ───────────────────────────────────────────────────────────── -->
+<div id="x-library" hidden>
+  <div class="x-panel">
+    <h2>Library</h2>
+    <p class="x-help">Everything you have saved. Open any item to continue it — saving updates that same item.</p>
+    <div class="x-split">
+      <div class="x-field">
+        <label for="x-lib-status">Status</label>
+        <select id="x-lib-status" class="o-select"></select>
+      </div>
+      <div class="x-field">
+        <label for="x-lib-kind">Content type</label>
+        <select id="x-lib-kind" class="o-select"></select>
+      </div>
+      <div class="x-field" style="align-self:end">
+        <button class="o-btn o-btn--secondary o-btn--sm" id="x-lib-refresh">Refresh library</button>
+      </div>
+    </div>
+    <p class="x-status" id="x-lib-status-line" role="status" aria-live="polite"></p>
+    <div class="x-lib-cards" id="x-lib-list"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ── Sticky draft actions ────────────────────────────────────────────────-->
+<div class="x-actionbar" id="x-actionbar" hidden>
+  <span class="x-pill a-state" id="x-save-state">Not saved yet</span>
+  <button class="o-btn o-btn--primary o-btn--sm" id="x-save">Save draft</button>
+  <button class="o-btn o-btn--secondary o-btn--sm" id="x-goto-preview">Preview</button>
+  <button class="o-btn o-btn--secondary o-btn--sm" id="x-export">Export</button>
+  <details class="x-more" id="x-more">
+    <summary aria-label="More draft actions">More</summary>
+    <div class="x-more-menu">
+      <button class="o-btn o-btn--secondary o-btn--sm" id="x-copy-caption">Copy caption</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="x-copy-alt">Copy alt text</button>
+      <button class="o-btn o-btn--secondary o-btn--sm" id="x-open-lab">Template Lab</button>
+    </div>
+  </details>
+</div>
+
+<!-- ── Template Lab ────────────────────────────────────────────────────────-->
+<dialog class="x-modal" id="x-lab" aria-labelledby="x-lab-title">
+  <div class="x-modal-head">
+    <h2 id="x-lab-title">Template Lab</h2>
+    <p class="x-help" id="x-lab-sub"></p>
+    <button class="o-btn o-btn--secondary o-btn--sm m-close" id="x-lab-close">Close</button>
+  </div>
+  <div class="x-modal-body" id="x-lab-body"></div>
+</dialog>
+
 </div>
 
 <script type="module">
@@ -159,8 +413,16 @@ import { renderPost, normalizeDesign, TEMPLATES, TEMPLATE_FAMILY_IDS, ASPECTS, D
   from "/admin/orbit-x/templates.js";
 import { FORMATS, ROLE_SEQUENCES, EXPANDABLE_ROLE } from "/admin/orbit-x/formats.js";
 import { adviseCopy, CONSTITUTION } from "/admin/orbit-x/editorial.js";
+import { draftCompleteness } from "/admin/orbit-x/schemas.js";
+import { INTERACTION_FORMATS, INTERACTION_FORMAT_IDS, DEFAULT_INTERACTION_FORMAT,
+  PLACEMENTS, choiceRule, interactiveSlides, auditInteraction } from "/admin/orbit-x/interactive.js";
+import { STAGES, availableStages, statusLabel, statusTone, libraryEntry, matchesKindFilter,
+  LIBRARY_STATUS_FILTERS, LIBRARY_KIND_FILTERS, START_ACTIONS, recommendationView, factSummary,
+  PREVIEW_MODES, saveStateLabel, saveStateTone, fieldGroupsFor, cadenceTemplate,
+  READY_STATUS, READY_ACTION_LABEL } from "/admin/orbit-x/desk.js";
 
 const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
 const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const api = async (path, options = {}) => {
   const res = await fetch(path, { credentials: "same-origin",
@@ -183,12 +445,20 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
 /* ── State: the verified candidate is held SEPARATELY from editable copy and
    is rendered read-only. Editing facts is not a UI affordance that exists. */
-let current = null;   // { candidate, post, generatedCopy, calculationMetadata, savedId, suggestions, design, notes }
+let current = null;   // { candidate, post, generatedCopy, calculationMetadata, savedId, suggestions, design, notes, status }
 let formats = {};
 let aiAvailable = false;
 let template = { width: 1080, height: 1080, filePrefix: "orbit-axis" };
 let lastSky = [];     // current-sky strip data from the candidates response
-let previewMode = "full"; // full | feed | sim
+let previewMode = "full";
+let view = "workspace";
+let stage = "choose";
+let startFilter = null;       // null | "special"
+let interactionFormatId = DEFAULT_INTERACTION_FORMAT;
+let focusedSlide = 0;
+let choiceSlots = 0;   // how many answer-choice inputs are on screen
+let diagnostics = {};
+let saveState = { dirty: false, saving: false, savedAt: null };
 
 /* ── The session gate ──────────────────────────────────────────────────────
    The desk is admin-only and the SERVER decides that: this gate only answers
@@ -197,7 +467,9 @@ let previewMode = "full"; // full | feed | sim
    access, it removes a dead end. */
 
 function showGate(note = null) {
-  $("#x-desk").hidden = true;
+  $("#x-main").hidden = true;
+  $("#x-actionbar").hidden = true;
+  $("#x-views").hidden = true;
   $("#x-who").hidden = true;
   $("#x-gate").hidden = false;
   if (note) $("#x-gate-note").textContent = note;
@@ -206,7 +478,8 @@ function showGate(note = null) {
 
 function showDesk(email) {
   $("#x-gate").hidden = true;
-  $("#x-desk").hidden = false;
+  $("#x-main").hidden = false;
+  $("#x-views").hidden = false;
   $("#x-who").hidden = false;
   $("#x-who-email").textContent = email ? `Signed in as ${email}` : "Signed in";
   $("#x-password").value = ""; // never keep it in the DOM after use
@@ -244,7 +517,7 @@ $("#x-signin").addEventListener("submit", async (event) => {
       return;
     }
     showDesk(body.user?.email || $("#x-email").value);
-    loadHistory();  // same order as the bootstrap below
+    loadLibrary();
     load();
   } catch (error) {
     $("#x-gate-error").textContent = "Sign-in could not reach the server.";
@@ -258,37 +531,121 @@ $("#x-signout").onclick = async () => {
   await fetch("/api/auth/signout", { method: "POST", credentials: "same-origin" }).catch(() => {});
   current = null;
   // Everything derived from the signed-out account leaves the screen with it —
-  // the saved-work library included, since 5.2 renders real drafts and their
-  // thumbnails there. Ending a session must not leave one account's editorial
-  // work visible to whoever signs in next on this browser.
-  $("#x-candidates").innerHTML = `<p class="x-status">Pick a date and load.</p>`;
-  $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
-  $("#x-history").innerHTML = "";
+  // the Library included, since it renders real drafts and their thumbnails.
+  // Ending a session must not leave one account's editorial work visible to
+  // whoever signs in next on this browser.
+  $("#x-candidates").innerHTML = "";
+  $("#x-editor").innerHTML = `<p class="x-status">Start a draft from the Choose stage to begin.</p>`;
+  $("#x-lib-list").innerHTML = "";
+  $("#x-preview-box").innerHTML = "";
+  $("#x-live-preview").innerHTML = "";
+  setView("workspace");
+  setStage("choose");
   showGate("Signed out.");
 };
+
+/* ── Views and stages ─────────────────────────────────────────────────────
+   Three stages, one navigator, and the Library as its own top-level view.
+   The old desk stacked candidates, the whole editor, every template, and
+   every preview onto one page — on a phone that was a single scroll several
+   screens long before the first field. */
+
+function setView(next) {
+  view = next;
+  $("#x-workspace").hidden = next !== "workspace";
+  $("#x-library").hidden = next !== "library";
+  for (const button of $$("[data-view]")) {
+    const on = button.getAttribute("data-view") === next;
+    if (on) button.setAttribute("aria-current", "page"); else button.removeAttribute("aria-current");
+  }
+  $("#x-actionbar").hidden = !(next === "workspace" && current);
+  if (next === "library") loadLibrary();
+}
+
+function setStage(next) {
+  const allowed = availableStages(Boolean(current));
+  stage = allowed.includes(next) ? next : allowed[allowed.length - 1];
+  $("#x-stage-choose").hidden = stage !== "choose";
+  $("#x-stage-write").hidden = stage !== "write";
+  $("#x-stage-preview").hidden = stage !== "preview";
+  renderStages();
+  if (stage === "preview") preview();
+}
+
+function renderStages() {
+  const allowed = availableStages(Boolean(current));
+  $("#x-stages").innerHTML = STAGES.map((s, i) => `
+    <button type="button" data-stage="${s.id}" ${allowed.includes(s.id) ? "" : "disabled"}
+      aria-label="Stage ${i + 1}: ${esc(s.label)} — ${esc(s.hint)}"
+      ${s.id === stage ? 'aria-current="step"' : ""}>
+      <span class="n">${i + 1}</span>
+      <span>${esc(s.label)}<span class="hint">${esc(s.hint)}</span></span>
+    </button>`).join("");
+  for (const button of $$("[data-stage]")) {
+    button.onclick = () => setStage(button.getAttribute("data-stage"));
+  }
+}
+
+for (const button of $$("[data-view]")) button.onclick = () => setView(button.getAttribute("data-view"));
+
+/* ── Choose ──────────────────────────────────────────────────────────────── */
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 $("#x-date").value = todayIso();
 $("#x-today").onclick = () => { $("#x-date").value = todayIso(); load(); };
-$("#x-tomorrow").onclick = () => {
-  const d = new Date(Date.now() + 86400000); $("#x-date").value = d.toISOString().slice(0, 10); load();
-};
-$("#x-load").onclick = load;
-$("#x-hist-load").onclick = loadHistory;
-for (const button of document.querySelectorAll("[data-reading]")) {
-  button.onclick = () => loadReading(button.getAttribute("data-reading"));
+$("#x-reload").onclick = load;
+$("#x-date").onchange = load;
+
+$("#x-starts").innerHTML = START_ACTIONS.map((action) => `
+  <button type="button" class="x-start" data-start="${action.id}" aria-pressed="false"
+    aria-label="Start a ${esc(action.label)} post — ${esc(action.blurb)}">
+    <span class="s-label">${esc(action.label)}</span>
+    <span class="s-blurb">${esc(action.blurb)}</span>
+  </button>`).join("");
+for (const button of $$("[data-start]")) {
+  button.onclick = () => startAction(button.getAttribute("data-start"));
 }
 
-async function loadReading(type) {
-  status(`Calculating ${type} reading…`);
-  try {
-    const data = await api(`/api/orbit-x/readings?type=${encodeURIComponent(type)}&date=${$("#x-date").value}`);
-    formats = data.formats; aiAvailable = data.aiAvailable === true;
-    lastSky = data.candidate.facts?.planets || [];
-    status(`${data.candidate.title} · ${data.candidate.facts.selected_events.length} curated movement(s) · ${data.editorialTimezone}`);
-    await manualDraft(data.candidate, data.format);
-  } catch (error) { status(error.message); }
+$("#x-ix-format").innerHTML = INTERACTION_FORMAT_IDS.map((id) =>
+  `<option value="${id}" ${id === interactionFormatId ? "selected" : ""}>${esc(INTERACTION_FORMATS[id].name)}</option>`).join("");
+$("#x-ix-format").onchange = () => {
+  interactionFormatId = $("#x-ix-format").value;
+  $("#x-ix-blurb").textContent = INTERACTION_FORMATS[interactionFormatId]?.blurb || "";
+};
+$("#x-ix-blurb").textContent = INTERACTION_FORMATS[interactionFormatId]?.blurb || "";
+$("#x-ix-cancel").onclick = () => { $("#x-interactive-setup").hidden = true; markStart(null); };
+$("#x-ix-start").onclick = () => startInteractive();
+
+function markStart(id) {
+  for (const button of $$("[data-start]")) {
+    button.setAttribute("aria-pressed", String(button.getAttribute("data-start") === id));
+  }
 }
+
+function startAction(id) {
+  markStart(id);
+  if (id === "daily" || id === "weekly" || id === "monthly") {
+    $("#x-interactive-setup").hidden = true;
+    startFilter = null;
+    return loadReading(id);
+  }
+  if (id === "interactive") {
+    $("#x-interactive-setup").hidden = false;
+    $("#x-ix-format").focus();
+    return undefined;
+  }
+  // Special: the calculated Moon events, which is what the desk recommends
+  // beyond the three cadences. Pressing it again clears the filter — a filter
+  // with no way off is a dead end, and this one survives a refresh.
+  $("#x-interactive-setup").hidden = true;
+  startFilter = startFilter === "special" ? null : "special";
+  markStart(startFilter === "special" ? id : null);
+  renderCandidates();
+  $("#x-rec-h").scrollIntoView({ block: "nearest" });
+  return undefined;
+}
+
+let lastCandidates = { entries: [], recommendedTemplates: {}, localDate: "" };
 
 async function load() {
   status("Calculating…");
@@ -297,68 +654,132 @@ async function load() {
     formats = data.formats; template = data.template;
     aiAvailable = data.aiAvailable === true;
     lastSky = data.sky || [];
-    const box = $("#x-candidates"); box.innerHTML = "";
-    for (const entry of data.candidates) {
-      const { candidate, score, suggestedFormat, coverage } = entry;
-      const recTpl = data.recommendedTemplates?.[candidate.eventKey];
-      const div = document.createElement("div");
-      div.className = "x-cand" + (score.duplicate || coverage.length ? " x-cand--dup" : "");
-      div.innerHTML = `
-        <div class="x-row"><strong>${esc(candidate.title)}</strong>
-          <span class="x-score">${score.totalScore}/${score.maxScore}</span></div>
-        <div class="x-reasons">${esc(candidate.eventType)} · ${esc(candidate.timestamp || "evergreen")}
-          · suggested: ${esc(formats[suggestedFormat]?.name || suggestedFormat)}
-          ${recTpl ? ` · template: ${esc(TEMPLATES[recTpl]?.name || recTpl)}` : ""}
-          ${coverage.length ? ` · <strong>already covered (${esc(coverage[0].status)})</strong>` : ""}</div>
-        <div class="x-reasons">${esc(score.reasons.join(" · "))}</div>
-        <div class="x-row">
-          <select class="o-select" data-fmt style="max-width:230px">
-            ${compatibleFormats(candidate, suggestedFormat).map((f) => `<option value="${f.id}" ${f.id === suggestedFormat ? "selected" : ""}>${esc(f.name)}</option>`).join("")}
-          </select>
-          <button class="o-btn o-btn--secondary o-btn--sm" data-manual>Manual draft</button>
-          ${aiAvailable ? `<button class="o-btn o-btn--primary o-btn--sm" data-gen>Generate (AI)</button>` : ""}
-        </div>`;
-      div.querySelector("[data-manual]").onclick = () => manualDraft(candidate, div.querySelector("[data-fmt]").value);
-      div.querySelector("[data-gen]") && (div.querySelector("[data-gen]").onclick =
-        () => generate(candidate, div.querySelector("[data-fmt]").value));
-      box.appendChild(div);
-    }
-    status(`${data.candidates.length} recommendations for ${data.localDate}`
-      + `${data.setAside?.length ? ` · ${data.setAside.length} other sky events not recommended` : ""}`
-      + `${data.skipped.length ? ` · ${data.skipped.length} unsupported skipped` : ""}`
-      + `${aiAvailable ? "" : " · manual drafting (no AI provider configured)"}`);
-    loadHistory();
+    lastCandidates = { entries: data.candidates || [], recommendedTemplates: data.recommendedTemplates || {},
+      localDate: data.localDate };
+    diagnostics = {
+      "Local date": data.localDate,
+      "Engine context": data.contextVersion,
+      "Browser timezone": tz,
+      "AI provider": aiAvailable ? "configured" : "not configured — manual authoring",
+      "Recommendations": String((data.candidates || []).length),
+      "Other sky events set aside": String((data.setAside || []).length),
+      "Unsupported skipped": String((data.skipped || []).length),
+    };
+    renderDiagnostics();
+    renderCandidates();
+    renderMode();
+    status(`${(data.candidates || []).length} recommendation(s) for ${data.localDate}`);
+    loadLibrary();
   } catch (error) { status(error.message); }
 }
 
-/* Only the formats that actually fit this candidate. Offering all eight put
-   "Astrology Without the Fog" on a Full Moon and the Daily Reading format on
-   a Monthly one — choices that are wrong before the editor types anything.
-   The suggested format is always included, so the list can never be empty. */
-function compatibleFormats(candidate, suggested) {
-  const all = Object.values(formats);
-  const fits = all.filter((f) => {
-    if (f.readingType) return f.readingType === candidate.readingType;
-    if (candidate.readingType) return false;
-    return !f.candidateTypes || f.candidateTypes.includes(candidate.eventType);
-  });
-  const list = fits.length ? fits : all.filter((f) => f.id === suggested);
-  return list.some((f) => f.id === suggested) ? list
-    : [...list, all.find((f) => f.id === suggested)].filter(Boolean);
+function renderMode() {
+  // A state, never an error — and never a sentence of provider plumbing in
+  // the founder's status line. The detail lives under Diagnostics.
+  $("#x-mode").hidden = aiAvailable;
+}
+
+function renderDiagnostics() {
+  $("#x-diagnostics-body").innerHTML = Object.entries(diagnostics)
+    .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v ?? "—")}</dd>`).join("");
+}
+
+function renderCandidates() {
+  const box = $("#x-candidates");
+  const entries = lastCandidates.entries.filter((entry) => startFilter !== "special"
+    || !FORMATS[entry.suggestedFormat]?.readingType);
+  $("#x-rec-help").textContent = startFilter === "special"
+    ? "Calculated Moon events for this date."
+    : "Calculated for this date. Every card opens a draft with its verified facts attached.";
+  if (!entries.length) {
+    box.innerHTML = `<p class="x-status">Nothing recommended for this date.</p>`;
+    return;
+  }
+  box.innerHTML = entries.map((entry, i) => {
+    const v = recommendationView(entry, { formats,
+      recommendedTemplate: lastCandidates.recommendedTemplates[entry.candidate.eventKey] });
+    return `<article class="x-card">
+      <h3>${esc(v.title)}</h3>
+      <div class="c-when">${esc(v.timing)}</div>
+      <div class="x-row" style="margin:0">
+        <span class="x-pill">${esc(v.formatName)}</span>
+        ${v.templateName ? `<span class="x-pill">${esc(v.templateName)}</span>` : ""}
+        ${v.hasDraft ? `<span class="x-pill x-pill--ready">Draft exists · ${esc(v.draftStatusLabel)}</span>` : ""}
+      </div>
+      ${v.reason ? `<p class="c-reason">${esc(v.reason)}</p>` : ""}
+      <div class="x-row" style="margin:0">
+        <button type="button" class="o-btn o-btn--primary o-btn--sm" data-rec="${i}">${esc(v.actionLabel)}</button>
+        ${aiAvailable ? `<button type="button" class="o-btn o-btn--secondary o-btn--sm" data-rec-ai="${i}">Generate (AI)</button>` : ""}
+      </div>
+      <details>
+        <summary>Details</summary>
+        <dl>
+          <dt>Event key</dt><dd>${esc(v.details.eventKey)}</dd>
+          <dt>Type</dt><dd>${esc(v.details.eventType)}</dd>
+          ${v.details.timestamp ? `<dt>Instant</dt><dd>${esc(v.details.timestamp)}</dd>` : ""}
+          ${v.details.score !== null ? `<dt>Score</dt><dd>${v.details.score}/${v.details.maxScore}</dd>` : ""}
+          ${v.details.reasons.length ? `<dt>Scoring</dt><dd>${esc(v.details.reasons.join(" · "))}</dd>` : ""}
+        </dl>
+      </details>
+    </article>`;
+  }).join("");
+  for (const button of $$("[data-rec]")) {
+    button.onclick = () => {
+      const entry = entries[Number(button.getAttribute("data-rec"))];
+      const existing = (entry.coverage || [])[0];
+      if (existing) return openSavedPost(existing.id);
+      return manualDraft(entry.candidate, entry.suggestedFormat);
+    };
+  }
+  for (const button of $$("[data-rec-ai]")) {
+    const entry = entries[Number(button.getAttribute("data-rec-ai"))];
+    button.onclick = () => generate(entry.candidate, entry.suggestedFormat);
+  }
+}
+
+async function loadReading(type) {
+  status(`Calculating ${type} reading…`);
+  try {
+    const data = await api(`/api/orbit-x/readings?type=${encodeURIComponent(type)}&date=${$("#x-date").value}`);
+    formats = data.formats; aiAvailable = data.aiAvailable === true;
+    lastSky = data.candidate.facts?.planets || [];
+    renderMode();
+    const existing = (data.coverage || [])[0];
+    if (existing) return openSavedPost(existing.id);
+    return manualDraft(data.candidate, data.format);
+  } catch (error) { status(error.message); return undefined; }
+}
+
+async function startInteractive() {
+  status("Calculating the sky for this question…");
+  try {
+    const data = await api(`/api/orbit-x/interactive?date=${$("#x-date").value}`);
+    formats = data.formats; aiAvailable = data.aiAvailable === true;
+    lastSky = data.candidate.facts?.planets || [];
+    renderMode();
+    $("#x-interactive-setup").hidden = true;
+    await manualDraft(data.candidate, "interactive_post");
+  } catch (error) { status(error.message); }
 }
 
 async function manualDraft(candidate, format) {
-  status("Building manual draft…");
+  status("Building draft…");
   try {
     const data = await api("/api/orbit-x/manual", { method: "POST", body: JSON.stringify({
-      eventKey: candidate.eventKey, date: $("#x-date").value, tz, format }) });
+      eventKey: candidate.eventKey, date: $("#x-date").value, tz, format,
+      interactionFormat: interactionFormatId }) });
     // generatedCopy stays null for a manual draft: human-authored is a
     // recorded fact in the row, not a pretence of generation.
     current = { candidate: data.candidate, post: data.post, generatedCopy: null,
       calculationMetadata: data.calculationMetadata, savedId: null,
-      suggestions: data.suggestions, notes: "",
-      design: normalizeDesign({ template: data.recommendedTemplate }, data.candidate.eventType, format) };
+      suggestions: data.suggestions, notes: "", status: "draft",
+      design: normalizeDesign({ template: data.recommendedTemplate, ...(data.post.design || {}) },
+        data.candidate.eventType, format) };
+    if (data.post.interaction?.format) interactionFormatId = data.post.interaction.format;
+    saveState = { dirty: false, saving: false, savedAt: null };
+    focusedSlide = 0; choiceSlots = 0;
     renderEditor();
+    setStage("write");
     status("Draft ready — the facts are in place; the interpretation is yours.");
   } catch (error) { status(error.message); }
 }
@@ -370,65 +791,104 @@ async function generate(candidate, format, instruction = "") {
       eventKey: candidate.eventKey, date: $("#x-date").value, tz, format, instruction }) });
     current = { candidate: data.candidate, post: data.post, generatedCopy: data.post,
       calculationMetadata: data.calculationMetadata, savedId: null, suggestions: null,
-      notes: "",
+      notes: "", status: "draft",
       design: normalizeDesign(data.post.design || {}, candidate.eventType, format) };
+    saveState = { dirty: false, saving: false, savedAt: null };
     renderEditor();
+    setStage("write");
     status(data.usage ? `Generated (${data.usage.input}+${data.usage.output} tokens)` : "Generated");
   } catch (error) {
     status(error.body?.findings ? `Refused: ${error.body.findings.map((f) => f.why).join("; ")}` : error.message);
   }
 }
 
+/* ── Verified facts, as a person reads them ───────────────────────────────
+   Same packet, unchanged and still read-only — only its presentation moved
+   from `key: <JSON>` lines to labelled groups. The raw object is one
+   disclosure away for diagnostics. */
+function factsPanel() {
+  const summary = factSummary(current.candidate);
+  const groups = summary.groups.map((group) => `
+    <dl>${group.items.map((item) => `<div><dt>${esc(item.label)}</dt><dd>${esc(item.value)}</dd></div>`).join("")}</dl>`).join("");
+  const planets = summary.planets.length ? `
+    <h4 class="x-help" style="margin:var(--space-xs) 0 2px">Planet positions</h4>
+    <ul>${summary.planets.map((p) => `<li>${esc(p.name)} · ${esc(p.value)}</li>`).join("")}</ul>` : "";
+  const events = summary.events.length ? `
+    <h4 class="x-help" style="margin:var(--space-xs) 0 2px">Selected movements</h4>
+    <ul class="f-events">${summary.events.map((e) =>
+      `<li><strong>${esc(e.when)}</strong> · ${esc(e.title)}${e.sign ? ` · Moon in ${esc(e.sign)}` : ""}</li>`).join("")}</ul>` : "";
+  return `<section class="x-facts" aria-label="Verified engine facts — read only">
+    <h3>Verified facts <span class="x-pill">Engine · read-only</span></h3>
+    ${groups}${planets}${events}
+    <p class="x-meta">${esc(summary.sourceNote)}</p>
+    <details class="x-raw">
+      <summary>View raw engine data</summary>
+      <pre>${esc(JSON.stringify(current.candidate.facts ?? {}, null, 2))}</pre>
+    </details>
+  </section>`;
+}
+
+/* ── Template: the cadence default, and one way to change it ─────────────── */
+function templateBar() {
+  const chosen = TEMPLATES[current.design.template];
+  const cadence = cadenceTemplate(current.post.format, current.candidate.eventType);
+  const isDefault = cadence.id === current.design.template;
+  return `<section class="x-facts" aria-label="Template">
+    <div class="x-tpl-now">
+      <span class="t-thumb" data-thumb-now></span>
+      <div>
+        <strong>${esc(chosen?.name || current.design.template)}</strong>
+        <div class="x-help" style="margin:0">${isDefault ? "Cadence default" : `Changed from the ${esc(cadence.name)} default`} · ${esc(current.design.aspect)}</div>
+      </div>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-change-tpl" style="margin-left:auto">Change template</button>
+    </div>
+  </section>`;
+}
+
 /* ── Design controls: constrained, designed choices — no free x/y anywhere. */
 function designControls() {
   const d = current.design;
-  const isReading = Boolean(current.post.reading);
-  const tplChoices = isReading ? TEMPLATE_FAMILY_IDS.map((id) => TEMPLATES[id]) : Object.values(TEMPLATES);
-  return `<div class="x-controls">
-    <div class="x-row">
-      <label>Aspect
-        <select class="o-select" id="d-aspect">
-          ${Object.values(ASPECTS).map((a) => `<option value="${a.id}" ${a.id === d.aspect ? "selected" : ""}>${a.id} (${a.width}×${a.height})</option>`).join("")}
-        </select></label>
-      <label>Density
-        <select class="o-select" id="d-density">
-          ${Object.values(DENSITIES).map((x) => `<option value="${x.id}" ${x.id === d.density ? "selected" : ""}>${x.name}</option>`).join("")}
-        </select></label>
-      <label>Variant
-        <select class="o-select" id="d-variant">
-          ${Array.from({ length: TEMPLATES[d.template]?.variants || 1 }, (_, i) =>
-            `<option value="${i}" ${i === d.variant ? "selected" : ""}>${i === 0 ? "Axis (left)" : "Centered"}</option>`).join("")}
-        </select></label>
-      <label>Logo
-        <select class="o-select" id="d-logo">
-          ${Object.entries(LOGO_POSITIONS).map(([id, name]) => `<option value="${id}" ${id === d.logoPosition ? "selected" : ""}>${name}</option>`).join("")}
-        </select></label>
-      <label>Headline
-        <select class="o-select" id="d-align">
-          ${Object.entries(HEADLINE_ALIGNMENTS).map(([id, name]) => `<option value="${id}" ${id === d.headlineAlignment ? "selected" : ""}>${name}</option>`).join("")}
-        </select></label>
-    </div>
+  return `<div class="x-split">
+    <div class="x-field"><label for="d-aspect">Aspect</label>
+      <select class="o-select" id="d-aspect">
+        ${Object.values(ASPECTS).map((a) => `<option value="${a.id}" ${a.id === d.aspect ? "selected" : ""}>${a.id} (${a.width}×${a.height})</option>`).join("")}
+      </select></div>
+    <div class="x-field"><label for="d-density">Density</label>
+      <select class="o-select" id="d-density">
+        ${Object.values(DENSITIES).map((x) => `<option value="${x.id}" ${x.id === d.density ? "selected" : ""}>${esc(x.name)}</option>`).join("")}
+      </select></div>
+    <div class="x-field"><label for="d-variant">Variant</label>
+      <select class="o-select" id="d-variant">
+        ${Array.from({ length: TEMPLATES[d.template]?.variants || 1 }, (_, i) =>
+          `<option value="${i}" ${i === d.variant ? "selected" : ""}>${i === 0 ? "Axis (left)" : "Centered"}</option>`).join("")}
+      </select></div>
+    <div class="x-field"><label for="d-logo">Logo position</label>
+      <select class="o-select" id="d-logo">
+        ${Object.entries(LOGO_POSITIONS).map(([id, name]) => `<option value="${id}" ${id === d.logoPosition ? "selected" : ""}>${esc(name)}</option>`).join("")}
+      </select></div>
+    <div class="x-field"><label for="d-align">Headline alignment</label>
+      <select class="o-select" id="d-align">
+        ${Object.entries(HEADLINE_ALIGNMENTS).map(([id, name]) => `<option value="${id}" ${id === d.headlineAlignment ? "selected" : ""}>${esc(name)}</option>`).join("")}
+      </select></div>
+  </div>
+  <fieldset style="border:0;padding:0;margin:0">
+    <legend class="x-help">Celestial visuals</legend>
     <div class="x-row">
       <label><input type="checkbox" id="d-v-moon" ${d.visuals.moon ? "checked" : ""}/> Moon</label>
       <label><input type="checkbox" id="d-v-strip" ${d.visuals.strip ? "checked" : ""}/> Sky strip</label>
       <label><input type="checkbox" id="d-v-diagram" ${d.visuals.diagram ? "checked" : ""}/> Diagram</label>
-      <span style="opacity:.4">|</span>
+    </div>
+  </fieldset>
+  <fieldset style="border:0;padding:0;margin:0">
+    <legend class="x-help">Metadata shown on the slide</legend>
+    <div class="x-row">
       <label><input type="checkbox" id="d-m-date" ${d.metadata.date ? "checked" : ""}/> Date</label>
       <label><input type="checkbox" id="d-m-time" ${d.metadata.time ? "checked" : ""}/> Time</label>
       <label><input type="checkbox" id="d-m-sign" ${d.metadata.sign ? "checked" : ""}/> Sign</label>
       <label><input type="checkbox" id="d-m-illum" ${d.metadata.illumination ? "checked" : ""}/> Illumination</label>
       <label><input type="checkbox" id="d-m-calc" ${d.metadata.calculated ? "checked" : ""}/> Calculated label</label>
     </div>
-    <div class="x-tpl-cards" id="d-templates">
-      ${tplChoices.map((t) => `
-        <button type="button" class="x-tpl-card ${t.id === d.template ? "is-active" : ""}" data-tpl="${t.id}">
-          <span data-thumb="${t.id}"></span>
-          <div class="t-name">${esc(t.name)}</div>
-          <div class="t-use">${esc(t.intendedUse)} · ${esc(t.density)}</div>
-        </button>`).join("")}
-    </div>
-    ${isReading ? `<button type="button" class="o-btn o-btn--primary o-btn--sm" id="d-compare">Compare all five in Template Lab</button>` : ""}
-  </div>`;
+  </fieldset>`;
 }
 
 function readDesign() {
@@ -459,168 +919,267 @@ function budgetFor(role) {
     bodyCapacity(role, { aspect: current.design?.aspect }));
 }
 
+const isInteractive = () => Boolean(FORMATS[current?.post?.format]?.interactive);
+
+/* ── The Write stage ─────────────────────────────────────────────────────── */
+
+function group(id, label, hint, inner, open = true) {
+  return `<details class="x-group" ${open ? "open" : ""} data-group="${id}">
+    <summary>${esc(label)}<span class="g-hint">${esc(hint)}</span></summary>
+    <div>${inner}</div>
+  </details>`;
+}
+
 function renderEditor() {
   const { candidate, post } = current;
   const fmt = formats[post.format] || FORMATS[post.format];
   const isReading = Boolean(post.reading);
-  $("#x-editor-title").textContent = `${fmt.name} — ${candidate.title}`;
-  const facts = Object.entries(candidate.facts || {})
-    .map(([k, v]) => `<div><strong>${esc(k)}</strong>: ${esc(JSON.stringify(v))}</div>`).join("");
+  const groups = fieldGroupsFor(post.format);
+  const hint = (id) => groups.find((g) => g.id === id)?.hint || "";
+  const label = (id) => groups.find((g) => g.id === id)?.label || id;
+  $("#x-editor-title").textContent = candidate.title;
+  $("#x-editor-format").textContent = fmt.name;
   const expandable = EXPANDABLE_ROLE[post.format];
 
-  $("#x-editor").innerHTML = `
-    <div class="x-facts" aria-label="Verified engine facts — read only">
-      <div><strong>VERIFIED FACTS (engine · read-only)</strong> — ${esc(candidate.eventKey)}</div>${facts}
+  const hookInner = isReading ? `
+    <div class="x-field">
+      <label for="e-theme">Theme</label>
+      <input type="text" id="e-theme" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before you mark this ready" />
+      <p class="x-help">The Intro/Cover hook. Editorial copy — not engine output.</p>
     </div>
-    ${designControls()}
-    ${isReading ? `<div class="x-section">
-      <label>Theme <input type="text" id="e-theme" class="o-input" value="${esc(post.reading.theme)}" placeholder="Required before approval" /></label>
-      <div class="x-helper">The Intro/Cover hook. Editorial copy—not engine output.</div>
-      <label>Reading in one sentence <textarea id="e-one" class="o-input" placeholder="Required before approval">${esc(post.reading.oneSentence)}</textarea></label>
-      <div class="x-helper">The independent second hook and thesis. Fits about
-        ${budgetFor("one_sentence")} characters at this size.</div>
-      <label>Cover hook line <input type="text" id="e-hook" class="o-input" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." /></label>
-      <div class="x-helper">Optional, and drawn under the theme on slide 1 — the line that earns the swipe.
-        The cover slide carries it; without a field it could never be written. Keep it to about
-        ${budgetFor("cover")} characters — past that it stops reading as a hook.</div>
+    <div class="x-field">
+      <label for="e-one">Reading in one sentence</label>
+      <textarea id="e-one" class="o-input" data-slide-role="one_sentence" placeholder="Required before you mark this ready">${esc(post.reading.oneSentence)}</textarea>
+      <p class="x-help">The second hook. About ${budgetFor("one_sentence")} characters fit.</p>
+    </div>
+    <div class="x-field">
+      <label for="e-hook">Cover hook line</label>
+      <input type="text" id="e-hook" class="o-input" data-slide-role="cover" value="${esc(post.slides.find((s) => s.role === "cover")?.body || "")}" placeholder="One line that makes slide 2 worth reaching." />
+      <p class="x-help">Optional, drawn under the theme on slide 1. Keep it near ${budgetFor("cover")} characters.</p>
       ${(suggestionFor("cover")?.suggestions || []).length ? `<div class="x-chips">${suggestionFor("cover").suggestions.map((h) =>
         `<button type="button" class="x-chip" data-hook="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
-    </div>` : `<label>Headline <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" /></label>`}
-    ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
-      `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
-    <div id="e-slides">${post.slides.map((s, i) => isReading && ["cover", "one_sentence"].includes(s.role) ? "" : slideSection(s, i)).join("")}</div>
-    ${expandable ? `<div class="x-row">
-      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-add-slide">Add ${esc(expandable)} slide</button>
-      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-remove-slide">Remove last ${esc(expandable)} slide</button>
-    </div>` : ""}
-    <label>Caption <textarea id="e-caption" class="o-input">${esc(post.caption)}</textarea></label>
-    ${current.suggestions?.caption?.helper ? `<div class="x-helper">${esc(current.suggestions.caption.helper)}</div>` : ""}
+    </div>` : `
+    <div class="x-field">
+      <label for="e-headline">Headline</label>
+      <input type="text" id="e-headline" class="o-input" value="${esc(post.headline)}" />
+      <p class="x-help">Up to ${fmt.limits.headline} characters.</p>
+      ${current.suggestions?.headline?.length > 1 ? `<div class="x-chips">${current.suggestions.headline.map((h) =>
+        `<button type="button" class="x-chip" data-headline="${esc(h)}">${esc(h)}</button>`).join("")}</div>` : ""}
+    </div>`;
+
+  const slidesInner = isInteractive()
+    ? `<p class="x-help">These slides are drawn from your question above — edit the question, and they follow.</p>
+       <ol class="x-help" style="padding-left:1.2em">${post.slides.map((s) => `<li>${esc(s.role)}</li>`).join("")}</ol>`
+    : `<div id="e-slides">${post.slides.map((s, i) => isReading && ["cover", "one_sentence"].includes(s.role) ? "" : slideSection(s, i)).join("")}</div>
+       ${expandable ? `<div class="x-row">
+         <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-add-slide">Add ${esc(expandable)} slide</button>
+         <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-remove-slide">Remove last ${esc(expandable)} slide</button>
+       </div>` : ""}`;
+
+  $("#x-editor").innerHTML = `
+    ${factsPanel()}
+    ${templateBar()}
+    ${group("hook", label("hook"), hint("hook"), hookInner)}
+    ${isInteractive() ? group("interaction", label("interaction"), hint("interaction"), interactionFields()) : ""}
+    ${group("content", label("content"), hint("content"), slidesInner)}
+    ${group("caption", label("caption"), hint("caption"), `
+      <div class="x-field">
+        <label for="e-caption">Caption</label>
+        <textarea id="e-caption" class="o-input">${esc(post.caption)}</textarea>
+        ${current.suggestions?.caption?.helper ? `<p class="x-help">${esc(current.suggestions.caption.helper)}</p>` : ""}
+      </div>
+      <div class="x-split">
+        <div class="x-field">
+          <label for="e-cta">Call to action</label>
+          <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" />
+        </div>
+        <div class="x-field">
+          <label for="e-cta-pick">Suggested CTAs</label>
+          <select class="o-select" id="e-cta-pick">
+            <option value="">Choose one…</option>
+            ${(current.suggestions?.cta ? [...current.suggestions.cta.product.map((c) => ["product", c]),
+              ...current.suggestions.cta.editorial.map((c) => ["editorial", c])] : [])
+              .map(([k, c]) => `<option value="${esc(c)}">${esc(k)}: ${esc(c)}</option>`).join("")}
+            <option value="">None — end on the idea</option>
+          </select>
+        </div>
+      </div>`)}
+    ${group("accessibility", label("accessibility"), hint("accessibility"), `
+      <div class="x-field">
+        <label for="e-alt">Alt text</label>
+        <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea>
+        <p class="x-help">Describe what the graphic shows, not what it means.</p>
+      </div>`)}
+    ${group("notes", label("notes"), hint("notes"), `
+      <div class="x-field">
+        <label for="e-notes">Editor notes</label>
+        <textarea id="e-notes" class="o-input">${esc(current.notes || "")}</textarea>
+      </div>
+      ${aiAvailable && !isReading ? `<div class="x-split">
+        <div class="x-field"><label for="e-instruction">Steering for regeneration</label>
+          <input type="text" id="e-instruction" class="o-input" /></div>
+        <div class="x-field" style="align-self:end">
+          <button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button></div>
+      </div>` : ""}
+      <details class="x-raw" id="e-handoff">
+        <summary>Writing assistance — draft elsewhere, import back</summary>
+        <p class="x-help">The brief carries the verified facts, the empty slots, the limits, and Orbit's
+          editorial rules — and nothing about you or any account. What comes back is checked against the
+          same facts before it touches the draft.</p>
+        <div class="x-row">
+          <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-brief">Copy brief</button>
+          <button class="o-btn o-btn--secondary o-btn--sm" id="e-show-brief">Show brief</button>
+        </div>
+        <pre class="x-brief" id="e-brief" hidden></pre>
+        <div class="x-field">
+          <label for="e-import">Paste the returned draft</label>
+          <textarea id="e-import" class="o-input" placeholder="Paste the JSON that came back."></textarea>
+        </div>
+        <div class="x-row">
+          <button class="o-btn o-btn--primary o-btn--sm" id="e-import-go">Import into draft</button>
+          <span class="x-status" id="e-import-status" role="status" aria-live="polite"></span>
+        </div>
+      </details>`, false)}
+    ${group("design", "Design", "Aspect, density, celestial toggles", designControls(), false)}
     <div class="x-row">
-      <label style="flex:1">CTA <input type="text" id="e-cta" class="o-input" value="${esc(post.cta)}" /></label>
-      <select class="o-select" id="e-cta-pick" style="max-width:240px">
-        <option value="">CTA options…</option>
-        ${(current.suggestions?.cta ? [...current.suggestions.cta.product.map((c) => ["product", c]),
-          ...current.suggestions.cta.editorial.map((c) => ["editorial", c])] : [])
-          .map(([k, c]) => `<option value="${esc(c)}">${esc(k)}: ${esc(c)}</option>`).join("")}
-        <option value="">— none (end on the idea) —</option>
-      </select>
-    </div>
-    <label>Alt text <textarea id="e-alt" class="o-input">${esc(post.altText)}</textarea></label>
-    <div class="x-helper">Describe what the graphic actually shows — not the symbolism.</div>
-    <label>Editor notes <textarea id="e-notes" class="o-input">${esc(current.notes || "")}</textarea></label>
-    <div class="x-row">
-      <span class="x-meter" id="e-meter"></span>
+      <span class="x-pill" id="e-meter"></span>
       <span class="x-warn" id="e-warnings"></span>
     </div>
-    <div class="x-advice" id="e-advice"></div>
-    <details class="x-handoff" id="e-handoff">
-      <summary>Hand off to a writer, then import the text</summary>
-      <p class="x-helper">Copy the brief into any writer or assistant. It carries the verified
-        facts, the slots that need words, the limits, and Orbit's editorial rules — and nothing
-        about you or any account. Paste what comes back below; it is checked against the same
-        facts before it touches the draft.</p>
-      <div class="x-row">
-        <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-brief">Copy handoff brief</button>
-        <button class="o-btn o-btn--secondary o-btn--sm" id="e-show-brief">Show brief</button>
-      </div>
-      <pre class="x-brief" id="e-brief" hidden></pre>
-      <label>Paste the returned draft
-        <textarea id="e-import" class="o-input" placeholder="Paste the JSON the writer returned."></textarea>
-      </label>
-      <div class="x-row">
-        <button class="o-btn o-btn--primary o-btn--sm" id="e-import-go">Import into draft</button>
-        <span class="x-status" id="e-import-status"></span>
-      </div>
-    </details>
-    <div class="x-row">
-      ${aiAvailable && !isReading ? `<button class="o-btn o-btn--secondary o-btn--sm" id="e-regen">Regenerate (AI)</button>
-      <input type="text" id="e-instruction" class="o-input" placeholder="Optional steering for regeneration" style="max-width:280px" />` : ""}
-      <button class="o-btn o-btn--primary o-btn--sm" id="e-save">Save draft</button>
-      <span style="opacity:.4">|</span>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="full">Full size</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="feed">Feed size</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" data-pv="sim">Feed preview</button>
-    </div>
-    <div class="x-row">
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-caption">Copy caption</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-copy-alt">Copy alt text</button>
-      <button class="o-btn o-btn--secondary o-btn--sm" id="e-export">Export carousel (PNG)</button>
-      <button class="o-btn o-btn--primary o-btn--sm" id="e-approve" disabled>Approve</button>
-      <select id="e-reject-reason" class="o-select" style="max-width:200px">
-        <option value="">Reject: reason…</option>
-        <option>inaccurate interpretation</option><option>too predictive</option>
-        <option>too sensational</option><option>too much jargon</option><option>repetitive</option>
-        <option>poor visual fit</option><option>weak product connection</option><option>other</option>
-      </select>
-      <button class="o-btn o-btn--sm" id="e-reject" disabled>Reject</button>
-    </div>
-    <div id="e-template-lab"></div>
-    <div id="e-preview-box"></div>`;
+    <div class="x-advice" id="e-advice"></div>`;
 
-  for (const chip of document.querySelectorAll("[data-hook]")) {
-    chip.onclick = () => { $("#e-hook").value = chip.getAttribute("data-hook"); refresh(); };
+  wireEditor();
+  renderStages();
+  refresh();
+}
+
+function interactionFields() {
+  const ix = current.post.interaction || { format: interactionFormatId, choices: [] };
+  const rule = choiceRule(ix.format);
+  const kind = INTERACTION_FORMATS[ix.format];
+  const slots = rule.mode === "none" ? 0
+    : Math.min(rule.max, Math.max(rule.min, (ix.choices || []).length, choiceSlots));
+  choiceSlots = slots;
+  return `
+    <div class="x-split">
+      <div class="x-field">
+        <label for="e-ix-format">Interaction format</label>
+        <select class="o-select" id="e-ix-format">
+          ${INTERACTION_FORMAT_IDS.map((id) => `<option value="${id}" ${id === ix.format ? "selected" : ""}>${esc(INTERACTION_FORMATS[id].name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="x-field">
+        <label for="e-ix-placement">Placement</label>
+        <select class="o-select" id="e-ix-placement">
+          ${Object.entries(PLACEMENTS).map(([id, name]) => `<option value="${id}" ${id === ix.placement ? "selected" : ""}>${esc(name)}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <div class="x-field">
+      <label for="e-ix-question">Main question</label>
+      <textarea id="e-ix-question" class="o-input" data-slide-role="question">${esc(ix.question || "")}</textarea>
+      <p class="x-help">${esc(kind?.questionHelper || "")} Non-predictive and non-diagnostic.</p>
+    </div>
+    <div class="x-field">
+      <label for="e-ix-context">Context or setup <span class="x-meta">(optional)</span></label>
+      <input type="text" id="e-ix-context" class="o-input" data-slide-role="hero" value="${esc(ix.context || "")}" />
+      <p class="x-help">Drawn on slide 1 under the headline. Near ${budgetFor("cover")} characters.</p>
+    </div>
+    ${slots ? `<div class="x-field" data-choice-block>
+      <label id="e-ix-choices-label">Answer choices ${rule.mode === "required" ? `(${rule.min === rule.max ? rule.min : `${rule.min}–${rule.max}`} required)` : "(optional)"}</label>
+      <div class="x-choices" role="group" aria-labelledby="e-ix-choices-label">
+        ${Array.from({ length: slots }, (_, i) => `
+          <div class="x-choice">
+            <span aria-hidden="true">${String.fromCharCode(65 + i)}</span>
+            <input type="text" class="o-input" data-choice="${i}"
+              aria-label="Answer choice ${String.fromCharCode(65 + i)}"
+              value="${esc((ix.choices || [])[i] || "")}" />
+          </div>`).join("")}
+      </div>
+      ${slots < rule.max ? `<button type="button" class="o-btn o-btn--secondary o-btn--sm" id="e-ix-add" style="margin-top:6px">Add a choice</button>` : ""}
+    </div>` : ""}
+    <div class="x-field">
+      <label for="e-ix-engagement">Engagement prompt</label>
+      <input type="text" id="e-ix-engagement" class="o-input" data-slide-role="engagement" value="${esc(ix.engagementPrompt || "")}" />
+      <p class="x-help">${esc(kind?.engagementHelper || "")}</p>
+    </div>`;
+}
+
+function wireEditor() {
+  for (const chip of $$("[data-hook]")) {
+    chip.onclick = () => { $("#e-hook").value = chip.getAttribute("data-hook"); touch(); };
   }
-  for (const chip of document.querySelectorAll("[data-headline]")) {
-    chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); refresh(); };
+  for (const chip of $$("[data-headline]")) {
+    chip.onclick = () => { $("#e-headline").value = chip.getAttribute("data-headline"); touch(); };
   }
-  for (const chip of document.querySelectorAll("[data-insert]")) {
+  for (const chip of $$("[data-insert]")) {
     chip.onclick = () => {
       const field = document.querySelector(`[data-sb="${chip.getAttribute("data-insert")}"]`);
-      field.value = chip.getAttribute("data-text"); refresh();
+      field.value = chip.getAttribute("data-text"); touch();
     };
   }
-  for (const el of document.querySelectorAll("#d-aspect, #d-density, #d-variant, #d-logo, #d-align, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
-    el.onchange = () => { current.design = readDesign(); refresh(); };
+  for (const el of $$("#d-aspect, #d-density, #d-variant, #d-logo, #d-align, #d-v-moon, #d-v-strip, #d-v-diagram, #d-m-date, #d-m-time, #d-m-sign, #d-m-illum, #d-m-calc")) {
+    el.onchange = () => { current.design = readDesign(); touch(); renderTemplateThumbNow(); };
   }
-  const compare = $("#d-compare");
-  if (compare) compare.onclick = renderTemplateLab;
-  for (const card of document.querySelectorAll("[data-tpl]")) {
-    card.onclick = () => {
-      current.design = normalizeDesign({ ...current.design, template: card.getAttribute("data-tpl"), variant: 0 },
-        candidate.eventType, post.format);
-      renderEditor(); // variant list depends on template
-    };
-  }
+  const changeTpl = $("#e-change-tpl");
+  if (changeTpl) changeTpl.onclick = () => openTemplateLab(changeTpl);
   const addBtn = $("#e-add-slide"), rmBtn = $("#e-remove-slide");
   if (addBtn) addBtn.onclick = () => resizeSlides(1);
   if (rmBtn) rmBtn.onclick = () => resizeSlides(-1);
-  for (const btn of document.querySelectorAll("[data-pv]")) {
-    btn.onclick = () => { previewMode = btn.getAttribute("data-pv"); preview(); };
-  }
   const regen = $("#e-regen");
-  if (regen) regen.onclick = () => generate(candidate, post.format, $("#e-instruction").value);
-  $("#e-cta-pick").onchange = () => { $("#e-cta").value = $("#e-cta-pick").value; refresh(); };
-  $("#e-save").onclick = saveDraft;
-  $("#e-copy-caption").onclick = () => copyText(readCopy().caption, "Caption copied");
-  $("#e-copy-alt").onclick = () => copyText(readCopy().altText, "Alt text copied");
-  $("#e-export").onclick = exportSlides;
-  $("#e-copy-brief").onclick = () => copyText(handoffBrief(), "Handoff brief copied");
+  if (regen) regen.onclick = () => generate(current.candidate, current.post.format, $("#e-instruction").value);
+  const ixFormat = $("#e-ix-format");
+  if (ixFormat) ixFormat.onchange = () => {
+    interactionFormatId = ixFormat.value;
+    choiceSlots = 0;   // the new format decides how many answers it takes
+    current.post = { ...current.post, interaction: { ...readInteraction(), format: interactionFormatId } };
+    renderEditor();   // the choice fields depend on the interaction format
+  };
+  const ixAdd = $("#e-ix-add");
+  if (ixAdd) ixAdd.onclick = () => {
+    const ix = readInteraction();
+    choiceSlots = Math.min(choiceRule(ix.format).max, choiceSlots + 1);
+    current.post = { ...current.post, interaction: ix };
+    renderEditor();
+  };
+  const ctaPick = $("#e-cta-pick");
+  if (ctaPick) ctaPick.onchange = () => { $("#e-cta").value = ctaPick.value; touch(); };
+  $("#e-copy-brief").onclick = () => copyText(handoffBrief(), "Brief copied");
   $("#e-show-brief").onclick = () => {
     const box = $("#e-brief");
     box.hidden = !box.hidden;
     if (!box.hidden) box.textContent = handoffBrief();
   };
   $("#e-import-go").onclick = () => applyHandoff($("#e-import").value);
-  $("#e-approve").onclick = () => decide("approved");
-  $("#e-reject").onclick = () => decide("rejected");
-  $("#e-notes").oninput = () => { current.notes = $("#e-notes").value; };
-  $("#x-editor").oninput = debounce(refresh, 350); // assignment, not addEventListener — re-renders must not stack listeners
-  renderTemplateThumbs();
-  refresh();
+  $("#e-notes").oninput = () => { current.notes = $("#e-notes").value; touch(); };
+  // Assignment, not addEventListener — a re-render must not stack listeners.
+  $("#x-editor").oninput = debounce(touch, 300);
+  // Keep the selected field and its slide connected: focusing a field scrolls
+  // the matching slide into view and outlines it.
+  $("#x-editor").addEventListener("focusin", (event) => {
+    const holder = event.target.closest("[data-slide-role], [data-slide-index]");
+    if (!holder) return;
+    const role = holder.getAttribute("data-slide-role");
+    const index = holder.getAttribute("data-slide-index");
+    const slides = current.post.slides || [];
+    const next = index !== null ? Number(index) : slides.findIndex((s) => s.role === role);
+    if (next >= 0 && next !== focusedSlide) { focusedSlide = next; highlightSlide(); }
+  });
+  renderTemplateThumbNow();
 }
 
 function slideSection(s, i) {
   const sugg = suggestionFor(s.role);
   const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
   const empty = required && !String(s.body || "").trim();
-  return `<div class="x-section ${empty ? "x-section--empty" : ""}" data-slide-section="${i}">
-    <div class="x-row"><strong style="font-size:var(--type-caption)">Slide ${i + 1}${s.role ? ` · ${esc(s.role)}` : ""}${required ? "" : " · optional"}</strong></div>
-    ${sugg?.helper ? `<div class="x-helper">${esc(sugg.helper)}</div>` : ""}
-    <div class="x-helper">Fits about ${budgetFor(s.role)} characters at this size.</div>
-    <label>Heading <input type="text" class="o-input" data-sh="${i}" value="${esc(s.heading)}" /></label>
-    <label>Body <textarea class="o-input" data-sb="${i}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea></label>
+  return `<div class="x-field ${empty ? "x-field--empty" : ""}" data-slide-section="${i}" data-slide-index="${i}">
+    <strong style="font-size:var(--type-fine)">Slide ${i + 1}${s.role ? ` · ${esc(s.role)}` : ""}${required ? "" : " · optional"}</strong>
+    ${sugg?.helper ? `<p class="x-help">${esc(sugg.helper)}</p>` : ""}
+    <label for="sh-${i}">Heading</label>
+    <input type="text" id="sh-${i}" class="o-input" data-sh="${i}" value="${esc(s.heading)}" />
+    <label for="sb-${i}">Body <span class="x-meta">· about ${budgetFor(s.role)} characters</span></label>
+    <textarea id="sb-${i}" class="o-input" data-sb="${i}" placeholder="${esc(sugg?.placeholder || "")}">${esc(s.body)}</textarea>
     ${sugg?.suggestions?.length ? `<div class="x-chips">
-      ${sugg.styleExamples ? `<span class="x-helper" style="width:100%">Style examples — adapt to this event, don't paste:</span>` : ""}
+      ${sugg.styleExamples ? `<span class="x-help" style="width:100%">Style examples — adapt, don't paste:</span>` : ""}
       ${sugg.suggestions.map((t) => `<button type="button" class="x-chip" data-insert="${i}" data-text="${esc(t)}">${esc(t)}</button>`).join("")}
     </div>` : ""}
   </div>`;
@@ -652,6 +1211,12 @@ function slideBodyField(slide, i) {
     if (slide.role === "cover") return $("#e-hook");
     if (slide.role === "one_sentence") return $("#e-one");
   }
+  if (isInteractive()) {
+    if (slide.role === "hero") return $("#e-ix-context");
+    if (slide.role === "question") return $("#e-ix-question");
+    if (slide.role === "engagement") return $("#e-ix-engagement");
+    return null; // the choices slide is drawn from the choice inputs
+  }
   return document.querySelector(`[data-sb="${i}"]`);
 }
 
@@ -659,10 +1224,30 @@ function headlineField() {
   return current.post?.reading ? $("#e-theme") : $("#e-headline");
 }
 
+function readInteraction() {
+  const choices = $$("[data-choice]").map((input) => input.value.trim()).filter(Boolean);
+  return {
+    format: $("#e-ix-format")?.value || current.post.interaction?.format || interactionFormatId,
+    question: $("#e-ix-question")?.value || "",
+    context: $("#e-ix-context")?.value || "",
+    choices,
+    engagementPrompt: $("#e-ix-engagement")?.value || "",
+    placement: $("#e-ix-placement")?.value || current.post.interaction?.placement || "feed_carousel",
+  };
+}
+
 function readCopy() {
   const { post } = current;
   const reading = post.reading ? { ...post.reading,
     theme: $("#e-theme")?.value || "", oneSentence: $("#e-one")?.value || "" } : null;
+  if (isInteractive()) {
+    const interaction = readInteraction();
+    const headline = $("#e-headline")?.value || post.headline;
+    return { format: post.format, headline, subhead: post.subhead,
+      interaction, slides: interactiveSlides(interaction, { headline }),
+      caption: $("#e-caption").value, cta: $("#e-cta").value,
+      altText: $("#e-alt").value, editorialNotes: post.editorialNotes || [], design: current.design };
+  }
   return { format: post.format,
     headline: reading ? reading.theme : $("#e-headline").value, subhead: post.subhead,
     slides: post.slides.map((s, i) => ({
@@ -675,56 +1260,87 @@ function readCopy() {
     ...(reading ? { reading } : {}), design: current.design };
 }
 
-/** Client-side completeness mirror — the server re-checks on approval. */
-function completeness(copy) {
-  const missing = [];
-  if (!copy.reading && !copy.headline.trim()) missing.push("headline");
-  if (copy.reading && !copy.reading.theme.trim()) missing.push("theme");
-  if (copy.reading && !copy.reading.oneSentence.trim()) missing.push("reading in one sentence");
-  copy.slides.forEach((s, i) => {
-    if (copy.reading && ["cover", "one_sentence"].includes(s.role)) return;
-    const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
-    if (required && !s.body.trim()) missing.push(`slide ${i + 1}${s.role ? ` (${s.role})` : ""}`);
-  });
-  if (!copy.caption.trim()) missing.push("caption");
-  if (!copy.altText.trim()) missing.push("alt text");
-  const requiredSlides = copy.slides.filter((s) => !(copy.reading && ["cover", "one_sentence"].includes(s.role))
-    && (s.role ? REQUIRED_ROLES[s.role] !== false : true)).length;
-  const requiredTotal = 2 + (copy.reading ? 2 : 0) + requiredSlides;
-  return { missing, complete: !missing.length, done: requiredTotal - missing.length, total: requiredTotal };
-}
-
 function renderContext(copy) {
   const facts = current.candidate.facts || {};
   return { eventType: current.candidate.eventType, title: current.candidate.title,
     facts, sky: facts.planets || lastSky, design: current.design };
 }
 
+/** Any edit marks the draft dirty. Saving stays EXPLICIT — nothing here
+ *  writes to the server, so a stray keystroke can never overwrite saved work
+ *  on its own. */
+function touch() {
+  saveState = { ...saveState, dirty: true };
+  refresh();
+}
+
 function refresh() {
   const copy = readCopy();
-  const c = completeness(copy);
-  $("#e-meter").textContent = `${c.done} of ${c.total} required sections complete`;
+  current.post = { ...current.post, slides: copy.slides,
+    ...(copy.interaction ? { interaction: copy.interaction } : {}) };
+  const c = draftCompleteness(copy);
+  const meter = $("#e-meter");
+  if (meter) {
+    meter.textContent = `${c.completeCount} of ${c.requiredTotal} required sections complete`;
+    meter.className = `x-pill${c.complete ? " x-pill--ready" : ""}`;
+  }
   const rendered = renderPost(copy, renderContext(copy));
-  $("#e-warnings").textContent = rendered.warnings.join("  ·  ");
+  if ($("#e-warnings")) $("#e-warnings").textContent = rendered.warnings.join("  ·  ");
+  $("#x-preview-warnings").textContent = rendered.warnings.join("  ·  ");
   // Advisories update as you type. They used to appear only after a save,
   // which is the moment they are least useful — the point of a retention
   // warning is to change the draft, not to grade it afterwards.
-  showAdvisories(adviseCopy(copy));
-  $("#e-approve").disabled = !(current.savedId && c.complete);
-  $("#e-reject").disabled = !current.savedId;
-  preview(rendered);
+  showAdvisories([...adviseCopy(copy), ...auditInteraction(copy.interaction)]);
+  $("#x-ready").disabled = !(current.savedId && c.complete && current.status === "draft");
+  $("#x-reject").disabled = !current.savedId;
+  $("#x-finish-help").textContent = current.savedId
+    ? (c.complete ? "Everything required is written." : `Still to write: ${c.missing.join(", ")}.`)
+    : "Save the draft first — the finish actions work on a saved item.";
+  livePreview(rendered);
+  if (stage === "preview") preview(rendered);
+  renderActionBar();
   for (const [i, s] of copy.slides.entries()) {
     const box = document.querySelector(`[data-slide-section="${i}"]`);
     if (!box) continue;
     const required = s.role ? REQUIRED_ROLES[s.role] !== false : true;
-    box.classList.toggle("x-section--empty", required && !s.body.trim());
+    box.classList.toggle("x-field--empty", required && !String(s.body || "").trim());
   }
 }
 
+function renderActionBar() {
+  $("#x-actionbar").hidden = !(view === "workspace" && current);
+  const pill = $("#x-save-state");
+  pill.textContent = saveStateLabel(saveState);
+  pill.className = `x-pill a-state x-pill--${saveStateTone(saveState)}`;
+}
+
+function livePreview(rendered) {
+  const box = $("#x-live-preview");
+  if (!box) return;
+  box.innerHTML = `<div class="x-slides x-slides--mini">`
+    + rendered.slides.map((s, i) => `<div data-live-slide="${i}">${s.svg}</div>`).join("") + `</div>`;
+  highlightSlide();
+}
+
+function highlightSlide() {
+  for (const el of $$("[data-live-slide]")) {
+    const on = Number(el.getAttribute("data-live-slide")) === focusedSlide;
+    el.classList.toggle("is-focused", on);
+    if (on) el.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+}
+
+/* ── Preview stage ───────────────────────────────────────────────────────── */
+
+$("#x-preview-mode").innerHTML = PREVIEW_MODES
+  .map((m) => `<option value="${m.id}" ${m.id === previewMode ? "selected" : ""}>${esc(m.label)}</option>`).join("");
+$("#x-preview-mode").onchange = () => { previewMode = $("#x-preview-mode").value; preview(); };
+
 function preview(rendered = null) {
+  if (!current) return;
   const copy = readCopy();
   const r = rendered || renderPost(copy, renderContext(copy));
-  const box = $("#e-preview-box");
+  const box = $("#x-preview-box");
   if (previewMode === "sim") {
     const dots = copy.slides.map((_, i) => `<span class="${i === 0 ? "on" : ""}">●</span>`).join(" ");
     box.innerHTML = `<div class="x-feedsim">
@@ -733,23 +1349,24 @@ function preview(rendered = null) {
       <div class="f-dots">${dots}</div>
       <div class="f-caption">${esc(copy.caption.length > 140 ? copy.caption.slice(0, 140) + "… more" : copy.caption)}</div>
     </div>
-    <p class="x-helper">Simulated feed at phone size — judge legibility here, not at full size.</p>`;
+    <p class="x-help">Simulated feed at phone size — judge legibility here, not at full size.</p>`;
   } else {
     box.innerHTML = `<div class="x-slides ${previewMode === "feed" ? "x-slides--feed" : "x-slides--full"}">`
       + r.slides.map((s) => s.svg).join("") + `</div>`
-      + (previewMode === "feed" ? `<p class="x-helper">375&nbsp;px wide — roughly what the feed shows.</p>` : "");
+      + (previewMode === "feed" ? `<p class="x-help">375&nbsp;px wide — roughly what the feed shows.</p>` : "");
   }
 }
 
-function renderTemplateThumbs() {
-  const copy = readCopy();
-  for (const holder of document.querySelectorAll("[data-thumb]")) {
-    const tplId = holder.getAttribute("data-thumb");
-    const design = normalizeDesign({ ...current.design, template: tplId, variant: 0 },
-      current.candidate.eventType, current.post.format);
-    const r = renderPost({ ...copy, design }, { ...renderContext(copy), design });
+/* ── Template Lab: a modal, brought into view, with a way back out ───────── */
+
+function renderTemplateThumbNow() {
+  const holder = document.querySelector("[data-thumb-now]");
+  if (!holder) return;
+  try {
+    const copy = readCopy();
+    const r = renderPost(copy, renderContext(copy));
     holder.innerHTML = r.slides[0]?.svg || "";
-  }
+  } catch { /* a thumbnail is never worth an error */ }
 }
 
 function labCopy() {
@@ -769,37 +1386,67 @@ function labCopy() {
     }) };
 }
 
-function renderTemplateLab() {
-  const box = $("#e-template-lab");
-  if (!box || !current.post.reading) return;
+let labOpener = null;
+
+function openTemplateLab(opener = null) {
+  if (!current) return;
   const copy = labCopy();
-  const cards = TEMPLATE_FAMILY_IDS.map((id) => {
+  const heading = copy.reading
+    ? `${copy.reading.type[0].toUpperCase()}${copy.reading.type.slice(1)} · ${copy.reading.periodLabel}`
+    : current.candidate.title;
+  $("#x-lab-sub").textContent = `Compare all five founder families from this draft — ${heading}. Astronomy stays engine output.`;
+  $("#x-lab-body").innerHTML = `<div class="x-lab-grid">${TEMPLATE_FAMILY_IDS.map((id) => {
     const family = TEMPLATES[id];
     const design = normalizeDesign({ ...current.design, aspect: "portrait", template: id },
       current.candidate.eventType, current.post.format);
     const rendered = renderPost({ ...copy, design }, { ...renderContext(copy), design });
-    const readingIndex = Math.max(0, copy.slides.findIndex((s) => s.role === "reading"));
-    const detailIndex = Math.max(0, copy.slides.findIndex((s) => ["reflection", "evidence", "key_dates"].includes(s.role)));
+    const readingIndex = Math.max(0, copy.slides.findIndex((s) => ["reading", "question"].includes(s.role)));
+    const detailIndex = Math.max(0, copy.slides.findIndex((s) => ["reflection", "evidence", "key_dates", "engagement"].includes(s.role)));
     const indexes = [...new Set([0, 1, readingIndex, detailIndex])].slice(0, 4);
-    return `<article class="x-lab-card">
+    return `<article class="x-lab-card ${id === current.design.template ? "is-active" : ""}">
       <span class="x-demo-label">EDITORIAL DEMO · REAL ENGINE FACTS</span>
       <h4>${esc(family.name)}</h4><p>${esc(family.intendedUse)}</p>
       <div class="x-lab-slides">${indexes.map((i) => rendered.slides[i]?.svg || "").join("")}</div>
       <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-use-family="${id}" style="margin-top:8px">Use for this draft</button>
     </article>`;
-  }).join("");
-  box.innerHTML = `<section class="x-lab" aria-label="Founder Template Review">
-    <h3>Founder Template Review · ${esc(copy.reading.type[0].toUpperCase() + copy.reading.type.slice(1))} · ${esc(copy.reading.periodLabel)}</h3>
-    <p class="x-helper">The same structured reading feeds all five versioned portrait systems. Demo symbolic lines are labeled editorial copy; astronomy remains engine output. No default changes here.</p>
-    <div class="x-lab-grid">${cards}</div></section>`;
-  for (const button of box.querySelectorAll("[data-use-family]")) {
+  }).join("")}</div>`;
+  for (const button of $$("[data-use-family]")) {
     button.onclick = () => {
-      current.design = normalizeDesign({ ...current.design, aspect: "portrait",
-        template: button.getAttribute("data-use-family") }, current.candidate.eventType, current.post.format);
+      const id = button.getAttribute("data-use-family");
+      current.design = normalizeDesign({ ...current.design, aspect: "portrait", template: id },
+        current.candidate.eventType, current.post.format);
+      closeTemplateLab();
       renderEditor();
+      touch();
+      // The choice has to be visible, not merely stored: the founder came here
+      // to change something and must see that it changed.
+      status(`Template set to ${TEMPLATES[id]?.name || id} for this draft.`);
+      setStage("write");
     };
   }
+  // Remember where focus came from explicitly. Reading document.activeElement
+  // is right only when the opener was clicked with a pointer; a keyboard
+  // shortcut or a programmatic open leaves focus on <body>, and closing then
+  // dropped the founder back at the top of the page.
+  labOpener = opener || (document.activeElement !== document.body ? document.activeElement : $("#e-change-tpl"));
+  const dialog = $("#x-lab");
+  // showModal() is the accessible default: focus moves in, Tab is trapped,
+  // Escape closes, and the page behind is inert.
+  if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
+  $("#x-lab-close").focus();
 }
+
+function closeTemplateLab() {
+  const dialog = $("#x-lab");
+  if (typeof dialog.close === "function" && dialog.open) dialog.close(); else dialog.removeAttribute("open");
+  if (labOpener && typeof labOpener.focus === "function") labOpener.focus();
+}
+
+$("#x-lab-close").onclick = closeTemplateLab;
+$("#x-lab").addEventListener("close", () => {
+  if (labOpener && typeof labOpener.focus === "function") labOpener.focus();
+});
+$("#x-open-lab").onclick = () => { $("#x-more").open = false; openTemplateLab($("#x-open-lab")); };
 
 /* ── Export: deterministic filenames, aspect-aware dimensions ── */
 async function exportSlides() {
@@ -820,19 +1467,26 @@ async function exportSlides() {
     a.href = canvas.toDataURL("image/png");
     a.click();
   }
-  if (current.savedId) {
+  if (current.savedId && current.status === "approved") {
     await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH",
-      body: JSON.stringify({ status: "exported" }) }).catch(() => {});
-    loadHistory();
+      body: JSON.stringify({ status: "exported" }) }).then(() => { current.status = "exported"; }).catch(() => {});
+    loadLibrary();
   }
   status(`Exported ${r.slides.length} slide(s) · ${A.width}×${A.height}`);
 }
 
 async function saveDraft() {
+  saveState = { ...saveState, saving: true };
+  renderActionBar();
   status("Saving…");
   const payload = () => ({ eventKey: current.candidate.eventKey, date: $("#x-date").value, tz,
     format: current.post.format, copy: readCopy(),
     generatedCopy: current.generatedCopy, notes: $("#e-notes").value });
+  const done = () => {
+    saveState = { dirty: false, saving: false, saved: true,
+      savedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) };
+    refresh(); loadLibrary();
+  };
   try {
     if (current.savedId) {
       const copy = readCopy();
@@ -841,84 +1495,125 @@ async function saveDraft() {
         body: JSON.stringify({ copy, notes }) });
       current.post = data.post.edited_copy || copy;
       current.notes = data.post.editor_notes ?? notes;
+      current.status = data.post.status || current.status;
       status("Draft updated");
-      refresh(); loadHistory(); return;
+      done(); return;
     }
     const data = await api("/api/orbit-x/posts", { method: "POST", body: JSON.stringify(payload()) });
     current.savedId = data.post.id;
+    current.status = data.post.status || "draft";
     current.notes = data.post.editor_notes || $("#e-notes").value;
     showAdvisories(data.advisories);
     status(data.completeness?.complete ? "Draft saved" : `Draft saved — still missing: ${data.completeness.missing.join(", ")}`);
-    refresh(); loadHistory();
+    done();
   } catch (error) {
+    saveState = { ...saveState, saving: false };
     if (error.status === 409) {
       if (confirm("This event already has living coverage. Save a deliberate fresh treatment anyway?")) {
         const data = await api("/api/orbit-x/posts", { method: "POST",
           body: JSON.stringify({ ...payload(), allowDuplicate: true }) });
         current.savedId = data.post.id;
+        current.status = data.post.status || "draft";
         showAdvisories(data.advisories);
-        status("Fresh treatment saved"); refresh(); loadHistory(); return;
+        status("Fresh treatment saved"); done(); return;
       }
-      status("Not saved — duplicate declined"); return;
+      status("Not saved — duplicate declined"); renderActionBar(); return;
     }
+    renderActionBar();
     status(error.body?.findings ? `Refused: ${error.body.findings.map((f) => f.why).join("; ")}` : error.message);
   }
 }
 
 function showAdvisories(advisories) {
-  $("#e-advice").innerHTML = (advisories || []).length
+  const box = $("#e-advice");
+  if (!box) return;
+  box.innerHTML = (advisories || []).length
     ? `Editorial advisories (non-blocking):<br>` + advisories.map((a) => `· ${esc(a.why)}`).join("<br>")
     : "";
 }
 
 async function decide(to) {
   if (!current.savedId) return;
-  // Approval persists the latest copy first, so the gate judges what's on
-  // screen, not a stale save.
+  // The lifecycle move persists the latest copy first, so the gate judges
+  // what's on screen, not a stale save.
   const body = { status: to, copy: readCopy() };
   if (to === "rejected") {
-    body.rejectionReason = $("#e-reject-reason").value || "other";
+    body.rejectionReason = $("#x-reject-reason").value || "other";
     delete body.copy;
   }
   try {
-    await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH", body: JSON.stringify(body) });
-    status(to === "approved" ? "Approved" : "Rejected"); loadHistory();
+    const data = await api(`/api/orbit-x/posts/${current.savedId}`, { method: "PATCH", body: JSON.stringify(body) });
+    current.status = data.post?.status || to;
+    status(`Marked ${statusLabel(current.status)}`);
+    refresh(); loadLibrary();
   } catch (error) {
     status(error.body?.missing ? `${error.message} Missing: ${error.body.missing.join(", ")}` : error.message);
   }
 }
 
-async function loadHistory() {
+$("#x-save").onclick = saveDraft;
+$("#x-export").onclick = exportSlides;
+$("#x-goto-preview").onclick = () => setStage("preview");
+$("#x-copy-caption").onclick = () => { $("#x-more").open = false; copyText(readCopy().caption, "Caption copied"); };
+$("#x-copy-alt").onclick = () => { $("#x-more").open = false; copyText(readCopy().altText, "Alt text copied"); };
+$("#x-ready").onclick = () => decide(READY_STATUS);
+$("#x-reject").onclick = () => decide("rejected");
+$("#x-ready").textContent = READY_ACTION_LABEL;
+
+/* ── Library ─────────────────────────────────────────────────────────────── */
+
+$("#x-lib-status").innerHTML = LIBRARY_STATUS_FILTERS
+  .map((f) => `<option value="${f.value}">${esc(f.label)}</option>`).join("");
+$("#x-lib-kind").innerHTML = LIBRARY_KIND_FILTERS
+  .map((f) => `<option value="${f.value}">${esc(f.label)}</option>`).join("");
+$("#x-lib-status").onchange = loadLibrary;
+$("#x-lib-kind").onchange = loadLibrary;
+$("#x-lib-refresh").onclick = loadLibrary;
+
+async function loadLibrary() {
+  const line = $("#x-lib-status-line");
   try {
-    const filter = $("#x-hist-filter").value;
+    const filter = $("#x-lib-status").value;
     const data = await api(`/api/orbit-x/posts${filter ? `?status=${filter}` : ""}`);
-    const kind = $("#x-hist-kind").value;
-    const posts = data.posts.filter((p) => !kind ? true : kind === "other"
-      ? !["daily_reading", "weekly_reading", "monthly_reading"].includes(p.selected_format)
-      : p.selected_format === kind);
-    $("#x-history").innerHTML = `<tr><th></th><th>Date</th><th>Event</th><th>Status</th><th>Score</th><th></th></tr>`
-      + posts.map((p, i) => `<tr>
-        <td data-hist-thumb="${i}"></td>
-        <td>${esc((p.created_at || "").slice(0, 10))}</td>
-        <td>${esc(p.event_key)}<br><span class="x-reasons">${esc(p.selected_format)}</span></td>
-        <td>${esc(p.status)}${p.rejection_reason ? ` (${esc(p.rejection_reason)})` : ""}</td>
-        <td>${esc(p.editorial_score ?? "")}</td>
-        <td><button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-post="${esc(p.id)}">Open</button></td></tr>`).join("");
-    // First-slide thumbnails: the history is a content library, not a table.
-    posts.forEach((p, i) => {
-      const cell = document.querySelector(`[data-hist-thumb="${i}"]`);
-      if (!cell || !p.edited_copy?.slides?.length) return;
+    const kind = $("#x-lib-kind").value;
+    const rows = data.posts.filter((row) => matchesKindFilter(row, kind));
+    line.textContent = `${rows.length} saved item(s)`;
+    if (!rows.length) {
+      $("#x-lib-list").innerHTML = `<p class="x-status">Nothing saved with these filters yet.</p>`;
+      return;
+    }
+    const entries = rows.map(libraryEntry);
+    $("#x-lib-list").innerHTML = entries.map((entry, i) => `
+      <article class="x-lib-card">
+        <div class="l-thumb" data-lib-thumb="${i}"><div class="l-empty">No slides yet</div></div>
+        <div class="l-body">
+          <h3>${esc(entry.title)}</h3>
+          <div class="l-meta">${esc(entry.typeLabel)}${entry.periodLabel ? ` · ${esc(entry.periodLabel)}` : ""}</div>
+          <div class="x-row" style="margin:0">
+            <span class="x-pill x-pill--${entry.statusTone}">${esc(entry.statusLabel)}</span>
+            <span class="x-pill">${esc(entry.templateLabel)}</span>
+          </div>
+          ${entry.rejectionReason ? `<div class="l-meta">Reason: ${esc(entry.rejectionReason)}</div>` : ""}
+          <div class="l-key">${esc(entry.eventKey)}</div>
+          <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-post="${esc(entry.id)}"
+            aria-label="Open draft: ${esc(entry.title)}">${esc(entry.openLabel)}</button>
+        </div>
+      </article>`).join("");
+    // First-slide thumbnails: the library is a content shelf, not a table.
+    entries.forEach((entry, i) => {
+      const cell = document.querySelector(`[data-lib-thumb="${i}"]`);
+      if (!cell || !entry.thumbnailCopy) return;
       try {
-        const cand = p.event_payload || {};
-        const r = renderPost(p.edited_copy, { eventType: cand.eventType, title: cand.title,
+        const cand = rows[i].event_payload || {};
+        const r = renderPost(entry.thumbnailCopy, { eventType: cand.eventType, title: cand.title,
           facts: cand.facts || {}, sky: cand.facts?.planets || [] });
         cell.innerHTML = r.slides[0]?.svg || "";
       } catch { /* a thumbnail is never worth an error */ }
     });
-    for (const button of document.querySelectorAll("[data-open-post]")) {
+    for (const button of $$("[data-open-post]")) {
       button.onclick = () => openSavedPost(button.getAttribute("data-open-post"));
     }
-  } catch (error) { $("#x-history").innerHTML = `<tr><td>${esc(error.message)}</td></tr>`; }
+  } catch (error) { line.textContent = error.message; }
 }
 
 async function openSavedPost(id) {
@@ -932,20 +1627,26 @@ async function openSavedPost(id) {
     const localDate = row.calculation_metadata?.local_date || candidate.facts?.period?.start_date;
     if (localDate) $("#x-date").value = localDate;
     lastSky = candidate.facts?.planets || [];
+    if (post.interaction?.format) interactionFormatId = post.interaction.format;
     current = {
       candidate, post, generatedCopy: row.generated_copy || null,
       calculationMetadata: row.calculation_metadata || null,
       savedId: row.id, suggestions: null, notes: row.editor_notes || "",
+      status: row.status || "draft",
       design: normalizeDesign({ template: row.template_family, ...(post.design || {}) },
         candidate.eventType, post.format || row.selected_format),
     };
+    saveState = { dirty: false, saving: false, savedAt: null, saved: true };
+    focusedSlide = 0; choiceSlots = 0;
+    setView("workspace");
     renderEditor();
-    status(`Opened saved ${row.status || "draft"} · changes will update this item`);
+    setStage("write");
+    status(`Opened ${statusLabel(row.status)} — saving updates this item`);
   } catch (error) { status(error.message); }
 }
 
 
-/* ── Handoff and import (Dev Update 5.4) ────────────────────────────────────
+/* ── Writing assistance: brief out, draft back (Dev Update 5.4) ─────────────
    Orbit calls no AI. But the founder may want one — or a human writer — to
    draft the interpretive lines, and retyping them slot by slot is where a
    verified fact quietly becomes a typo. So: export a brief, import the reply.
@@ -1047,14 +1748,14 @@ function importedInventsFacts(incoming, facts) {
 }
 
 function applyHandoff(text) {
-  const status = (t) => { $("#e-import-status").textContent = t; };
+  const say = (t) => { $("#e-import-status").textContent = t; };
   let incoming;
   try { incoming = parseHandoff(text); }
-  catch (error) { status(error.message); return; }
+  catch (error) { say(error.message); return; }
 
   const invented = importedInventsFacts(incoming, current.candidate?.facts);
   if (invented.length) {
-    status(`Refused — ${invented.join(", ")} appears in no verified fact. The astronomy is not the writer's to change.`);
+    say(`Refused — ${invented.join(", ")} appears in no verified fact. The astronomy is not the writer's to change.`);
     return;
   }
 
@@ -1086,14 +1787,21 @@ function applyHandoff(text) {
   if (typeof incoming.altText === "string" && incoming.altText.trim()) {
     $("#e-alt").value = incoming.altText.trim(); filled += 1;
   }
-  if (!filled) { status("Nothing usable in that JSON — expected headline, slides, caption, altText."); return; }
+  if (!filled) { say("Nothing usable in that JSON — expected headline, slides, caption, altText."); return; }
 
-  refresh();
+  touch();
   const advisories = adviseCopy(readCopy());
-  status(`Imported ${filled} field(s). Every date checked against the packet.`
+  say(`Imported ${filled} field(s). Every date checked against the packet.`
     + (unplaced.length ? ` COULD NOT PLACE: ${unplaced.join(", ")} — no field for it on this format.` : "")
     + (advisories.length ? ` ${advisories.length} advisory to review.` : " Nothing flagged."));
 }
+
+// A details-based menu that never closes on an outside click is a menu that
+// covers the page.
+document.addEventListener("click", (event) => {
+  const menu = $("#x-more");
+  if (menu?.open && !menu.contains(event.target)) menu.open = false;
+});
 
 function copyText(text, done) {
   navigator.clipboard.writeText(text).then(() => status(done), () => status("Copy failed — select manually"));
@@ -1107,12 +1815,13 @@ function debounce(fn, ms) {
 // Bootstrap, in this order deliberately:
 //   1. The session gate decides gate-or-desk BEFORE anything requests data, so
 //      a signed-out visit opens on the sign-in form instead of an error line.
-//   2. Saved work loads on its own, because the library is useful before any
-//      candidate calculation and must survive one failing (load() refreshes
-//      history again on success, but never reaches it if the sky call throws).
+//   2. The Library loads on its own, because saved work is useful before any
+//      candidate calculation and must survive the sky call failing.
+renderStages();
+setStage("choose");
 checkSession().then((signedIn) => {
   if (!signedIn) return;
-  loadHistory();
+  loadLibrary();
   load();
 });
 </script>

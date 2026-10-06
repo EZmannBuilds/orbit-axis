@@ -1,8 +1,92 @@
-# Orbit X — Collective Readings + Template Lab (Dev Update 5.2)
+# Orbit X — Solo Publishing Workspace (Dev Update 5.6)
 
 An AI-assisted editorial system built on deterministic Orbit calculations.
 It turns verified astronomical events into faceless, brand-voiced social
 content, with a human approving every word before anything leaves the desk.
+
+## Dev Update 5.6: the publishing workspace
+
+Orbit X was one very long engineering-oriented page: candidates, the whole
+editor, five full template previews, every slide preview, and a saved-work
+table, all stacked in one scroll. It is now a **three-stage solo publishing
+workspace** — *Choose → Write → Preview* — with a **Library** as its own
+top-level view.
+
+- **Choose** is five actions (Daily, Weekly, Monthly, Special, Interactive)
+  over one date control, plus recommendation cards that show a human title, a
+  timing, the recommended template, and **one** short reason. Event keys, ISO
+  instants, numeric scores and the full scoring explanation live under
+  *Details*. An event that already has a draft is a neutral **Draft exists**
+  state with an **Open draft** action — never a red error.
+- **Write** puts the editor and a live preview side by side above 1000px and
+  collapses to the editor alone below it; the field you are editing outlines
+  the slide it draws. Fields are grouped (Hook · Interactive question ·
+  Reading · Caption & CTA · Accessibility · Notes) and each group collapses.
+  One cadence-default template is shown with a **Change template** control.
+- **Preview** carries one labelled **Preview mode** selector (Full size ·
+  Feed width · Simulated feed post) in place of three unlabelled buttons, and
+  the finish actions.
+- A **sticky action bar** holds Save draft, Preview, and Export with a live
+  **Unsaved changes / Saving… / Saved at HH:MM** state. Saving stays
+  **explicit** — the input handler marks the draft dirty and writes nothing,
+  so no keystroke can overwrite stored work. Copy caption, copy alt text and
+  Template Lab live under *More*.
+- **Template Lab** is a native `<dialog>` opened with `showModal()`: focus
+  moves into it, Escape closes it, focus returns to whatever opened it, and
+  choosing *Use for this draft* returns to the editor and says what changed.
+  The five-family comparison is unchanged.
+- The **verified facts panel** is now readable UI — period, timezone, moon
+  phase, sign, illumination, a planet register, and selected movements as
+  labelled groups and chips. The packet is unchanged and still read-only; the
+  raw object sits behind a *View raw engine data* disclosure. A fact the
+  engine did not supply is absent, never defaulted.
+- The **Library** replaces the saved-work table: cards with a first-slide
+  thumbnail, a human title, the reading/post type, the period, a status pill,
+  the template, and **Open draft**. `full_moon:2026-08-27` reads as *Full Moon
+  · August 27, 2026*; the key stays visible as detail. Reopening and
+  update-in-place are unchanged.
+- The visible lifecycle is **Draft → Ready to Post → Exported**. Nothing in
+  the database changed: *Mark ready to post* still writes `approved`, and
+  `rejected` is now *Needs changes*, moved into an optional
+  *Review & set aside* disclosure instead of the primary action row.
+- Missing AI configuration is a calm **Manual mode** chip. The provider detail
+  moved to a *Diagnostics* disclosure.
+
+### Interactive posts (first class)
+
+An interactive post is its own format (`interactive_post`), not a question
+buried in a reflection slide. `lib/orbit-x/interactive.js` owns eight
+interaction formats — open question, two-choice poll, this or that, finish the
+sentence, emoji response, save and return, story question, carousel reflection
+— each declaring whether answer choices are `required`, `optional` or `none`
+and how many are valid.
+
+Structured fields: interaction format, main question, optional context/setup,
+two to four answer choices where applicable, engagement prompt, caption, CTA,
+alt text, and placement. **The interaction is the source of truth**: the
+slides are recomputed from it at validation, so a stored poll can never
+disagree with the slide that draws it — the same principle as facts never
+coming from the browser, applied to the question.
+
+Validation: polls and *this or that* require valid, distinct choices before a
+post can be finished (a count still being typed is a draft, not an error);
+open questions require none. Questions are audited deterministically for
+**predictive** and **diagnostic** shapes and for engagement bait, beside the
+existing editorial audit — a question may notice, it may never predict an
+outcome or ask anyone to self-assess. Calculated facts stay separate from
+editorial symbolism, and every existing format and stored draft remains valid.
+
+Interactive posts render through the existing SVG/template system (new
+`question`, `choices` and `engagement` slide roles) and open on the founder
+default `orbit_signal/v1`, changeable per draft like any other.
+
+**No migration.** An interactive post is anchored to a real calculated day but
+is not that day's reading: it writes `reading_type`, `period_key`,
+`period_start_at` and `period_end_at` as NULL, so it satisfies the
+`reading_type` CHECK constraint and can never take the Daily Reading's slot in
+the one-live-period partial unique index. `event_type` has no constraint, and
+the structured `interaction` object lives inside the existing `edited_copy`
+JSONB.
 
 ## Dev Update 5.2: Today, This Week, This Month
 
@@ -161,8 +245,9 @@ There is deliberately no INSERT policy — nobody can grant themselves entry.
 
 The desk is whole without a provider. With no `ORBIT_X_AI_API_KEY`, everything
 works except Generate/Regenerate, which the UI hides rather than disables into
-an apology; the status line says once, neutrally: *manual drafting (no AI
-provider configured)*. Missing AI configuration is never an Orbit X error.
+an apology; a single calm **Manual mode** chip states the absence, and the
+provider detail lives under Diagnostics. Missing AI configuration is never an
+Orbit X error.
 
 **Create Manual Draft** builds a scaffold from the selected verified candidate
 and format — no model, no network. Since Dev Update 5.1 the scaffold is
@@ -190,8 +275,13 @@ may end on the final idea.
 
 ## The visual system (Dev Update 5.1)
 
-Three isomorphic modules run identically in Node tests and the desk browser
-(served read-only at `/admin/orbit-x/{celestial,templates,language,formats}.js`):
+Isomorphic modules run identically in Node tests and the desk browser (served
+read-only at
+`/admin/orbit-x/{celestial,templates,language,formats,schemas,editorial,interactive,desk}.js`).
+`interactive.js` owns the interaction contract and `desk.js` owns the
+workspace's presentation logic — stage order, library titles, the solo status
+vocabulary, the readable fact summary — so the suite executes what the desk
+runs instead of grepping the page for strings. The three visual modules:
 
 - **`celestial.js`** — the iconography. All ten bodies and all twelve zodiac
   signs as **authored SVG paths** (never platform-font glyphs), a restrained
@@ -247,15 +337,17 @@ claims ("tonight") whose truth depends on the publication instant, and long
 CTAs.
 
 **Editor controls** (constrained, designed — no freeform x/y): aspect,
-density, template cards with live thumbnails, variant, celestial toggles
+density, the cadence-default template with a Change template control into the
+Template Lab dialog, variant, celestial toggles
 (Moon / sky strip / diagram), metadata toggles (date / time / sign /
 illumination / calculated label), add/remove slide within format bounds for
 the expandable roles (`explain`, `method` — the Deep Explainer path, up to 8
-slides for Without the Fog), full-size / feed-size (375 px) / simulated-feed
-previews, and history with first-slide thumbnails. Export produces
+slides for Without the Fog), one Preview mode selector, and the Library's
+first-slide thumbnails. Export produces
 `orbit-axis_<date>_<event>_<nn>[_portrait].png` in posting order. On a phone
-the desk is single-column with horizontally snapping slide previews; editing,
-template/density changes, approval, and export all work at 375 px.
+the workspace is stage-tabbed and single-column with horizontally snapping
+slide previews; editing, template changes, marking ready, and export all work
+at 390×844 with no horizontal overflow.
 
 ## Environment
 
@@ -287,7 +379,10 @@ can write them, and the API refuses the transition by name.
   moon phase occurred, ingress occurred, station occurred, calculation-method
   explainers. Formats: `something_changed`, `calculated_not_invented`.
 - **Yellow** (approval always): interpretive — collective themes, nuanced
-  education, tarot. Formats: `daily_signal`, `without_the_fog`, `your_sky`.
+  education, tarot. Formats: `daily_signal`, `without_the_fog`, `your_sky`,
+  and `interactive_post`, which is yellow permanently: a post that solicits an
+  answer from real people is not something a future automation may publish
+  unattended.
 - **Red** (never autonomous without an explicit future policy): individual
   natal or synastry interpretation, medical/financial/legal territory,
   deterministic prediction, emotionally sensitive personal guidance.
@@ -310,7 +405,7 @@ or product integrity. No self-modifying behaviour exists or is planned here.
 10. Preview all slides → brand template, readable at phone size.
 11. Export slides → `orbit-axis_<date>_<event>_<nn>.png`, correct order.
 12. Copy caption; copy alt text.
-13. Save draft → approve → reopen from history.
+13. Save draft → Mark ready to post → reopen from the Library.
 14. Save a second draft of the same event → 409 → deliberate fresh treatment works.
 15. Reject a draft with a reason → reason visible in history.
 16. Unset the AI key → Generate/Regenerate disappear; Manual draft still
@@ -318,7 +413,11 @@ or product integrity. No self-modifying behaviour exists or is planned here.
     status line notes manual mode without an error appearing anywhere.
 17. Stop local Supabase → save fails with a clear message, copy not lost.
 18. Confirm no secrets in the page source and no natal/account data in packets.
-19. `npm run test:local` — the whole suite still passes.
+19. Start an Interactive post → pick "This or that" → two answers → save,
+    reopen from the Library, and confirm it updates in place.
+20. Check the workspace at wide desktop, ~1024 px, and 390×844: no horizontal
+    overflow, stage tabs reachable, saved items render as cards.
+21. `npm run test:local` — the whole suite still passes.
 
 ## Known limitations (V1, deliberate)
 

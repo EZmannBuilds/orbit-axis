@@ -134,11 +134,13 @@ test("founder-selected families map deterministically to each reading cadence", 
     weekly_reading: "planetary_grid",
     monthly_reading: "orbit_signal",
     special_reading: "orbit_signal",
+    interactive_post: "orbit_signal",
   });
   assert.equal(recommendTemplate("collective_reading", "daily_reading"), "lunar_field");
   assert.equal(recommendTemplate("collective_reading", "weekly_reading"), "planetary_grid");
   assert.equal(recommendTemplate("collective_reading", "monthly_reading"), "orbit_signal");
   assert.equal(recommendTemplate("full_moon", "something_changed"), "orbit_signal");
+  assert.equal(recommendTemplate("interactive", "interactive_post"), "orbit_signal");
 });
 
 test("the canonical logo lockup preserves mark geometry and accessible naming", () => {
@@ -148,12 +150,16 @@ test("the canonical logo lockup preserves mark geometry and accessible naming", 
   assert.match(mark, /ORBIT AXIS/);
 });
 
-test("Template Lab, library filters, and duplicate-period migration are present", () => {
+test("Template Lab, the Library, and duplicate-period migration are present", () => {
   const page = readFileSync(new URL("../lib/orbit-x/ui.html", import.meta.url), "utf8");
-  assert.match(page, /Founder Template Review/);
+  // Dev Update 5.6 moved the lab into a modal dialog and the saved-work table
+  // into a top-level Library view. The five-way comparison and the
+  // reopen/update-in-place contract are unchanged and still asserted here;
+  // their behaviour is executed in test/orbit-x-desk.test.js.
+  assert.match(page, /id="x-lab" aria-labelledby="x-lab-title"/);
   assert.match(page, /Compare all five/);
-  assert.match(page, /data-reading="daily"/);
-  assert.match(page, /daily_reading/);
+  assert.match(page, /data-start="\$\{action\.id\}"/, "the cadences start from the five start actions");
+  assert.match(page, /START_ACTIONS/);
   assert.match(page, /data-open-post/);
   assert.match(page, /openSavedPost/);
   assert.match(page, /Draft updated/);
