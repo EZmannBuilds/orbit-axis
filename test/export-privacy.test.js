@@ -362,9 +362,10 @@ test("every schema version bump is explained where it happened", () => {
   // understand, so MINOR rather than patch. The guarantee this test has always
   // carried is unchanged: the constant and the changelog in the file move
   // together, so a version can never be raised silently.
-  assert.equal(EXPORT_SCHEMA_VERSION, "1.3.0");
+  // 1.4.0 added daily draws, for the same reason.
+  assert.equal(EXPORT_SCHEMA_VERSION, "1.4.0");
   const src = readFileSync(join(ROOT, "lib", "account", "export.js"), "utf8");
-  for (const version of ["1.1.0", "1.2.0", "1.3.0"]) {
+  for (const version of ["1.1.0", "1.2.0", "1.3.0", "1.4.0"]) {
     assert.ok(src.includes(`${version}:`), `the ${version} bump is explained in the file`);
   }
 });

@@ -21,7 +21,7 @@ import { DECK_VERSION, PRODUCTION_CARDS, deckStatus, deckSupportsReversals, vali
 import { DRAFT_CARDS } from "../lib/tarot/draft-deck.js";
 import { FIXTURE_DECK_REVIEWED } from "./fixtures/tarot-deck.js";
 import {
-  EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, EXPORT_TAROT_FIELDS,
+  EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, EXPORT_TAROT_FIELDS, EXPORT_DAILY_DRAW_FIELDS,
   auditExportPrivacy, presentExportTarotReading, stripSecrets,
 } from "../lib/account/export.js";
 import { USER_OWNED_TABLES } from "../lib/account/deletion.js";
@@ -350,7 +350,14 @@ test("the seven-day astrology strip keeps its original meaning", () => {
 test("saved Tarot readings are exported through an explicit allowlist", () => {
   assert.ok(EXPORT_SOURCES.some((s) => s.table === "tarot_readings" && s.column === "owner_id"));
   assert.deepEqual([...EXPORT_TAROT_FIELDS], ["question", "spread_type", "created_at"]);
-  assert.equal(EXPORT_SCHEMA_VERSION, "1.3.0", "a new category is a MINOR bump");
+  assert.equal(EXPORT_SCHEMA_VERSION, "1.4.0", "a new category is a MINOR bump");
+});
+
+test("remembered daily draws are exported through an explicit allowlist", () => {
+  assert.ok(EXPORT_SOURCES.some((s) => s.table === "tarot_daily_draws" && s.column === "owner_id"),
+    "a daily draw says what card a person was shown on which day, which is theirs");
+  assert.deepEqual([...EXPORT_DAILY_DRAW_FIELDS],
+    ["local_date", "deck_version", "card_slug", "orientation", "created_at"]);
 });
 
 test("an exported reading carries its meaning and no database identity", () => {
@@ -394,6 +401,11 @@ test("secret stripping still runs over tarot content", () => {
 test("account deletion still verifies tarot readings are gone", () => {
   assert.ok(USER_OWNED_TABLES.some((t) => t.table === "tarot_readings" && t.column === "owner_id"),
     "a table that can now hold content must stay in the deletion verification");
+});
+
+test("account deletion verifies daily draws are gone too", () => {
+  assert.ok(USER_OWNED_TABLES.some((t) => t.table === "tarot_daily_draws" && t.column === "owner_id"),
+    "the daily draw is owner-scoped and cascades; a survivor must be detected, not assumed away");
 });
 
 /* ── The production gate, from three directions ───────────────────────────── */

@@ -11,6 +11,7 @@ import assert from "node:assert/strict";
 import {
   buildAccountExport, stripSecrets, exportFilename,
   EXPORT_SCHEMA_VERSION, EXPORT_SOURCES, AccountExportError,
+  auditExportPrivacy,
 } from "../lib/account/export.js";
 import { exportData } from "../lib/api/v1/handlers/account.js";
 import { handleApiV1, createLimiters } from "../lib/api/v1/router.js";
@@ -195,6 +196,23 @@ test("categories that do not exist yet are named rather than silently absent", a
     "notification_preferences", "compatibility_notes", "researcher_data"]) {
     assert.ok(pending.includes(category), `${category} should be listed as pending`);
   }
+});
+
+test("remembered daily draws are carried through without database identity", async () => {
+  const doc = await build({
+    fetchImpl: fakeRest({
+      tarot_daily_draws: [{
+        id: FORTUNE_A, owner_id: USER_ID,
+        local_date: "2026-08-20", deck_version: "rws-1", card_slug: "the-star",
+        orientation: "reversed", created_at: "2026-08-20T07:00:00.000Z",
+      }],
+    }),
+  });
+  assert.deepEqual(doc.daily_draws, [{
+    local_date: "2026-08-20", deck_version: "rws-1", card_slug: "the-star",
+    orientation: "reversed", created_at: "2026-08-20T07:00:00.000Z",
+  }]);
+  assert.deepEqual(auditExportPrivacy(doc).findings, []);
 });
 
 // ── what must never appear ──────────────────────────────────────────────────

@@ -169,7 +169,7 @@ test("a clean cascade reports success and says how much was checked", async () =
   }));
   assert.equal(result.deleted, true);
   assert.equal(result.tablesVerified, USER_OWNED_TABLES.length);
-  assert.ok(USER_OWNED_TABLES.length >= 16, "the schema has at least sixteen user-owned tables");
+  assert.ok(USER_OWNED_TABLES.length >= 17, "the schema has at least seventeen user-owned tables");
 });
 
 // ── Partial failure and retry ───────────────────────────────────────────────

@@ -26,12 +26,19 @@ import { USER_OWNED_TABLES } from "../lib/account/deletion.js";
 
 const MIGRATIONS = new URL("../supabase/migrations/", import.meta.url).pathname;
 
-/** The migration that grants the verification reads. */
+/**
+ * The migrations that grant the verification reads, concatenated in order.
+ *
+ * There is more than one because the original grant is already applied in
+ * Production and cannot be edited; a table created later gets its own grant
+ * migration named with the same marker so it is counted here.
+ */
 function grantMigration() {
-  const name = readdirSync(MIGRATIONS)
-    .find((f) => f.includes("service_role_deletion_verification_grants"));
-  assert.ok(name, "the service-role verification grant migration must exist");
-  return readFileSync(join(MIGRATIONS, name), "utf8");
+  const names = readdirSync(MIGRATIONS)
+    .filter((f) => f.includes("service_role_deletion_verification_grants"))
+    .sort();
+  assert.ok(names.length > 0, "the service-role verification grant migration must exist");
+  return names.map((name) => readFileSync(join(MIGRATIONS, name), "utf8")).join("\n");
 }
 
 test("every table the deletion path verifies is granted to service_role", () => {
