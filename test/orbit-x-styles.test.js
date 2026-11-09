@@ -256,7 +256,7 @@ test("what reads as AI-made is absent: no gradients, glass, sparkles, glossy pla
           const outsideAssets = s.svg.replace(/<g data-orbit-asset="[^"]*"[\s\S]*?<\/g><\/g>|<g data-orbit-asset="[^"]*"[\s\S]*?<\/g>/g, "");
           assert.doesNotMatch(outsideAssets.replace(/<defs>[\s\S]*?<\/defs>/g, ""), /Gradient|backdrop|mask=|glow/i, `${family}: no gradient outside an asset`);
           assert.doesNotMatch(s.svg, /backdrop|glow|glass/i, `${family}: no glass or glow`);
-          for (const f of s.svg.match(/<filter id="[^"]*"/g) || []) assert.match(f, /orbit-shadow-/, "the only filter is a cast shadow");
+          for (const f of s.svg.match(/<filter id="[^"]*"/g) || []) assert.match(f, /orbit-shadow-|orbit-form-/, "filters are cast shadows or a body's own surface texture");
           assert.doesNotMatch(s.svg, /Inter[,'"]/, `${family}: not Inter`);
           assert.ok(!s.svg.includes("✨"), "no sparkle characters");
         }
@@ -388,8 +388,8 @@ test("the Moon sphere shows the engine's illumination, and every asset is vector
   const quarter = moonSphere({ id: "m3", cx: 100, cy: 100, r: 80, state: { illumination_percent: 50, waxing: false }, f });
   assert.match(full, /aria-label="Moon, 100% illuminated"/);
   assert.match(none, /Moon, 0% illuminated/);
-  assert.ok(!none.includes("clip-path="), "a new Moon has no lit area");
-  assert.ok(full.includes("clip-path=") && quarter.includes("clip-path="));
+  assert.match(none, /data-lit="0"/, "a new Moon has no lit area");
+  assert.ok(/data-lit="100"/.test(full) && /data-lit="50"/.test(quarter));
   assert.equal(moonSphere({ id: "m4", cx: 0, cy: 0, r: 10, state: null, f }), "", "no illumination fact, no Moon");
   for (const svg of [full, none, quarter]) assert.doesNotMatch(svg, /<image|data:image|href=/, "no raster asset");
   assert.deepEqual(assetFor({ kind: "moon", eventType: "full_moon", facts: {} }), { type: "moon", state: { illumination_percent: 100, waxing: true } });
