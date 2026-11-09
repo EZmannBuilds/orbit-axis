@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "AGPL-3.0-or-later",
   "private": true,
-  "description": "Orbit \u2014 standalone astrology app and API.",
+  "description": "Orbit — standalone astrology app and API.",
   "type": "module",
   "main": "server.js",
   "scripts": {
@@ -55,6 +55,8 @@
     "@capacitor/keyboard": "^7.0.6",
     "@capacitor/status-bar": "^7.0.6",
     "@ezmannbuilds/orbit-axis-engine": "file:vendor/orbit-axis-engine",
+    "@resvg/resvg-js": "2.6.2",
+    "jpeg-js": "0.4.4",
     "luxon": "^3.7.2",
     "tz-lookup": "^6.1.25"
   },
