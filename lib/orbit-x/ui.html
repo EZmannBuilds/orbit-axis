@@ -68,6 +68,18 @@
   .x-feedsim svg { width: 100%; height: auto; display: block; }
   .x-reading-bar { margin-top: var(--space-md); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
   .x-reading-bar strong { margin-right: var(--space-sm); }
+  /* Dev Update 6.1: the automatic channel panel. */
+  .x-channel { margin-top: var(--space-md); }
+  .x-channel summary { cursor: pointer; }
+  .x-ch-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-sm); }
+  .x-ch-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); }
+  .x-ch-card--proposed { border-left: 3px solid var(--color-accent); }
+  .x-ch-card--approved { border-left: 3px solid var(--color-success, #4fb286); }
+  .x-ch-card--rejected, .x-ch-card--superseded, .x-ch-card--retired { opacity: 0.6; }
+  .x-ch-badge { font-size: var(--type-caption); border: 1px solid var(--color-border); border-radius: 999px; padding: 1px 8px; }
+  .x-ch-sample { display: flex; gap: 6px; overflow-x: auto; margin-top: 6px; }
+  .x-ch-sample svg { width: 120px; height: auto; flex: 0 0 auto; border-radius: 4px; border: 1px solid var(--color-border); }
+  .x-ch-log { white-space: pre-wrap; font-size: var(--type-caption); max-height: 320px; overflow: auto; }
   .x-lab { margin: var(--space-md) 0; padding: var(--space-md); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
   .x-lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: var(--space-sm); }
   .x-lab-card { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--color-surface); }
@@ -124,6 +136,23 @@
   <button class="o-btn o-btn--secondary o-btn--sm" data-reading="monthly">This Month</button>
   <span class="x-helper">Shared current sky · manual authoring · portrait first</span>
 </div>
+
+<details class="x-panel x-channel" id="x-channel">
+  <summary><strong>Automatic channel</strong> <span class="x-status" id="x-ch-summary">Open to load the channel, its post types, and its run log.</span></summary>
+  <div class="x-row">
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-load">Refresh</button>
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-pause">Pause channel</button>
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-propose" hidden>Ask for new post types</button>
+    <span class="x-status" id="x-ch-status" role="status" aria-live="polite"></span>
+  </div>
+  <div class="x-facts" id="x-ch-config"></div>
+  <h3>Post types</h3>
+  <p class="x-helper">Approve a type once and it joins the rotation; it then posts without per-post approval. Every post still runs every automated check, and Red content never posts. A rejected type never posts. Samples use today's calculated facts with placeholder interpretation.</p>
+  <div class="x-ch-types" id="x-ch-types"></div>
+  <h3>Recent runs</h3>
+  <table class="x-hist" id="x-ch-runs"></table>
+  <div class="x-ch-log" id="x-ch-log"></div>
+</details>
 
 <div class="x-grid">
   <section class="x-panel" aria-label="Candidates">
@@ -264,6 +293,7 @@ $("#x-signout").onclick = async () => {
   $("#x-candidates").innerHTML = `<p class="x-status">Pick a date and load.</p>`;
   $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
   $("#x-history").innerHTML = "";
+  for (const id of ["#x-ch-config", "#x-ch-types", "#x-ch-runs", "#x-ch-log"]) $(id).innerHTML = "";
   showGate("Signed out.");
 };
 
@@ -1103,6 +1133,140 @@ function debounce(fn, ms) {
   let t = null;
   return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
+
+/* ── The automatic channel (Dev Update 6.1) ──────────────────────────────
+   Read-mostly. The desk approves or rejects post types and can pause the
+   channel; it never publishes. Samples are rendered by the server from
+   today's engine facts with placeholder interpretation. */
+let channelData = null;
+
+function channelConfigHtml(st, control) {
+  const flag = (on, label) => `<span class="x-ch-badge">${esc(label)}: ${on ? "on" : "off"}</span>`;
+  const mode = !st.enabled ? "off" : st.live ? "LIVE (publishing)" : "dry run (never calls Meta)";
+  return `<strong>Mode:</strong> ${esc(mode)} &nbsp; ${flag(st.yellow, "Yellow auto-publish")} ${flag(!st.killSwitch, "Kill switch clear")}
+    ${flag(!control?.paused, "Not paused")} ${flag(st.cronSecretSet, "Cron secret set")} ${flag(st.aiConfigured, "AI copy")}
+    ${flag(st.graphConfigured, "Instagram configured")}<br>
+    <strong>Editorial timezone:</strong> ${esc(st.timezone)} · <strong>Instagram API:</strong> ${esc(st.graph?.api || "not chosen")} ${esc(st.graph?.version || "")}
+    ${st.tokenExpiresAt ? ` · <strong>token expires</strong> ${esc(st.tokenExpiresAt.slice(0, 10))}` : ""}
+    ${control?.paused ? `<br><span class="x-warn">Paused${control.reason ? `: ${esc(control.reason)}` : ""}</span>` : ""}
+    ${st.graphProblems?.length && st.live ? `<br><span class="x-warn">${esc(st.graphProblems.join("; "))}</span>` : ""}
+    ${st.rotationIgnored?.length ? `<br><span class="x-advice">Rotation overrides ignored: ${esc(st.rotationIgnored.join(", "))}</span>` : ""}`;
+}
+
+function typeCardHtml(t) {
+  const actions = {
+    proposed: [["approved", "Approve"], ["rejected", "Reject"]],
+    approved: [["retired", "Retire"], ["rejected", "Reject"]],
+    retired: [["approved", "Approve again"]],
+  }[t.status] || [];
+  return `<div class="x-ch-card x-ch-card--${esc(t.status)}" data-type-id="${esc(t.id)}">
+    <div class="x-row"><strong>${esc(t.name)}</strong> <span class="x-ch-badge">${esc(t.label)}</span>
+      <span class="x-ch-badge">${esc(t.status)}</span> <span class="x-reasons">${esc(t.source)}</span></div>
+    <div class="x-reasons">${esc(t.description)}</div>
+    ${t.proposal_notes ? `<div class="x-advice">${esc(t.proposal_notes)}</div>` : ""}
+    <div class="x-reasons">${esc(t.spec?.aspect || "")} · ${esc((t.spec?.formats || []).join(", "))}${t.spec?.motif ? ` · motif ${esc(t.spec.motif.kind)}` : ""}</div>
+    ${t.approved_at ? `<div class="x-reasons">approved ${esc(String(t.approved_at).slice(0, 10))}</div>` : ""}
+    ${t.unusableReason ? `<div class="x-warn">Not in rotation: ${esc(t.unusableReason)}</div>` : ""}
+    ${t.layout?.length ? `<div class="x-warn">Layout: ${esc(t.layout.slice(0, 3).join("; "))}</div>` : ""}
+    <div class="x-row">
+      <select class="o-select" data-sample-format style="max-width:200px">${(t.spec?.formats || []).map((f) => `<option>${esc(f)}</option>`).join("")}</select>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-sample="${esc(t.id)}">Show sample</button>
+      ${actions.map(([to, label]) => `<button type="button" class="o-btn o-btn--${to === "approved" ? "primary" : "secondary"} o-btn--sm" data-type-to="${to}">${esc(label)}</button>`).join("")}
+    </div>
+    <div class="x-ch-sample" data-sample-box></div>
+  </div>`;
+}
+
+function runRowHtml(r) {
+  const failed = (r.failedChecks || []).map((c) => c.id).join(", ");
+  return `<tr><td>${esc(r.slot_date)}</td><td>${esc(r.mode)}</td><td>${esc(r.state)}</td>
+    <td>${esc(r.format || "")}<br><span class="x-reasons">${esc(r.post_type_label || "")}</span></td>
+    <td>${esc(r.headline || "")}${r.error ? `<br><span class="x-reasons">${esc(r.error)}</span>` : ""}${failed ? `<br><span class="x-warn">failed: ${esc(failed)}</span>` : ""}</td>
+    <td>${r.permalink ? `<a href="${esc(r.permalink)}" target="_blank" rel="noopener">Instagram</a>` : ""}</td>
+    <td><button type="button" class="o-btn o-btn--secondary o-btn--sm" data-run-log="${esc(r.id)}">Log</button></td></tr>`;
+}
+
+async function loadChannel() {
+  $("#x-ch-status").textContent = "Loading channel…";
+  try {
+    channelData = await api("/api/orbit-x/channel");
+    const { status: st, control, types, runs } = channelData;
+    $("#x-ch-summary").textContent = `${st.enabled ? (st.live ? "live" : "dry run") : "off"} · `
+      + `${types.filter((t) => t.status === "approved").length} approved · ${types.filter((t) => t.status === "proposed").length} awaiting review`;
+    $("#x-ch-config").innerHTML = channelConfigHtml(st, control);
+    $("#x-ch-pause").textContent = control?.paused ? "Resume channel" : "Pause channel";
+    $("#x-ch-propose").hidden = !st.aiConfigured;
+    const order = { proposed: 0, approved: 1, retired: 2, rejected: 3, superseded: 4 };
+    $("#x-ch-types").innerHTML = [...types].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9)
+      || a.label.localeCompare(b.label)).map(typeCardHtml).join("") || `<p class="x-status">No post types yet.</p>`;
+    $("#x-ch-runs").innerHTML = `<tr><th>Day</th><th>Mode</th><th>State</th><th>Format</th><th>Post</th><th></th><th></th></tr>`
+      + runs.map(runRowHtml).join("");
+    wireChannel();
+    $("#x-ch-status").textContent = "";
+  } catch (error) {
+    $("#x-ch-status").textContent = error.status === 502
+      ? "Channel storage is unavailable here (has the channel migration been applied?)."
+      : error.message;
+  }
+}
+
+function wireChannel() {
+  for (const card of document.querySelectorAll("[data-type-id]")) {
+    const id = card.getAttribute("data-type-id");
+    card.querySelector("[data-sample]").onclick = async () => {
+      const format = card.querySelector("[data-sample-format]").value;
+      const box = card.querySelector("[data-sample-box]");
+      box.textContent = "Rendering…";
+      try {
+        const data = await api(`/api/orbit-x/post-types/${id}/sample?format=${encodeURIComponent(format)}&date=${$("#x-date").value}`);
+        box.innerHTML = data.slides.join("");
+        box.title = `${data.notice} (${data.facts})`;
+      } catch (error) { box.textContent = error.message; }
+    };
+    for (const button of card.querySelectorAll("[data-type-to]")) {
+      button.onclick = async () => {
+        const to = button.getAttribute("data-type-to");
+        const reason = to === "approved" ? null : prompt(`Reason for marking this type ${to}?`, "");
+        if (to !== "approved" && reason === null) return;
+        try {
+          await api(`/api/orbit-x/post-types/${id}`, { method: "PATCH", body: JSON.stringify({ status: to, reason }) });
+          $("#x-ch-status").textContent = `Post type ${to}.`;
+          loadChannel();
+        } catch (error) { $("#x-ch-status").textContent = error.message; }
+      };
+    }
+  }
+  for (const button of document.querySelectorAll("[data-run-log]")) {
+    button.onclick = async () => {
+      try {
+        const data = await api(`/api/orbit-x/channel/runs/${button.getAttribute("data-run-log")}/events`);
+        $("#x-ch-log").textContent = data.events.map((e) => `${e.at}  ${e.step}  ${e.outcome}  ${e.detail ? JSON.stringify(e.detail) : ""}`).join("\n");
+      } catch (error) { $("#x-ch-log").textContent = error.message; }
+    };
+  }
+}
+
+$("#x-ch-load").onclick = loadChannel;
+$("#x-channel").addEventListener("toggle", () => { if ($("#x-channel").open && !channelData) loadChannel(); });
+$("#x-ch-pause").onclick = async () => {
+  const pausing = !channelData?.control?.paused;
+  const reason = pausing ? prompt("Why pause the channel? (optional)", "") : null;
+  if (pausing && reason === null) return;
+  try {
+    await api("/api/orbit-x/channel/pause", { method: "POST", body: JSON.stringify({ paused: pausing, reason }) });
+    $("#x-ch-status").textContent = pausing ? "Paused. No call to Meta will be made until you resume." : "Resumed.";
+    loadChannel();
+  } catch (error) { $("#x-ch-status").textContent = error.message; }
+};
+$("#x-ch-propose").onclick = async () => {
+  $("#x-ch-status").textContent = "Asking for new post types…";
+  try {
+    const data = await api("/api/orbit-x/post-types/propose", { method: "POST", body: "{}" });
+    $("#x-ch-status").textContent = `${data.proposed.length} proposed`
+      + (data.refused?.length ? ` · ${data.refused.length} refused (${data.refused.map((r) => r.problems[0]).join("; ")})` : "");
+    loadChannel();
+  } catch (error) { $("#x-ch-status").textContent = error.message; }
+};
 
 // Bootstrap, in this order deliberately:
 //   1. The session gate decides gate-or-desk BEFORE anything requests data, so
