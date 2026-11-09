@@ -15,9 +15,15 @@
 --                         changed design is a new version, never an edit to
 --                         an approved one. Status transitions are enforced
 --                         here as well as in code.
---   orbit_x_channel_runs  one row per channel slot (one per editorial day).
---                         The UNIQUE slot key is the idempotency guard: a
---                         second cron invocation resumes the same run.
+--   orbit_x_channel_runs  one row per editorial day, prepared up to 7 days
+--                         ahead. The UNIQUE slot key is the idempotency
+--                         guard: a second cron invocation resumes the same
+--                         run. A run carries its review (who, when) and its
+--                         publish schedule (scheduled_for, inside a publish
+--                         window that ends at publish_by).
+--   orbit_x_template_settings / orbit_x_format_preferences
+--                         the desk's template picker: which templates are
+--                         active, and a preferred template per format.
 --   orbit_x_channel_events  append-only audit log: what each tick generated,
 --                         which checks passed or failed, what was published.
 --   orbit_x_channel_control  the instant pause. An environment variable
@@ -42,7 +48,12 @@ alter table public.orbit_x_posts
   add column if not exists publish_attempts integer not null default 0,
   add column if not exists last_publish_error text,
   add column if not exists scheduled_at timestamptz,
-  add column if not exists permalink text;
+  add column if not exists permalink text,
+  -- The review (2026-11-09): who approved a channel post for publishing, when,
+  -- and the publish time they chose.
+  add column if not exists reviewed_by uuid references auth.users (id) on delete set null,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists publish_at timestamptz;
 
 alter table public.orbit_x_posts drop constraint if exists orbit_x_posts_origin_valid;
 alter table public.orbit_x_posts add constraint orbit_x_posts_origin_valid
@@ -245,7 +256,7 @@ create table if not exists public.orbit_x_channel_runs (
   id              uuid primary key default gen_random_uuid(),
   slot_key        text not null unique,
   slot_date       date not null,
-  mode            text not null,
+  mode            text not null,             -- 'review' (default) or 'auto'
   state           text not null default 'claimed',
   post_id         uuid references public.orbit_x_posts (id) on delete set null,
   post_type_id    uuid references public.orbit_x_post_types (id) on delete set null,
@@ -261,18 +272,30 @@ create table if not exists public.orbit_x_channel_runs (
   error           text,
   attempts        integer not null default 0,
   lease_until     timestamptz,
+  scheduled_for   timestamptz,               -- the approved publish instant
+  publish_window_start timestamptz,          -- the facts apply from here...
+  publish_by      timestamptz,               -- ...until here (exclusive); then it expires
+  reviewed_by     uuid references auth.users (id) on delete set null,
+  reviewed_at     timestamptz,
+  review_note     text,
   created_at      timestamptz not null default now(),
   updated_at      timestamptz not null default now(),
   finished_at     timestamptz,
 
-  constraint orbit_x_channel_runs_mode_valid check (mode in ('dry_run', 'live')),
+  constraint orbit_x_channel_runs_mode_valid check (mode in ('review', 'auto')),
   constraint orbit_x_channel_runs_state_valid check (state in (
-    'claimed', 'generated', 'rendered', 'uploaded', 'containers', 'publishing',
-    'published', 'dry_run_complete', 'skipped', 'failed', 'expired', 'killed'))
+    'claimed', 'generated', 'ready_for_review', 'approved', 'uploaded', 'containers', 'publishing',
+    'published', 'review_rejected', 'skipped', 'failed', 'expired', 'killed')),
+  -- An approved run always has a publish time, inside its window.
+  constraint orbit_x_channel_runs_schedule_valid check (
+    state <> 'approved' or (scheduled_for is not null
+      and (publish_by is null or scheduled_for < publish_by)))
 );
 
 create index if not exists orbit_x_channel_runs_recent_idx
   on public.orbit_x_channel_runs (slot_date desc);
+create index if not exists orbit_x_channel_runs_due_idx
+  on public.orbit_x_channel_runs (state, scheduled_for) where state = 'approved';
 
 create table if not exists public.orbit_x_channel_events (
   id      bigint generated always as identity primary key,
@@ -315,6 +338,46 @@ create table if not exists public.orbit_x_channel_control (
 insert into public.orbit_x_channel_control (id, paused) values (1, false)
 on conflict (id) do nothing;
 
+-- ── The template picker ────────────────────────────────────────────────────
+-- Which templates (registry type keys) are active in the rotation, and a
+-- preferred template per format. Keyed by type_key, not by version, so a
+-- choice survives a new version of the same template. The code refuses to
+-- activate a template that is unapproved or fails the layout check.
+
+create table if not exists public.orbit_x_template_settings (
+  type_key   text primary key,
+  active     boolean not null,
+  updated_by uuid references auth.users (id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.orbit_x_format_preferences (
+  format     text primary key,
+  type_key   text not null,
+  updated_by uuid references auth.users (id) on delete set null,
+  updated_at timestamptz not null default now(),
+  constraint orbit_x_format_preferences_format_valid check (format in (
+    'daily_reading', 'weekly_reading', 'monthly_reading', 'something_changed',
+    'calculated_not_invented', 'without_the_fog', 'your_sky'))
+);
+
+alter table public.orbit_x_template_settings enable row level security;
+alter table public.orbit_x_format_preferences enable row level security;
+
+drop policy if exists "orbit_x_template_settings_admin_all" on public.orbit_x_template_settings;
+create policy "orbit_x_template_settings_admin_all" on public.orbit_x_template_settings
+  for all to authenticated
+  using (exists (select 1 from public.orbit_x_admins a where a.owner_id = (select auth.uid())))
+  with check (exists (select 1 from public.orbit_x_admins a where a.owner_id = (select auth.uid())));
+drop policy if exists "orbit_x_format_preferences_admin_all" on public.orbit_x_format_preferences;
+create policy "orbit_x_format_preferences_admin_all" on public.orbit_x_format_preferences
+  for all to authenticated
+  using (exists (select 1 from public.orbit_x_admins a where a.owner_id = (select auth.uid())))
+  with check (exists (select 1 from public.orbit_x_admins a where a.owner_id = (select auth.uid())));
+
+grant select, insert, update, delete on public.orbit_x_template_settings, public.orbit_x_format_preferences to authenticated;
+grant select, insert, update, delete on public.orbit_x_template_settings, public.orbit_x_format_preferences to service_role;
+
 alter table public.orbit_x_channel_runs enable row level security;
 alter table public.orbit_x_channel_events enable row level security;
 alter table public.orbit_x_channel_control enable row level security;
@@ -354,8 +417,9 @@ grant select, update on public.orbit_x_channel_control to service_role;
 --
 -- PUBLIC on purpose: Meta's servers fetch image_url with a plain GET and no
 -- credentials. Only finished slides go here, at unguessable paths under
--- channel/<date>/<post-id>/, and only in live mode (or a dry run that asked to
--- exercise storage). No customer data, ever. Writes are service-role only:
+-- channel/<date>/<post-id>/, and only at publish time, after a post was
+-- approved. Previews in the review queue are rendered on request for admins
+-- and never uploaded. No customer data, ever. Writes are service-role only:
 -- there is no insert policy for any client role.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
@@ -380,6 +444,8 @@ comment on table public.orbit_x_channel_events is
 
 -- ── MANUAL ROLLBACK (whole migration) ──────────────────────────────────────
 --
+-- drop table if exists public.orbit_x_format_preferences;
+-- drop table if exists public.orbit_x_template_settings;
 -- drop table if exists public.orbit_x_channel_events;
 -- drop table if exists public.orbit_x_channel_runs;
 -- drop table if exists public.orbit_x_channel_control;

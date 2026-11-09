@@ -10,7 +10,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { createPublisher, graphConfig, OrbitXPublishError } from "../lib/orbit-x/publisher.js";
-import { runChannelTick, historyFromRuns, slideAltText } from "../lib/orbit-x/channel.js";
+import { runChannelTick, historyFromRuns, slideAltText, localParts } from "../lib/orbit-x/channel.js";
 import { memoryChannelStore, previewCopy } from "../lib/orbit-x/memory-store.js";
 import { syncRegistry, samplePost, BUILTIN_POST_TYPES, renderFingerprint } from "../lib/orbit-x/post-types.js";
 import { evergreenCandidate, EVERGREEN_TOPICS } from "../lib/orbit-x/channel-candidates.js";
@@ -177,70 +177,83 @@ const fakeMedia = () => {
   return { uploads, async upload(path, bytes, type) { uploads.push({ path, type, size: bytes.length });
     return `https://stub.supabase.test/storage/v1/object/public/orbit-x-media/${path}`; } };
 };
-/** One Green evergreen option, so a test does not depend on the calendar. */
-const greenOption = (slug = "what-an-ephemeris-does") => {
+/** One Green evergreen option per day, so a test does not depend on the
+ *  calendar. Only the first day gets it: the topic window keeps the rest. */
+const greenOption = (slug = "what-an-ephemeris-does") => (slotDate) => {
   const topic = EVERGREEN_TOPICS.find((t) => t.slug === slug);
   const candidate = evergreenCandidate(topic);
-  return () => ({ options: [{ candidate, formatId: topic.format, kind: "evergreen", autonomy: autonomyFor(topic.format),
-    urgency: "standing", topicKey: topic.slug, periodKey: `${candidate.eventKey}:x`, eventKey: candidate.eventKey }], notes: [] });
+  return { options: [{ candidate, formatId: topic.format, kind: "evergreen", autonomy: autonomyFor(topic.format),
+    urgency: "standing", topicKey: topic.slug, periodKey: `${candidate.eventKey}:${slotDate}`, eventKey: candidate.eventKey }], notes: [] };
 };
+const firstPrepared = (store) => store.db.runs.filter((r) => r.post_id).sort((a, b) => a.slot_date.localeCompare(b.slot_date))[0];
 
-test("dry run, end to end on real engine facts: drafts, files, a full log, and no call to Meta", async () => {
-  const clock = { now: new Date("2026-11-09T13:07:00Z") };
+test("review mode, end to end on real engine facts: a week of drafts, every one waiting, no call to Meta", async () => {
+  const clock = { now: new Date("2026-11-09T14:00:00Z") };
   const store = await approvedStore(clock);
   const graph = fakeGraph();
-  const summary = await runChannelTick({ env: { ...BASE_ENV, ...GRAPH_ENV, ORBIT_X_AUTOPUBLISH_YELLOW: "true" }, store,
-    deps: { now: () => clock.now, generate, fetchImpl: graph.fetchImpl, budgetMs: 120_000 } });
-  assert.equal(summary.mode, "dry_run");
-  assert.equal(summary.state, "dry_run_complete");
-  assert.equal(graph.calls.length, 0, "dry run never calls Meta");
+  const summary = await runChannelTick({ env: { ...BASE_ENV, ...GRAPH_ENV }, store,
+    deps: { now: () => clock.now, generate, fetchImpl: graph.fetchImpl, budgetMs: 600_000 } });
+  assert.equal(summary.mode, "review");
+  assert.equal(graph.calls.length, 0, "review mode never calls Meta on its own");
+  assert.deepEqual(store.db.runs.map((r) => r.slot_date).sort(),
+    ["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14", "2026-11-15"], "7 days ahead");
+  const prepared = store.db.runs.filter((r) => r.state === "ready_for_review");
+  assert.ok(prepared.length >= 5, `most days are prepared (${prepared.length})`);
+  assert.ok(store.db.runs.every((r) => ["ready_for_review", "skipped"].includes(r.state)), "nothing is approved without a person");
+  assert.ok(store.db.posts.every((p) => p.status === "draft" && p.origin === "channel" && p.created_by === null));
+  assert.ok(prepared.some((r) => r.autonomy === "yellow") && prepared.some((r) => r.autonomy === "green"));
+  assert.ok(new Set(prepared.map((r) => r.format)).size >= 4, "the week is varied across formats");
 
-  const run = store.db.runs[0];
-  const post = store.db.posts[0];
-  assert.equal(post.status, "draft", "a dry run leaves a desk draft, never an approval");
-  assert.equal(post.origin, "channel");
-  assert.equal(post.created_by, null);
-  assert.equal(run.format, "something_changed", "2026-11-09 is a New Moon, and an event outranks standing options");
-  assert.equal(post.event_key, "new_moon:2026-11-09");
+  const moon = store.db.runs.find((r) => r.slot_date === "2026-11-09");
+  assert.equal(moon.format, "something_changed", "2026-11-09 is a New Moon, and an event outranks standing options");
+  const post = store.db.posts.find((p) => p.id === moon.post_id);
   assert.ok(post.event_payload.facts.instant_utc, "the engine's exact instant is in the packet");
-  assert.ok(run.media.length >= 4);
-  assert.match(run.media[0].filename, /^orbit-axis_2026-11-09_new-moon-2026-11-09_01(_portrait)?\.png$/);
-  assert.match(run.media[0].pngSha256, /^[0-9a-f]{64}$/);
-  const steps = store.db.events.filter((e) => e.run_id === run.id).map((e) => `${e.step}:${e.outcome}`);
-  for (const s of ["claim:info", "plan:ok", "checks:ok", "write:ok", "render:ok", "dry_run:info"]) {
+  assert.match(moon.media[0].filename, /^orbit-axis_2026-11-09_new-moon-2026-11-09_01(_portrait)?\.png$/);
+  assert.match(moon.media[0].pngSha256, /^[0-9a-f]{64}$/);
+  assert.ok(moon.publish_by, "every prepared post knows when its window closes");
+  const steps = store.db.events.filter((e) => e.run_id === moon.id).map((e) => `${e.step}:${e.outcome}`);
+  for (const s of ["claim:info", "plan:ok", "checks:ok", "write:ok", "render:ok", "queue:info"]) {
     assert.ok(steps.includes(s), `the log records ${s}`);
   }
 });
 
-test("idempotent per day: a second tick finds the day done; an overlapping tick is turned away", async () => {
-  const clock = { now: new Date("2026-11-11T13:07:00Z") };
+test("idempotent: later ticks prepare nothing twice, and an overlapping tick is turned away", async () => {
+  const clock = { now: new Date("2026-11-11T14:00:00Z") };
   const store = await approvedStore(clock);
-  const deps = { now: () => clock.now, generate, buildOptions: greenOption(), budgetMs: 120_000 };
-  const first = await runChannelTick({ env: BASE_ENV, store, deps });
-  clock.now = new Date("2026-11-11T14:37:00Z");
-  const second = await runChannelTick({ env: BASE_ENV, store, deps });
-  assert.equal(second.runId, first.runId);
-  assert.equal(second.done, true);
-  assert.equal(store.db.posts.length, 1, "one post for the day, however many ticks");
+  const deps = { now: () => clock.now, generate, buildOptions: greenOption(), budgetMs: 600_000 };
+  await runChannelTick({ env: BASE_ENV, store, deps });
+  const runs = store.db.runs.length;
+  const posts = store.db.posts.length;
+  clock.now = new Date("2026-11-11T14:15:00Z");
+  await runChannelTick({ env: BASE_ENV, store, deps });
+  assert.equal(store.db.runs.length, runs, "no second run for any day");
+  assert.equal(store.db.posts.length, posts, "no second post for any day");
 
   const busy = await approvedStore(clock);
-  const claimed = await busy.insertRun({ slot_key: "dry_run:2026-11-11", slot_date: "2026-11-11", mode: "dry_run", state: "claimed" });
+  const claimed = await busy.insertRun({ slot_key: "day:2026-11-11", slot_date: "2026-11-11", mode: "review", state: "claimed" });
   await busy.leaseRun(claimed.id, "2099-01-01T00:00:00.000Z", clock.now.toISOString());
-  const turnedAway = await runChannelTick({ env: BASE_ENV, store: busy, deps });
-  assert.equal(turnedAway.busy, true);
-  assert.equal(busy.db.posts.length, 0);
+  await runChannelTick({ env: BASE_ENV, store: busy, deps });
+  assert.equal(busy.db.runs.find((r) => r.id === claimed.id).state, "claimed", "a leased run is left alone");
 });
 
-test("live, end to end with a mocked Meta: scheduled only after a carousel id, published only with a media id", async () => {
-  const clock = { now: new Date("2026-11-11T13:07:00Z") };
+test("auto mode: a Green post approves itself at the default time and publishes then, not before", async () => {
+  const clock = { now: new Date("2026-11-11T13:00:00Z") };
   const store = await approvedStore(clock);
   const graph = fakeGraph();
   const media = fakeMedia();
-  const summary = await runChannelTick({ env: LIVE_ENV, store, deps: { now: () => clock.now, generate, media,
-    fetchImpl: graph.fetchImpl, sleep: noSleep, buildOptions: greenOption(), budgetMs: 120_000 } });
-  assert.equal(summary.state, "published");
-  assert.equal(summary.mediaId, "media_9");
-  const post = store.db.posts[0];
+  const deps = { now: () => clock.now, generate, media, fetchImpl: graph.fetchImpl, sleep: noSleep,
+    buildOptions: greenOption(), budgetMs: 600_000 };
+  await runChannelTick({ env: LIVE_ENV, store, deps });
+  const run = firstPrepared(store);
+  assert.equal(run.state, "approved");
+  assert.equal(localParts(run.scheduled_for, "America/Chicago").label, "Wed Nov 11, 8:30 AM CST", "the default slot");
+  assert.equal(graph.calls.length, 0, "nothing goes out before its time");
+  assert.equal(media.uploads.length, 0, "and nothing is uploaded early");
+
+  clock.now = new Date("2026-11-11T14:35:00Z"); // 8:35 AM CST
+  const summary = await runChannelTick({ env: LIVE_ENV, store, deps });
+  assert.deepEqual(summary.published, ["2026-11-11"]);
+  const post = store.db.posts.find((p) => p.id === run.post_id);
   assert.equal(post.status, "published");
   assert.equal(post.external_media_id, "media_9");
   assert.equal(post.permalink, "https://www.instagram.com/p/abc123/");
@@ -252,126 +265,148 @@ test("live, end to end with a mocked Meta: scheduled only after a carousel id, p
   assert.ok(items.every((c) => c.params.alt_text.length >= 40), "every slide carries alt text");
   assert.equal(graph.calls.filter((c) => c.path.endsWith("/media_publish")).length, 1);
 
-  clock.now = new Date("2026-11-11T16:17:00Z");
-  await runChannelTick({ env: LIVE_ENV, store, deps: { now: () => clock.now, generate, media, fetchImpl: graph.fetchImpl, sleep: noSleep } });
+  clock.now = new Date("2026-11-11T15:00:00Z");
+  await runChannelTick({ env: LIVE_ENV, store, deps });
   assert.equal(graph.calls.filter((c) => c.path.endsWith("/media_publish")).length, 1, "a later tick never republishes");
 });
 
+test("auto mode never approves Yellow: it waits for a person, whatever its template", async () => {
+  const clock = { now: new Date("2026-11-09T14:00:00Z") };
+  const store = await approvedStore(clock);
+  await runChannelTick({ env: LIVE_ENV, store, deps: { now: () => clock.now, generate, budgetMs: 600_000 } });
+  const yellow = store.db.runs.filter((r) => r.autonomy === "yellow" && r.post_id);
+  assert.ok(yellow.length > 0);
+  assert.ok(yellow.every((r) => r.state === "ready_for_review"), "every Yellow post waits");
+  assert.ok(store.db.runs.filter((r) => r.autonomy === "green" && r.post_id).every((r) => r.state === "approved"),
+    "Green posts approved themselves");
+});
+
 test("a lost publish response is recovered from the container, never published twice", async () => {
-  const clock = { now: new Date("2026-11-12T13:07:00Z") };
+  const clock = { now: new Date("2026-11-12T13:00:00Z") };
   const store = await approvedStore(clock);
   // Meta publishes, then the response is lost. The fake's media list carries
   // the caption the post really has, which is what recovery matches on.
   const onPublish = { loseResponse: true, get caption() { return store.db.posts[0]?.edited_copy?.caption || ""; } };
   const graph = fakeGraph({ onPublish });
   const deps = { now: () => clock.now, generate, media: fakeMedia(), fetchImpl: graph.fetchImpl, sleep: noSleep,
-    buildOptions: greenOption("why-apps-disagree"), budgetMs: 120_000 };
-  const result = await runChannelTick({ env: LIVE_ENV, store, deps });
-  assert.equal(result.state, "published", "the container said it went out, and the id was recovered");
-  assert.equal(store.db.posts[0].external_media_id, "media_9");
+    buildOptions: greenOption("why-apps-disagree"), budgetMs: 600_000 };
+  await runChannelTick({ env: LIVE_ENV, store, deps });
+  clock.now = new Date("2026-11-12T15:00:00Z");
+  await runChannelTick({ env: LIVE_ENV, store, deps });
+  const run = firstPrepared(store);
+  assert.equal(run.state, "published", "the container said it went out, and the id was recovered");
+  assert.equal(store.db.posts.find((p) => p.id === run.post_id).external_media_id, "media_9");
   assert.equal(graph.calls.filter((c) => c.path.endsWith("/media_publish")).length, 1, "exactly one publish call, never a retry");
   const log = store.db.events.map((e) => `${e.step}:${e.outcome}:${JSON.stringify(e.detail)}`).join("\n");
   assert.match(log, /publish_outcome_unknown/, "the unknown outcome is in the audit log");
 
-  // And when the container shows it did NOT go out, the next tick publishes once.
-  const clock2 = { now: new Date("2026-11-12T13:07:00Z") };
+  // And when the container shows it did NOT go out, it is published once more.
+  const clock2 = { now: new Date("2026-11-12T13:00:00Z") };
   const store2 = await approvedStore(clock2);
   const graph2 = fakeGraph({ failures: { media_publish: [{ status: 503, error: { code: 2, message: "unavailable" } }] } });
-  const r2 = await runChannelTick({ env: LIVE_ENV, store: store2, deps: { ...deps, now: () => clock2.now, fetchImpl: graph2.fetchImpl } });
-  assert.equal(r2.state, "published");
+  const deps2 = { ...deps, now: () => clock2.now, fetchImpl: graph2.fetchImpl };
+  await runChannelTick({ env: LIVE_ENV, store: store2, deps: deps2 });
+  clock2.now = new Date("2026-11-12T15:00:00Z");
+  await runChannelTick({ env: LIVE_ENV, store: store2, deps: deps2 });
+  assert.equal(firstPrepared(store2).state, "published");
   assert.equal(graph2.calls.filter((c) => c.path.endsWith("/media_publish")).length, 2,
     "a 503 is resolved through the container (FINISHED, not PUBLISHED) and published once more");
 });
 
-test("the kill switch stops everything and ends in-flight runs; the desk's pause stops before Meta", async () => {
-  const clock = { now: new Date("2026-11-13T13:07:00Z") };
+test("pause and kill switch: due posts wait while paused; the kill switch ends a publish under way", async () => {
+  const clock = { now: new Date("2026-11-13T13:00:00Z") };
   const store = await approvedStore(clock);
   const graph = fakeGraph({ statuses: ["IN_PROGRESS"] });
-  const deps = { now: () => clock.now, generate, media: fakeMedia(), fetchImpl: graph.fetchImpl, sleep: noSleep,
-    buildOptions: greenOption(), budgetMs: 120_000 };
-  const waiting = await runChannelTick({ env: LIVE_ENV, store, deps });
-  assert.equal(waiting.state, "containers", "the carousel is still processing");
+  const media = fakeMedia();
+  const deps = { now: () => clock.now, generate, media, fetchImpl: graph.fetchImpl, sleep: noSleep,
+    buildOptions: greenOption(), budgetMs: 600_000 };
+  await runChannelTick({ env: LIVE_ENV, store, deps });
+  const run = firstPrepared(store);
+  assert.equal(run.state, "approved");
 
   await store.setControl({ paused: true, reason: "test" });
+  clock.now = new Date("2026-11-13T15:00:00Z");
   const paused = await runChannelTick({ env: LIVE_ENV, store, deps });
   assert.equal(paused.state, "paused");
-  assert.equal(store.db.runs[0].state, "containers", "a pause loses nothing");
+  assert.equal(media.uploads.length, 0, "nothing is uploaded while paused");
+  assert.equal(graph.calls.length, 0, "and Meta is not called");
   await store.setControl({ paused: false });
+
+  await runChannelTick({ env: LIVE_ENV, store, deps });
+  assert.equal(store.db.runs.find((r) => r.id === run.id).state, "containers", "after resuming, it goes out; Meta is still processing");
 
   const killed = await runChannelTick({ env: { ...LIVE_ENV, ORBIT_X_KILL_SWITCH: "stop" }, store, deps });
   assert.equal(killed.state, "killed");
-  assert.equal(store.db.runs[0].state, "killed", "the in-flight run ends for good");
-  assert.equal(store.db.posts[0].status, "failed", "and its post says it did not go out");
+  assert.equal(store.db.runs.find((r) => r.id === run.id).state, "killed", "the publish under way ends for good");
+  assert.equal(store.db.posts.find((p) => p.id === run.post_id).status, "failed", "and its post says it did not go out");
   assert.equal(graph.calls.filter((c) => c.path.endsWith("/media_publish")).length, 0);
 });
 
-test("the channel skips, and says why, when nothing is approved, Yellow is off, or AI is missing", async () => {
-  const clock = { now: new Date("2026-11-14T13:07:00Z") };
+test("a queued post whose window closes expires instead of posting late", async () => {
+  const clock = { now: new Date("2026-11-09T14:00:00Z") };
+  const store = await approvedStore(clock);
+  await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate, budgetMs: 600_000 } });
+  const moon = store.db.runs.find((r) => r.slot_date === "2026-11-09");
+  clock.now = new Date("2026-11-10T07:00:00Z"); // 1:00 AM CST on the 10th
+  const summary = await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate, budgetMs: 600_000 } });
+  assert.ok(summary.expired.includes("2026-11-09"));
+  assert.equal(store.db.runs.find((r) => r.id === moon.id).state, "expired");
+  assert.equal(store.db.posts.find((p) => p.id === moon.post_id).status, "rejected");
+  assert.ok(store.db.runs.some((r) => r.slot_date === "2026-11-16"), "and the lookahead moved on a day");
+});
+
+test("the channel skips, and says why, when no template is active or AI is missing", async () => {
+  const clock = { now: new Date("2026-11-14T14:00:00Z") };
   const empty = memoryChannelStore({ now: () => clock.now });
-  const none = await runChannelTick({ env: BASE_ENV, store: empty, deps: { now: () => clock.now, generate, buildOptions: greenOption() } });
-  assert.equal(none.state, "skipped");
-  assert.match(empty.db.runs[0].error, /no approved post type is usable/);
+  await runChannelTick({ env: BASE_ENV, store: empty, deps: { now: () => clock.now, generate, buildOptions: greenOption(), budgetMs: 600_000 } });
+  assert.ok(empty.db.runs.every((r) => r.state === "skipped"));
+  assert.match(empty.db.runs[0].error, /no template is active/);
   assert.ok(empty.db.types.length === BUILTIN_POST_TYPES.length && empty.db.types.every((t) => t.status === "proposed"),
     "the tick proposed the built-ins for review");
-
-  const yellowOnly = async () => {
-    const reading = (await import("../lib/orbit-x/post-types.js")).fixtureCandidates().daily_reading;
-    return { options: [{ candidate: reading, formatId: "daily_reading", kind: "reading", autonomy: "yellow",
-      urgency: "standing", periodKey: reading.eventKey, eventKey: reading.eventKey }], notes: [] };
-  };
-  const options = await yellowOnly();
-  const store = await approvedStore(clock);
-  const off = await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate, buildOptions: () => options } });
-  assert.equal(off.state, "skipped");
-  assert.match(JSON.stringify(store.db.runs[0].plan.refusedByPolicy), /ORBIT_X_AUTOPUBLISH_YELLOW/);
 
   const noAi = await approvedStore(clock);
   const env = { ...BASE_ENV };
   delete env.ORBIT_X_AI_API_KEY;
-  const result = await runChannelTick({ env, store: noAi, deps: { now: () => clock.now, buildOptions: greenOption() } });
-  assert.equal(result.state, "skipped");
-  assert.match(noAi.db.runs[0].error, /no copy source/);
+  await runChannelTick({ env, store: noAi, deps: { now: () => clock.now, buildOptions: greenOption(), budgetMs: 600_000 } });
+  assert.match(firstPrepared(noAi)?.error || noAi.db.runs[0].error, /no copy source|topic/);
+  assert.ok(noAi.db.runs.some((r) => /no copy source/.test(r.error || "")));
 });
 
-test("a period the desk already covered is never posted again", async () => {
-  const clock = { now: new Date("2026-11-15T13:07:00Z") };
+test("a period the desk already covered is never prepared again", async () => {
+  const clock = { now: new Date("2026-11-15T14:00:00Z") };
   const store = await approvedStore(clock);
-  const option = greenOption()();
+  const option = greenOption()("2026-11-15");
   store.db.posts.push({ id: "desk-1", event_key: option.options[0].eventKey, period_key: "other", status: "exported", origin: "desk" });
-  const result = await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate, buildOptions: () => option } });
-  assert.equal(result.state, "skipped");
-  assert.match(JSON.stringify(store.db.runs[0].plan.refusedByPolicy), /already covered \(desk, exported\)/);
+  await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate, buildOptions: () => option, budgetMs: 600_000 } });
+  const day = store.db.runs.find((r) => r.slot_date === "2026-11-15");
+  assert.equal(day.state, "skipped");
+  assert.match(JSON.stringify(day.plan.refusedByPolicy), /already covered \(desk, exported\)/);
 });
 
 test("copy that fails its checks is excluded and the next tick tries the next-best option", async () => {
-  const clock = { now: new Date("2026-11-16T13:07:00Z") };
+  const clock = { now: new Date("2026-11-16T14:00:00Z") };
   const store = await approvedStore(clock);
-  const two = () => {
-    const a = greenOption("what-an-ephemeris-does")().options[0];
-    const b = greenOption("why-apps-disagree")().options[0];
-    return { options: [a, b], notes: [] };
-  };
+  const two = (slotDate) => ({ options: [greenOption("what-an-ephemeris-does")(slotDate).options[0],
+    greenOption("why-apps-disagree")(slotDate).options[0]], notes: [] });
   const badThenGood = async (packet) => {
     const out = await generate(packet);
-    if (packet.event.facts.topic === "what-an-ephemeris-does" || packet.event.title === "What an ephemeris does") {
+    if (packet.event.title === "What an ephemeris does") {
       const bad = JSON.parse(out.text);
       bad.caption = "This will bring you luck.";
       return { text: JSON.stringify(bad), usage: null };
     }
     return out;
   };
-  const deps = { now: () => clock.now, generate: badThenGood, buildOptions: two, budgetMs: 120_000 };
-  const first = await runChannelTick({ env: BASE_ENV, store, deps });
-  const firstPlan = store.db.runs[0].plan;
-  if (first.state === "claimed") {
-    assert.equal(firstPlan.excluded.length, 1, "the failed plan is excluded");
-    clock.now = new Date("2026-11-16T14:37:00Z");
-    const second = await runChannelTick({ env: BASE_ENV, store, deps });
-    assert.equal(second.state, "dry_run_complete");
-    assert.equal(store.db.posts[0].event_key, "educational:why-apps-disagree");
-  } else {
-    assert.equal(first.state, "dry_run_complete", "rotation chose the clean option first");
+  await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate: badThenGood, buildOptions: two, budgetMs: 600_000 } });
+  const day = store.db.runs.find((r) => r.slot_date === "2026-11-16");
+  if (day.state === "claimed") {
+    assert.equal(day.plan.excluded.length, 1, "the failed plan is excluded");
+    clock.now = new Date("2026-11-16T14:15:00Z");
+    await runChannelTick({ env: BASE_ENV, store, deps: { now: () => clock.now, generate: badThenGood, buildOptions: two, budgetMs: 600_000 } });
   }
+  const after = store.db.runs.find((r) => r.slot_date === "2026-11-16");
+  assert.equal(after.state, "ready_for_review");
+  assert.equal(store.db.posts.find((p) => p.id === after.post_id).event_key, "educational:why-apps-disagree");
   assert.ok(!store.db.posts.some((p) => /luck/.test(p.edited_copy.caption)), "the refused copy was never saved");
 });
 
@@ -412,8 +447,9 @@ test("the desk lists proposed built-ins, approves once, refuses illegal moves, a
   const list = await handleOrbitXRoute("GET", "/api/orbit-x/channel", new URLSearchParams(), {}, AUTH, deps);
   assert.equal(list.status, 200);
   assert.equal(list.body.types.length, BUILTIN_POST_TYPES.length);
-  assert.ok(list.body.types.every((t) => t.status === "proposed" && t.layout.length === 0));
-  assert.equal(list.body.status.mode, "dry_run");
+  assert.ok(list.body.types.every((t) => t.status === "proposed"));
+  assert.ok(list.body.types.filter((t) => !t.type_key.startsWith("celestial_editorial")).every((t) => t.layout.length === 0));
+  assert.equal(list.body.status.mode, "review");
   assert.ok(!JSON.stringify(list.body).includes("test-ai-key"), "no secret values in the desk payload");
 
   const type = list.body.types.find((t) => t.type_key === "lunar_hero");

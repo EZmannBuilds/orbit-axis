@@ -14,9 +14,11 @@ import {
   CHANNEL_FORMATS, READING_FORMAT_IDS, TEMPLATE_FORMATS, BUILTIN_POST_TYPES, HOOK_STYLES, CAPTION_STRUCTURES,
   validatePostTypeSpec, specHash, renderFingerprint, planRegistrySync, usability, designForType,
   renderTypeSample, typeLabel, TYPE_TRANSITIONS, fixtureCandidates, samplePost,
+  templateStates, rotationTypes, preferredMap,
 } from "../lib/orbit-x/post-types.js";
+import { publishWindow, defaultPublishAt, scheduleWithin, localParts, neighboursOf, lookaheadDates } from "../lib/orbit-x/channel.js";
 import { choosePlan, resolveRotation, nearDuplicate, DEFAULT_ROTATION, seeded } from "../lib/orbit-x/rotation.js";
-import { runPostChecks, autonomyAllowed, autonomyFor, verifyHumanDates, channelBrief } from "../lib/orbit-x/policy.js";
+import { runPostChecks, autonomyAllowed, autonomyFor, verifyHumanDates, channelBrief, reviewRequired } from "../lib/orbit-x/policy.js";
 import { normalizeDesign, renderPost, sanitizeMotif, motifLayer, ASPECTS } from "../lib/orbit-x/templates.js";
 import { validateGeneratedPost } from "../lib/orbit-x/schemas.js";
 import { layoutCollisions, postCollisions } from "../lib/orbit-x/layout-check.js";
@@ -37,20 +39,33 @@ test("the channel carries Green and Yellow formats only; Red does not exist here
     assert.ok(["green", "yellow"].includes(FORMATS[id].autonomyRisk), `${id} is green or yellow`);
   }
   assert.equal(autonomyFor("no_such_format"), "red", "an unknown format is treated as red");
-  assert.deepEqual(autonomyAllowed("red", { yellow: true }), { allowed: false, reason: "red: never autonomous" });
-  assert.equal(autonomyAllowed("yellow", { yellow: false }).allowed, false, "yellow needs its own flag");
-  assert.equal(autonomyAllowed("yellow", { yellow: true }).allowed, true);
+  assert.deepEqual(autonomyAllowed("red"), { allowed: false, reason: "red: never autonomous" });
+  assert.equal(autonomyAllowed("yellow").allowed, true, "yellow is prepared, for a person to review");
   assert.equal(autonomyAllowed("green").allowed, true);
 });
 
-test("every built-in type is valid, fits, and keeps text off the mark and off other text", () => {
-  assert.equal(BUILTIN_POST_TYPES.length, 14);
-  assert.equal(new Set(BUILTIN_POST_TYPES.map((b) => b.key)).size, 14, "keys are unique");
+test("review is the default; only Green may approve itself, and only in auto mode", () => {
+  assert.equal(reviewRequired({ mode: "review", autonomy: "green" }), true);
+  assert.equal(reviewRequired({ mode: "review", autonomy: "yellow" }), true);
+  assert.equal(reviewRequired({ mode: "auto", autonomy: "green" }), false);
+  assert.equal(reviewRequired({ mode: "auto", autonomy: "yellow" }), true, "Yellow always waits for a person");
+  assert.equal(reviewRequired({ mode: "auto", autonomy: "red" }), true);
+  assert.equal(channelConfig({}).mode, "review");
+  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_LIVE: "true" }).mode, "auto");
+});
+
+test("every built-in type is valid and fits; all but Celestial Editorial keep text clear", () => {
+  assert.equal(BUILTIN_POST_TYPES.length, 16);
+  assert.equal(new Set(BUILTIN_POST_TYPES.map((b) => b.key)).size, 16, "keys are unique");
   for (const b of BUILTIN_POST_TYPES) {
     assert.equal(validatePostTypeSpec(b.spec).ok, true, `${b.key} validates`);
     const { warnings, layout } = renderFingerprint(b.spec);
     assert.deepEqual(warnings, [], `${b.key} renders without fitting warnings`);
-    assert.deepEqual(layout, [], `${b.key} has no layout collisions`);
+    if (b.spec.family === "celestial_editorial") {
+      assert.ok(layout.length > 0, "Celestial Editorial's known collision is detected, which keeps it inactive");
+    } else {
+      assert.deepEqual(layout, [], `${b.key} has no layout collisions`);
+    }
   }
   // Every channel format has at least one built-in to rotate through.
   for (const id of CHANNEL_FORMATS) {
@@ -205,7 +220,101 @@ test("weekly caps and the evergreen topic window hold", () => {
     post_type_label: "instrument/v1", topic_key: "x" }];
   const windowed = choosePlan({ options: [evergreen], types: usableTypes, history: recent, slotDate: "2026-11-09" });
   assert.equal(windowed.plan, null);
-  assert.match(windowed.considered[0].reason, /topic ran 10 days ago/);
+  assert.match(windowed.considered[0].reason, /topic runs 10 days away/);
+});
+
+test("planning ahead: rules look both ways, and caps hold in every 7-day window", () => {
+  // Wednesday is planned after Thursday already exists.
+  const upcoming = [{ slot_date: "2026-11-12", format: "daily_reading", family: "lunar_field", post_type_label: "lunar_field/v1" }];
+  const history = [{ slot_date: "2026-11-10", format: "daily_reading", family: "orbit_signal", post_type_label: "orbit_signal/v1" }];
+  const { plan } = choosePlan({ options: [opt("daily_reading", "daily:2026-11-11")], types: usableTypes, history, upcoming,
+    slotDate: "2026-11-11" });
+  assert.ok(!["lunar_field", "orbit_signal"].includes(plan.family), "neither neighbour's family repeats");
+
+  // Two daily readings already around the slot plus one more five days out:
+  // a window containing the slot would hold 4 with this one, over the cap of 3.
+  const around = ["2026-11-09", "2026-11-10", "2026-11-14"].map((d) => ({ slot_date: d, format: "daily_reading",
+    family: "planetary_grid", post_type_label: "planetary_grid/v1" }));
+  const capped = choosePlan({ options: [opt("daily_reading", "daily:2026-11-12")], types: usableTypes,
+    history: around.filter((h) => h.slot_date < "2026-11-12").reverse(), upcoming: around.filter((h) => h.slot_date > "2026-11-12"),
+    slotDate: "2026-11-12" });
+  assert.equal(capped.plan, null);
+  assert.match(capped.considered[0].reason, /weekly cap reached \(3\/3/);
+
+  const runs = [{ id: "a", slot_date: "2026-11-10", post_id: "p", plan: {}, state: "approved", format: "x" },
+    { id: "b", slot_date: "2026-11-13", post_id: "q", plan: {}, state: "ready_for_review", format: "y" },
+    { id: "c", slot_date: "2026-11-14", post_id: "r", plan: {}, state: "review_rejected", format: "z" }];
+  const n = neighboursOf(runs, "2026-11-12");
+  assert.deepEqual([n.history.length, n.upcoming.length], [1, 1], "rejected posts are not neighbours");
+  assert.deepEqual(lookaheadDates("2026-11-30", 3), ["2026-11-30", "2026-12-01", "2026-12-02"]);
+});
+
+/* ── The template picker ──────────────────────────────────────────────────── */
+
+const approvedRows = () => planRegistrySync([]).inserts.map((r, i) => ({ ...r, id: `id-${i}`, status: "approved" }));
+
+test("templates: approved ones are active by default; switched-off and blocked ones never rotate", () => {
+  const states = templateStates(approvedRows(), [{ type_key: "lunar_field", active: false }]);
+  const byKey = Object.fromEntries(states.map((t) => [t.typeKey, t]));
+  assert.equal(byKey.orbit_signal.active, true);
+  assert.equal(byKey.lunar_field.active, false, "switched off in the desk");
+  assert.equal(byKey.lunar_field.activatable, true, "and it can be switched back on");
+  for (const key of ["celestial_editorial", "celestial_editorial.alt"]) {
+    assert.equal(byKey[key].active, false, `${key} stays inactive`);
+    assert.equal(byKey[key].activatable, false);
+    assert.match(byKey[key].blockedReason, /layout collisions/);
+  }
+  const forced = templateStates(approvedRows(), [{ type_key: "celestial_editorial", active: true }]);
+  assert.equal(forced.find((t) => t.typeKey === "celestial_editorial").active, false, "a settings row cannot force a blocked template on");
+  const proposed = templateStates(planRegistrySync([]).inserts.map((r, i) => ({ ...r, id: `p-${i}` })));
+  assert.ok(proposed.every((t) => !t.active && /not approved/.test(t.blockedReason)), "built-ins wait for approval");
+
+  const rotating = rotationTypes(states).map((t) => t.typeKey);
+  assert.ok(!rotating.includes("lunar_field") && !rotating.includes("celestial_editorial"));
+  const days = ["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14"];
+  for (const d of days) {
+    const { plan } = choosePlan({ options: [opt("daily_reading", `daily:${d}`)], types: rotationTypes(states), history: [], slotDate: d });
+    assert.ok(!["lunar_field", "celestial_editorial", "celestial_editorial.alt"].includes(plan.type.typeKey), `${d} uses an active template`);
+  }
+});
+
+test("a format's preferred template is used whenever the no-repeat rules allow", () => {
+  const types = rotationTypes(templateStates(approvedRows()));
+  const preferred = preferredMap([{ format: "daily_reading", type_key: "orbit_signal.alt" }]);
+  const first = choosePlan({ options: [opt("daily_reading", "daily:2026-11-09")], types, preferred, slotDate: "2026-11-09" });
+  assert.equal(first.plan.type.label, "orbit_signal.alt/v1");
+  assert.match(first.considered[0].reason, /\(preferred\)/);
+  const blocked = choosePlan({ options: [opt("daily_reading", "daily:2026-11-10")], types, preferred, slotDate: "2026-11-10",
+    history: [{ slot_date: "2026-11-09", format: "daily_reading", family: "orbit_signal", post_type_label: "orbit_signal.alt/v1" }] });
+  assert.notEqual(blocked.plan.family, "orbit_signal", "the family rule still wins over a preference");
+});
+
+/* ── Publish windows and schedules ───────────────────────────────────────── */
+
+test("publish windows follow the facts, and a schedule must fall inside one", () => {
+  const tz = "America/Chicago";
+  const daily = fixtureCandidates().daily_reading;
+  const w = publishWindow({ candidate: daily, formatId: "daily_reading", slotDate: "2026-08-20", timezone: tz });
+  assert.deepEqual(w, { start: daily.facts.period.start_utc, end: daily.facts.period.end_utc }, "a reading stays in its period");
+  const moon = publishWindow({ candidate: fixtureCandidates().something_changed, formatId: "something_changed",
+    slotDate: "2026-11-24", timezone: tz });
+  assert.equal(localParts(moon.start, tz).label, "Tue Nov 24, 12:00 AM CST");
+  assert.equal(localParts(moon.end, tz).label, "Wed Nov 25, 12:00 AM CST", "a moon post stays on its day");
+  const evergreen = publishWindow({ candidate: evergreenCandidate(EVERGREEN_TOPICS[0]), formatId: "calculated_not_invented",
+    slotDate: "2026-11-24", timezone: tz });
+  assert.equal(localParts(evergreen.end, tz).date, "2026-12-01", "evergreen may move within a week");
+
+  assert.equal(localParts(defaultPublishAt({ slotDate: "2026-11-24", timezone: tz, time: "08:30", window: moon }), tz).label,
+    "Tue Nov 24, 8:30 AM CST");
+  const now = new Date("2026-11-24T12:00:00Z");
+  assert.equal(scheduleWithin({ date: "2026-11-24", time: "09:15", timezone: tz, window: moon, now }).ok, true);
+  assert.match(scheduleWithin({ date: "2026-11-24", time: "05:00", timezone: tz, window: moon, now }).problem, /already passed/);
+  assert.match(scheduleWithin({ date: "2026-11-25", time: "09:00", timezone: tz, window: moon, now }).problem, /stop applying/);
+  assert.match(scheduleWithin({ date: "2026-11-24", time: "9am", timezone: tz, window: moon, now }).problem, /HH:MM/);
+  // Daylight saving: 2:30 AM on 2027-03-14 does not exist in Chicago.
+  const spring = { start: "2027-03-13T00:00:00Z", end: "2027-03-20T00:00:00Z" };
+  assert.match(scheduleWithin({ date: "2027-03-14", time: "02:30", timezone: tz, window: spring,
+    now: new Date("2027-03-13T00:00:00Z") }).problem, /does not exist/);
 });
 
 test("an event on its day outranks the standing options, and choices are deterministic", () => {
@@ -316,7 +425,7 @@ test("the channel brief rides in the packet; the desk's packet is unchanged", ()
   const packet = buildPacket(c, "something_changed", [], "", brief);
   assert.equal(packet.channel.hookStyle, HOOK_STYLES.plain_fact);
   assert.match(packet.channel.neverMention, /money/);
-  assert.match(JSON.stringify(packet.channel), /no per-post human review/);
+  assert.match(JSON.stringify(packet.channel), /little or no further editing/);
 });
 
 test("the model's design is ignored: the approved type's design is what renders", () => {
@@ -357,9 +466,11 @@ test("evergreen facts are read from code, never remembered", () => {
 test("flags are exact-string, and the kill switch fails safe", () => {
   assert.equal(channelEnabled({ ORBIT_X_ENABLED: "true", ORBIT_X_AUTOPUBLISH: "1" }), false);
   assert.equal(channelEnabled({ ORBIT_X_ENABLED: "true", ORBIT_X_AUTOPUBLISH: "true" }), true);
-  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_LIVE: "TRUE" }).mode, "dry_run");
-  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_LIVE: "true" }).mode, "live");
-  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_YELLOW: "yes" }).yellow, false);
+  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_LIVE: "TRUE" }).mode, "review");
+  assert.equal(channelConfig({ ORBIT_X_AUTOPUBLISH_LIVE: "true" }).mode, "auto");
+  assert.equal(channelConfig({ ORBIT_X_PUBLISH_TIME: "7:30" }).publishTime, "08:30", "a malformed time is not guessed at");
+  assert.match(channelConfig({ ORBIT_X_PUBLISH_TIME: "7:30" }).rotationIgnored.join(" "), /ORBIT_X_PUBLISH_TIME/);
+  assert.equal(channelConfig({ ORBIT_X_PUBLISH_TIME: "07:45" }).publishTime, "07:45");
   for (const value of ["1", "true", "false", "stop", "yes"]) assert.equal(killSwitchEngaged({ ORBIT_X_KILL_SWITCH: value }), true, value);
   for (const value of [undefined, "", "   "]) assert.equal(killSwitchEngaged({ ORBIT_X_KILL_SWITCH: value }), false);
   const summary = JSON.stringify(channelConfig({ ORBIT_X_IG_ACCESS_TOKEN: "secret-token-value-1234567890", CRON_SECRET: "cron-secret-value-123" }));
@@ -378,6 +489,12 @@ test("the channel migration holds the guarantees the code relies on", () => {
   assert.match(sql, /spec is immutable; propose a new version/);
   assert.match(sql, /orbit_x_channel_events is append-only/);
   assert.match(sql, /'orbit-x-media',\s*'orbit-x-media',\s*true/, "the media bucket is public so Meta can fetch");
+  assert.match(sql, /mode in \('review', 'auto'\)/);
+  assert.match(sql, /'ready_for_review', 'approved'/);
+  assert.match(sql, /orbit_x_channel_runs_schedule_valid[\s\S]*scheduled_for is not null/, "an approved run has a publish time");
+  assert.match(sql, /create table if not exists public\.orbit_x_template_settings/);
+  assert.match(sql, /create table if not exists public\.orbit_x_format_preferences/);
+  assert.match(sql, /orbit_x_template_settings_admin_all[\s\S]*orbit_x_admins/, "template choices are admin-only");
   assert.doesNotMatch(sql, /create policy[^;]*orbit_x_channel_runs[^;]*for insert/i, "no client role writes runs");
   // The partial unique index this channel reuses still covers its statuses.
   const readings = readFileSync(new URL("../supabase/migrations/20260820200000_orbit_x_collective_readings.sql", import.meta.url), "utf8");

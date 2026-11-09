@@ -94,18 +94,17 @@ deliberate exception and stops publishing for any non-empty value.
 
 | Name | Purpose | Environments | Required | Who supplies |
 |---|---|---|---|---|
-| `ORBIT_X_AUTOPUBLISH` | `true` runs the channel (dry run unless the next flag is also `true`). Needs `ORBIT_X_ENABLED=true`. | Production | No | Owner |
-| `ORBIT_X_AUTOPUBLISH_LIVE` | `true` lets the channel call the Instagram API. Anything else is dry run. | Production | No | Owner |
-| `ORBIT_X_AUTOPUBLISH_YELLOW` | `true` lets Yellow (interpretive) formats auto-publish after the stricter checks. | Production | No | Owner |
-| `ORBIT_X_KILL_SWITCH` | Any non-empty value stops all publishing and ends in-flight runs. Needs a redeploy on Vercel; the desk's Pause is immediate. | Production | No | Owner |
-| `CRON_SECRET` | Vercel sends it as `Authorization: Bearer …` to the cron route. 16+ characters. Unset means the route refuses. | Production | **Yes** for the channel | Owner |
-| `ORBIT_X_IG_API` | `instagram` (Instagram Login) or `facebook` (Facebook Login + linked Page). | Production | **Yes** for live | Owner |
-| `ORBIT_X_IG_USER_ID` | Numeric Instagram professional account id. | Production | **Yes** for live | Owner |
-| `ORBIT_X_IG_ACCESS_TOKEN` | Long-lived token with the content-publish permission. Secret. | Production | **Yes** for live | Owner |
+| `ORBIT_X_AUTOPUBLISH` | `true` runs the channel in **review mode**: keeps 7 days prepared as "ready for review"; nothing publishes until a person approves a post with a publish time. Needs `ORBIT_X_ENABLED=true`. | Production | No | Owner |
+| `ORBIT_X_AUTOPUBLISH_LIVE` | `true` enables **auto mode**: Green posts approve themselves. Yellow always waits for a person. Off by default. | Production | No | Owner |
+| `ORBIT_X_PUBLISH_TIME` | Default publish time per day, `HH:MM` in the editorial timezone. Default `08:30`. | Production | No | Owner |
+| `ORBIT_X_KILL_SWITCH` | Any non-empty value stops preparing and publishing and ends a publish under way. Needs a redeploy on Vercel; the desk's Pause is immediate. | Production | No | Owner |
+| `CRON_SECRET` | Vercel sends it as `Authorization: Bearer ...` to the cron route. 16+ characters. Unset means the route refuses. | Production | **Yes** for the channel | Owner |
+| `ORBIT_X_IG_API` | `facebook` (Facebook Login with the linked Page, the default route) or `instagram` (Instagram Login). | Production | **Yes** to publish | Owner |
+| `ORBIT_X_IG_USER_ID` | Numeric Instagram professional account id. | Production | **Yes** to publish | Owner |
+| `ORBIT_X_IG_ACCESS_TOKEN` | Token with the content-publish permission; a system-user token does not expire. Secret. | Production | **Yes** to publish | Owner |
 | `ORBIT_X_GRAPH_API_VERSION` | Graph API version. Default `v25.0`. | Production | No | Owner |
-| `ORBIT_X_IG_TOKEN_EXPIRES_AT` | Optional ISO date; the run log warns 10 days before it. | Production | No | Owner |
+| `ORBIT_X_IG_TOKEN_EXPIRES_AT` | Optional ISO date for expiring tokens; the run log warns 10 days before it. | Production | No | Owner |
 | `ORBIT_X_CHANNEL_ROTATION` | Optional JSON overriding the rotation rules. Invalid keys are ignored and reported in the desk. | Production | No | Owner |
-| `ORBIT_X_DRY_RUN_UPLOAD` | `true` uploads dry-run slides to the public media bucket too. | Production | No | Owner |
 | `ORBIT_X_DESIGN_PROPOSALS` | `true` asks Claude weekly for new post types to review. | Production | No | Owner |
 
 The channel also needs `SUPABASE_SERVICE_ROLE_KEY` with `orbit-x-channel` in

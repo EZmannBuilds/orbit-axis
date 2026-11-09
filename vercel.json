@@ -13,16 +13,8 @@
   },
   "crons": [
     {
-      "path": "/api/orbit-x-channel/tick?tick=1",
-      "schedule": "7 13 * * *"
-    },
-    {
-      "path": "/api/orbit-x-channel/tick?tick=2",
-      "schedule": "37 14 * * *"
-    },
-    {
-      "path": "/api/orbit-x-channel/tick?tick=3",
-      "schedule": "17 16 * * *"
+      "path": "/api/orbit-x-channel/tick",
+      "schedule": "*/15 * * * *"
     }
   ],
   "rewrites": [
