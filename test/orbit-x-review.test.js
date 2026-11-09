@@ -321,3 +321,15 @@ test("the gates hold: non-admins see nothing, and writes need the channel's auth
   assert.equal(noLane.status, 503);
   assert.equal(noLane.body.code, "channel_unauthorized");
 });
+
+test("the profile grid preview: the next nine queued posts, newest first, nothing published by looking", async () => {
+  const { route, graph, media } = await preparedWeek();
+  const grid = await route("GET", "/api/orbit-x/channel/grid");
+  assert.equal(grid.status, 200);
+  assert.ok(grid.body.tiles.length >= 5 && grid.body.tiles.length <= 9);
+  assert.ok(grid.body.tiles.every((t) => t.svg.startsWith("<svg") && /preserveAspectRatio="xMidYMid slice"/.test(t.svg)), "tiles crop like the profile");
+  const dates = grid.body.tiles.map((t) => t.slotDate);
+  assert.deepEqual(dates, [...dates].sort().reverse(), "newest first, as a profile shows them");
+  assert.equal(graph.calls.length, 0, "viewing the grid calls nobody");
+  assert.equal(media.uploads.length, 0, "and uploads nothing");
+});

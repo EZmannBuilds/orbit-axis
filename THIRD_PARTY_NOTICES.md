@@ -77,6 +77,28 @@ and subset to Latin from the upstream variable fonts; neither family declares
 a Reserved Font Name. The full licences travel beside the files
 (`OFL-Arimo.txt`, `OFL-Gelasio.txt`).
 
+## Template fonts (Dev Update 6.2)
+
+    Licence: SIL Open Font License 1.1 (full text beside each family in lib/orbit-x/fonts/)
+
+Bundled for the Living Atlas, After Dark Observatory and Cosmic Press
+template families, drawn by the server's slide renderer. Each is instanced to
+static Regular and Bold and subset to Latin; no raster or hosted font is used.
+
+| Family | Copyright | Used for |
+| --- | --- | --- |
+| Fraunces | 2018 The Fraunces Project Authors (github.com/undercasetype/Fraunces) | Living Atlas display type |
+| DM Sans | 2014 The DM Sans Project Authors (github.com/googlefonts/dm-fonts) | Living Atlas text |
+| Manrope | 2018 The Manrope Project Authors (github.com/googlefonts/manrope) | After Dark Observatory text |
+| Newsreader | 2020 The Newsreader Project Authors (github.com/productiontype/Newsreader) | After Dark Observatory and Cosmic Press display type |
+| Space Grotesk | 2020 The Space Grotesk Project Authors (github.com/floriankarsten/space-grotesk) | Cosmic Press text |
+| Orbit Coord Mono | Derived from IBM Plex Mono, Copyright 2017 IBM Corp. | Coordinates and data labels |
+
+IBM Plex Mono is licensed with the Reserved Font Name "Plex". Because the
+bundled subset is a modified version, it is renamed "Orbit Coord Mono" and
+does not use the reserved name; the original copyright and licence are kept
+(`OFL-OrbitCoordMono.txt`).
+
 ## Orbit Axis Engine
 
     Copyright (C) 2026 EZmannBuilds

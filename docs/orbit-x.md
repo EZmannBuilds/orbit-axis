@@ -8,6 +8,119 @@ reviews and schedules each one, publishes them to Instagram. Designs are
 approved once, every post passes automated checks, and everything sits behind
 flags that default off.
 
+## Dev Update 6.2: three template families, with depth
+
+The first look was one dark violet card repeated, so the profile grid read as a
+single post. Three new template families replace that look when a person
+switches them on. All three are registered in the template picker, with
+thumbnails, **inactive by default** (approve a template, then activate it).
+Celestial Editorial stays inactive until its collision is fixed.
+
+| Family | Page and inks | Type | Character |
+| --- | --- | --- | --- |
+| Living Atlas | paper `#F6F1E7`, ink `#182C39`, terracotta `#C65B43`, cobalt `#2859A6`, sage `#6C8669`, solar yellow `#F1C75B`, dusty rose `#E8B5C0` | Fraunces, DM Sans, coordinates in Orbit Coord Mono | A survey sheet: ruled margin, astrolabe line art, soft paper shadows |
+| After Dark Observatory | midnight `#101B29`, ivory `#F7F0DE`, coral `#F28C69`, ice blue `#9CC9DB`, orchid `#D9B9E8`, amber `#EBC95D`, mint `#8FB89F` | Newsreader, Manrope | Hairline star-map geometry, corner brackets, a denser star scatter, deep contact shadows |
+| Cosmic Press | cream `#FFF8E9`, charcoal `#242020`, vermilion `#C43D3B`, ink blue `#285D83`, ochre `#D9A72E`, forest `#53765A`, lilac `#D9B5E8` | Space Grotesk, Newsreader | Two-ink risograph: registration offset, halftone, hard print shadows, registration marks |
+
+### Colour means a kind of post
+
+Each family assigns its accent by kind, so a 3x3 alternates on its own:
+
+| Kind | Used for | Atlas | After Dark | Press |
+| --- | --- | --- | --- | --- |
+| Moon | Full and New Moons, the daily reading | solar yellow | amber | ochre |
+| Transit | Sun ingresses, the weekly reading | cobalt | ice blue | ink blue |
+| Retrograde | Mercury stations | terracotta | coral | vermilion |
+| Method | calculated_not_invented, without_the_fog, your_sky | sage | mint | forest |
+| Monthly | the monthly reading | dusty rose | orchid | lilac |
+
+### Three cover layouts per family
+
+`design.variant` picks the cover: **0 numeral** (the post's own date, a week
+range, or the month), **1 diagram** (the zodiac wheel), **2 type** (type alone
+beside a colour field). A layout with nothing real to show falls back to type:
+a numeral needs a date, a diagram needs positions. Inner slides share one
+system per family: body slides with the kind's colour rule, full-colour
+reflection slides, a data slide (wheel and positions), and an ink invitation
+slide. A single-image fact post (the one-slide `signal` role) uses the wheel or
+numeral over a headline and one line.
+
+**Every diagram is geometry of engine facts.** The wheel places each body at
+its ecliptic longitude (the engine's number, which packets now carry; sign plus
+degree for older ones), draws real aspects between the bodies (separation
+against fixed orbs), and on a lunation highlights the Sun and Moon signs. 0
+degrees Aries sits at 9 o'clock, increasing counterclockwise, as on a printed
+chart. There is no random starfield inside or beside the wheel.
+
+### Depth: shadows, stars and shaded forms
+
+Added after the first review. Forms are drawn with 3D-style shading but are
+vector SVG, so they export as flat 2D PNG and JPEG. No Blender, raster or stock
+asset is used, so there is nothing to license. (Blender is not installed in the
+build environment; a modelled asset can replace one of these later, because
+each asset is one function returning an SVG group in `lib/orbit-x/assets.js`.)
+
+- **Shadows** are a family voice: soft paper (Atlas), deep contact (After
+  Dark), hard offset print with no blur (Press).
+- **The Moon sphere** shows the engine's illumination with the same terminator
+  geometry as the flat Moon disc, with craters on the lit side, faint
+  earthshine and a rim on the dark side, so a New Moon is not a blank circle.
+  With no illumination fact there is no Moon.
+- **Planet spheres** appear when the post is about that body (the Sun for a
+  Sun ingress, Mercury for a station). An **armillary sphere** marks methodology
+  and shared-sky posts, and a **ringed planet** the monthly reading. These last
+  two are illustration, not data, and the docs and alt text do not present them
+  as positions.
+- **Stars** are a deterministic scatter (seeded by the post) of fine dots and
+  four-point stars, kept out of the wheel, the type and the header. They are
+  decoration, hidden from assistive tech, and never placed inside a diagram.
+
+What the families deliberately avoid: background gradients, glass panels, glow,
+generic sparkle bursts, a centred headline over three cards, and one typeface
+everywhere. A test enforces that gradients and filters exist only inside marked
+assets and cast shadows.
+
+### Accessibility
+
+Every text run states its background and is checked when drawn: 4.5:1 for body
+text, 3:1 for large text (24 px, or 18.66 px bold). Text on an accent fill is
+always large and bold; small text sits on the page colour. The muted tone is
+derived so it clears 4.5:1 on its page. A failure comes back as a named
+rendering warning, which refuses an AI proposal and fails the tests. Captions
+and alt text are generated and checked as before.
+
+### Fonts and licences
+
+All open-licence (SIL OFL 1.1), bundled in `lib/orbit-x/fonts/` as static
+Regular and Bold Latin subsets with their licence text, and drawn by the
+server's renderer; the desk preview falls back to system fonts and is
+approximate where the PNG is exact. Text is fitted from the real faces' widths
+(`lib/orbit-x/font-metrics.js`, generated). Fraunces, DM Sans, Manrope,
+Newsreader and Space Grotesk keep their names. **IBM Plex Mono carries the
+Reserved Font Name "Plex"**, so the modified subset is renamed **Orbit Coord
+Mono**. Rebuild with `scripts/orbit-x-build-fonts.py`. See
+`THIRD_PARTY_NOTICES.md`.
+
+### Review the samples
+
+```bash
+node scripts/orbit-x-sample-sheet.js        # writes docs/orbit-x-samples/
+```
+
+The committed sheets are in `docs/orbit-x-samples/` (real engine facts for the
+fixed example date 2026-11-09, interpretive lines labelled as example copy):
+`overview.png` (the same three posts in each family), `<family>-covers.png`
+(three layouts by five kinds), `<family>-carousel-daily.png`,
+`<family>-square.png` (1080x1080), full-size slides, and `grid-preview.png`
+with `grid-preview.html`. The desk's **Automatic channel** panel shows the same
+profile grid for the next nine queued posts.
+
+### House style
+
+No em dashes in post copy: the derived sentences were rewritten, the channel
+brief tells the writer, and a blocking per-post check (`no_em_dash`) refuses
+one in a draft, a model response or a reviewer's edit.
+
 ## Dev Update 6.1: the automatic Instagram channel
 
 Status on 2026-11-09: built, tested, and **off**. Nothing here has run against

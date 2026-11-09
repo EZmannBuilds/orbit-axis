@@ -55,8 +55,8 @@ test("review is the default; only Green may approve itself, and only in auto mod
 });
 
 test("every built-in type is valid and fits; all but Celestial Editorial keep text clear", () => {
-  assert.equal(BUILTIN_POST_TYPES.length, 16);
-  assert.equal(new Set(BUILTIN_POST_TYPES.map((b) => b.key)).size, 16, "keys are unique");
+  assert.equal(BUILTIN_POST_TYPES.length, 25);
+  assert.equal(new Set(BUILTIN_POST_TYPES.map((b) => b.key)).size, 25, "keys are unique");
   for (const b of BUILTIN_POST_TYPES) {
     assert.equal(validatePostTypeSpec(b.spec).ok, true, `${b.key} validates`);
     const { warnings, layout } = renderFingerprint(b.spec);

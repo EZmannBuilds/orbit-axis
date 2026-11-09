@@ -91,6 +91,11 @@
   .x-review-slides { display: flex; gap: 6px; overflow-x: auto; }
   .x-review-slides img { width: 180px; height: auto; flex: 0 0 auto; border-radius: 4px; border: 1px solid var(--color-border); }
   .x-yellow { color: var(--color-warning, #d9a441); font-weight: 600; }
+  .x-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; max-width: 520px; }
+  .x-grid3 .x-gt { aspect-ratio: 3 / 4; overflow: hidden; background: var(--color-surface-sunken); position: relative; }
+  .x-grid3 .x-gt svg { display: block; width: 100%; height: 100%; }
+  .x-grid3 .x-gt small { position: absolute; left: 4px; bottom: 4px; padding: 0 6px; border-radius: 8px; background: rgba(255,255,255,.88); color: #222; font-size: 11px; }
+  .x-grid3 .x-gt--empty { display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: var(--type-caption); }
   .x-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-sm); }
   .x-tpl { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-xs); }
   .x-tpl svg { width: 100%; height: auto; border-radius: 4px; }
@@ -165,6 +170,9 @@
   <p class="x-helper">Each day's post is prepared ahead and waits for review. Open a day to see its slides, edit the caption and alt text, and approve it with a publish time (America/Chicago). Approved posts publish at their time; until then they can be edited, rescheduled, or unscheduled. Yellow posts need an explicit per-post confirmation.</p>
   <div class="x-week" id="x-ch-week"></div>
   <div id="x-ch-review"></div>
+  <h3>Profile grid preview</h3>
+  <p class="x-helper">The next nine queued posts as they would sit on the profile, newest first, cropped to the profile's 3:4 tile. Looking does not publish anything.</p>
+  <div class="x-grid3" id="x-ch-grid"></div>
   <h3>Templates</h3>
   <p class="x-helper">Only active templates rotate. Set a preferred template per format; it is used whenever the no-repeat rules allow. Thumbnails use today's calculated facts.</p>
   <div class="x-row" id="x-ch-prefs"></div>
@@ -317,7 +325,7 @@ $("#x-signout").onclick = async () => {
   $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
   $("#x-history").innerHTML = "";
   for (const id of ["#x-ch-config", "#x-ch-types", "#x-ch-runs", "#x-ch-log", "#x-ch-week", "#x-ch-review",
-    "#x-ch-templates", "#x-ch-prefs"]) $(id).innerHTML = "";
+    "#x-ch-templates", "#x-ch-prefs", "#x-ch-grid"]) $(id).innerHTML = "";
   showGate("Signed out.");
 };
 
@@ -1202,6 +1210,7 @@ function dayCardHtml(r) {
 
 async function loadWeek() {
   weekData = await api("/api/orbit-x/channel/week");
+  loadGrid().catch(() => {});
   $("#x-ch-week").innerHTML = weekData.rows.map(dayCardHtml).join("") || `<p class="x-status">Nothing prepared yet.</p>`;
   for (const b of document.querySelectorAll("[data-open-review]")) b.onclick = () => openReview(b.getAttribute("data-open-review"));
   for (const b of document.querySelectorAll("[data-unschedule]")) {
@@ -1311,6 +1320,13 @@ async function openReview(postId) {
   };
 }
 
+async function loadGrid() {
+  const data = await api("/api/orbit-x/channel/grid");
+  $("#x-ch-grid").innerHTML = Array.from({ length: 9 }, (_, i) => data.tiles[i]
+    ? `<div class="x-gt">${data.tiles[i].svg}<small>${esc(data.tiles[i].slotDate)} · ${esc(data.tiles[i].state.replace(/_/g, " "))}</small></div>`
+    : `<div class="x-gt x-gt--empty">nothing queued</div>`).join("");
+}
+
 /* The template picker (2026-11-09). */
 let templateData = null;
 
@@ -1410,7 +1426,7 @@ async function loadChannel() {
     $("#x-ch-runs").innerHTML = `<tr><th>Day</th><th>Mode</th><th>State</th><th>Format</th><th>Post</th><th></th><th></th></tr>`
       + runs.map(runRowHtml).join("");
     wireChannel();
-    await Promise.all([loadWeek(), loadTemplates()]);
+    await Promise.all([loadWeek(), loadTemplates(), loadGrid()]);
     $("#x-ch-status").textContent = "";
   } catch (error) {
     $("#x-ch-status").textContent = error.status === 502
