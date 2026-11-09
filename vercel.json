@@ -14,7 +14,7 @@
   "crons": [
     {
       "path": "/api/orbit-x-channel/tick",
-      "schedule": "*/15 * * * *"
+      "schedule": "7 13 * * *"
     }
   ],
   "rewrites": [

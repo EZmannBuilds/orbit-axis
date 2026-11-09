@@ -1,0 +1,49 @@
+# Orbit X automatic channel: the 15-minute tick (Dev Update 6.1).
+#
+# Vercel's Hobby plan allows only daily crons, so vercel.json keeps one daily
+# tick and this schedule calls the same protected route every 15 minutes. A
+# scheduled post goes out within about 15 minutes of its time (GitHub may delay
+# scheduled runs by several minutes under load).
+#
+# INERT UNTIL THE OWNER TURNS IT ON. It does nothing unless the repository
+# variable ORBIT_X_TICK_URL is set (the full https URL of
+# /api/orbit-x-channel/tick on the Production deployment) and the repository
+# secret CRON_SECRET holds the same value as the deployment's CRON_SECRET. The
+# route itself stays off unless ORBIT_X_ENABLED and ORBIT_X_AUTOPUBLISH are
+# exactly "true" there, and answers 404 otherwise. No secret is written here,
+# and the secret is passed through the environment, never echoed.
+
+name: Orbit X channel tick
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One tick at a time; a late run is skipped rather than queued behind another.
+concurrency:
+  group: orbit-x-channel-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    if: ${{ vars.ORBIT_X_TICK_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Call the channel tick
+        env:
+          TICK_URL: ${{ vars.ORBIT_X_TICK_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET is not set; nothing to do."; exit 0; fi
+          case "$TICK_URL" in https://*) ;; *) echo "ORBIT_X_TICK_URL must be https."; exit 1;; esac
+          status=$(curl -sS -m 40 -o /tmp/tick.json -w "%{http_code}" -H "Authorization: Bearer ${CRON_SECRET}" "$TICK_URL" || echo 000)
+          echo "tick status: ${status}"
+          # The body names states and dates only; it never carries a secret.
+          head -c 600 /tmp/tick.json || true
+          echo
+          case "$status" in 200|404) exit 0;; *) exit 1;; esac

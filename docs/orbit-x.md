@@ -275,7 +275,7 @@ is approved.
 7. **Create the Meta app and token** (Route B below, or Route A), then set
    `ORBIT_X_IG_API`, `ORBIT_X_IG_USER_ID`, `ORBIT_X_IG_ACCESS_TOKEN`.
 8. **Review a week** (checklist below). Publishing needs Instagram configured.
-9. Content Desk approves posts with publish times. They publish at those times.
+9. Content Desk approves posts with publish times. They publish at those times (set the GitHub variable and secret for the 15-minute tick, see Cron schedule).
 10. Auto mode (`ORBIT_X_AUTOPUBLISH_LIVE=true`) is optional and not recommended
     until a few weeks of reviewed posts have been clean.
 
@@ -456,11 +456,25 @@ Unknown keys and out-of-range values are ignored and listed in the desk.
 
 ### Cron schedule
 
-`vercel.json` calls `/api/orbit-x-channel/tick` every 15 minutes, so a
-scheduled post goes out within 15 minutes of its time. Vercel's Hobby plan
-allows only daily crons; the 15-minute schedule needs Pro. Each tick has a
-24-second budget inside the 30-second function limit and resumes where it left
-off on the next call.
+The project is on Vercel's **Hobby** plan, which allows only daily crons (a
+15-minute Vercel cron failed the deployment on 2026-11-09). So:
+
+- `vercel.json` calls `/api/orbit-x-channel/tick` once a day at 13:07 UTC
+  (07:07 in Chicago in winter; Hobby may run it any time in that hour). It keeps
+  the 7 days prepared and publishes anything due.
+- `.github/workflows/orbit-x-channel-tick.yml` calls the same route **every 15
+  minutes**, so a scheduled post goes out within about 15 minutes of its time
+  (GitHub can delay scheduled runs). It is **inert until you turn it on**: set the
+  repository variable `ORBIT_X_TICK_URL` (the full https URL of the route on the
+  Production deployment) and the repository secret `CRON_SECRET` (the same value
+  as the deployment's). Without them the job is skipped. The route stays off
+  unless `ORBIT_X_ENABLED` and `ORBIT_X_AUTOPUBLISH` are `true`.
+- On Vercel Pro you could instead set the Vercel cron to `*/15 * * * *` and drop
+  the workflow.
+
+Each tick has a 24-second budget inside the 30-second function limit and
+resumes where it left off on the next call. Without the 15-minute workflow, a
+scheduled post would publish at the next daily tick.
 
 ### Known limitations and follow-ups
 
