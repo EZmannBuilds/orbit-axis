@@ -7,10 +7,16 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "{vendor/orbit-axis-engine/ephemeris/**,vendor/orbit-axis-engine/src/**,vendor/orbit-axis-engine/bin/linux-x64/**,lib/orbit-x/**}",
+      "includeFiles": "{vendor/orbit-axis-engine/ephemeris/**,vendor/orbit-axis-engine/src/**,vendor/orbit-axis-engine/bin/linux-x64/**,lib/orbit-x/**,node_modules/@resvg/resvg-js/**,node_modules/@resvg/resvg-js-linux-x64-gnu/**,node_modules/jpeg-js/**}",
       "excludeFiles": "vendor/orbit-axis-engine/bin/darwin-arm64/**"
     }
   },
+  "crons": [
+    {
+      "path": "/api/orbit-x-channel/tick",
+      "schedule": "7 13 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",

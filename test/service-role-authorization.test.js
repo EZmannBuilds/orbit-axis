@@ -96,9 +96,10 @@ test("an unknown purpose is never authorized, however configured", () => {
     authorizedEnv({ [PURPOSE_VAR]: "read-every-users-birth-data" }), prodContext);
   assert.equal(verdict.authorized, false);
   // Two, since Dev Update 3.10 added "stripe-billing" for webhook writes.
-  // This assertion is the tripwire that makes each widening a reviewed
-  // decision, and it fired for that one exactly as intended.
-  assert.deepEqual([...SERVICE_ROLE_PURPOSES], ["account-deletion", "stripe-billing"],
+  // Three since Dev Update 6.1 added "orbit-x-channel" for the automatic
+  // channel's cron writes. This assertion is the tripwire that makes each
+  // widening a reviewed decision, and it fired for both exactly as intended.
+  assert.deepEqual([...SERVICE_ROLE_PURPOSES], ["account-deletion", "stripe-billing", "orbit-x-channel"],
     "widening this set must be a deliberate change");
 });
 

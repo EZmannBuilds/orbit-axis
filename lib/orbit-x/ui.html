@@ -68,6 +68,38 @@
   .x-feedsim svg { width: 100%; height: auto; display: block; }
   .x-reading-bar { margin-top: var(--space-md); padding: var(--space-sm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
   .x-reading-bar strong { margin-right: var(--space-sm); }
+  /* Dev Update 6.1: the automatic channel panel. */
+  .x-channel { margin-top: var(--space-md); }
+  .x-channel summary { cursor: pointer; }
+  .x-ch-types { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-sm); }
+  .x-ch-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); }
+  .x-ch-card--proposed { border-left: 3px solid var(--color-accent); }
+  .x-ch-card--approved { border-left: 3px solid var(--color-success, #4fb286); }
+  .x-ch-card--rejected, .x-ch-card--superseded, .x-ch-card--retired { opacity: 0.6; }
+  .x-ch-badge { font-size: var(--type-caption); border: 1px solid var(--color-border); border-radius: 999px; padding: 1px 8px; }
+  .x-ch-sample { display: flex; gap: 6px; overflow-x: auto; margin-top: 6px; }
+  .x-ch-sample svg { width: 120px; height: auto; flex: 0 0 auto; border-radius: 4px; border: 1px solid var(--color-border); }
+  .x-ch-log { white-space: pre-wrap; font-size: var(--type-caption); max-height: 320px; overflow: auto; }
+  /* 2026-11-09: the week view, the review drawer, and the template picker. */
+  .x-week { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-sm); }
+  .x-day { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); }
+  .x-day--approved { border-left: 3px solid var(--color-success, #4fb286); }
+  .x-day--ready_for_review { border-left: 3px solid var(--color-accent); }
+  .x-day--published { opacity: 0.75; }
+  .x-day h4 { margin: 0 0 4px; }
+  .x-review { border: 1px solid var(--color-accent); border-radius: var(--radius-md); padding: var(--space-sm); margin: var(--space-sm) 0; }
+  .x-review-slides { display: flex; gap: 6px; overflow-x: auto; }
+  .x-review-slides img { width: 180px; height: auto; flex: 0 0 auto; border-radius: 4px; border: 1px solid var(--color-border); }
+  .x-yellow { color: var(--color-warning, #d9a441); font-weight: 600; }
+  .x-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; max-width: 520px; }
+  .x-grid3 .x-gt { aspect-ratio: 3 / 4; overflow: hidden; background: var(--color-surface-sunken); position: relative; }
+  .x-grid3 .x-gt svg { display: block; width: 100%; height: 100%; }
+  .x-grid3 .x-gt small { position: absolute; left: 4px; bottom: 4px; padding: 0 6px; border-radius: 8px; background: rgba(255,255,255,.88); color: #222; font-size: 11px; }
+  .x-grid3 .x-gt--empty { display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: var(--type-caption); }
+  .x-tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: var(--space-sm); }
+  .x-tpl { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-xs); }
+  .x-tpl svg { width: 100%; height: auto; border-radius: 4px; }
+  .x-tpl--inactive { opacity: 0.55; }
   .x-lab { margin: var(--space-md) 0; padding: var(--space-md); border: 1px solid var(--color-accent); border-radius: var(--radius-lg); background: var(--color-surface-sunken); }
   .x-lab-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: var(--space-sm); }
   .x-lab-card { min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--color-surface); }
@@ -124,6 +156,34 @@
   <button class="o-btn o-btn--secondary o-btn--sm" data-reading="monthly">This Month</button>
   <span class="x-helper">Shared current sky · manual authoring · portrait first</span>
 </div>
+
+<details class="x-panel x-channel" id="x-channel">
+  <summary><strong>Automatic channel</strong> <span class="x-status" id="x-ch-summary">Open to load the week ahead, the review queue, templates, and the run log.</span></summary>
+  <div class="x-row">
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-load">Refresh</button>
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-pause">Pause channel</button>
+    <button class="o-btn o-btn--secondary o-btn--sm" id="x-ch-propose" hidden>Ask for new post types</button>
+    <span class="x-status" id="x-ch-status" role="status" aria-live="polite"></span>
+  </div>
+  <div class="x-facts" id="x-ch-config"></div>
+  <h3>The week ahead</h3>
+  <p class="x-helper">Each day's post is prepared ahead and waits for review. Open a day to see its slides, edit the caption and alt text, and approve it with a publish time (America/Chicago). Approved posts publish at their time; until then they can be edited, rescheduled, or unscheduled. Yellow posts need an explicit per-post confirmation.</p>
+  <div class="x-week" id="x-ch-week"></div>
+  <div id="x-ch-review"></div>
+  <h3>Profile grid preview</h3>
+  <p class="x-helper">The next nine queued posts as they would sit on the profile, newest first, cropped to the profile's 3:4 tile. Looking does not publish anything.</p>
+  <div class="x-grid3" id="x-ch-grid"></div>
+  <h3>Templates</h3>
+  <p class="x-helper">Only active templates rotate. Set a preferred template per format; it is used whenever the no-repeat rules allow. Thumbnails use today's calculated facts.</p>
+  <div class="x-row" id="x-ch-prefs"></div>
+  <div class="x-tpl-grid" id="x-ch-templates"></div>
+  <h3>Post types to approve</h3>
+  <p class="x-helper">Approve a type once and it can join the rotation. Every post still runs every automated check, and Red content never posts. A rejected type never posts.</p>
+  <div class="x-ch-types" id="x-ch-types"></div>
+  <h3>Recent runs</h3>
+  <table class="x-hist" id="x-ch-runs"></table>
+  <div class="x-ch-log" id="x-ch-log"></div>
+</details>
 
 <div class="x-grid">
   <section class="x-panel" aria-label="Candidates">
@@ -264,6 +324,8 @@ $("#x-signout").onclick = async () => {
   $("#x-candidates").innerHTML = `<p class="x-status">Pick a date and load.</p>`;
   $("#x-editor").innerHTML = `<p class="x-status">Start a draft from a candidate to begin.</p>`;
   $("#x-history").innerHTML = "";
+  for (const id of ["#x-ch-config", "#x-ch-types", "#x-ch-runs", "#x-ch-log", "#x-ch-week", "#x-ch-review",
+    "#x-ch-templates", "#x-ch-prefs", "#x-ch-grid"]) $(id).innerHTML = "";
   showGate("Signed out.");
 };
 
@@ -1103,6 +1165,326 @@ function debounce(fn, ms) {
   let t = null;
   return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
+
+/* ── The automatic channel (Dev Update 6.1) ──────────────────────────────
+   Read-mostly. The desk approves or rejects post types and can pause the
+   channel; it never publishes. Samples are rendered by the server from
+   today's engine facts with placeholder interpretation. */
+let channelData = null;
+
+function channelConfigHtml(st, control) {
+  const flag = (on, label) => `<span class="x-ch-badge">${esc(label)}: ${on ? "yes" : "no"}</span>`;
+  const mode = !st.enabled ? "off" : st.live ? "auto (Green approves itself; Yellow always waits)" : "review (every post waits for a person)";
+  return `<strong>Mode:</strong> ${esc(mode)} &nbsp; ${flag(!st.killSwitch, "Kill switch clear")}
+    ${flag(!control?.paused, "Not paused")} ${flag(st.cronSecretSet, "Cron secret set")} ${flag(st.aiConfigured, "AI copy")}
+    ${flag(st.graphConfigured, "Instagram configured")}<br>
+    <strong>Editorial timezone:</strong> ${esc(st.timezone)} · <strong>default publish time:</strong> ${esc(st.publishTime)}
+    · <strong>prepared ahead:</strong> ${esc(st.lookaheadDays)} days
+    · <strong>Instagram API:</strong> ${esc(st.graph?.api || "not chosen")} ${esc(st.graph?.version || "")}
+    ${st.tokenExpiresAt ? ` · <strong>token expires</strong> ${esc(st.tokenExpiresAt.slice(0, 10))}` : ""}
+    ${control?.paused ? `<br><span class="x-warn">Paused${control.reason ? `: ${esc(control.reason)}` : ""}</span>` : ""}
+    ${st.rotationIgnored?.length ? `<br><span class="x-advice">Settings ignored: ${esc(st.rotationIgnored.join(", "))}</span>` : ""}`;
+}
+
+/* The week view and the review drawer (2026-11-09). */
+let weekData = null;
+
+function dayCardHtml(r) {
+  const when = r.scheduledLocal ? `publishes ${esc(r.scheduledLocal.label)}` : r.post?.publishedAt ? "published" : "";
+  return `<div class="x-day x-day--${esc(r.state)}">
+    <h4>${esc(r.slotDate)} <span class="x-ch-badge">${esc(r.state.replace(/_/g, " "))}</span></h4>
+    <div class="x-reasons">${esc(r.format || "")} · ${esc(r.template || "")}
+      ${r.autonomy === "yellow" ? ` · <span class="x-yellow">Yellow: per-post approval</span>` : r.autonomy ? " · Green" : ""}</div>
+    ${r.post ? `<div>${esc(r.post.headline)}</div>` : ""}
+    ${when ? `<div class="x-reasons">${when}</div>` : ""}
+    ${r.post?.permalink ? `<a href="${esc(r.post.permalink)}" target="_blank" rel="noopener">View on Instagram</a>` : ""}
+    ${r.error ? `<div class="x-reasons">${esc(r.error)}</div>` : ""}
+    ${r.failedChecks?.length ? `<div class="x-warn">failed: ${esc(r.failedChecks.join(", "))}</div>` : ""}
+    <div class="x-row">
+      ${r.post && r.editable ? `<button type="button" class="o-btn o-btn--secondary o-btn--sm" data-open-review="${esc(r.post.id)}">Review</button>` : ""}
+      ${r.state === "approved" && r.post ? `<button type="button" class="o-btn o-btn--secondary o-btn--sm" data-unschedule="${esc(r.post.id)}">Unschedule</button>` : ""}
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-run-log="${esc(r.runId)}">Log</button>
+    </div>
+  </div>`;
+}
+
+async function loadWeek() {
+  weekData = await api("/api/orbit-x/channel/week");
+  loadGrid().catch(() => {});
+  $("#x-ch-week").innerHTML = weekData.rows.map(dayCardHtml).join("") || `<p class="x-status">Nothing prepared yet.</p>`;
+  for (const b of document.querySelectorAll("[data-open-review]")) b.onclick = () => openReview(b.getAttribute("data-open-review"));
+  for (const b of document.querySelectorAll("[data-unschedule]")) {
+    b.onclick = async () => {
+      try {
+        await api(`/api/orbit-x/channel/posts/${b.getAttribute("data-unschedule")}/unschedule`, { method: "POST", body: "{}" });
+        $("#x-ch-status").textContent = "Unscheduled; back in the review queue.";
+        loadWeek();
+      } catch (error) { $("#x-ch-status").textContent = error.message; }
+    };
+  }
+  wireRunLogs();
+}
+
+async function openReview(postId) {
+  const row = weekData?.rows.find((r) => r.post?.id === postId);
+  if (!row) return;
+  const box = $("#x-ch-review");
+  box.innerHTML = `<div class="x-review"><p class="x-status">Rendering the slides…</p></div>`;
+  let previews;
+  try { previews = await api(`/api/orbit-x/channel/posts/${postId}/previews`); }
+  catch (error) { box.innerHTML = `<div class="x-review x-warn">${esc(error.message)}</div>`; return; }
+  const local = row.scheduledLocal || row.suggestedLocal || {};
+  const templates = (templateData?.templates || []).filter((t) => t.activatable && t.formats.includes(row.format));
+  box.innerHTML = `<div class="x-review">
+    <h4>${esc(row.slotDate)} · ${esc(row.format)} · ${esc(row.template)}
+      ${row.autonomy === "yellow" ? `<span class="x-yellow">Yellow: look at every slide, then confirm below</span>` : ""}</h4>
+    ${previews.matchesPrepared ? "" : `<p class="x-warn">The rendering changed since this post was prepared. Regenerate it before approving.</p>`}
+    <div class="x-review-slides" id="x-rv-slides">${previews.slides.map((s) =>
+      `<img alt="${esc(s.filename)}" src="${s.dataUrl}" data-sha="${esc(s.sha256)}">`).join("")}</div>
+    <label>Caption <textarea id="x-rv-caption" rows="5">${esc(row.post.caption)}</textarea></label>
+    <label>Alt text <textarea id="x-rv-alt" rows="3">${esc(row.post.altText)}</textarea></label>
+    <div class="x-row"><button type="button" class="o-btn o-btn--secondary o-btn--sm" id="x-rv-save">Save edits (re-runs every check)</button>
+      <span class="x-status" id="x-rv-checks"></span></div>
+    <div class="x-row">
+      <label>Publish date <input type="date" id="x-rv-date" value="${esc(local.date || row.slotDate)}"></label>
+      <label>Time (${esc(weekData.timezone)}) <input type="time" id="x-rv-time" value="${esc(local.time || weekData.publishTime)}"></label>
+      <span class="x-reasons">Allowed ${esc(row.window?.start?.label || "")} to ${esc(row.window?.end?.label || "")}</span>
+    </div>
+    ${row.autonomy === "yellow" ? `<label><input type="checkbox" id="x-rv-yellow" disabled> I looked at every slide of this interpretive post</label>` : ""}
+    <div class="x-row">
+      <button type="button" class="o-btn o-btn--primary o-btn--sm" id="x-rv-approve" disabled>${row.state === "approved" ? "Save schedule" : "Approve and schedule"}</button>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="x-rv-now" disabled ${weekData.canPublish ? "" : `title="${esc(weekData.publishBlockedReason || "")}"`}>Approve and publish now</button>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="x-rv-reject">Reject</button>
+    </div>
+    <div class="x-row">
+      <select class="o-select" id="x-rv-template" style="max-width:240px">${templates.map((t) =>
+        `<option value="${esc(t.id)}" ${t.label === row.template ? "selected" : ""}>${esc(t.label)}${t.active ? "" : " (inactive)"}</option>`).join("")}</select>
+      <input type="text" id="x-rv-instruction" placeholder="Optional note for the rewrite" style="max-width:320px">
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="x-rv-regen" ${row.state === "ready_for_review" ? "" : "disabled title=\"Unschedule first\""}>Regenerate</button>
+    </div>
+  </div>`;
+
+  // Approval unlocks only once every slide has actually loaded on screen.
+  const images = [...document.querySelectorAll("#x-rv-slides img")];
+  let loaded = 0;
+  const unlock = () => {
+    if (loaded < images.length) return;
+    $("#x-rv-approve").disabled = false;
+    $("#x-rv-now").disabled = !weekData.canPublish;
+    if ($("#x-rv-yellow")) $("#x-rv-yellow").disabled = false;
+  };
+  for (const img of images) { if (img.complete) loaded += 1; else img.onload = () => { loaded += 1; unlock(); }; }
+  unlock();
+  const seen = () => images.map((img) => img.getAttribute("data-sha"));
+  const say = (t) => { $("#x-rv-checks").textContent = t; };
+
+  $("#x-rv-save").onclick = async () => {
+    try {
+      await api(`/api/orbit-x/channel/posts/${postId}`, { method: "PATCH",
+        body: JSON.stringify({ caption: $("#x-rv-caption").value, altText: $("#x-rv-alt").value }) });
+      say("Saved. Every check passed.");
+      loadWeek();
+    } catch (error) {
+      const failed = (error.body?.checks || []).filter((c) => !c.passed && c.blocking).map((c) => `${c.id}${c.detail ? ` (${c.detail})` : ""}`);
+      say(`${error.message} ${failed.join("; ")}`);
+    }
+  };
+  const approve = async (publishNow) => {
+    try {
+      const data = await api(`/api/orbit-x/channel/posts/${postId}/approve`, { method: "POST", body: JSON.stringify({
+        seenSlides: seen(), confirmYellow: Boolean($("#x-rv-yellow")?.checked), publishNow,
+        date: $("#x-rv-date").value, time: $("#x-rv-time").value }) });
+      $("#x-ch-status").textContent = publishNow ? `Publishing: ${data.state}` : `Approved: publishes ${data.scheduledLocal?.label || data.scheduledFor}`;
+      box.innerHTML = "";
+      loadWeek();
+    } catch (error) { say(error.message); }
+  };
+  $("#x-rv-approve").onclick = () => approve(false);
+  $("#x-rv-now").onclick = () => approve(true);
+  $("#x-rv-reject").onclick = async () => {
+    const reason = prompt("Why reject this post?", "");
+    if (reason === null) return;
+    try {
+      await api(`/api/orbit-x/channel/posts/${postId}/reject`, { method: "POST", body: JSON.stringify({ reason }) });
+      box.innerHTML = ""; loadWeek();
+    } catch (error) { say(error.message); }
+  };
+  $("#x-rv-regen").onclick = async () => {
+    say("Regenerating…");
+    try {
+      const data = await api(`/api/orbit-x/channel/posts/${postId}/regenerate`, { method: "POST",
+        body: JSON.stringify({ typeId: $("#x-rv-template").value, instruction: $("#x-rv-instruction").value }) });
+      await loadWeek();
+      openReview(data.postId);
+    } catch (error) { say(error.message); }
+  };
+}
+
+async function loadGrid() {
+  const data = await api("/api/orbit-x/channel/grid");
+  $("#x-ch-grid").innerHTML = Array.from({ length: 9 }, (_, i) => data.tiles[i]
+    ? `<div class="x-gt">${data.tiles[i].svg}<small>${esc(data.tiles[i].slotDate)} · ${esc(data.tiles[i].state.replace(/_/g, " "))}</small></div>`
+    : `<div class="x-gt x-gt--empty">nothing queued</div>`).join("");
+}
+
+/* The template picker (2026-11-09). */
+let templateData = null;
+
+async function loadTemplates() {
+  templateData = await api(`/api/orbit-x/channel/templates?date=${$("#x-date").value}`);
+  const prefs = Object.fromEntries((templateData.preferences || []).map((p) => [p.format, p.type_key]));
+  $("#x-ch-prefs").innerHTML = templateData.formats.map((format) => {
+    const choices = templateData.templates.filter((t) => t.activatable && t.formats.includes(format));
+    return `<label class="x-reasons">${esc(format)} <select class="o-select" data-pref="${esc(format)}" style="max-width:200px">
+      <option value="">no preference</option>${choices.map((t) =>
+        `<option value="${esc(t.typeKey)}" ${prefs[format] === t.typeKey ? "selected" : ""}>${esc(t.label)}</option>`).join("")}</select></label>`;
+  }).join("");
+  $("#x-ch-templates").innerHTML = templateData.templates.map((t) => `<div class="x-tpl ${t.active ? "" : "x-tpl--inactive"}">
+    ${t.thumbnail || ""}
+    <div><strong>${esc(t.name)}</strong> <span class="x-ch-badge">${esc(t.label)}</span></div>
+    <div class="x-reasons">${esc(t.formats.join(", "))}</div>
+    ${t.blockedReason ? `<div class="x-warn">${esc(t.blockedReason)}</div>` : ""}
+    <label><input type="checkbox" data-active="${esc(t.typeKey)}" ${t.active ? "checked" : ""} ${t.activatable ? "" : "disabled"}> Active</label>
+  </div>`).join("");
+  for (const box of document.querySelectorAll("[data-active]")) {
+    box.onchange = async () => {
+      try {
+        await api(`/api/orbit-x/channel/templates/${box.getAttribute("data-active")}`, { method: "POST",
+          body: JSON.stringify({ active: box.checked }) });
+        loadTemplates();
+      } catch (error) { $("#x-ch-status").textContent = error.message; box.checked = !box.checked; }
+    };
+  }
+  for (const sel of document.querySelectorAll("[data-pref]")) {
+    sel.onchange = async () => {
+      try {
+        await api("/api/orbit-x/channel/preferences", { method: "POST",
+          body: JSON.stringify({ format: sel.getAttribute("data-pref"), typeKey: sel.value || null }) });
+        $("#x-ch-status").textContent = "Preference saved.";
+      } catch (error) { $("#x-ch-status").textContent = error.message; }
+    };
+  }
+}
+
+function wireRunLogs() {
+  for (const button of document.querySelectorAll("[data-run-log]")) {
+    button.onclick = async () => {
+      try {
+        const data = await api(`/api/orbit-x/channel/runs/${button.getAttribute("data-run-log")}/events`);
+        $("#x-ch-log").textContent = data.events.map((e) => `${e.at}  ${e.step}  ${e.outcome}  ${e.detail ? JSON.stringify(e.detail) : ""}`).join("\n");
+      } catch (error) { $("#x-ch-log").textContent = error.message; }
+    };
+  }
+}
+
+function typeCardHtml(t) {
+  const actions = {
+    proposed: [["approved", "Approve"], ["rejected", "Reject"]],
+    approved: [["retired", "Retire"], ["rejected", "Reject"]],
+    retired: [["approved", "Approve again"]],
+  }[t.status] || [];
+  return `<div class="x-ch-card x-ch-card--${esc(t.status)}" data-type-id="${esc(t.id)}">
+    <div class="x-row"><strong>${esc(t.name)}</strong> <span class="x-ch-badge">${esc(t.label)}</span>
+      <span class="x-ch-badge">${esc(t.status)}</span> <span class="x-reasons">${esc(t.source)}</span></div>
+    <div class="x-reasons">${esc(t.description)}</div>
+    ${t.proposal_notes ? `<div class="x-advice">${esc(t.proposal_notes)}</div>` : ""}
+    <div class="x-reasons">${esc(t.spec?.aspect || "")} · ${esc((t.spec?.formats || []).join(", "))}${t.spec?.motif ? ` · motif ${esc(t.spec.motif.kind)}` : ""}</div>
+    ${t.approved_at ? `<div class="x-reasons">approved ${esc(String(t.approved_at).slice(0, 10))}</div>` : ""}
+    ${t.unusableReason ? `<div class="x-warn">Not in rotation: ${esc(t.unusableReason)}</div>` : ""}
+    ${t.layout?.length ? `<div class="x-warn">Layout: ${esc(t.layout.slice(0, 3).join("; "))}</div>` : ""}
+    <div class="x-row">
+      <select class="o-select" data-sample-format style="max-width:200px">${(t.spec?.formats || []).map((f) => `<option>${esc(f)}</option>`).join("")}</select>
+      <button type="button" class="o-btn o-btn--secondary o-btn--sm" data-sample="${esc(t.id)}">Show sample</button>
+      ${actions.map(([to, label]) => `<button type="button" class="o-btn o-btn--${to === "approved" ? "primary" : "secondary"} o-btn--sm" data-type-to="${to}">${esc(label)}</button>`).join("")}
+    </div>
+    <div class="x-ch-sample" data-sample-box></div>
+  </div>`;
+}
+
+function runRowHtml(r) {
+  const failed = (r.failedChecks || []).map((c) => c.id).join(", ");
+  return `<tr><td>${esc(r.slot_date)}</td><td>${esc(r.mode)}</td><td>${esc(r.state)}</td>
+    <td>${esc(r.format || "")}<br><span class="x-reasons">${esc(r.post_type_label || "")}</span></td>
+    <td>${esc(r.headline || "")}${r.error ? `<br><span class="x-reasons">${esc(r.error)}</span>` : ""}${failed ? `<br><span class="x-warn">failed: ${esc(failed)}</span>` : ""}</td>
+    <td>${r.permalink ? `<a href="${esc(r.permalink)}" target="_blank" rel="noopener">Instagram</a>` : ""}</td>
+    <td><button type="button" class="o-btn o-btn--secondary o-btn--sm" data-run-log="${esc(r.id)}">Log</button></td></tr>`;
+}
+
+async function loadChannel() {
+  $("#x-ch-status").textContent = "Loading channel…";
+  try {
+    channelData = await api("/api/orbit-x/channel");
+    const { status: st, control, types, runs } = channelData;
+    $("#x-ch-summary").textContent = `${st.enabled ? (st.live ? "auto" : "review") : "off"} · `
+      + `${types.filter((t) => t.status === "approved").length} approved · ${types.filter((t) => t.status === "proposed").length} awaiting review`;
+    $("#x-ch-config").innerHTML = channelConfigHtml(st, control);
+    $("#x-ch-pause").textContent = control?.paused ? "Resume channel" : "Pause channel";
+    $("#x-ch-propose").hidden = !st.aiConfigured;
+    const order = { proposed: 0, approved: 1, retired: 2, rejected: 3, superseded: 4 };
+    $("#x-ch-types").innerHTML = [...types].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9)
+      || a.label.localeCompare(b.label)).map(typeCardHtml).join("") || `<p class="x-status">No post types yet.</p>`;
+    $("#x-ch-runs").innerHTML = `<tr><th>Day</th><th>Mode</th><th>State</th><th>Format</th><th>Post</th><th></th><th></th></tr>`
+      + runs.map(runRowHtml).join("");
+    wireChannel();
+    await Promise.all([loadWeek(), loadTemplates(), loadGrid()]);
+    $("#x-ch-status").textContent = "";
+  } catch (error) {
+    $("#x-ch-status").textContent = error.status === 502
+      ? "Channel storage is unavailable here (has the channel migration been applied?)."
+      : error.message;
+  }
+}
+
+function wireChannel() {
+  for (const card of document.querySelectorAll("[data-type-id]")) {
+    const id = card.getAttribute("data-type-id");
+    card.querySelector("[data-sample]").onclick = async () => {
+      const format = card.querySelector("[data-sample-format]").value;
+      const box = card.querySelector("[data-sample-box]");
+      box.textContent = "Rendering…";
+      try {
+        const data = await api(`/api/orbit-x/post-types/${id}/sample?format=${encodeURIComponent(format)}&date=${$("#x-date").value}`);
+        box.innerHTML = data.slides.join("");
+        box.title = `${data.notice} (${data.facts})`;
+      } catch (error) { box.textContent = error.message; }
+    };
+    for (const button of card.querySelectorAll("[data-type-to]")) {
+      button.onclick = async () => {
+        const to = button.getAttribute("data-type-to");
+        const reason = to === "approved" ? null : prompt(`Reason for marking this type ${to}?`, "");
+        if (to !== "approved" && reason === null) return;
+        try {
+          await api(`/api/orbit-x/post-types/${id}`, { method: "PATCH", body: JSON.stringify({ status: to, reason }) });
+          $("#x-ch-status").textContent = `Post type ${to}.`;
+          loadChannel();
+        } catch (error) { $("#x-ch-status").textContent = error.message; }
+      };
+    }
+  }
+  wireRunLogs();
+}
+
+$("#x-ch-load").onclick = loadChannel;
+$("#x-channel").addEventListener("toggle", () => { if ($("#x-channel").open && !channelData) loadChannel(); });
+$("#x-ch-pause").onclick = async () => {
+  const pausing = !channelData?.control?.paused;
+  const reason = pausing ? prompt("Why pause the channel? (optional)", "") : null;
+  if (pausing && reason === null) return;
+  try {
+    await api("/api/orbit-x/channel/pause", { method: "POST", body: JSON.stringify({ paused: pausing, reason }) });
+    $("#x-ch-status").textContent = pausing ? "Paused. No call to Meta will be made until you resume." : "Resumed.";
+    loadChannel();
+  } catch (error) { $("#x-ch-status").textContent = error.message; }
+};
+$("#x-ch-propose").onclick = async () => {
+  $("#x-ch-status").textContent = "Asking for new post types…";
+  try {
+    const data = await api("/api/orbit-x/post-types/propose", { method: "POST", body: "{}" });
+    $("#x-ch-status").textContent = `${data.proposed.length} proposed`
+      + (data.refused?.length ? ` · ${data.refused.length} refused (${data.refused.map((r) => r.problems[0]).join("; ")})` : "");
+    loadChannel();
+  } catch (error) { $("#x-ch-status").textContent = error.message; }
+};
 
 // Bootstrap, in this order deliberately:
 //   1. The session gate decides gate-or-desk BEFORE anything requests data, so
