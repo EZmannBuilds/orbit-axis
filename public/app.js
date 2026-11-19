@@ -10,6 +10,7 @@
 import { SHARE_PRESETS, SHARE_PRESET_IDS, renderShareImage, deliverShareImage, shareFilename } from "/share-image.js";
 import { sampleReadingHtml } from "./sample-reading.js";
 import { renderMoonSVG } from "./moon-phase.js";
+import { zodiacWheelSvg, orbitSvg, placementsListHtml } from "./sky-wheel.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
   relationshipDisplay, chartInitials, validateName,
@@ -2063,7 +2064,47 @@ function eventTitleText(title) {
     .trim();
 }
 
+/* ── Today's real positions for the wheel and orbit views ───────────────
+   One cached request shared by Chart's example wheel and Sky's orbit view.
+   Both draw only what /api/sky/current reports; on failure they hide. */
+const SKY_POSITIONS = { tz: null, at: 0, list: null, pending: null };
+function currentSkyPositions() {
+  const tz = axisResolveTimezone();
+  if (SKY_POSITIONS.list && SKY_POSITIONS.tz === tz && Date.now() - SKY_POSITIONS.at < 10 * 60_000) {
+    return Promise.resolve(SKY_POSITIONS.list);
+  }
+  if (!SKY_POSITIONS.pending) {
+    SKY_POSITIONS.pending = get(`/api/sky/current?tz=${encodeURIComponent(tz)}`)
+      .then((r) => Object.assign(SKY_POSITIONS, { tz, at: Date.now(), list: r.positions || [], pending: null }).list)
+      .catch((err) => { SKY_POSITIONS.pending = null; throw err; });
+  }
+  return SKY_POSITIONS.pending;
+}
+
+async function renderSkyOrbit() {
+  const fig = $("#sky-orbit");
+  if (!fig) return;
+  try {
+    const list = await currentSkyPositions();
+    $("#sky-orbit-art").innerHTML = orbitSvg(list);
+    fig.hidden = list.length === 0;
+  } catch { fig.hidden = true; }
+}
+
+async function fillChartExample() {
+  const box = $("#me-example");
+  if (!box) return;
+  try {
+    const list = await currentSkyPositions();
+    if (!list.length) { box.hidden = true; return; }
+    $("#me-example-wheel").innerHTML = zodiacWheelSvg(list);
+    $("#me-example-list").innerHTML = placementsListHtml(list);
+    box.hidden = false;
+  } catch { box.hidden = true; }
+}
+
 function renderEvents(events) {
+  renderSkyOrbit();
   $("#events-count").textContent = `${events.length} upcoming`;
   $("#events-timeline").innerHTML = events.map(e => `
     <div class="o-timeline__item">
@@ -7050,11 +7091,17 @@ function renderChartPlaceholder(kind, { message = "", retry = false } = {}) {
     return;
   }
   target.innerHTML = `<div class="me-empty">
+    <section class="me-example" id="me-example" aria-labelledby="me-example-label" hidden>
+      <p class="me-example__label" id="me-example-label">Example · today's sky, not your birth chart</p>
+      <div class="me-example__wheel" id="me-example-wheel"></div>
+    </section>
     <h2>No active chart yet</h2>
     <p>Create your chart and Orbit Axis will explain every placement in it.</p>
-    ${authSignedIn() ? "" : sampleReadingHtml()}
     <button type="button" class="o-btn o-btn--primary" data-action="add-chart">Create your chart</button>
+    ${authSignedIn() ? "" : sampleReadingHtml()}
+    <ul class="placements" id="me-example-list" aria-label="Today's planet positions (example)"></ul>
   </div>`;
+  fillChartExample();
 }
 
 /**
