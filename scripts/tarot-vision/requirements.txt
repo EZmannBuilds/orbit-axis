@@ -1,0 +1,11 @@
+# Card classifier: dataset synthesis, training and export.
+# Install torch and torchvision FIRST from the PyTorch index that matches your GPU
+# (see README.md), then:  pip install -r scripts/tarot-vision/requirements.txt
+numpy>=1.26
+opencv-python-headless>=4.9
+timm>=1.0
+onnx>=1.16
+onnxruntime>=1.18
+# Core ML export: macOS or Linux only (no Windows build). Installed by the WSL
+# step in README.md, not on Windows.
+# coremltools>=8.0
