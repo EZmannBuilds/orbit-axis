@@ -2067,7 +2067,7 @@ function renderEvents(events) {
   $("#events-count").textContent = `${events.length} upcoming`;
   $("#events-timeline").innerHTML = events.map(e => `
     <div class="o-timeline__item">
-      <div class="o-timeline__date">${esc(formatLocalDateKey(e.date))}</div>
+      <time class="o-timeline__date" datetime="${esc(e.date)}" title="${esc(formatLocalDateKey(e.date))}" aria-label="${esc(formatLocalDateKey(e.date))}">${esc(formatShortDateKey(e.date))}</time>
       <div class="o-timeline__body">
         <div class="o-timeline__title">
           <span class="o-timeline__icon" aria-hidden="true">${icon(EVENT_ICONS[e.kind] || "sparkle")}</span>
@@ -7809,6 +7809,16 @@ function wireFortuneDeck(count) {
 /** A human date, falling back to the raw value rather than showing nothing. */
 function axisFortuneDate(F) {
   return formatLocalDateKey(F.fortune_date || "");
+}
+
+/** "Nov 22" — or "Jan 3, 2027" when the date is not in the current year. */
+function formatShortDateKey(raw) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  const [y, m, d] = raw.split("-").map(Number);
+  const sameYear = y === new Date().getFullYear();
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }), timeZone: "UTC",
+  });
 }
 
 function formatLocalDateKey(raw) {

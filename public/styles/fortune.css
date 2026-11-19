@@ -211,7 +211,7 @@
 
 /* The overall reading is the one people came for, so it leads and spans. */
 .fortune-card2--primary { border-color: var(--accent, #8b9cf5); }
-.fortune-card2--caution { border-left: 3px solid var(--warn-border, #7a5c22); }
+.fortune-card2--caution { border: 1px solid var(--warn-border, #7a5c22); }
 
 .fortune-card2__label { margin: 0 0 0.1rem; font-size: 1rem; }
 .fortune-card2__lede {
@@ -511,7 +511,8 @@
   min-height: 44px;
   cursor: pointer;
   color: var(--color-accent);
-  font-weight: 600;
+  font-weight: 500;
+  font-size: var(--type-body);
 }
 .sample-reading__body { padding: 0 0 20px; max-width: 60ch; }
 .sample-reading__body h3 { margin: 12px 0; font-size: 22px; line-height: 1.3; }

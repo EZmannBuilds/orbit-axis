@@ -40,12 +40,12 @@
   color: var(--color-primary);
 }
 .axis-subtitle {
-  font-size: var(--type-body);
+  font-size: var(--type-caption);
   letter-spacing: var(--track-body);
   color: var(--color-muted);
   max-width: 46ch;
 }
-.axis-timezone { font-size: var(--type-fine); color: var(--color-faint); }
+.axis-timezone { font-size: var(--type-fine); color: var(--color-faint); margin-top: var(--space-xxs); }
 
 /* ── The chart chip ──────────────────────────────────────────────────────────
    Which chart this reading belongs to, as ONE control. It replaces a label, a
@@ -349,7 +349,7 @@
 .why-reading__factors { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-xs); }
 .why-factor {
   padding: var(--space-xs) var(--space-sm);
-  border-left: 2px solid var(--color-accent-border);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-sm, 8px);
   background: var(--color-surface-sunken);
   color: var(--color-secondary);
@@ -549,13 +549,13 @@
   background: var(--color-surface-ghost);
   color: var(--color-primary);
 }
-/* The current view, stated three ways: surface, weight, and the orbit edge. */
+/* The current view, stated three ways: surface, weight, and a hairline ring. */
 .chart-subnav a[aria-current="page"],
 .subnav .o-segment--block a[aria-current="page"] {
   background: var(--color-accent-soft);
   color: var(--color-accent);
   font-weight: var(--weight-semibold);
-  box-shadow: inset 2px 0 0 var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent-border);
 }
 .chart-subnav a:focus-visible,
 .subnav .o-segment--block a:focus-visible {
