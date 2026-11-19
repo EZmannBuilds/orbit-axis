@@ -1,0 +1,270 @@
+/* Orbit Axis :: Celestial Editorial Observatory (Phase 1).
+ *
+ * Loaded last. The direction approved on 2026-11-19: open editorial layout on a
+ * deep midnight field, the Moon and other astronomical visuals as the focal
+ * points, reading text sitting on the page rather than in boxes, precise mono
+ * numerals for sky data, cyan / violet / muted-gold accents, and frosted glass
+ * reserved for navigation. Dark theme only; light theme keeps its own look.
+ *
+ * Fonts are self-hosted (SIL OFL 1.1); see THIRD_PARTY_NOTICES.md.
+ */
+
+@font-face { font-family: "Newsreader"; src: url("/fonts/newsreader-latin-var.woff2") format("woff2"); font-weight: 300 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Newsreader"; src: url("/fonts/newsreader-latin-italic-var.woff2") format("woff2"); font-weight: 300 500; font-style: italic; font-display: swap; }
+@font-face { font-family: "Hanken Grotesk"; src: url("/fonts/hanken-grotesk-latin-var.woff2") format("woff2"); font-weight: 400 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/ibm-plex-mono-latin-400.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("/fonts/ibm-plex-mono-latin-500.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+
+:root {
+  --font-serif: "Newsreader", "New York", "Iowan Old Style", Georgia, serif;
+  --font-text: "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+:root:not([data-theme="light"]) {
+  --obs-void: #04060f;
+  --obs-ink: #eef0f7;
+  --obs-ink-2: #b1b7cc;
+  --obs-ink-3: #828aa4;
+  --obs-cyan: #79e3ff;
+  --obs-violet: #a796ff;
+  --obs-gold: #d9bd84;
+  --obs-line: rgba(160, 180, 255, 0.13);
+
+  --color-bg: var(--obs-void);
+  --color-canvas: var(--obs-void);
+  --color-primary: var(--obs-ink);
+  --color-secondary: var(--obs-ink-2);
+  --color-muted: var(--obs-ink-3);
+  --color-border: var(--obs-line);
+  --color-border-strong: rgba(160, 180, 255, 0.26);
+  --color-accent: var(--obs-cyan);
+  --color-accent-hover: #b6f1ff;
+  --color-accent-soft: rgba(121, 227, 255, 0.1);
+  --color-accent-border: rgba(121, 227, 255, 0.4);
+  --color-on-accent: #04101a;
+  --glass-bg: rgba(4, 6, 15, 0.7);
+  --glass-border: rgba(160, 180, 255, 0.08);
+}
+
+body { font-family: var(--font-text); }
+
+:root:not([data-theme="light"]) body {
+  background-color: var(--obs-void);
+  background-image:
+    radial-gradient(130% 55% at 72% -6%, rgba(70, 95, 220, 0.26), transparent 60%),
+    radial-gradient(80% 40% at 0% 26%, rgba(120, 90, 230, 0.1), transparent 70%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+:root:not([data-theme="light"]) ::selection { background: rgba(121, 227, 255, 0.26); color: #fff; }
+:root:not([data-theme="light"]) { caret-color: var(--obs-cyan); accent-color: var(--obs-cyan); }
+
+/* ── Type system ─────────────────────────────────────────────────────────── */
+.axis-wordmark,
+.workspace h1,
+.axis-section-title,
+.u-card-title,
+.fortune-card > h2,
+.moon-state--hero .moon-state__phase {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+}
+.axis-wordmark { font-size: clamp(2.5rem, 9vw, 3.25rem); line-height: 1; }
+.axis-section-title,
+.u-card-title,
+.fortune-card > h2 { font-size: 1.75rem; line-height: 1.15; }
+
+/* Instrument numerals: dates, illumination, positions. */
+.axis-today-date,
+.moon-state__facts,
+.o-timeline__date,
+.tech-sky__summary {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+:root:not([data-theme="light"]) .axis-today-date,
+:root:not([data-theme="light"]) .moon-state__facts,
+:root:not([data-theme="light"]) .o-timeline__date { color: var(--obs-cyan); }
+.axis-today-date { font-size: 11.5px; text-transform: uppercase; }
+.moon-state__facts { font-size: 12px; text-transform: uppercase; }
+
+/* ── Stop putting everything in a box ────────────────────────────────────────
+   Reading sections sit on the page. A soft gold rule and space separate them. */
+:root:not([data-theme="light"]) .workspace .axis-card,
+:root:not([data-theme="light"]) .workspace .o-card,
+:root:not([data-theme="light"]) .workspace .fortune-card {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding-inline: 0;
+}
+:root:not([data-theme="light"]) .workspace .axis-card + *,
+:root:not([data-theme="light"]) #today-fortune,
+:root:not([data-theme="light"]) #today-highlights,
+:root:not([data-theme="light"]) #today-sky {
+  position: relative;
+  padding-top: var(--space-xl);
+}
+:root:not([data-theme="light"]) #today-fortune::before,
+:root:not([data-theme="light"]) #today-highlights::before,
+:root:not([data-theme="light"]) #today-sky::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 30%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(217, 189, 132, 0.55), transparent);
+}
+
+/* ── Today: the Moon is the hero ─────────────────────────────────────────── */
+.axis-subtitle { display: none; } /* restates the title; the Moon says it */
+.moon-state__kicker { display: none; } /* an eyebrow; the section's h2 still names it */
+
+@media (max-width: 760px) {
+  #today-moon { overflow: visible; padding-top: var(--space-md); }
+  .moon-state.moon-state--hero { position: relative; min-height: 236px; }
+  .moon-state--hero .moon-scene {
+    position: absolute;
+    top: -18px; right: -84px; left: auto;
+    width: 232px; height: 232px;
+    border-radius: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .moon-state--hero .moon-state__text { position: relative; z-index: 1; }
+  .moon-state--hero .moon-state__phase,
+  .moon-state--hero .moon-state__facts { max-width: 58%; }
+  .moon-state--hero .moon-state__meaning { max-width: 64%; }
+  /* The Moon bleeds off the edge; never let that widen the page. */
+  .workspace, #today-moon { overflow-x: clip; }
+}
+.moon-state--hero .moon-scene__sky,
+.moon-state--hero .moon-scene__stars { display: none; }
+.moon-state--hero .moon-scene__moon { top: 0; left: 0; width: 100%; transform: none; }
+.moon-state--hero .moon-scene__moon svg { filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55)); }
+.moon-state--hero .moon-state__phase {
+  font-size: clamp(2.375rem, 10vw, 3rem);
+  line-height: 1;
+  margin-bottom: var(--space-sm);
+}
+.moon-state--hero .moon-state__meaning {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 1.375rem;
+  line-height: 1.35;
+  color: var(--color-primary);
+  margin-top: var(--space-md);
+}
+.moon-state--hero .moon-state__next { color: var(--color-secondary); }
+
+/* Sky highlights: open rows. */
+.sky-highlight { padding-block: var(--space-sm); border-bottom: 1px solid var(--color-border); }
+.sky-highlight__label { font-weight: 600; }
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+:root:not([data-theme="light"]) .o-btn--primary {
+  background: var(--obs-ink);
+  color: #070a16;
+  border-color: transparent;
+  box-shadow: 0 10px 24px -14px rgba(121, 227, 255, 0.55);
+}
+:root:not([data-theme="light"]) .o-btn--primary:hover:not(:disabled) { background: #ffffff; }
+:root:not([data-theme="light"]) .o-btn--secondary {
+  background: transparent;
+  border-color: rgba(160, 180, 255, 0.24);
+  color: var(--obs-ink);
+}
+
+/* Segmented controls become underline tabs. */
+:root:not([data-theme="light"]) .o-segment {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  padding: 0;
+  gap: var(--space-lg);
+  justify-content: flex-start;
+}
+:root:not([data-theme="light"]) .o-segment--block a,
+:root:not([data-theme="light"]) .o-segment--block button { flex: 0 0 auto; }
+:root:not([data-theme="light"]) .o-segment a,
+:root:not([data-theme="light"]) .o-segment button {
+  background: none;
+  border-radius: 0;
+  padding: 10px 0;
+  color: var(--obs-ink-3);
+  box-shadow: none;
+}
+:root:not([data-theme="light"]) .o-segment a[aria-current="page"],
+:root:not([data-theme="light"]) .o-segment a[aria-selected="true"],
+:root:not([data-theme="light"]) .o-segment button[aria-selected="true"],
+:root:not([data-theme="light"]) .subnav .o-segment--block a[aria-current="page"] {
+  background: none;
+  color: var(--obs-ink);
+  box-shadow: inset 0 -2px 0 var(--obs-cyan);
+}
+
+/* Chart's own sub-navigation follows the same underline pattern. */
+:root:not([data-theme="light"]) .chart-subnav {
+  background: none; border: 0; border-bottom: 1px solid var(--color-border);
+  border-radius: 0; padding: 0; gap: var(--space-lg); justify-content: flex-start;
+}
+:root:not([data-theme="light"]) .chart-subnav a {
+  flex: 0 0 auto; background: none; border-radius: 0; padding: 10px 0;
+  color: var(--obs-ink-3); box-shadow: none; font-weight: 400;
+}
+:root:not([data-theme="light"]) .chart-subnav a[aria-current="page"] {
+  background: none; color: var(--obs-ink); box-shadow: inset 0 -2px 0 var(--obs-cyan);
+}
+.o-card-head h2, .o-card-head h3, .chart-empty h2, .chart-empty h3, #me h2 {
+  font-family: var(--font-serif); font-weight: 300; letter-spacing: -0.015em;
+}
+
+/* ── Sky: an open, continuous timeline ───────────────────────────────────── */
+.o-timeline__date { white-space: normal; line-height: 1.35; }
+.o-timeline__item::before { background: linear-gradient(180deg, rgba(121, 227, 255, 0.4), var(--color-border) 75%); }
+.o-card-head { padding-bottom: var(--space-sm); }
+
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+:root:not([data-theme="light"]) .topnav {
+  background: linear-gradient(180deg, rgba(4, 6, 15, 0.9), rgba(4, 6, 15, 0.55));
+  border-bottom-color: transparent;
+}
+
+@media (max-width: 1023px) {
+  .workspace { padding-bottom: calc(118px + env(safe-area-inset-bottom)); scroll-padding-bottom: 118px; }
+
+  .rail {
+    inset: auto 14px calc(12px + env(safe-area-inset-bottom)) 14px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 28px;
+    background: rgba(14, 20, 40, 0.55);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+  :root[data-theme="light"] .rail { background: rgba(255, 255, 255, 0.72); border-color: rgba(0, 0, 0, 0.08); }
+  .rail__link { position: relative; border-radius: 22px; color: var(--obs-ink-3, var(--color-muted)); }
+  .rail__link[aria-current="page"] { color: var(--color-accent); }
+  /* The active tab is lit from above: a short light bar and a soft wash. */
+  .rail__link[aria-current="page"]::before {
+    content: "";
+    position: absolute; top: -7px; left: 26%; right: 26%;
+    height: 2px; border-radius: 2px;
+    background: var(--color-accent);
+    box-shadow: 0 6px 14px 1px rgba(121, 227, 255, 0.35);
+  }
+  .rail__link[aria-current="page"]::after {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(121, 227, 255, 0.14), transparent 75%);
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .rail__link::before, .rail__link::after { transition: opacity 240ms cubic-bezier(0.16, 1, 0.3, 1); }
+  }
+}

@@ -44,6 +44,15 @@ inlines the path data for the ~60 icons Orbit Axis actually draws into the
 committed `public/icons.js`, so the app ships no icon font, loads no CDN, and
 makes no third-party request to render its own navigation.
 
+## Fonts (SIL Open Font License 1.1)
+
+Self-hosted in `public/fonts/`, Latin subsets downloaded from Google Fonts on
+2026-11-19. Each licence text ships beside the files.
+
+- **Newsreader** — Copyright 2020 The Newsreader Project Authors. `OFL-Newsreader.txt`
+- **Hanken Grotesk** — Copyright 2021 The Hanken Grotesk Project Authors. `OFL-HankenGrotesk.txt`
+- **IBM Plex Mono** — Copyright © 2017 IBM Corp., Reserved Font Name "Plex". `OFL-IBMPlexMono.txt`
+
 ## Orbit Axis Engine
 
     Copyright (C) 2026 EZmannBuilds
