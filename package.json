@@ -45,7 +45,8 @@
     "orbit:vault:push": "node scripts/vault-sync.js sync --push",
     "orbit:core:smoke": "node scripts/core-smoke.js",
     "engine:sync": "node scripts/engine-sync.js",
-    "engine:check": "node scripts/engine-sync.js --check"
+    "engine:check": "node scripts/engine-sync.js --check",
+    "tarot:export-training": "node scripts/tarot-lora/export-training.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^7.1.2",

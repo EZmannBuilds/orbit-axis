@@ -1,0 +1,7 @@
+# Local tarot model (LoRA). torch with CUDA first (see scripts/tarot-vision/README.md), then:
+#   pip install -r scripts/tarot-lora/requirements.txt
+transformers>=4.51
+peft>=0.15
+accelerate>=1.6
+huggingface_hub>=0.30
+safetensors>=0.4
