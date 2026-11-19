@@ -1,6 +1,6 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-platform :ios, '14.0'
+platform :ios, '15.0'
 use_frameworks!
 
 # workaround to avoid Xcode caching of Pods that requires
@@ -24,4 +24,15 @@ end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+  # Xcode 27 supports iOS 15+ only; plugin podspecs still declare 14.0.
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      # Xcode 27 errors on Capacitor's quoted includes in framework headers.
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+    end
+  end
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+  end
 end
