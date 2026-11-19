@@ -328,3 +328,114 @@ body { font-family: var(--font-text); }
   font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--color-muted);
 }
+
+/* ── Phase 4: Atlas — an illustrated celestial encyclopedia ─────────────── */
+.atlas-search .o-input {
+  height: 48px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  font-size: 16px;
+}
+.atlas-search .o-input:focus { border-color: var(--color-accent-border); background: rgba(121, 227, 255, 0.05); }
+.atlas-category-card,
+.atlas-card {
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  padding-inline: 0;
+}
+.atlas-category-card:hover,
+.atlas-card:hover { background: none; }
+.atlas-category-card__glyph,
+.atlas-card__glyph {
+  inline-size: 52px;
+  block-size: 52px;
+  background: radial-gradient(circle at 50% 35%, rgba(121, 227, 255, 0.12), transparent 70%);
+  border-color: rgba(217, 189, 132, 0.4);
+}
+.atlas-category-card__glyph svg,
+.atlas-card__glyph svg { width: 24px; height: 24px; }
+.atlas-category-card__name {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 1.375rem;
+  letter-spacing: -0.01em;
+}
+.atlas-category-card__count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.atlas-chip { border-radius: 999px; background: none; }
+
+/* ── Phase 4: Tarot — the card is the focal point ───────────────────────── */
+.tarot-card-slot { width: 100%; display: flex; justify-content: center; }
+.tarot-card {
+  width: min(64vw, 250px);
+  max-width: none;
+  border-color: rgba(217, 189, 132, 0.35);
+  box-shadow: 0 28px 50px -24px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+.tarot-reading h2, .tarot-reading h3,
+.tarot-meaning__name,
+#tarot-daily h2, #tarot-spread h2 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  letter-spacing: -0.015em;
+}
+.tarot-meaning__name { font-size: 1.75rem; }
+.tarot-meaning__position {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--obs-gold, var(--color-muted));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tarot-card--down { transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 420ms cubic-bezier(0.16, 1, 0.3, 1); }
+  .tarot-card--down:hover { transform: translateY(-4px); box-shadow: 0 36px 60px -26px rgba(0, 0, 0, 0.95); }
+}
+
+/* ── Phase 5: You, History, Settings — native, open lists ───────────────── */
+:root:not([data-theme="light"]) .account-offer {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 0 0 var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+.account-offer__lead {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.more-section > .o-group__label,
+.o-group__label {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--obs-gold, var(--color-muted));
+}
+/* "Back to You": a quiet text control, not a second boxed button. */
+.workspace a.o-btn--utility[href="#more"] {
+  background: none;
+  border-color: transparent;
+  padding-inline: 0;
+  color: var(--color-accent);
+}
+.workspace a.o-btn--utility[href="#more"]::before { content: "‹"; margin-right: 6px; font-size: 1.2em; line-height: 1; }
+/* Empty states read as composed pages, not a blank screen. */
+.history-empty, .me-empty, .tr-empty { text-align: left; }
+.history-empty h2, .tr-empty h2 {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  font-size: 1.875rem;
+  letter-spacing: -0.015em;
+}
