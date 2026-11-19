@@ -47,6 +47,40 @@
   --glass-border: rgba(160, 180, 255, 0.08);
 }
 
+/* Daylight observatory: warm paper, deep navy ink, deep teal for sky data. */
+:root[data-theme="light"] {
+  --obs-void: #f6f3ec;
+  --obs-ink: #121628;
+  --obs-ink-2: #3f4660;
+  --obs-ink-3: #636a83;
+  --obs-cyan: #0a6f87;
+  --obs-violet: #5b3fd0;
+  --obs-gold: #8f6d2c;
+  --obs-line: rgba(18, 22, 40, 0.12);
+
+  --color-bg: var(--obs-void);
+  --color-canvas: var(--obs-void);
+  --color-primary: var(--obs-ink);
+  --color-secondary: var(--obs-ink-2);
+  --color-muted: var(--obs-ink-3);
+  --color-border: var(--obs-line);
+  --color-border-strong: rgba(18, 22, 40, 0.24);
+  --color-accent: var(--obs-cyan);
+  --color-accent-hover: #075a6e;
+  --color-accent-soft: rgba(10, 111, 135, 0.08);
+  --color-accent-border: rgba(10, 111, 135, 0.4);
+  --color-on-accent: #ffffff;
+  --glass-bg: rgba(246, 243, 236, 0.78);
+  --glass-border: rgba(18, 22, 40, 0.08);
+}
+:root[data-theme="light"] body {
+  background-color: var(--obs-void);
+  background-image: radial-gradient(130% 55% at 72% -6%, rgba(120, 140, 230, 0.14), transparent 60%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+:root[data-theme="light"] ::selection { background: rgba(10, 111, 135, 0.18); }
+
 body { font-family: var(--font-text); }
 
 :root:not([data-theme="light"]) body {
@@ -85,33 +119,33 @@ body { font-family: var(--font-text); }
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
-:root:not([data-theme="light"]) .axis-today-date,
-:root:not([data-theme="light"]) .moon-state__facts,
-:root:not([data-theme="light"]) .o-timeline__date { color: var(--obs-cyan); }
+.axis-today-date,
+.moon-state__facts,
+.o-timeline__date { color: var(--obs-cyan); }
 .axis-today-date { font-size: 11.5px; text-transform: uppercase; }
 .moon-state__facts { font-size: 12px; text-transform: uppercase; }
 
 /* ── Stop putting everything in a box ────────────────────────────────────────
    Reading sections sit on the page. A soft gold rule and space separate them. */
-:root:not([data-theme="light"]) .workspace .axis-card,
-:root:not([data-theme="light"]) .workspace .o-card,
-:root:not([data-theme="light"]) .workspace .fortune-card {
+.workspace .axis-card,
+.workspace .o-card,
+.workspace .fortune-card {
   background: none;
   border: 0;
   border-radius: 0;
   box-shadow: none;
   padding-inline: 0;
 }
-:root:not([data-theme="light"]) .workspace .axis-card + *,
-:root:not([data-theme="light"]) #today-fortune,
-:root:not([data-theme="light"]) #today-highlights,
-:root:not([data-theme="light"]) #today-sky {
+.workspace .axis-card + *,
+#today-fortune,
+#today-highlights,
+#today-sky {
   position: relative;
   padding-top: var(--space-xl);
 }
-:root:not([data-theme="light"]) #today-fortune::before,
-:root:not([data-theme="light"]) #today-highlights::before,
-:root:not([data-theme="light"]) #today-sky::before {
+#today-fortune::before,
+#today-highlights::before,
+#today-sky::before {
   content: "";
   position: absolute; top: 0; left: 0; right: 30%;
   height: 1px;
@@ -164,21 +198,21 @@ body { font-family: var(--font-text); }
 .sky-highlight__label { font-weight: 600; }
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
-:root:not([data-theme="light"]) .o-btn--primary {
+.o-btn--primary {
   background: var(--obs-ink);
-  color: #070a16;
+  color: var(--obs-void);
   border-color: transparent;
   box-shadow: 0 10px 24px -14px rgba(121, 227, 255, 0.55);
 }
-:root:not([data-theme="light"]) .o-btn--primary:hover:not(:disabled) { background: #ffffff; }
-:root:not([data-theme="light"]) .o-btn--secondary {
+.o-btn--primary:hover:not(:disabled) { background: #ffffff; }
+.o-btn--secondary {
   background: transparent;
-  border-color: rgba(160, 180, 255, 0.24);
+  border-color: var(--color-border-strong);
   color: var(--obs-ink);
 }
 
 /* Segmented controls become underline tabs. */
-:root:not([data-theme="light"]) .o-segment {
+.o-segment {
   background: none;
   border: 0;
   border-bottom: 1px solid var(--color-border);
@@ -187,35 +221,35 @@ body { font-family: var(--font-text); }
   gap: var(--space-lg);
   justify-content: flex-start;
 }
-:root:not([data-theme="light"]) .o-segment--block a,
-:root:not([data-theme="light"]) .o-segment--block button { flex: 0 0 auto; }
-:root:not([data-theme="light"]) .o-segment a,
-:root:not([data-theme="light"]) .o-segment button {
+.o-segment--block a,
+.o-segment--block button { flex: 0 0 auto; }
+.o-segment a,
+.o-segment button {
   background: none;
   border-radius: 0;
   padding: 10px 0;
   color: var(--obs-ink-3);
   box-shadow: none;
 }
-:root:not([data-theme="light"]) .o-segment a[aria-current="page"],
-:root:not([data-theme="light"]) .o-segment a[aria-selected="true"],
-:root:not([data-theme="light"]) .o-segment button[aria-selected="true"],
-:root:not([data-theme="light"]) .subnav .o-segment--block a[aria-current="page"] {
+.o-segment a[aria-current="page"],
+.o-segment a[aria-selected="true"],
+.o-segment button[aria-selected="true"],
+.subnav .o-segment--block a[aria-current="page"] {
   background: none;
   color: var(--obs-ink);
   box-shadow: inset 0 -2px 0 var(--obs-cyan);
 }
 
 /* Chart's own sub-navigation follows the same underline pattern. */
-:root:not([data-theme="light"]) .chart-subnav {
+.chart-subnav {
   background: none; border: 0; border-bottom: 1px solid var(--color-border);
   border-radius: 0; padding: 0; gap: var(--space-lg); justify-content: flex-start;
 }
-:root:not([data-theme="light"]) .chart-subnav a {
+.chart-subnav a {
   flex: 0 0 auto; background: none; border-radius: 0; padding: 10px 0;
   color: var(--obs-ink-3); box-shadow: none; font-weight: 400;
 }
-:root:not([data-theme="light"]) .chart-subnav a[aria-current="page"] {
+.chart-subnav a[aria-current="page"] {
   background: none; color: var(--obs-ink); box-shadow: inset 0 -2px 0 var(--obs-cyan);
 }
 .o-card-head h2, .o-card-head h3, .chart-empty h2, .chart-empty h3, #me h2 {
@@ -228,8 +262,8 @@ body { font-family: var(--font-text); }
 .o-card-head { padding-bottom: var(--space-sm); }
 
 /* ── Navigation ──────────────────────────────────────────────────────────── */
-:root:not([data-theme="light"]) .topnav {
-  background: linear-gradient(180deg, rgba(4, 6, 15, 0.9), rgba(4, 6, 15, 0.55));
+.topnav {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--obs-void) 90%, transparent), color-mix(in srgb, var(--obs-void) 55%, transparent));
   border-bottom-color: transparent;
 }
 
@@ -246,7 +280,7 @@ body { font-family: var(--font-text); }
     -webkit-backdrop-filter: blur(24px) saturate(150%);
     box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
-  :root[data-theme="light"] .rail { background: rgba(255, 255, 255, 0.72); border-color: rgba(0, 0, 0, 0.08); }
+  :root[data-theme="light"] .rail { background: rgba(255, 255, 255, 0.7); border-color: rgba(18, 22, 40, 0.08); box-shadow: 0 18px 40px -20px rgba(18, 22, 40, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9); }
   .rail__link { position: relative; border-radius: 22px; color: var(--obs-ink-3, var(--color-muted)); }
   .rail__link[aria-current="page"] { color: var(--color-accent); }
   /* The active tab is lit from above: a short light bar and a soft wash. */
@@ -255,13 +289,13 @@ body { font-family: var(--font-text); }
     position: absolute; top: -7px; left: 26%; right: 26%;
     height: 2px; border-radius: 2px;
     background: var(--color-accent);
-    box-shadow: 0 6px 14px 1px rgba(121, 227, 255, 0.35);
+    box-shadow: 0 6px 14px 1px color-mix(in srgb, var(--color-accent) 40%, transparent);
   }
   .rail__link[aria-current="page"]::after {
     content: "";
     position: absolute; inset: 0;
     border-radius: 22px;
-    background: linear-gradient(180deg, rgba(121, 227, 255, 0.14), transparent 75%);
+    background: linear-gradient(180deg, var(--color-accent-soft), transparent 75%);
     pointer-events: none;
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -285,9 +319,9 @@ body { font-family: var(--font-text); }
 
 /* Zodiac wheel (Chart example) */
 .zw { width: 100%; max-width: 340px; height: auto; display: block; margin: 0 auto; }
-.zw__ring { fill: none; stroke: rgba(160, 180, 255, 0.22); stroke-width: 1; }
+.zw__ring { fill: none; stroke: var(--color-border-strong); stroke-width: 1; }
 .zw__ring--faint { opacity: 0.55; }
-.zw__tick { stroke: rgba(160, 180, 255, 0.3); stroke-width: 0.8; }
+.zw__tick { stroke: var(--color-border-strong); stroke-width: 0.8; }
 .zw__sign { fill: var(--color-secondary); text-anchor: middle; dominant-baseline: central; }
 .zw__pointer { stroke: var(--color-accent); stroke-width: 0.7; opacity: 0.5; }
 .zw__body { fill: var(--color-primary); text-anchor: middle; dominant-baseline: central; }
@@ -317,8 +351,8 @@ body { font-family: var(--font-text); }
 .sky-orbit { margin: var(--space-md) 0 var(--space-lg); }
 .sky-orbit__art { display: flex; justify-content: center; }
 .orb { width: min(270px, 78vw); height: auto; }
-.orb__track { fill: none; stroke: rgba(160, 180, 255, 0.18); stroke-width: 0.7; }
-.orb__sign { fill: rgba(160, 180, 255, 0.45); text-anchor: middle; dominant-baseline: central; }
+.orb__track { fill: none; stroke: var(--color-border-strong); stroke-width: 0.7; }
+.orb__sign { fill: var(--color-muted); text-anchor: middle; dominant-baseline: central; }
 .orb__body { fill: var(--color-primary); }
 .orb__body--sun { fill: var(--obs-gold, #d9bd84); }
 .orb__body--moon { fill: var(--color-accent); }
@@ -353,7 +387,7 @@ body { font-family: var(--font-text); }
   inline-size: 52px;
   block-size: 52px;
   background: radial-gradient(circle at 50% 35%, rgba(121, 227, 255, 0.12), transparent 70%);
-  border-color: rgba(217, 189, 132, 0.4);
+  border-color: color-mix(in srgb, var(--obs-gold) 55%, transparent);
 }
 .atlas-category-card__glyph svg,
 .atlas-card__glyph svg { width: 24px; height: 24px; }
@@ -377,7 +411,7 @@ body { font-family: var(--font-text); }
 .tarot-card {
   width: min(64vw, 250px);
   max-width: none;
-  border-color: rgba(217, 189, 132, 0.35);
+  border-color: color-mix(in srgb, var(--obs-gold) 50%, transparent);
   box-shadow: 0 28px 50px -24px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 .tarot-reading h2, .tarot-reading h3,
@@ -401,7 +435,7 @@ body { font-family: var(--font-text); }
 }
 
 /* ── Phase 5: You, History, Settings — native, open lists ───────────────── */
-:root:not([data-theme="light"]) .account-offer {
+.account-offer {
   border: 0;
   border-radius: 0;
   background: none;
@@ -439,3 +473,51 @@ body { font-family: var(--font-text); }
   font-size: 1.875rem;
   letter-spacing: -0.015em;
 }
+
+/* ── Desktop and tablet ─────────────────────────────────────────────────── */
+.me-empty { background: none; border: 0; border-radius: 0; box-shadow: none; padding-inline: 0; }
+.subnav .o-segment, .subnav .o-segment--block {
+  background: none; border: 0; border-bottom: 1px solid var(--color-border); border-radius: 0; padding: 0;
+  gap: var(--space-lg); justify-content: flex-start;
+}
+.subnav .o-segment--block a { flex: 0 0 auto; background: none; border-radius: 0; padding: 10px 0; color: var(--obs-ink-3); box-shadow: none; }
+.subnav .o-segment--block a[aria-current="page"] { background: none; color: var(--obs-ink); box-shadow: inset 0 -2px 0 var(--color-accent); }
+
+@media (min-width: 1024px) {
+  /* Sidebar: no tile behind the active item, just light and colour. */
+  .rail { background: color-mix(in srgb, var(--obs-void) 70%, transparent); border-right-color: var(--color-border); }
+  .rail__link[aria-current="page"] {
+    background: linear-gradient(90deg, var(--color-accent-soft), transparent 85%);
+    color: var(--color-accent);
+  }
+
+  /* Today: a broadsheet-scale Moon and phase. */
+  .moon-state.moon-state--hero { grid-template-columns: minmax(0, 1fr) 380px; gap: var(--space-xxl); }
+  .moon-state--hero .moon-scene { width: 380px; height: 380px; overflow: visible; border-radius: 0; }
+  .moon-state--hero .moon-state__phase { font-size: clamp(3.25rem, 5vw, 4.5rem); line-height: 0.98; }
+  .moon-state--hero .moon-state__meaning { font-size: 1.625rem; max-width: 30ch; }
+
+  /* Chart: the wheel leads on the left, reading and placements on the right. */
+  .me-empty {
+    display: grid;
+    grid-template-columns: minmax(340px, 460px) minmax(0, 1fr);
+    column-gap: var(--space-xxl);
+    align-items: start;
+  }
+  .me-empty > .me-example { grid-column: 1; grid-row: 1 / span 6; margin: 0; position: sticky; top: calc(var(--topbar-height, 64px) + 24px); }
+  .me-empty > :not(.me-example) { grid-column: 2; }
+  .me-empty > h2 { margin-top: var(--space-xl); }
+  .zw { max-width: 460px; }
+  .placements { margin-top: var(--space-lg); }
+
+  /* Sky: a larger orbit view. */
+  .orb { width: 340px; }
+}
+.workspace .me-panel { background: none; border: 0; border-radius: 0; box-shadow: none; padding-inline: 0; }
+:root[data-theme="light"] .o-segment a[aria-current="page"],
+:root[data-theme="light"] .o-segment a[aria-selected="true"],
+:root[data-theme="light"] .o-segment button[aria-selected="true"] {
+  background: none; color: var(--obs-ink); box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+.moon-state--hero .moon-scene { border: 0; background: none; box-shadow: none; outline: 0; }
+:root[data-theme="light"] .moon-state--hero .moon-scene, :root:not([data-theme="light"]) .moon-state--hero .moon-scene { box-shadow: none; }
