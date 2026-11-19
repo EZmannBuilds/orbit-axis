@@ -27,9 +27,9 @@
 /* Staggered entrance for the Today and History cards. The delays are small and
    the total is under half a second — long enough to read as arrival, short
    enough that nobody waits for it. */
-.axis-rise   { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) both; }
-.axis-rise-2 { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) 70ms both; }
-.axis-rise-3 { animation: axis-fade-rise var(--duration-slow) var(--ease-decelerate) 140ms both; }
+.axis-rise   { animation: none; }
+.axis-rise-2 { animation: none; }
+.axis-rise-3 { animation: none; }
 
 /* Loading shimmer. Neutral: it is a placeholder for content, not a thing to
    look at, so it moves in the surface ramp rather than in the accent. */

@@ -72,8 +72,8 @@ test("the actions are inside Technical Sky, not above the fortune", () => {
   const skyMount = html.indexOf('id="today-sky"');
   assert.ok(fortuneMount > 0 && fortuneMount < skyMount, "the fortune renders before Technical Sky");
   const daysAt = html.indexOf('id="today-days"');
-  assert.ok(daysAt > 0 && daysAt < fortuneMount,
-    "the week strip is the one thing above the reading — it says which day you are reading");
+  assert.ok(daysAt > fortuneMount && daysAt < skyMount,
+    "past readings follow the current reading and precede technical detail");
 });
 
 test("Dev Update 1.3 placed each destination on the correct level", () => {

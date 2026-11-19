@@ -8,6 +8,7 @@
    ========================================================================== */
 
 import { SHARE_PRESETS, SHARE_PRESET_IDS, renderShareImage, deliverShareImage, shareFilename } from "/share-image.js";
+import { sampleReadingHtml } from "./sample-reading.js";
 import { renderMoonSVG } from "./moon-phase.js";
 import {
   RELATIONSHIP_TYPES, RELATIONSHIP_LABELS, DEFAULT_FIRST_CHART_RELATIONSHIP,
@@ -791,7 +792,7 @@ function transitsRenderNoChart() {
     <p>The sky itself is available to everyone — Current Positions shows where the planets are right now, with no chart required.</p>
     <div class="tr-empty__actions">
       <button type="button" class="o-btn o-btn--primary" data-action="add-chart">Create your chart</button>
-      <a class="o-btn o-btn--secondary" href="#positions">View Current Positions</a>
+      <a class="o-btn o-btn--secondary" href="#positions">See planet positions</a>
     </div>
   </div>`;
 }
@@ -857,7 +858,7 @@ function renderTransitsWorkspace(data, chart) {
         <h2>No major transits are in range right now</h2>
         <p>No supported major aspect is currently within the orb Orbit Axis reports on. That is an ordinary state, not a problem — the sky is still moving.</p>
         <div class="tr-empty__actions">
-          <a class="o-btn o-btn--secondary" href="#positions">View Current Positions</a>
+          <a class="o-btn o-btn--secondary" href="#positions">See planet positions</a>
           <a class="o-btn o-btn--secondary" href="#me">Review My Chart</a>
           <a class="o-btn o-btn--secondary" href="#home">Return Home</a>
         </div>
@@ -903,7 +904,7 @@ function renderTransitsWorkspace(data, chart) {
           </table>
         </div>
         <p class="tech-sky__help">Positions come from the same shared sky as Current Positions. Orbit Axis does not publish exact-hit times or end dates for transits — those need timing it cannot calculate reliably.</p>
-        <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">View Current Positions</a>
+        <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">See planet positions</a>
       </details>
     </section>`;
 }
@@ -2904,6 +2905,7 @@ function openAuthGate(reason = "account") {
   const copy = AUTH_REASONS[reason] || AUTH_REASONS.account;
   $("#auth-gate-title").textContent = copy.title;
   $("#auth-gate-description").textContent = copy.body;
+  $("#auth-sample").innerHTML = copy.mode === "signup" ? sampleReadingHtml() : "";
   authGate.setMode?.(copy.mode);
   if (!gate.hidden) return;
   openModal(gate, { dismissible: true, initialFocus: $("#auth-email") });
@@ -7050,6 +7052,7 @@ function renderChartPlaceholder(kind, { message = "", retry = false } = {}) {
   target.innerHTML = `<div class="me-empty">
     <h2>No active chart yet</h2>
     <p>Create your chart and Orbit Axis will explain every placement in it.</p>
+    ${authSignedIn() ? "" : sampleReadingHtml()}
     <button type="button" class="o-btn o-btn--primary" data-action="add-chart">Create your chart</button>
   </div>`;
 }
@@ -7406,8 +7409,6 @@ async function axisInit() {
   const today = new Date();
   $("#today-date").textContent = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
   axisWireFortuneSheet();
-  const scope = $("#history-scope");
-  if (scope) scope.addEventListener("change", () => axisLoadHistory(scope.value));
   // History loads from renderRoute(), and ONLY from renderRoute().
   //
   // There used to be a second hashchange listener here doing the same thing.
@@ -7520,7 +7521,7 @@ async function axisLoadToday() {
     if (state.charts.length) {
       return axisRenderSetup("Your daily reading couldn't load just now. It will return on the next refresh.");
     }
-    return axisRenderSetup("Save My Chart to unlock your daily reading. Your chart and reading history are stored in Supabase so they can follow your account.");
+    return axisRenderSetup("Save your birth chart to see your daily reading. Your chart and reading history stay with your account.");
   }
 
   const birth = axisGetBirth();
@@ -7910,9 +7911,12 @@ function axisRenderMoon(moon, sky) {
              a Moon that is not oriented the way you would actually see it, and
              saying so is the difference between a simplification and a picture
              that quietly misleads. -->
-        <p class="moon-state__note">Not your birth chart's Moon. ${esc(ORIENTATION_NOTE)}</p>
+        <details class="moon-explainer">
+          <summary>About this Moon</summary>
+          <p class="moon-state__note">Not your birth chart's Moon. ${esc(ORIENTATION_NOTE)}</p>
+        </details>
         <div class="moon-state__actions">
-          <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">View Current Positions</a>
+          <a class="o-btn o-btn--secondary o-btn--sm" href="#positions">See planet positions</a>
         </div>
       </div>
     </div>`;
@@ -8053,14 +8057,20 @@ function axisRenderHighlights(highlights) {
   if (!section || !body) return;
   if (!highlights.length) { section.hidden = true; body.innerHTML = ""; return; }
   section.hidden = false;
-  body.innerHTML = `<ul class="sky-highlights">${highlights.map((h) => `
+  const list = (items) => `<ul class="sky-highlights">${items.map((h) => `
     <li class="sky-highlight sky-highlight--${esc(h.kind)}">
       <span class="sky-highlight__label">${esc(h.label)}</span>
       <span class="sky-highlight__detail">${esc(h.detail)}</span>
       <a class="sky-highlight__link" href="${esc(h.href)}">${
-        h.href === "#symbol-atlas" ? "Learn about this sign" : "See the transit details"
+        h.href === "#symbol-atlas" ? "Explore signs" : "View in Sky"
       }</a>
     </li>`).join("")}</ul>`;
+  const wasOpen = body.querySelector("details")?.open;
+  body.innerHTML = list(highlights.slice(0, 2)) + (highlights.length > 2
+    ? `<details class="sky-highlights-more" ${wasOpen ? "open" : ""}>
+        <summary>More in the sky today (${highlights.length - 2})</summary>
+        ${list(highlights.slice(2))}
+      </details>` : "");
 }
 
 /**
@@ -8150,13 +8160,14 @@ function axisRenderSetup(message = "Orbit Axis reads today's sky against your bi
   const signedIn = authSignedIn();
   $("#today-fortune").innerHTML = `
     <div class="fortune-card">
-      <h2>${signedIn ? "Create your birth chart" : "This is the sky everyone shares"}</h2>
+      <h2>${signedIn ? "Create your birth chart" : "Your chart makes it personal"}</h2>
       <div class="fortune-setup">
-        <p>${esc(signedIn ? message : "Add your birth date, time and place, and Orbit Axis reads today against the sky the day you were born — not against your sun sign.")}</p>
+        <p>${esc(signedIn ? message : "Add your birth details to see how today’s sky relates to your chart.")}</p>
+        ${signedIn ? "" : sampleReadingHtml()}
         <button type="button" class="o-btn o-btn--primary" id="oa-open-chart-form">
           ${signedIn ? "Create your birth chart" : "Create my chart — free"}
         </button>
-        ${signedIn ? "" : `<p class="fortune-card__sub">Takes about a minute. No card, and you can export or delete everything at any time.</p>`}
+        ${signedIn ? "" : `<p class="fortune-card__sub">Free account. No payment details needed.</p>`}
       </div>
     </div>`;
   $("#oa-open-chart-form")?.addEventListener("click", () => {
@@ -8169,7 +8180,7 @@ function axisRenderSetup(message = "Orbit Axis reads today's sky against your bi
 }
 
 /* ── The week strip ───────────────────────────────────────────────────────
-   Seven days ending today, across the top of Today.
+   Seven days ending today, below the current reading.
 
    WHAT IT IS BUILT FROM. Your own reading history, and nothing else. A day is
    shown as readable only when Orbit Axis actually wrote you a reading that day;
@@ -8192,6 +8203,12 @@ function dayKey(date) {
 function axisRenderDayStrip(fortunes = []) {
   const strip = $("#today-days");
   if (!strip) return;
+  if (!authSignedIn() || fortunes.length === 0) {
+    strip.hidden = true;
+    strip.innerHTML = "";
+    DAY_STRIP.days = [];
+    return;
+  }
 
   // The history endpoint returns entries for whichever charts the scope covers;
   // one reading per day per chart. A day counts as "read" if anything landed on
@@ -8357,24 +8374,42 @@ function tarotHistoryRowHtml(reading) {
   </li>`;
 }
 
+let historyRequest = 0;
+
 async function axisLoadHistory(scope = "active") {
   const body = $("#history-body");
   if (!body) return;
-  // Same as the daily reading: history is per-account, so signed out there is
-  // nothing to ask for. Falls through to the honest empty state below.
+  const request = ++historyRequest;
+  const userId = state.auth.user?.id;
+  const chartId = state.activeChartId;
+  const isCurrent = () => request === historyRequest && userId === state.auth.user?.id
+    && chartId === state.activeChartId && historyKind() === "astrology";
+  if (!authSignedIn()) {
+    axisRenderDayStrip([]);
+    axisRenderHistoryEmpty();
+    return;
+  }
+  body.innerHTML = `<p role="status">Loading your readings…</p>`;
   try {
-    if (!authSignedIn()) throw new Error("signed out");
     const r = await get(`/api/fortune/history?scope=${encodeURIComponent(scope)}&limit=30`);
-    // The week strip reads the same response. One request feeds both surfaces,
-    // so they can never disagree about which days you have a reading for.
+    if (!isCurrent()) return;
+    if (!Array.isArray(r.fortunes)) throw new Error("Invalid history response");
     axisRenderDayStrip(r.fortunes || []);
-    if (!r.fortunes || r.fortunes.length === 0) return axisRenderHistoryEmpty();
+    if (r.fortunes.length === 0) return axisRenderHistoryEmpty();
     axisRenderHistory(r.fortunes);
     openPendingHistoryEntry();
   } catch {
-    // Not signed in → no persisted history yet. Honest empty state (no fabrication).
-    axisRenderDayStrip([]);
-    axisRenderHistoryEmpty();
+    if (!isCurrent()) return;
+    // Unknown history is not empty history. Hide the strip rather than marking
+    // dates as having no saved reading, and retain the requested scope on retry.
+    const strip = $("#today-days");
+    if (strip) strip.hidden = true;
+    body.innerHTML = `<div class="history-empty" role="alert">
+      <h2>Your readings couldn't be loaded</h2>
+      <p>Check your connection and try again. This doesn't mean your saved readings are gone.</p>
+      <button class="o-btn o-btn--secondary" type="button" id="history-retry">Try again</button>
+    </div>`;
+    $("#history-retry")?.addEventListener("click", () => axisLoadHistory(scope));
   }
 }
 

@@ -740,46 +740,67 @@
   .fortune-card2--primary { grid-column: span 2; }
 }
 
-/* ══ The Moon, as a hero ═════════════════════════════════════════════════════
-   The scene was a card illustration beside a paragraph. It is the first thing
-   worth looking at on the page, so the art carries the panel and the phase name
-   takes a display size. */
-.moon-state--hero {
+/* The Moon stays distinctive without pushing the next action off the screen. */
+.moon-state.moon-state--hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  grid-template-columns: minmax(0, 1fr) 260px;
   align-items: center;
   gap: var(--space-lg);
-  min-block-size: 260px;
 }
 .moon-state--hero .moon-state__text { order: -1; min-width: 0; }
 .moon-state__kicker {
   margin: 0 0 var(--space-xs);
-  font-size: var(--type-fine);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--track-caps);
-  text-transform: uppercase;
-  color: var(--color-faint);
+  font-size: var(--type-caption);
+  font-weight: 400;
+  letter-spacing: normal;
+  color: var(--color-secondary);
 }
-/* The one editorial moment in the product: the phase name is the headline. */
 .moon-state--hero .moon-state__phase {
   margin: 0 0 var(--space-xs);
-  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   font-weight: var(--weight-semibold);
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.15;
   color: var(--color-primary);
 }
 .moon-state--hero .moon-scene {
-  block-size: 100%;
-  min-block-size: 240px;
-  border-radius: var(--radius-lg);
+  width: 260px;
+  height: 260px;
+  min-width: 0;
+  aspect-ratio: 1;
+  border-radius: 50%;
   overflow: hidden;
 }
-
+.moon-explainer { margin-top: 4px; }
+.moon-explainer summary {
+  cursor: pointer;
+  color: var(--color-secondary);
+  font-size: var(--type-caption);
+  padding-block: 12px;
+  min-height: 44px;
+}
+.moon-explainer .moon-state__note { padding-bottom: 8px; }
 @media (max-width: 760px) {
-  .moon-state--hero { grid-template-columns: 1fr; gap: var(--space-md); }
-  .moon-state--hero .moon-scene { min-block-size: 190px; }
+  .moon-state.moon-state--hero { display: block; }
+  .moon-state--hero .moon-scene {
+    position: absolute;
+    inset: 0 0 auto auto;
+    width: 104px;
+    height: 104px;
+    margin: 0;
+  }
+  .moon-state--hero .moon-state__phase,
+  .moon-state--hero .moon-state__kicker,
+  .moon-state--hero .moon-state__facts { max-width: calc(100% - 120px); }
+  .moon-state--hero .moon-state__meaning { margin-top: 16px; }
+}
+
+@media (max-width: 380px) {
+  .moon-state--hero .moon-scene { width: 72px; height: 72px; }
+  .moon-state--hero .moon-state__phase,
+  .moon-state--hero .moon-state__kicker,
+  .moon-state--hero .moon-state__facts { max-width: calc(100% - 84px); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -257,15 +257,14 @@
   }
   .rail__link[aria-current="page"] { background: transparent; }
   .rail__icon { width: 25px; height: 25px; }
-  /* The phone shows the short form of the same name. Swapping the rendered text
-     rather than the accessible name keeps the announced name identical on every
-     device. */
+  /* The five destination names fit at every size. Render each label once so
+     generated CSS text cannot duplicate its accessible name. */
   .rail__label {
     display: block; width: 100%;
-    font-size: 0;
+    font-size: 11px;
     overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
-  .rail__label::before { content: attr(data-mobile-label); font-size: 10px; }
+
 
   .topnav { padding-left: var(--space-md); padding-right: var(--space-md); }
   .workspace {
@@ -340,10 +339,16 @@
 }
 
 @media (max-width: 380px) {
-  .rail__label::before { font-size: 9px; }
+
   .rail__icon { width: 23px; height: 23px; }
 }
 
 @media (forced-colors: active) {
   .rail__link[aria-current="page"] { border: 2px solid Highlight; }
+}
+
+/* Keep navigation concise; the workspace already explains the current page. */
+.topnav__crumb { display: none; }
+@media (min-width: 1024px) {
+  .workspace:not(.workspace--wide) { max-width: 1080px; }
 }
