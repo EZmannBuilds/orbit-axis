@@ -38,6 +38,10 @@ $py = ".cache\tarot-vision\venv\Scripts\python"
 & $py scripts\tarot-vision\export.py --onnx
 ```
 
+If the machine shares its GPU with other jobs through a turn-taking script or
+lock, run `train.py` through it rather than directly. Synthesis and export use
+the CPU only.
+
 Then the Core ML export, under WSL, using a CPU-only torch:
 
 ```bash

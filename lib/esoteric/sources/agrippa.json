@@ -1,0 +1,819 @@
+{
+  "source": {
+    "title": "Three Books of Occult Philosophy",
+    "author": "Henry Cornelius Agrippa",
+    "translator": "J. F. [John French / 'J. Freake']",
+    "year": 1651,
+    "original_latin": 1533,
+    "transcription": "Joseph H. Peterson, Twilit Grotto / esotericarchives.com (spelling as in 1651, with Peterson's bracketed modernisations removed)",
+    "url_used": [
+      "https://www.esotericarchives.com/agrippa/agripp1b.htm",
+      "https://www.esotericarchives.com/agrippa/agripp2c.htm",
+      "https://www.esotericarchives.com/agrippa/agripp2d.htm"
+    ]
+  },
+  "decan_images": [
+    {
+      "sign": "Aries",
+      "face": 1,
+      "image": "a black man, standing and cloathed in a white garment, girdled about, of a great body, with reddish eyes, and great strength, and like one that is angry",
+      "virtue": "signifieth and causeth boldness, fortitude, loftiness and shamelesness",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Aries",
+      "face": 2,
+      "image": "a form of a woman, outwardly cloathed with a red garment, and under it a white, spreading abroad over her feet",
+      "virtue": "causeth nobleness, height of a Kingdom, and greatness of dominion",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Aries",
+      "face": 3,
+      "image": "the figure of a white man, pale, with reddish hair, and cloathed with a red garment, who carrying on the one hand a golden Bracelet, and holding forth a wooden staff, is restless, and like one in wrath, because he cannot perform that good he would",
+      "virtue": "bestoweth wit, meekness, joy and beauty",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Taurus",
+      "face": 1,
+      "image": "a naked man, an Archer, Harvester or Husbandman, and goeth forth to sow, plough, build, people, and divide the earth, according to the rules of Geometry",
+      "virtue": null,
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Taurus",
+      "face": 2,
+      "image": "a naked man, holding in his hand a key",
+      "virtue": "giveth power, nobility, and dominion over people",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Taurus",
+      "face": 3,
+      "image": "a man in whose hand is a Serpent, and a dart",
+      "virtue": "the image of necessity and profit, and also of misery & slavery",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Gemini",
+      "face": 1,
+      "image": "a man in whose hand is a rod, and he is, as it were, serving another",
+      "virtue": "granteth wisdom, and the knowledge of numbers and arts in which there is no profit",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Gemini",
+      "face": 2,
+      "image": "a man in whose hand is a Pipe, and another being bowed down, digging the earth",
+      "virtue": "signifie infamous and dishonest agility, as that of Jesters and Juglers; it also signifies labours and painful searchings",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Gemini",
+      "face": 3,
+      "image": "a man seeking for Arms, and a fool holding in the right hand a Bird, and in his left a pipe",
+      "virtue": "significations of forgetfulness, wrath, boldness, jeasts, scurrilities, and unprofitable words",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Cancer",
+      "face": 1,
+      "image": "the form of a young Virgin, adorned with fine cloathes, and having a Crown on her head",
+      "virtue": "giveth acuteness of senses, subtilty of wit, and the love of men",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Cancer",
+      "face": 2,
+      "image": "a man cloathed in comely apparrel, or a man and woman sitting at the table and playing",
+      "virtue": "bestoweth riches, mirth, gladness, and the love of women",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Cancer",
+      "face": 3,
+      "image": "a man a Hunter with his lance and horne, bringing out dogs for to hunt",
+      "virtue": "the contention of men, the pursuing of those who fly, the hunting and possessing of things by arms and brawlings",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Leo",
+      "face": 1,
+      "image": "a man riding on a Lion",
+      "virtue": "signifieth boldness, violence, cruelty, wickedness, lust and labours to be sustained",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Leo",
+      "face": 2,
+      "image": "an image with hands lifted up, and a man on whose head is a Crown; he hath the appearance of an angry man, and one that threatneth, having in his right hand a Sword drawn out of the scabbard, & in his left a buckler",
+      "virtue": "hath signification upon hidden contentions, and unknown victories, & upon base men, and upon the occasions of quarrels and battels",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Leo",
+      "face": 3,
+      "image": "a young man in whose hand is a Whip, and a man very sad, and of an ill aspect",
+      "virtue": "signifie love and society, and the loss of ones right for avoiding strife",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Virgo",
+      "face": 1,
+      "image": "the figure of a good maide, and a man casting seeds",
+      "virtue": "signifieth getting of wealth, ordering of diet, plowing, sowing, and peopling",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Virgo",
+      "face": 2,
+      "image": "a black man cloathed with a skin, and a man having a bush of hair, holding a bag",
+      "virtue": "signifie gain, scraping together of wealth and covetousness",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Virgo",
+      "face": 3,
+      "image": "a white woman and deaf, or an old man leaning on a staff",
+      "virtue": "to shew weakness, infirmity, loss of members, destruction of trees, and depopulation of lands",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Libra",
+      "face": 1,
+      "image": "the form of an angry man, in whose hand is a Pipe, and the form of a man reading in a book",
+      "virtue": "justifying and helping the miserable and weak against the powerful and wicked",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Libra",
+      "face": 2,
+      "image": "two men furious and wrathful and a man in a comely garment, sitting in a chair",
+      "virtue": "to shew indignation against the evil, and quietness and security of life with plenty of good things",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Libra",
+      "face": 3,
+      "image": "a violent man holding a bow, and before him a naked man, and also another man holding bread in one hand, and a cup of wine in the other",
+      "virtue": "to shew wicked lusts, singings, sports and gluttony",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Scorpio",
+      "face": 1,
+      "image": "a woman of good face and habit, and two men striking her",
+      "virtue": "for comliness, beauty, and for strifes, treacheries, deceits, detractations, and perditions",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Scorpio",
+      "face": 2,
+      "image": "a man naked, and a woman naked, and a man sitting on the earth, and before him two dogs biting one another",
+      "virtue": "for impudence, deceit, and false dealing, and for to lend mischief and strife amongst men",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Scorpio",
+      "face": 3,
+      "image": "a man bowed downward upon his knees, and a woman striking him with a staff",
+      "virtue": "drunkenness, fornication, wrath, violence, and strife",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Sagittarius",
+      "face": 1,
+      "image": "the form of a man armed with a coat of male, and holding a naked sword in his hand",
+      "virtue": "for boldness, malice, and liberty",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Sagittarius",
+      "face": 2,
+      "image": "a woman weeping, and covered with cloathes",
+      "virtue": "for sadness and fear of his own body",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Sagittarius",
+      "face": 3,
+      "image": "a man like in colour to gold, or an idle man playing with a staff",
+      "virtue": "in following our own wills, and obstinacy in them, and in activeness for evil things, contentions, and horrible matters",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Capricorn",
+      "face": 1,
+      "image": "the form of a woman, and a man carrying full bags",
+      "virtue": "for to go forth and to rejoyce, to gain and to lose with weakness and baseness",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Capricorn",
+      "face": 2,
+      "image": "two women, and a man looking towards a Bird flying in the Air",
+      "virtue": "for the requiring those things which cannot be done, and for the searching after those things which cannot be known",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Capricorn",
+      "face": 3,
+      "image": "a woman chast in body, and wise in her work, and a banker gathering his mony together on the table",
+      "virtue": "to govern in prudence, in covetousness of money, and in avarice",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Aquarius",
+      "face": 1,
+      "image": "the form of a prudent man, and of a woman spinning",
+      "virtue": "in the thought and labour for gain, in poverty and baseness",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Aquarius",
+      "face": 2,
+      "image": "the form of a man with a long beard",
+      "virtue": "belongeth to the understanding, meeknes, modesty, liberty and good maners",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Aquarius",
+      "face": 3,
+      "image": "a black and angry man",
+      "virtue": "in expressing insolence; and impudence",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Pisces",
+      "face": 1,
+      "image": "a man carrying burthens on his shoulder, and well cloathed",
+      "virtue": "in journeys, change of place, and in carefulness of getting wealth and cloaths",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Pisces",
+      "face": 2,
+      "image": "a woman of a good countenance, and well adorned",
+      "virtue": "to desire and put ones self on about high and great matters",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    },
+    {
+      "sign": "Pisces",
+      "face": 3,
+      "image": "a man naked, or a youth, and nigh him a beautiful maide, whose head is adorned with flowers",
+      "virtue": "for rest, idleness, delight, fornication, and for imbracings of women",
+      "quote_url": "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxvii)"
+    }
+  ],
+  "lunar_mansions": [
+    {
+      "number": 1,
+      "name": "Alnath, that is the horns of Aries",
+      "starts": "from the head of Aries of the eighth sphere",
+      "effects": "it causeth discords, and journies",
+      "image_ch46": "for the destruction of some one … in an Iron ring, the Image of a black man in a garment made of haire, and girdled round, casting a small lance with his right hand",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Allothaim or Albochan, that is the belly of Aries",
+      "starts": "from the twelfth degree of the same sign [Aries], fifty one minutes, twenty two seconds compleat",
+      "effects": "it conduceth to the finding of treasures, and to the retaining of captives",
+      "image_ch46": "against the wrath of the Prince, and for reconciliation with him … the Image of a king crowned",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Achaomazon or Athoray, that is, showring or Pleiades",
+      "starts": "from the twenty five degrees of Aries compleat fourty two minutes, and fifty one seconds",
+      "effects": "it is profitable to Saylors, Huntsmen, and Alchymists",
+      "image_ch46": "in a silver ring … a woman well clothed, sitting in a chair, her right hand being lifted up on her head … giveth happy fortune and every good thing",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Aldebaram or Aldelamen, that is the eye or head of Taurus",
+      "starts": "from the eight degree of Taurus, thirty four minutes, and seventeen seconds of the same Taurus being excluded",
+      "effects": "it causeth the destruction and hindrances of buildings, fountains, wels, of gold-mines, the flight of creeping things, and begetteth discord",
+      "image_ch46": "for revenge, separation, enmity and ill will … the Image of a soldier sitting on an horse, holding a Serpent in his right hand",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Alchatay or Albachay",
+      "starts": "after the twenty one degree of Taurus, twenty five minutes, fourty seconds",
+      "effects": "it helpeth to the return from a journey, to the instruction of scholars, it confirmeth edifices, it giveth health and good will",
+      "image_ch46": "for the favor of Kings and officers, and good entertainment … the head of a man",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Alhanna or Alchaya, that is the little Star of great light",
+      "starts": "after the fourth degree of Gemini, seventeen minutes, and nine seconds",
+      "effects": "it conduceth to Hunting, and besieging of Towns, and revenge of princes, it destroyeth Harvests and fruits and hindreth the operation of the Physitian",
+      "image_ch46": "for to procure love betwixt two … two Images imbracing one another",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Aldimiach or Alarzach, that is the Arm of Gemini",
+      "starts": "from the seventeenth degree of Gemini, eight minutes and thirty four seconds, and lasteth even to the end of the sign",
+      "effects": "it conferreth gain and friendship, its profitable to Lovers, it scareth flyes, destroyeth Magisteries",
+      "image_ch46": "for to obtain every good thing … the Image of a man well clothed, holding up his hands to heaven as it were praying and supplicating",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Alnaza or Anatrachya that is misty or cloudy",
+      "starts": "the seven following Mansions begin from Cancer (first of them; exact degree not stated)",
+      "effects": "it causeth love, friendship, and society of fellow travellers, it driveth away mice ands afflicteth Captives, confirming their imprisonment",
+      "image_ch46": "for victory in war … a seal of Tin, being an Image of an Eagle, having the face of a man",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Archaam or Arcaph, that is the eye of the Lyon",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it hindreth Harvests and travellers, and putteth discord between men",
+      "image_ch46": "to cause infirmities … a seal of Lead, being the image of a man wanting his privy parts, shutting his eyes with his hands",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Algelioche or Albgebh, that is the neck or forehead of Leo",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it strengtheneth buildings, yeeldeth love, benevolence and help against enemies",
+      "image_ch46": "to facilitate child-bearing, and to cure the sick … a seal of gold, being the head of a Lyon",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 11,
+      "name": "Azobra or Ardaf, that is, the hair of the Lyons head",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it is good for voyages, and gain by merchandize, and for redemption of Captives",
+      "image_ch46": "for fear, reverence and worship … the image of a man riding on a Lion, holding the ear thereof in his left hand, and in his right, holding forth a bracelet of gold",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Alzarpha or Azarpha, that is the tayle of Leo",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it giveth prosperity to Harvests, and Plantations, but hindreth Seamen, but it is good for the bettering of servants, Captives and companions",
+      "image_ch46": "for the separation of Lovers … a seal of black lead, being the image of a Dragon fighting with a man",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 13,
+      "name": "Alhaire, that is Dogstars, or the wings of Virgo",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it is pravalent for Benevolence, gain, voyages, Harvests, and freedom of captives",
+      "image_ch46": "for the agreement of married couples, and for the dissolving of charms against copulation … images of both, of the man in red Wax, of the woman in white … imbrace one another",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 14,
+      "name": "Achureth or Arimet, by others Azimeth or Alhumech or Alcheymech, that is the spike of Virgo, or flying spike",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it causeth the love of martyred folk, it cureth the sick, its profitable to Saylors, but it hindreth journies by land",
+      "image_ch46": "for divorce and separation of the man from the woman … a seal of red Coppcr, being the image of a Dog biting his tail",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 15,
+      "name": "Agrapha or Algarpha, that is, covered, or covered flying",
+      "starts": "beginneth in the head of Libra",
+      "effects": "its profitable for the extracting of treasures, for digging of pits, it helpeth forward divorce, discord, and the destruction of houses and enemies, and hindreth travellers",
+      "image_ch46": "for to obtain friendship and good will … the image of a man sitting, and inditing of letterss",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 16,
+      "name": "Azubene or Ahubene, that is, the horns of Scorpio",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it hindereth journyes and Wedlock, Harvests and Merchandize, it pervaileth for redemption of captives",
+      "image_ch46": "for to gain much Merchandizing … a seal of Silver, being the image of a man sitting upon a Chair, holding a ballance in his hand",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 17,
+      "name": "Alchil, that is the Crown of Scorpio",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it bettereth a bad fortune, maketh love durable, strengtheneth buildings, & helpeth Seamen",
+      "image_ch46": "against Theeves and Robbers … with an Iron seal the Image of an Ape",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 18,
+      "name": "Alchas or Altob, that is the Heart of Scorpio",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it causeth discord, sedition, conspiracy against princes and mighty ones, and revenge from enemies, but it freeth captives and helpeth edifices",
+      "image_ch46": "against Feavors and pains of the belly … a seal of Copper, being the image of a Snake, holding his tail above his head",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 19,
+      "name": "Allatha or Achala, by others Hycula or Axala, that is the tayle of Scorpio",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it helpeth in the besieging of Cities and taking of Towns, and in the driving of men from their places, and for the destruction of Sea-men, and perdition of captives",
+      "image_ch46": "for facilitating birth, & provoking the menstrues … a seal of copper, being the image of a woman, holding her hands upon her face",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 20,
+      "name": "Abnahaya, that is a beam",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it helpeth for the taming of wild beasts, for the strengthening of prisons, it destroyeth the wealth of societies, it compelleth a man to come to a certain place",
+      "image_ch46": "for hunting … a seal of Tin, being the image of Sagittary, half a Man, and half an Horse",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 21,
+      "name": "Abeda or Albeldach which is a desert",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it is good for Harvests, gain buildings and travellers, and causeth divorce",
+      "image_ch46": "for the destruction of some body … the image of a man with a double countenance, before and behinde",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 22,
+      "name": "Sadahacha or Zodeboluch, or Zandeldena, that is a pastour",
+      "starts": "beginneth from the head of Capricorn",
+      "effects": "it promoteth the flight of servants and captives, that they may escape, and helpeth the curing of diseases",
+      "image_ch46": "for the security of Runaways … a seal of Iron, being the image of a man with wings on his feet, bearing an helmet on his head",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 23,
+      "name": "Zabadola or Zobrach that is swallowing",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it maketh for divorce, liberty of captives and the health of the sick",
+      "image_ch46": "for destruction and wasting … a seal of Iron, being the image of a Cat, having a Dogs head",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 24,
+      "name": "Sadabath or Chadezoad, that is the Star of fortune",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it is prevalent for the Benevolence of marryed folk, for the victory of souldiers, it hurteth the execution of Government, and hindreth that it may not be exercised",
+      "image_ch46": "for the multiplying of Heards of Cattle … the image of a woman giving suck her son",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 25,
+      "name": "Sadalabra or Sadalachia, that is a Butterfly or a spreading forth",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it helpeth besieging and revenge, it destroyeth enemies, maketh divorse, confirmeth prisons and buildings, hasteneth messengers, it conduceth to spels against copulation, and so bindeth every member of man, that it cannot perform his duty",
+      "image_ch46": "for the preservation of Trees and Harvests … in the wood of a Fig-tree, the image of a man planting",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 26,
+      "name": "Alpharg or Phragal Mocaden, that is the first drawing",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it maketh for the Union and love of men, for the health of captives, it destroyeth prisons and buildings",
+      "image_ch46": "for love and favor … the image of a woman washing and combing her haires",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 27,
+      "name": "Alcharya or Alhalgalmoad that is the second drawing",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it encreaseth Harvests, Revenues, Gain, it healeth infirmities, but hindreth buildings, prolongeth prisons, causeth danger to Seamen, and helpeth to infer mischiefs on whom you shall please",
+      "image_ch46": "for to destroy Fountains, Pits, Medicinal Waters and Baths … of red Earth the image of a man winged, holding in his hand an empty vessel, and perforated",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    },
+    {
+      "number": 28,
+      "name": "Albotham or Alchalcy, that is Pisces",
+      "starts": "not stated individually; Agrippa: the remaining quarters repeat the first quarter's degrees, minutes and seconds (three mansions begin in the first sign of each quarter, two in each of the other two)",
+      "effects": "it encreaseth Harvests and Merchandize, it secureth travellers through dangerous places; it maketh for the joy of marryed couples, but it strengthenth prisons, and causeth loss of treasures",
+      "image_ch46": "for to gather Fishes together … a seal of Copper, being the image of a Fish",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxiii)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvi)"
+      ]
+    }
+  ],
+  "behenian_stars": [
+    {
+      "name": "Head of Algol",
+      "nature_of": [
+        "Saturn",
+        "Jupiter"
+      ],
+      "stone": "the Diamond",
+      "herb": "black Hellebor, and Mugwort",
+      "note": "II.31: in the eighteenth degree of Taurus. II.47 image: the head of a man with a bloody neck; bestoweth good success to Petitions, maketh him bold and magnanimous, preserveth the members sound, helpeth against Witchcraft …",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Pleiades, or seven Stars",
+      "nature_of": [
+        "Moon (by nature)",
+        "Mars (by complexion)"
+      ],
+      "stone": "Crystall, and the stone Diodocus",
+      "herb": "the Hearb Diacedon, and Frankincense, and Fennill (also, amongst Metals, Quick-silver)",
+      "note": "II.31: 'also in the two and twentieth degree' (sign not restated; follows Taurus), 'a Lunary star by Nature and by complexion Martial'. II.47 image: a little Virgin, or the Figure of a Lamp; increase the light of the eyes, assemble Spirits, raise Winds, reveal secret and hidden things",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Aldeboran",
+      "nature_of": [
+        "Mars (by nature)",
+        "Venus (by complexion)"
+      ],
+      "stone": "the Carbuncle, and Ruby",
+      "herb": "the Milky Thistle, and Matry-silva",
+      "note": "II.31: in the third degree of Gemini (Hermes: twenty fifth degree of Aries). II.47 ('Adlebora'): image after the likeness of God, or of a flying man; giveth riches and honor",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Goat-Star",
+      "nature_of": [
+        "Jupiter",
+        "Saturn"
+      ],
+      "stone": "the Saphir",
+      "herb": "Horehound, Mint, Mugwort, and Mandrake",
+      "note": "II.31: in the thirteenth degree of Gemini. II.47 image: a man willing to make himself merry with musical instruments; acceptable, honored and exalted before Kings and Princes; helpeth the pain of the teeth",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Great Dog-star",
+      "nature_of": [
+        "Venus"
+      ],
+      "stone": "the Berill",
+      "herb": "Savin, Mugwort and Dragonwort (and amongst Animals the tongue of a Snake)",
+      "note": "II.31: in the seventh degree of Cancer, 'Venereal'. II.47 image: an Hound and a little Virgin; bestoweth honor and good will … power to pacifie and reconcile Kings, Princes, and other men",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Lesser Dog-star",
+      "nature_of": [
+        "Mercury (by nature)",
+        "Mars (by complexion)"
+      ],
+      "stone": "Achates",
+      "herb": "the Flowers of Marigold, and Penyroial",
+      "note": "II.31: in the seventeenth degree of Cancer. II.47 image: a Cock, or three little maides; conferreth the favor of the gods, of spirits, and men; power against Witchcrafts; preserveth health",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Heart of the Lyon (the Kings star)",
+      "nature_of": [
+        "Jupiter",
+        "Mars"
+      ],
+      "stone": "the Granate",
+      "herb": "Sallendine, Mugwort, and Mastick",
+      "note": "II.31: in the one and twentieth degree of Leo. II.47 image: a Lion or Cat, or an honorable Person sitting in a Chair; rendreth a man temperate, appeaseth wrath, giveth favour",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Taile of the Bear",
+      "nature_of": [
+        "Venus",
+        "Moon"
+      ],
+      "stone": "the Loadstone",
+      "herb": "Succory … also Mugwort, and the flowers of Perwinckle (and amongst Animals the tooth of a Wolf)",
+      "note": "I.32 says 'Taile of the lesser Bear'; II.31 says 'tail of the greater Bear', nineteenth degree of Virgo, 'Venereal, and Lunary'; II.47 says 'tail of Vrsa Major'. II.47 image: a pensive Man, or a Bull, or a Calf; availeth against incantations, secure in travels",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Wing of the Crow",
+      "nature_of": [
+        "Saturn",
+        "Mars"
+      ],
+      "stone": "such stones as are of the Colour of the black Onyx stone",
+      "herb": "the Bur, Quadraginus, Henbane, and Comfrey (and amongst Animals the tongue of a Frog)",
+      "note": "II.31: right wing in the seventh degree of Libra, left wing in the thirteenth, both of the nature of Saturn and Mars. II.47 image: a Raven, or Snake, or a black Man cloathed in black; maketh cholerick, bold … causeth naughty dreams; power of driving away evil spirits …",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Spica",
+      "nature_of": [
+        "Venus",
+        "Mercury"
+      ],
+      "stone": "the Emrald",
+      "herb": "Sage, Trifoile, Perwinkle, Mugwort, and Mandrake",
+      "note": "II.31: in the sixteenth degree of Libra, 'Venereal and Mercurial'. II.47 ('the Spike') image: a Bird, or a man laden with Merchandize; conferreth riches, overcome contentions, taketh away scarcity and mischief",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Alchamech",
+      "nature_of": [
+        "Mars",
+        "Jupiter"
+      ],
+      "stone": "the Jasper",
+      "herb": "the Plantain",
+      "note": "II.31 ('Alcameth'): in the seventeenth degree of Libra, of the nature of Mars and Jupiter, 'but of this when the Suns aspect is full towards it; of that when on the contrary'. II.47 ('Alchameth') image: an Horse or Wolf, or a man dancing; good against Feavers, astringeth and retaineth the bloud",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Elpheia",
+      "nature_of": [
+        "Venus",
+        "Mars"
+      ],
+      "stone": "the Topaze",
+      "herb": "Rosemary, Trifoile, and Ivy",
+      "note": "II.31 ('Elepheia'): in the fourth degree of Scorpio. II.47 ('Elphrya') image: an Hen, or a man crowned and advanced; bestoweth good will and love of men, giveth chastity",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Heart of the Scorpion",
+      "nature_of": [
+        "Mars",
+        "Jupiter"
+      ],
+      "stone": "the Sardonius, and Amethist",
+      "herb": "long Aristolochy, and Saffron",
+      "note": "II.31: in the third degree of Sagittarius. II.47 image: a man armed, with a coat of Male, or a Scorpion; giveth understanding and memory, good colour, aideth against evil spirits …",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Falling Vultur",
+      "nature_of": [
+        "Mercury",
+        "Venus"
+      ],
+      "stone": "the Chrysolite",
+      "herb": "Succory, and Fumitary",
+      "note": "II.31: in the seventh degree of Capricorn, 'Temperate, Mercurial, and Venereal'. II.47 image: a Vulture or Hen, or a traveller; maketh magnanimous and proud, power over devils and beasts",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    },
+    {
+      "name": "Taile of Capricorn",
+      "nature_of": [
+        "Saturn",
+        "Mercury"
+      ],
+      "stone": "the Chalcedone",
+      "herb": "Majoram, Mugwort, and Nip, and the root of Mandrake",
+      "note": "II.31: in the sixteenth degree of Aquarius. II.47 image: an Hart, or Goate, or an angry man; bestoweth prosperity, increaseth wrath",
+      "quote_url": [
+        "https://www.esotericarchives.com/agrippa/agripp1b.htm (Bk I ch. xxxii)",
+        "https://www.esotericarchives.com/agrippa/agripp2c.htm (Bk II ch. xxxi)",
+        "https://www.esotericarchives.com/agrippa/agripp2d.htm (Bk II ch. xlvii)"
+      ]
+    }
+  ],
+  "problems": [
+    "Spelling follows the 1651 English as transcribed by Peterson; his bracketed modern glosses (e.g. '[sailors]') were dropped. Text was read from the English only; the 1533 Latin was not collated.",
+    "Decans: Agrippa (Bk II ch. 37) gives image and signification together; the 'virtue' field is his signification clause. Taurus face 1 has no separate virtue: 'goeth forth to sow, plough, build, people, and divide the earth' is part of the image sentence, so virtue is null. Gemini face 2/3, Libra, Scorpio etc. describe several figures in one face; kept as given. No decan images were shortened with an ellipsis.",
+    "Mansions: Agrippa gives explicit starting degrees only for mansions 1-7. For 8, 15 and 22 he says only that they begin from Cancer / the head of Libra / the head of Capricorn. For 9-14, 16-21 and 23-28 he gives no individual start, only the rule that each quarter repeats the first quarter's spacing (each mansion 12 deg 51 min 26 sec per Abraham). Those rows say so in 'starts'; no degrees were computed or inferred.",
+    "Mansions: Peterson's page adds editorial notes citing Picatrix and Leupoldus, plus Arabic names (al-Sharatan etc.). These are not Agrippa's text and were left out.",
+    "Mansions: 'image_ch46' (extra field) is from Bk II ch. 46, shortened with '…'; the materials and perfumes were left out.",
+    "Mansions: the transcription has obvious typos, kept as found: 'ands' (8), 'pravalent' (13), 'pervaileth' (16), 'Coppcr' (14 image), 'letterss' (15 image).",
+    "Behenian stars: Bk I ch. 32 lists the fifteen stars with stones and plants but no planets. The planetary natures come from Bk II ch. 31, which lists 18 stars (it adds the Navel of Andromeda, the Shoulder of the Horse, and both wings of the Crow separately). Agrippa never uses the word 'Behenian' in I.32; it appears only in the title of II.47.",
+    "Behenian stars: the books disagree on the Bear's tail. I.32 has 'Taile of the lesser Bear'; II.31 has 'tail of the greater Bear'; II.47 has 'tail of Vrsa Major'.",
+    "Behenian stars: names are spelled differently in different chapters: Aldeboran / Aldeboram / Adlebora; Alchamech / Alcameth / Alchameth; Elpheia / Elepheia / Elphrya; Falling Vultur / falling Vulture.",
+    "Behenian stars: for the Pleiades, II.31 says only 'in the two and twentieth degree' without naming the sign; the sentence follows Algol in Taurus. For Alchamech, II.31's 'of this … of that' about the Sun's aspect is unclear.",
+    "Behenian stars: the characters (sigils) of the fifteen stars, printed as woodcuts in early editions, are not on the Peterson pages used. Those pages carry only the planetary 'letters' images in I.33 and the geomantic figures in II.48. Sigil descriptions are therefore left out.",
+    "Bk II ch. 47 images and virtues are given in 'note', shortened with '…'. II.47 also says these are 'the images of some of the fixed stars which they command to be ingraven on their stones under them'."
+  ]
+}

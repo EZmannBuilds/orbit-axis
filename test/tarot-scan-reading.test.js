@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 
 import {
   ScanReadingError, auditReadingText, checkWovenText, composeScanReading,
-  correspondenceLine, skyLinks, validateScanCards,
+  correspondenceLine, skyLinks, standingLine, validateScanCards,
 } from "../lib/tarot/scan-reading.js";
 import { PRODUCTION_CARDS, cardBySlug } from "../lib/tarot/deck.js";
 
@@ -78,6 +78,17 @@ test("correspondence lines state facts from the table", () => {
   assert.match(correspondenceLine("page-of-cups"), /Earth of Water, the throne of the Ace of Cups/);
   assert.match(correspondenceLine("ace-of-swords"), /Root of the Powers of the Air.*Yetzirah/);
   assert.match(correspondenceLine("the-world"), /planet Saturn and to Earth/);
+});
+
+test("Lilly standing lines: own house, exaltation, detriment, fall, sign trumps", () => {
+  assert.equal(standingLine("two-of-wands"), "In Lilly's table of essential dignities, Aries is Mars's own house.");
+  assert.equal(standingLine("three-of-wands"), "In Lilly's table of essential dignities, the Sun is exalted in Aries.");
+  assert.equal(standingLine("four-of-wands"), "In Lilly's table of essential dignities, Venus is in its detriment in Aries.");
+  assert.equal(standingLine("three-of-swords"), "In Lilly's table of essential dignities, Saturn is exalted in Libra.");
+  assert.equal(standingLine("seven-of-swords"), null); // Moon in Aquarius: none of the four
+  assert.equal(standingLine("the-emperor"), "In Lilly's table of essential dignities, Aries is the house of Mars and the exaltation of the Sun.");
+  assert.equal(standingLine("strength"), "In Lilly's table of essential dignities, Leo is the house of the Sun.");
+  assert.equal(standingLine("the-magician"), null);
 });
 
 test("sky links appear only with a sky, and name only real positions", () => {

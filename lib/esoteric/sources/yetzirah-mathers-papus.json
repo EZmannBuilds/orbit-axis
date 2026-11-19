@@ -1,0 +1,1103 @@
+{
+  "sources": [
+    {
+      "id": "westcott-sy-1893",
+      "title": "Sepher Yetzirah: The Book of Formation and the Thirty Two Paths of Wisdom",
+      "author": "W. Wynn Westcott (tr.)",
+      "year": 1893,
+      "edition": "2nd (revised) edition, London: Theosophical Publishing Society",
+      "url_used": [
+        "https://archive.org/details/sepheryetzirahb00rittgoog",
+        "https://archive.org/download/sepheryetzirahb00rittgoog/sepheryetzirahb00rittgoog_djvu.txt",
+        "https://en.wikisource.org/wiki/Sepher_Yetzirah/Sepher_Yetzirah"
+      ]
+    },
+    {
+      "id": "westcott-sy-1911-via-1996",
+      "title": "Sepher Yetzirah (4th ed., ed. Darcy Kuntz, Holmes 1996; based on Westcott's 3rd ed. 1911)",
+      "author": "W. Wynn Westcott (tr.), Darcy Kuntz (ed.)",
+      "year": 1996,
+      "edition": "Cross-check only: modern copyrighted reprint of the 1911 3rd-ed. text; not used as a value source",
+      "url_used": [
+        "https://archive.org/details/w.-wynn-westcott-sepher-yetzirah"
+      ]
+    },
+    {
+      "id": "mathers-1888",
+      "title": "The Tarot: Its Occult Signification, Use in Fortune-Telling, and Method of Play, Etc.",
+      "author": "S. L. MacGregor Mathers",
+      "year": 1888,
+      "edition": "1888 (George Redway); sacred-texts.com HTML transcription, read via Wayback Machine",
+      "url_used": [
+        "https://web.archive.org/web/2022/https://www.sacred-texts.com/tarot/mathers/mtar03.htm",
+        "https://web.archive.org/web/2022/https://www.sacred-texts.com/tarot/mathers/mtar01.htm",
+        "https://web.archive.org/web/2022/https://www.sacred-texts.com/tarot/mathers/mtar02.htm"
+      ]
+    },
+    {
+      "id": "papus-1892",
+      "title": "The Tarot of the Bohemians (Absolute Key to Occult Science)",
+      "author": "Papus (G. Encausse), tr. A. P. Morton",
+      "year": 1892,
+      "edition": "1st English ed., London: Chapman & Hall 1892 (Cornell copy); Ch. XX 'The Divining Tarot', Third Lesson, p. 316-317",
+      "url_used": [
+        "https://archive.org/details/cu31924028930571",
+        "https://archive.org/download/cu31924028930571/cu31924028930571_djvu.txt"
+      ]
+    }
+  ],
+  "letters": [
+    {
+      "letter": "Aleph",
+      "class": "mother",
+      "element": "Air",
+      "planet": null,
+      "sign": null,
+      "season": "temperate (climate) of the Year",
+      "day": null,
+      "month": null,
+      "body": "chest",
+      "function": null,
+      "opposites": null,
+      "direction": null,
+      "notes": "Ch. III.4-5 (main text). Universe: Air in the World. Male A.M.S., female S.M.A. 1911 text (per 1996 reprint) reads 'the breath in the chest (the lungs for breathing air)'. Ch. II.1 / VI.1: Air is the mediator ('tongue of a balance'). No direction assigned."
+    },
+    {
+      "letter": "Mem",
+      "class": "mother",
+      "element": "Water",
+      "planet": null,
+      "sign": null,
+      "season": "cold",
+      "day": null,
+      "month": null,
+      "body": "belly",
+      "function": null,
+      "opposites": null,
+      "direction": null,
+      "notes": "Ch. III.4-5 (main text). Universe: the earth. Male M.A.S., female M.S.A. Water is 'silent'/'mute'. No direction assigned."
+    },
+    {
+      "letter": "Shin",
+      "class": "mother",
+      "element": "Fire",
+      "planet": null,
+      "sign": null,
+      "season": "heat",
+      "day": null,
+      "month": null,
+      "body": "head",
+      "function": null,
+      "opposites": null,
+      "direction": null,
+      "notes": "Ch. III.4-5 (main text). Universe: the heavens. Fire is 'sibilant'. No direction assigned."
+    },
+    {
+      "letter": "Beth",
+      "class": "double",
+      "element": null,
+      "planet": "Moon",
+      "sign": null,
+      "season": null,
+      "day": "first day of the week",
+      "month": null,
+      "body": "right eye",
+      "function": "Wisdom",
+      "opposites": "Wisdom and Folly",
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). 'opposites' derived by matching the supplement's quality (Wisdom) to the pair list in Ch. IV.1. Read positionally, Ch. IV.1 would give Beth 'Life' and Ch. IV.2 'Above' - not stated as an allotment.",
+      "direction_positional": "Above"
+    },
+    {
+      "letter": "Gimel",
+      "class": "double",
+      "element": null,
+      "planet": "Mars",
+      "sign": null,
+      "season": null,
+      "day": "second day of the week",
+      "month": null,
+      "body": "right ear",
+      "function": "Health",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Supplement quality 'Health' has no pair in Ch. IV.1, so opposites left null. Positional reading of Ch. IV.1: 'Peace'.",
+      "direction_positional": "Below"
+    },
+    {
+      "letter": "Daleth",
+      "class": "double",
+      "element": null,
+      "planet": "Sun",
+      "sign": null,
+      "season": null,
+      "day": "third day of the week",
+      "month": null,
+      "body": "right nostril",
+      "function": "Fertility",
+      "opposites": "Fertility and Solitude (Desolation)",
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Opposites matched via quality. Positional reading of Ch. IV.1: 'Wisdom'.",
+      "direction_positional": "East"
+    },
+    {
+      "letter": "Kaph",
+      "class": "double",
+      "element": null,
+      "planet": "Venus",
+      "sign": null,
+      "season": null,
+      "day": "fourth day of the week",
+      "month": null,
+      "body": "left eye",
+      "function": "Life",
+      "opposites": "Life and Death",
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Opposites matched via quality. Positional reading of Ch. IV.1: 'Riches'.",
+      "direction_positional": "West"
+    },
+    {
+      "letter": "Pe",
+      "class": "double",
+      "element": null,
+      "planet": "Mercury",
+      "sign": null,
+      "season": null,
+      "day": "fifth day of the week",
+      "month": null,
+      "body": "left ear",
+      "function": "Power",
+      "opposites": "Power and Servitude",
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Spelled 'Pé' (Wikisource) / 'Pe' (1893 OCR) / 'Peh' (1911 per reprint). Opposites matched via quality. Positional reading of Ch. IV.1: 'Grace'.",
+      "direction_positional": "North"
+    },
+    {
+      "letter": "Resh",
+      "class": "double",
+      "element": null,
+      "planet": "Saturn",
+      "sign": null,
+      "season": null,
+      "day": "sixth day of the week",
+      "month": null,
+      "body": "left nostril",
+      "function": "Peace",
+      "opposites": "Peace and War (Evil)",
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Opposites matched via quality. Positional reading of Ch. IV.1: 'Fertility'.",
+      "direction_positional": "South"
+    },
+    {
+      "letter": "Tau",
+      "class": "double",
+      "element": null,
+      "planet": "Jupiter",
+      "sign": null,
+      "season": null,
+      "day": "Seventh Day of the week",
+      "month": null,
+      "body": "mouth",
+      "function": "Beauty",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. IV (Westcott: 'a modern illustration ... not found in the ancient copies'; he attributes it to Kalisch). Supplement quality 'Beauty' has no pair in Ch. IV.1, so opposites left null. Positional reading of Ch. IV.1: 'Power'.",
+      "direction_positional": "the Palace of Holiness in the midst"
+    },
+    {
+      "letter": "Heh",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Aries",
+      "season": null,
+      "day": null,
+      "month": "Nisan",
+      "body": "right foot",
+      "function": "Speech",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies') ('predominant in Speech'). Spelled 'Héh'/'Hé'.",
+      "direction_positional": "North-east"
+    },
+    {
+      "letter": "Vau",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Taurus",
+      "season": null,
+      "day": null,
+      "month": "Aiar",
+      "body": "right kidney",
+      "function": "mind",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). Main-text month list spells it 'Yiar'; note 46: 'also written Iyar, and Aiar'. Main text Ch. V.1 lists 'Imagination' (note 44: Postellus 'suspicion', Pistorius 'mind').",
+      "direction_positional": "South-east"
+    },
+    {
+      "letter": "Zain",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Gemini",
+      "season": null,
+      "day": null,
+      "month": "Sivan",
+      "body": "left foot",
+      "function": "Movement",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies').",
+      "direction_positional": "the East above"
+    },
+    {
+      "letter": "Cheth",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Cancer",
+      "season": null,
+      "day": null,
+      "month": "Tamuz",
+      "body": "right hand",
+      "function": "Sight",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). 1893 scan OCR reads 'Tamuz'; the Wikisource transcription of the same edition reads 'Tammuz'.",
+      "direction_positional": "the East below"
+    },
+    {
+      "letter": "Teth",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Leo",
+      "season": null,
+      "day": null,
+      "month": "Ab",
+      "body": "left kidney",
+      "function": "Hearing",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies').",
+      "direction_positional": "the North above"
+    },
+    {
+      "letter": "Yod",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Virgo",
+      "season": null,
+      "day": null,
+      "month": "Elul",
+      "body": "left hand",
+      "function": "Work",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies').",
+      "direction_positional": "the North below"
+    },
+    {
+      "letter": "Lamed",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Libra",
+      "season": null,
+      "day": null,
+      "month": "Tishri",
+      "body": "private parts",
+      "function": "Sexual desire",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). Text adds: '(Kalisch gives \"gall.\")'. Note 47 discusses the ambiguous Hebrew word.",
+      "direction_positional": "the South-west"
+    },
+    {
+      "letter": "Nun",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Scorpio",
+      "season": null,
+      "day": null,
+      "month": "Heshvan",
+      "body": "intestines",
+      "function": "Smell",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). Main-text month list spells it 'Hesvan'.",
+      "direction_positional": "the North-west"
+    },
+    {
+      "letter": "Samech",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Sagittarius",
+      "season": null,
+      "day": null,
+      "month": "Kislev",
+      "body": "stomach",
+      "function": "Sleep",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies').",
+      "direction_positional": "the West above"
+    },
+    {
+      "letter": "Oin",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Capricornus",
+      "season": null,
+      "day": null,
+      "month": "Tebet",
+      "body": "liver",
+      "function": "Anger",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). Westcott's spelling of Ayin (note 43).",
+      "direction_positional": "the West below"
+    },
+    {
+      "letter": "Tzaddi",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Aquarius",
+      "season": null,
+      "day": null,
+      "month": null,
+      "body": "gullet",
+      "function": "Taste",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies'). The supplement reads 'Aquarius in the Year' - the Universe/month clause appears dropped; no month given. The main-text month list has 'Sabat' in 11th position.",
+      "direction_positional": "the South above"
+    },
+    {
+      "letter": "Qoph",
+      "class": "simple",
+      "element": null,
+      "planet": null,
+      "sign": "Pisces",
+      "season": null,
+      "day": null,
+      "month": "Adar",
+      "body": "spleen",
+      "function": "Mirth",
+      "opposites": null,
+      "direction": null,
+      "notes": "Supplement to Ch. V (Westcott: 'a modern illustration ... not found in the ancient copies').",
+      "direction_positional": "the South below"
+    }
+  ],
+  "mathers": [
+    {
+      "slug": "the-magician",
+      "number_in_source": 1,
+      "name_in_source": "The Juggler",
+      "upright": "Will, Will-Power, Dexterity",
+      "reversed": "Will applied to evil ends, Weakness of Will, Cunning, Knavishness."
+    },
+    {
+      "slug": "the-high-priestess",
+      "number_in_source": 2,
+      "name_in_source": "The High Priestess",
+      "upright": "Science, Wisdom, Knowledge, Education",
+      "reversed": "Conceit, Ignorance, Unskilfulness, Superficial Knowledge."
+    },
+    {
+      "slug": "the-empress",
+      "number_in_source": 3,
+      "name_in_source": "The Empress",
+      "upright": "Action, Plan, Undertaking Movement in a matter, Initiative",
+      "reversed": "Inaction, Frittering away of power, Want of Concentration Vacillation."
+    },
+    {
+      "slug": "the-emperor",
+      "number_in_source": 4,
+      "name_in_source": "The Emperor",
+      "upright": "Realisation, Effect, Development",
+      "reversed": "Stoppage, Check, Immature, Unripe."
+    },
+    {
+      "slug": "the-hierophant",
+      "number_in_source": 5,
+      "name_in_source": "The Hierophant or Pope",
+      "upright": "Mercy, Beneficence Kindness, Goodness",
+      "reversed": "Over-kindness, weakness, Foolish exercise of generosity."
+    },
+    {
+      "slug": "the-lovers",
+      "number_in_source": 6,
+      "name_in_source": "The Lovers",
+      "upright": "Wise Dispositions, Proof, Trials Surmounted",
+      "reversed": "Unwise Plans, Failure when put to the test."
+    },
+    {
+      "slug": "the-chariot",
+      "number_in_source": 7,
+      "name_in_source": "The Chariot",
+      "upright": "Triumph, Victory, Overcoming obstacles",
+      "reversed": "Overthrown, Conquered by Obstacles at the last moment."
+    },
+    {
+      "slug": "justice",
+      "number_in_source": 8,
+      "name_in_source": "Themis, or Justice",
+      "upright": "Equilibrium, Balance, Justice",
+      "reversed": "Bigotry, Want of Balance, Abuse of Justice, Over-severity, Inequality, Bias."
+    },
+    {
+      "slug": "the-hermit",
+      "number_in_source": 9,
+      "name_in_source": "The Hermit",
+      "upright": "Prudence, Caution, Deliberation",
+      "reversed": "Over-prudence, Timorousness, Fear."
+    },
+    {
+      "slug": "wheel-of-fortune",
+      "number_in_source": 10,
+      "name_in_source": "The Wheel of Fortune",
+      "upright": "Good Fortune, Success, Unexpected Luck",
+      "reversed": "Ill-Fortune, Failure, Unexpected Ill-Luck."
+    },
+    {
+      "slug": "strength",
+      "number_in_source": 11,
+      "name_in_source": "Strength, or Fortitude",
+      "upright": "Power, Might, Force, Strength, Fortitude",
+      "reversed": "Abuse of Power, Overbearingness, Want of Fortitude."
+    },
+    {
+      "slug": "the-hanged-one",
+      "number_in_source": 12,
+      "name_in_source": "The Hanged Man",
+      "upright": "Self-sacrifice, Sacrifice, Devotion, Bound",
+      "reversed": "Selfishness, Unbound, Partial sacrifice."
+    },
+    {
+      "slug": "death",
+      "number_in_source": 13,
+      "name_in_source": "Death",
+      "upright": "Death, Change, Transformation, Alteration for the worse",
+      "reversed": "Death just escaped, Partial change, Alteration for the better."
+    },
+    {
+      "slug": "temperance",
+      "number_in_source": 14,
+      "name_in_source": "Temperance",
+      "upright": "Combination, Conformation, Uniting",
+      "reversed": "Ill-advised combinations, Disunion, Clashing interests, &c."
+    },
+    {
+      "slug": "the-devil",
+      "number_in_source": 15,
+      "name_in_source": "The Devil",
+      "upright": "Fatality for Good",
+      "reversed": "Fatality for Evil."
+    },
+    {
+      "slug": "the-tower",
+      "number_in_source": 16,
+      "name_in_source": "The Lightning-struck Tower",
+      "upright": "Ruin, Disruption, Over-throw, Loss, Bankruptcy",
+      "reversed": "These in a more or less partial degree."
+    },
+    {
+      "slug": "the-star",
+      "number_in_source": 17,
+      "name_in_source": "The Star",
+      "upright": "Hope, Expectation, Bright promises",
+      "reversed": "Hopes not fulfilled, Expectations disappointed or fulfilled in a minor degree."
+    },
+    {
+      "slug": "the-moon",
+      "number_in_source": 18,
+      "name_in_source": "The Moon",
+      "upright": "Twilight, Deception, Error",
+      "reversed": "Fluctuation, slight Deceptions, Trifling Mistakes."
+    },
+    {
+      "slug": "the-sun",
+      "number_in_source": 19,
+      "name_in_source": "The Sun",
+      "upright": "Happiness, Content, Joy",
+      "reversed": "These in a minor degree."
+    },
+    {
+      "slug": "judgement",
+      "number_in_source": 20,
+      "name_in_source": "The Last Judgment",
+      "upright": "Renewal, Result, Determination of a Matter",
+      "reversed": "Postponement of Result, Delay, Matter re-opened later."
+    },
+    {
+      "slug": "the-fool",
+      "number_in_source": 0,
+      "name_in_source": "The Foolish Man",
+      "upright": "Folly, Expiation, Wavering",
+      "reversed": "Hesitation, Instability, Trouble arising herefrom."
+    },
+    {
+      "slug": "the-world",
+      "number_in_source": 21,
+      "name_in_source": "The Universe",
+      "upright": "Completion, Good Reward",
+      "reversed": "Evil Reward, or Recompense."
+    },
+    {
+      "slug": "king-of-wands",
+      "number_in_source": 22,
+      "name_in_source": "King of Sceptres",
+      "upright": "Man living in the country, Country Gentleman, Knowledge, Education",
+      "reversed": "A naturally good but severe man, Counsel, Advice, Deliberation."
+    },
+    {
+      "slug": "queen-of-wands",
+      "number_in_source": 23,
+      "name_in_source": "Queen of Sceptres",
+      "upright": "Woman living in the country, Lady of the Manor, Love of Money, Avarice, Usury",
+      "reversed": "A good a virtuous Woman, but strict and economical, Obstacles, Resistance, Opposition."
+    },
+    {
+      "slug": "knight-of-wands",
+      "number_in_source": 24,
+      "name_in_source": "Knight of Sceptres",
+      "upright": "Departure, Separation, Disunion",
+      "reversed": "Rupture, Discord, Quarrel."
+    },
+    {
+      "slug": "page-of-wands",
+      "number_in_source": 25,
+      "name_in_source": "Knave of Sceptres",
+      "upright": "A Good Stranger, Good News, Pleasure, Satisfaction",
+      "reversed": "Ill News, Displeasure, Chagrin, Worry."
+    },
+    {
+      "slug": "ten-of-wands",
+      "number_in_source": 26,
+      "name_in_source": "Ten of Sceptres",
+      "upright": "Confidence, Security, Honour, Good Faith",
+      "reversed": "Treachery, Subterfuge, Duplicity, Bar."
+    },
+    {
+      "slug": "nine-of-wands",
+      "number_in_source": 27,
+      "name_in_source": "Nine of Sceptres",
+      "upright": "Order, Discipline, Good Arrangement, Disposition",
+      "reversed": "Obstacles, Crosses, Delay, Displeasure."
+    },
+    {
+      "slug": "eight-of-wands",
+      "number_in_source": 28,
+      "name_in_source": "Eight of Sceptres",
+      "upright": "Understanding, Observation, Direction",
+      "reversed": "Quarrels, Intestine disputes, Discord."
+    },
+    {
+      "slug": "seven-of-wands",
+      "number_in_source": 29,
+      "name_in_source": "Seven of Sceptres",
+      "upright": "Success, Gain, Advantage, Profit, Victory",
+      "reversed": "Indecision, Doubt, Hesitation, Embarrassment, Anxiety."
+    },
+    {
+      "slug": "six-of-wands",
+      "number_in_source": 30,
+      "name_in_source": "Six of Sceptres",
+      "upright": "Attempt, Hope, Desire, Wish, Expectation",
+      "reversed": "Infidelity, Treachery, Disloyalty, Perfidy."
+    },
+    {
+      "slug": "five-of-wands",
+      "number_in_source": 31,
+      "name_in_source": "Five of Sceptres",
+      "upright": "Gold, Opulence, Gain, Heritage, Riches, Fortune, Money",
+      "reversed": "Legal proceedings, Judgment, Law, Lawyer, Tribunal."
+    },
+    {
+      "slug": "four-of-wands",
+      "number_in_source": 32,
+      "name_in_source": "Four of Sceptres",
+      "upright": "Society, Union, Association, Concord, Harmony",
+      "reversed": "Prosperity, Success, Happiness, Advantage."
+    },
+    {
+      "slug": "three-of-wands",
+      "number_in_source": 33,
+      "name_in_source": "Three of Sceptres",
+      "upright": "Enterprise, Undertaking, Commerce, Trade, Negotiation",
+      "reversed": "Hope, Desire, Attempt, Wish."
+    },
+    {
+      "slug": "two-of-wands",
+      "number_in_source": 34,
+      "name_in_source": "Deuce of Sceptres",
+      "upright": "Riches, Fortune, Opulence, Magnificence, Grandeur",
+      "reversed": "Surprise, Astonishment, Event, Extraordinary Occurrence."
+    },
+    {
+      "slug": "ace-of-wands",
+      "number_in_source": 35,
+      "name_in_source": "Ace of Sceptres",
+      "upright": "Birth, Commencement, Beginning, Origin, Source",
+      "reversed": "Persecution, Pursuits Voilence, Vexation, Cruelty, Tyranny."
+    },
+    {
+      "slug": "king-of-cups",
+      "number_in_source": 36,
+      "name_in_source": "King of Cups",
+      "upright": "A fair Man, Goodness, Kindness, Liberality, Generosity",
+      "reversed": "A Man of good position, but shifty in his Dealings, Distrust, Doubt, Suspicion."
+    },
+    {
+      "slug": "queen-of-cups",
+      "number_in_source": 37,
+      "name_in_source": "Queen of Cups",
+      "upright": "A fair Woman, Success, Happiness, Advantage, Pleasure",
+      "reversed": "A Woman in good position, but intermeddling, and to be distrusted; Success, but with some attendant trouble."
+    },
+    {
+      "slug": "knight-of-cups",
+      "number_in_source": 38,
+      "name_in_source": "Knight of Cups",
+      "upright": "Arrival, Approach, Advance",
+      "reversed": "Duplicity, Abuse of Confidence, Fraud, Cunning."
+    },
+    {
+      "slug": "page-of-cups",
+      "number_in_source": 39,
+      "name_in_source": "Knave of Cups",
+      "upright": "A fair Youth, Confidence, Probity, Discretion, Integrity",
+      "reversed": "A Flatterer, Deception, Artifice."
+    },
+    {
+      "slug": "ten-of-cups",
+      "number_in_source": 40,
+      "name_in_source": "Ten of Cups",
+      "upright": "The Town wherein one resides, Honour, Consideration, Esteem, Virtue, Glory, Reputation",
+      "reversed": "Combat, Strife, Opposition, Differences, Dispute."
+    },
+    {
+      "slug": "nine-of-cups",
+      "number_in_source": 41,
+      "name_in_source": "Nine of Cups",
+      "upright": "Victory, Advantage, Success, Triumph, Difficulties surmounted",
+      "reversed": "Faults, Errors, Mistakes, Imperfections."
+    },
+    {
+      "slug": "eight-of-cups",
+      "number_in_source": 42,
+      "name_in_source": "Eight of Cups",
+      "upright": "A fair Girl, Friendship, Attachment, Tenderness",
+      "reversed": "Gaiety, Feasting, Joy, Pleasure."
+    },
+    {
+      "slug": "seven-of-cups",
+      "number_in_source": 43,
+      "name_in_source": "Seven of Cups",
+      "upright": "Idea, Sentiment, Reflection, Project",
+      "reversed": "Plan, Design, Resolution, Decision."
+    },
+    {
+      "slug": "six-of-cups",
+      "number_in_source": 44,
+      "name_in_source": "Six of Cups",
+      "upright": "The Past, passed by, Faded, Vanished, Disappeared",
+      "reversed": "The Future, that which is to come, Shortly, Soon."
+    },
+    {
+      "slug": "five-of-cups",
+      "number_in_source": 45,
+      "name_in_source": "Five of Cups",
+      "upright": "Union, Junction, Marriage, Inheritance",
+      "reversed": "Arrival, Return, News, Surprise, False projects."
+    },
+    {
+      "slug": "four-of-cups",
+      "number_in_source": 46,
+      "name_in_source": "Four of Cups",
+      "upright": "Ennui, Displeasure, Discontent, Dissatisfaction",
+      "reversed": "New Acquaintance, Conjecture, Sign, Presentiment."
+    },
+    {
+      "slug": "three-of-cups",
+      "number_in_source": 47,
+      "name_in_source": "Three of Cups",
+      "upright": "Success, Triumph, Victory, Favourable issue",
+      "reversed": "Expedition of business, Quickness, Celerity, Vigilance."
+    },
+    {
+      "slug": "two-of-cups",
+      "number_in_source": 48,
+      "name_in_source": "Deuce of Cups",
+      "upright": "Love, Attachment, Friendship, Sincerity, Affection",
+      "reversed": "Crossed desires, Obstacles, Opposition, Hindrance."
+    },
+    {
+      "slug": "ace-of-cups",
+      "number_in_source": 49,
+      "name_in_source": "Ace of Cups",
+      "upright": "Feasting, Banquet, Good Cheer",
+      "reversed": "Change, Novelty, Metamorphosis, Inconstancy."
+    },
+    {
+      "slug": "king-of-swords",
+      "number_in_source": 50,
+      "name_in_source": "King of Swords",
+      "upright": "A Lawyer, a Man of Law, Power, Command, Superiority, Authority",
+      "reversed": "A Wicked Man, Chagrin, Worry, Grief, Fear, Disturbance."
+    },
+    {
+      "slug": "queen-of-swords",
+      "number_in_source": 51,
+      "name_in_source": "Queen of Swords",
+      "upright": "Widowhood, Loss, Privation, Absence, Separation",
+      "reversed": "A Bad Woman, ill-tempered and bigoted, Riches and Discord, Abundance together with Worry, Joy with Grief."
+    },
+    {
+      "slug": "knight-of-swords",
+      "number_in_source": 52,
+      "name_in_source": "Knight of Swords",
+      "upright": "A Soldier, a man whose profession is arms, Skilfulness, Capacity, Address, Promptitude",
+      "reversed": "A conceited fool, Ingenuousness, Simplicity."
+    },
+    {
+      "slug": "page-of-swords",
+      "number_in_source": 53,
+      "name_in_source": "Knave of Swords",
+      "upright": "A Spy, Overlooking, Authority",
+      "reversed": "That which is unforeseen, Vigilance, Support."
+    },
+    {
+      "slug": "ten-of-swords",
+      "number_in_source": 54,
+      "name_in_source": "Ten of Swords",
+      "upright": "Tears, Affliction, Grief, Sorrow",
+      "reversed": "Passing Success, Momentary Advantage."
+    },
+    {
+      "slug": "nine-of-swords",
+      "number_in_source": 55,
+      "name_in_source": "Nine of Swords",
+      "upright": "An Ecclesiastic, a Priest, Conscience. Probity, Good Faith, Integrity",
+      "reversed": "Wise distrust, Suspicion, Fear, Doubt, Shady character."
+    },
+    {
+      "slug": "eight-of-swords",
+      "number_in_source": 56,
+      "name_in_source": "Eight of Swords",
+      "upright": "Sickness, Calumny, Criticism, Blame",
+      "reversed": "Treachery in the Past, Event, Accident, Remarkable Incident."
+    },
+    {
+      "slug": "seven-of-swords",
+      "number_in_source": 57,
+      "name_in_source": "Seven of Swords",
+      "upright": "Hope, Confidence, Desire, Attempt, Wish",
+      "reversed": "Wise Advice, Good Counsel, Wisdom, Prudence, Circumspection."
+    },
+    {
+      "slug": "six-of-swords",
+      "number_in_source": 58,
+      "name_in_source": "Six of Swords",
+      "upright": "Envoy, Messenger, Voyage, Travel",
+      "reversed": "Declaration, Love proposed, Revelation, Surprise."
+    },
+    {
+      "slug": "five-of-swords",
+      "number_in_source": 59,
+      "name_in_source": "Five of Swords",
+      "upright": "Mourning, Sadness, Affliction",
+      "reversed": "Losses Trouble (same signification, whether reversed or not.)"
+    },
+    {
+      "slug": "four-of-swords",
+      "number_in_source": 60,
+      "name_in_source": "Four of Swords",
+      "upright": "Solitude, Retreat, Abandonment, Solitary, Hermit",
+      "reversed": "Economy, Precaution, Regulation of Expenditure."
+    },
+    {
+      "slug": "three-of-swords",
+      "number_in_source": 61,
+      "name_in_source": "Three of Swords",
+      "upright": "A Nun, Separation, Removal, Rupture, Quarrel",
+      "reversed": "Error, Confusion, Misrule, Disorder."
+    },
+    {
+      "slug": "two-of-swords",
+      "number_in_source": 62,
+      "name_in_source": "Deuce of Swords",
+      "upright": "Friendship, Valour, Firmness, Courage",
+      "reversed": "False Friends, Treachery, Lies."
+    },
+    {
+      "slug": "ace-of-swords",
+      "number_in_source": 63,
+      "name_in_source": "Ace of Swords",
+      "upright": "Triumph, Fecundity, Fertility, Prosperity",
+      "reversed": "Embarrassment, Foolish and Hopeless Love, Obstacle, Hindrance."
+    },
+    {
+      "slug": "king-of-pentacles",
+      "number_in_source": 64,
+      "name_in_source": "King of Pentacles",
+      "upright": "A dark Man, Victory, Bravery, Courage, Success",
+      "reversed": "An old and vicious Man, a Dangerous Man, Doubt, Fear, Peril, Danger."
+    },
+    {
+      "slug": "queen-of-pentacles",
+      "number_in_source": 65,
+      "name_in_source": "Queen of Pentacles",
+      "upright": "A dark Woman, a generous Woman, Liberality, Greatness of Soul, Generosity",
+      "reversed": "Certain Evil, a suspicious Woman, a Woman justly regarded with Suspicion, Doubt, Mistrust."
+    },
+    {
+      "slug": "knight-of-pentacles",
+      "number_in_source": 66,
+      "name_in_source": "Knight of Pentacles",
+      "upright": "A useful Man, Trustworthy, Wisdom, Economy, Order, Regulation",
+      "reversed": "A brave Man, but out of Employment, Idle, Unemployed, Negligent."
+    },
+    {
+      "slug": "page-of-pentacles",
+      "number_in_source": 67,
+      "name_in_source": "Knave of Pentacles",
+      "upright": "A dark Youth, Economy, Order, Rule, Management",
+      "reversed": "Prodigality, Profusion, Waste, Dissipation."
+    },
+    {
+      "slug": "ten-of-pentacles",
+      "number_in_source": 68,
+      "name_in_source": "Ten of Pentacles",
+      "upright": "House, Dwelling, Habitation, Family",
+      "reversed": "Gambling, Dissipation, Robbery, Loss."
+    },
+    {
+      "slug": "nine-of-pentacles",
+      "number_in_source": 69,
+      "name_in_source": "Nine of Pentacles",
+      "upright": "Discretion, Circumspection, Prudence, Discernment",
+      "reversed": "Deceit, Bad faith, Artifices, Deception."
+    },
+    {
+      "slug": "eight-of-pentacles",
+      "number_in_source": 70,
+      "name_in_source": "Eight of Pentacles",
+      "upright": "A dark Girl, Beauty, Candour, Chastity, Innocence, Modesty",
+      "reversed": "Flattery, Usury, Hypocrisy, Shifty."
+    },
+    {
+      "slug": "seven-of-pentacles",
+      "number_in_source": 71,
+      "name_in_source": "Seven of Pentacles",
+      "upright": "Money, Finance, Treasure, Gain, Profit",
+      "reversed": "Disturbance, Worry, Anxiety, Melancholy."
+    },
+    {
+      "slug": "six-of-pentacles",
+      "number_in_source": 72,
+      "name_in_source": "Six of Pentacles",
+      "upright": "Presents, Gifts, Gratification",
+      "reversed": "Ambition, Desire, Passion, Aim, Longing."
+    },
+    {
+      "slug": "five-of-pentacles",
+      "number_in_source": 73,
+      "name_in_source": "Five of Pentacles",
+      "upright": "Lover or Mistress, Love, Sweetness, Affection, Pure and Chaste Love",
+      "reversed": "Disgraceful Love, Imprudence, License, Profligacy."
+    },
+    {
+      "slug": "four-of-pentacles",
+      "number_in_source": 74,
+      "name_in_source": "Four of Pentacles",
+      "upright": "Pleasure, Gaiety, Enjoyment, Satisfaction",
+      "reversed": "Obstacles, Hindrances."
+    },
+    {
+      "slug": "three-of-pentacles",
+      "number_in_source": 75,
+      "name_in_source": "Three of Pentacles",
+      "upright": "Nobility, Elevation, Dignity, Rank, Power",
+      "reversed": "Children, Sons, Daughters, Youths, Commencement."
+    },
+    {
+      "slug": "two-of-pentacles",
+      "number_in_source": 76,
+      "name_in_source": "Deuce of Pentacles",
+      "upright": "Embarrassment, Worry, Difficulties",
+      "reversed": "Letter, Missive, Epistle, Message."
+    },
+    {
+      "slug": "ace-of-pentacles",
+      "number_in_source": 77,
+      "name_in_source": "Ace of Pentacles",
+      "upright": "Perfect Contentment, Felicity, Prosperity, Triumph",
+      "reversed": "Purse of Gold, Money, Gain, Help, Profit, Riches."
+    }
+  ],
+  "papus": [
+    {
+      "slug": "the-magician",
+      "number_in_source": 1,
+      "name_in_source": "The Juggler",
+      "meaning": "Male Inquirer."
+    },
+    {
+      "slug": "the-high-priestess",
+      "number_in_source": 2,
+      "name_in_source": "The High Priestess",
+      "meaning": "Female Inquirer."
+    },
+    {
+      "slug": "the-empress",
+      "number_in_source": 3,
+      "name_in_source": "The Empress",
+      "meaning": "Action. Initiative."
+    },
+    {
+      "slug": "the-emperor",
+      "number_in_source": 4,
+      "name_in_source": "The Emperor",
+      "meaning": "Will."
+    },
+    {
+      "slug": "the-hierophant",
+      "number_in_source": 5,
+      "name_in_source": "The Pope",
+      "meaning": "Inspiration."
+    },
+    {
+      "slug": "the-lovers",
+      "number_in_source": 6,
+      "name_in_source": "The Lovers",
+      "meaning": "Love."
+    },
+    {
+      "slug": "the-chariot",
+      "number_in_source": 7,
+      "name_in_source": "The Chariot",
+      "meaning": "Triumph. Providential Protection."
+    },
+    {
+      "slug": "justice",
+      "number_in_source": 8,
+      "name_in_source": "Justice",
+      "meaning": "Justice."
+    },
+    {
+      "slug": "the-hermit",
+      "number_in_source": 9,
+      "name_in_source": "The Hermit",
+      "meaning": "Prudence."
+    },
+    {
+      "slug": "wheel-of-fortune",
+      "number_in_source": 10,
+      "name_in_source": "The Wheel of Fortune",
+      "meaning": "Fortune. Destiny."
+    },
+    {
+      "slug": "strength",
+      "number_in_source": 11,
+      "name_in_source": "Strength",
+      "meaning": "Strength. Fortitude."
+    },
+    {
+      "slug": "the-hanged-one",
+      "number_in_source": 12,
+      "name_in_source": "The Hanged Man",
+      "meaning": "Trials. Sacrifice."
+    },
+    {
+      "slug": "death",
+      "number_in_source": 13,
+      "name_in_source": "Death",
+      "meaning": "Death."
+    },
+    {
+      "slug": "temperance",
+      "number_in_source": 14,
+      "name_in_source": "Temperance",
+      "meaning": "Temperance. Economy."
+    },
+    {
+      "slug": "the-devil",
+      "number_in_source": 15,
+      "name_in_source": "The Devil",
+      "meaning": "Immense Force. Illness."
+    },
+    {
+      "slug": "the-tower",
+      "number_in_source": 16,
+      "name_in_source": "The Lightning-struck Tower",
+      "meaning": "Ruin. Deception."
+    },
+    {
+      "slug": "the-star",
+      "number_in_source": 17,
+      "name_in_source": "The Stars",
+      "meaning": "Hope."
+    },
+    {
+      "slug": "the-moon",
+      "number_in_source": 18,
+      "name_in_source": "The Moon",
+      "meaning": "Hidden Enemies. Danger."
+    },
+    {
+      "slug": "the-sun",
+      "number_in_source": 19,
+      "name_in_source": "The Sun",
+      "meaning": "Material Happiness. Lucky Marriage."
+    },
+    {
+      "slug": "judgement",
+      "number_in_source": 20,
+      "name_in_source": "The Judgment",
+      "meaning": "Change of Position."
+    },
+    {
+      "slug": "the-fool",
+      "number_in_source": 21,
+      "name_in_source": "The Foolish Man",
+      "meaning": "Inconsiderate Actions. Madness."
+    },
+    {
+      "slug": "the-world",
+      "number_in_source": 22,
+      "name_in_source": "The Universe",
+      "meaning": "Assured Success."
+    }
+  ],
+  "naming_notes": {
+    "mathers": "Suits: Sceptres (= wands; Mathers: 'Wands, Sceptres, or Clubs'), Cups, Swords, Pentacles ('Deniers / Money, Circles, or Pentacles'). Courts: King, Queen, Knight, Knave (-> page); 'Deuce' -> two. Trumps numbered 1-21 plus 0: 1 The Juggler (-> the-magician), 5 The Hierophant or Pope, 8 Themis, or Justice (-> justice), 11 Strength, or Fortitude (-> strength), 12 The Hanged Man (-> the-hanged-one), 16 The Lightning-struck Tower (-> the-tower), 20 The Last Judgment (-> judgement), 0 The Foolish Man (-> the-fool, listed between 20 and 21), 21 The Universe (-> the-world). Minors numbered 22-77, King-to-Ace order per suit. 'number_in_source' and 'name_in_source' kept per entry.",
+    "papus": "Third Lesson numbers trumps 1-22: 1 The Juggler (-> the-magician), 5 The Pope (-> the-hierophant), 8 Justice, 11 Strength, 12 The Hanged Man (-> the-hanged-one), 16 The Lightning-struck Tower, 17 The Stars (-> the-star), 20 The Judgment (-> judgement), 21 The Foolish Man (-> the-fool), 22 The Universe (-> the-world). Papus's suits elsewhere in the book: Sceptres, Cups, Swords, Pentacles (also 'Money'); courts King, Queen, Knight (also 'Cavaliers'), Knave.",
+    "westcott": "Letter spellings normalised to: Aleph, Mem, Shin, Beth, Gimel, Daleth, Kaph, Pe, Resh, Tau, Heh, Vau, Zain, Cheth, Teth, Yod, Lamed, Nun, Samech, Oin (=Ayin), Tzaddi, Qoph. Values are quoted in Westcott's wording ('Capricornus', 'Sexual desire', 'Seventh Day of the week'). Extra fields: 'notes' and 'direction_positional' (a positional pairing, NOT an allotment stated by the text)."
+  },
+  "problems": [
+    "Westcott edition: sacred-texts.com (labelled 1887) is behind a Cloudflare block (HTTP 403/5xx) and was not read. The 1887 1st edition was not found in public-domain scan form. Values come from the 1893 2nd edition (archive.org Google scan + Wikisource proofread transcription of the same edition). The 1911 3rd-ed. text was only cross-checked via a 1996 copyrighted reprint (Kuntz); in that reprint the main text of Ch. III-V matches 1893 almost word for word, but the two 'Supplement' sections (the source of every per-letter planet/day/gate/sign/month/organ/function value) do not appear. I could not establish from a primary scan whether Westcott himself dropped them in 1911 or whether Kuntz did.",
+    "Translation vs notes, and main text vs supplement: Westcott's main text (Ch. IV-V) only LISTS planets, days, gates, qualities, directions, signs, months and organs; it does not pair them letter by letter. The per-letter allotments are in the Supplements, which Westcott calls 'a modern illustration ... not found in the ancient copies' (from Kalisch). Note 40 says the planet allotment of both Kircher (Beth-Sun, Gimel-Venus, Daleth-Mercury, Kaph-Luna, Peh-Saturn, Resh-Jupiter, Tau-Mars) and Kalisch's supplement are 'wrong', and that 'the true attribution is however, not anywhere printed'. The 1911 wording (per reprint) is 'according to clairvoyant investigation' and 'probably not anywhere printed'.",
+    "Directions: no letter-by-letter direction is given for doubles (Ch. IV.2 lists Above, Below, East, West, North, South, Palace of Holiness) or simples (Ch. V.1 lists twelve directions). 'direction' is null for all 22. 'direction_positional' pairs list order with letter order only as an editor aid. Positional pairing is unreliable: the same positional reading of the Ch. V.1 property list (Sight, Hearing, Smell, Speech...) contradicts the supplement (Heh=Speech, Cheth=Sight...).",
+    "Double-letter opposites: Ch. IV.1 gives qualities Life, Peace, Wisdom, Riches, Grace, Fertility, Power and pairs Life/Death, Peace/War (Evil), Wisdom/Folly, Riches/Poverty, Grace/Indignation, Fertility/Solitude (Desolation), Power/Servitude, without assigning them to letters. The supplement assigns single qualities (Beth Wisdom, Gimel Health, Daleth Fertility, Kaph Life, Pe Power, Resh Peace, Tau Beauty). Opposites were filled by matching these; Gimel (Health) and Tau (Beauty) have no matching pair, so they are null, and Riches/Poverty and Grace/Indignation stay unassigned. Note 42 gives the Latin pairs of Postellus and Pistorius.",
+    "Simple-letter twelve properties: the supplement gives Vau 'mind' where the main text's list has 'Imagination' (note 44: Postellus 'suspicion', Pistorius 'mind'). Organs: the main-text list includes 'gall' but the supplement gives Tzaddi 'gullet', and Lamed 'private parts' with the remark '(Kalisch gives \"gall.\")'. Note 47 says the organ list varies between versions.",
+    "Tzaddi month: the supplement text (both the 1893 scan and Wikisource) reads 'formed with it Aquarius in the Year, and the gullet in Man'. No month is named, so month is null. ('Sabat' is 11th in the main-text month list.)",
+    "Westcott note 45 (the zodiac 'signs' Teth, Shin, Tau...) gives the Hebrew initials of the sign names (Teth=Taleh=Aries, etc.). These are NOT the simple letters and were not used for letter-sign values.",
+    "Westcott Ch. III mothers: the text gives Shin/Fire heavens-heat-head, Mem/Water earth-cold-belly, Aleph/Air air-temperate-chest. 'Season' records what the text says (heat/cold/temperate state of the Year). Westcott names no actual seasons.",
+    "Mathers: values come from the sacred-texts.com HTML transcription (via Wayback; the live site is blocked), not a page scan. Its typos are kept verbatim, e.g. Ace of Sceptres 'Pursuits Voilence' (sic, probably 'Pursuit, Violence'), 'the to the inexperienced'. Several entries lack commas ('Undertaking Movement', 'Mercy, Beneficence Kindness', 'Trials Surmounted'). Verify against a 1888 scan before quoting. Gutenberg (down for maintenance) and the Global Grey PDF (removed, 404) were unavailable.",
+    "Mathers: Five of Swords reversed reads 'Losses Trouble (same signification, whether reversed or not.)'; The Devil is just 'Fatality for Good' / 'Fatality for Evil'. Mathers also gives an Etteilla-derived 'additional remarks' list for 20 cards (combinations and reversals). That list is not included in the JSON.",
+    "Mathers: for the Hierophant and Justice entries the separator is '. ' not '.--'. The Six of Pentacles uses ':' before 'R.'. Parsing handled both. Split on the first '; R.' only.",
+    "Papus: used the 1892 1st English edition (Cornell scan), not the 1910 2nd edition (the Wellcome 1910 copy is marked in copyright, so it was not read). Papus gives only keywords and no reversed meanings. The trump meanings 7-22 are printed in two columns, and the OCR separates names from values. Pairing was rebuilt from column order (16 names, 16 values) and should be verified against the page image (p. 317). OCR errors were silently corrected: 'EcoNOMr'->'Economy', 'EuiN'->'Ruin', 'Mad- ness'->'Madness', 'Providential Pro- tection'->'Providential Protection'. Papus's Third Lesson also states that the first seven trumps chiefly refer to the intellectual side, the next seven to the moral side, and the last seven to material life.",
+    "Papus Sixth Lesson (Etteila's method) and the Second Lesson give minor-arcana meanings. These were out of scope and not extracted.",
+    "Public-domain status: Mathers 1888, Papus/Morton 1892 and Westcott 1893 are public domain. The 1996 Kuntz reprint is copyrighted and was used only as a cross-check; no values were taken from it."
+  ]
+}

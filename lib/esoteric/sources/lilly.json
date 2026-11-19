@@ -1,0 +1,536 @@
+{
+  "source": {
+    "title": "Christian Astrology modestly treated of in three books (Book I: An Introduction to Astrologie)",
+    "author": "William Lilly",
+    "year": 1647,
+    "edition": "1st edition, London: T. Brudenell for J. Partridge & H. Blunden, 1647 (Wing L2215); Wellcome Library copy digitised on archive.org (identifier b30338724)",
+    "page": "p. 104 (Table of the Essentiall Dignities of the Planets according to Ptolomy; scan leaf n137); explanation pp. 104-105; scoring text pp. 101-103 and 'A ready Table whereby to examine the Fortitudes and Debilities of the Planets' p. 115 (scan leaf n148)",
+    "url_used": [
+      "https://archive.org/details/b30338724",
+      "https://archive.org/details/b30338724/page/n137/mode/1up",
+      "https://archive.org/download/b30338724/page/n137.jpg",
+      "https://archive.org/download/b30338724/page/n148.jpg",
+      "https://archive.org/download/b30338724/b30338724_djvu.txt",
+      "https://www.skyscript.co.uk/deginf.html"
+    ]
+  },
+  "signs": [
+    {
+      "sign": "Aries",
+      "domicile": "Mars",
+      "domicile_day_night": "D",
+      "exaltation": {
+        "planet": "Sun",
+        "degree": 19
+      },
+      "triplicity": {
+        "day": "Sun",
+        "night": "Jupiter"
+      },
+      "terms": [
+        {
+          "planet": "Jupiter",
+          "to_degree": 6
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 14
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 21
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 26
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Mars",
+        "Sun",
+        "Venus"
+      ],
+      "detriment": "Venus",
+      "fall": "Saturn"
+    },
+    {
+      "sign": "Taurus",
+      "domicile": "Venus",
+      "domicile_day_night": "N",
+      "exaltation": {
+        "planet": "Moon",
+        "degree": 3
+      },
+      "triplicity": {
+        "day": "Venus",
+        "night": "Moon"
+      },
+      "terms": [
+        {
+          "planet": "Venus",
+          "to_degree": 8
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 15
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 22
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 26
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Mercury",
+        "Moon",
+        "Saturn"
+      ],
+      "detriment": "Mars",
+      "fall": null
+    },
+    {
+      "sign": "Gemini",
+      "domicile": "Mercury",
+      "domicile_day_night": "D",
+      "exaltation": {
+        "planet": "North Node",
+        "degree": 3
+      },
+      "triplicity": {
+        "day": "Saturn",
+        "night": "Mercury"
+      },
+      "terms": [
+        {
+          "planet": "Mercury",
+          "to_degree": 7
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 14
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 21
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 25
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Jupiter",
+        "Mars",
+        "Sun"
+      ],
+      "detriment": "Jupiter",
+      "fall": "South Node"
+    },
+    {
+      "sign": "Cancer",
+      "domicile": "Moon",
+      "domicile_day_night": "N D",
+      "exaltation": {
+        "planet": "Jupiter",
+        "degree": 15
+      },
+      "triplicity": {
+        "day": "Mars",
+        "night": "Mars"
+      },
+      "terms": [
+        {
+          "planet": "Mars",
+          "to_degree": 6
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 13
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 20
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 27
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Venus",
+        "Mercury",
+        "Moon"
+      ],
+      "detriment": "Saturn",
+      "fall": "Mars"
+    },
+    {
+      "sign": "Leo",
+      "domicile": "Sun",
+      "domicile_day_night": "N D",
+      "exaltation": null,
+      "triplicity": {
+        "day": "Sun",
+        "night": "Jupiter"
+      },
+      "terms": [
+        {
+          "planet": "Saturn",
+          "to_degree": 6
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 13
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 19
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 25
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Saturn",
+        "Jupiter",
+        "Mars"
+      ],
+      "detriment": "Saturn",
+      "fall": null
+    },
+    {
+      "sign": "Virgo",
+      "domicile": "Mercury",
+      "domicile_day_night": "N",
+      "exaltation": {
+        "planet": "Mercury",
+        "degree": 15
+      },
+      "triplicity": {
+        "day": "Venus",
+        "night": "Moon"
+      },
+      "terms": [
+        {
+          "planet": "Mercury",
+          "to_degree": 7
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 13
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 18
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 24
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Sun",
+        "Venus",
+        "Mercury"
+      ],
+      "detriment": "Jupiter",
+      "fall": "Venus"
+    },
+    {
+      "sign": "Libra",
+      "domicile": "Venus",
+      "domicile_day_night": "D",
+      "exaltation": {
+        "planet": "Saturn",
+        "degree": 21
+      },
+      "triplicity": {
+        "day": "Saturn",
+        "night": "Mercury"
+      },
+      "terms": [
+        {
+          "planet": "Saturn",
+          "to_degree": 6
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 11
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 19
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 24
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Moon",
+        "Saturn",
+        "Jupiter"
+      ],
+      "detriment": "Mars",
+      "fall": "Sun"
+    },
+    {
+      "sign": "Scorpio",
+      "domicile": "Mars",
+      "domicile_day_night": "N",
+      "exaltation": null,
+      "triplicity": {
+        "day": "Mars",
+        "night": "Mars"
+      },
+      "terms": [
+        {
+          "planet": "Mars",
+          "to_degree": 6
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 14
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 21
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 27
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Mars",
+        "Sun",
+        "Venus"
+      ],
+      "detriment": "Venus",
+      "fall": "Moon"
+    },
+    {
+      "sign": "Sagittarius",
+      "domicile": "Jupiter",
+      "domicile_day_night": "D",
+      "exaltation": {
+        "planet": "South Node",
+        "degree": 3
+      },
+      "triplicity": {
+        "day": "Sun",
+        "night": "Jupiter"
+      },
+      "terms": [
+        {
+          "planet": "Jupiter",
+          "to_degree": 8
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 14
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 19
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 25
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Mercury",
+        "Moon",
+        "Saturn"
+      ],
+      "detriment": "Mercury",
+      "fall": "North Node"
+    },
+    {
+      "sign": "Capricorn",
+      "domicile": "Saturn",
+      "domicile_day_night": "N",
+      "exaltation": {
+        "planet": "Mars",
+        "degree": 28
+      },
+      "triplicity": {
+        "day": "Venus",
+        "night": "Moon"
+      },
+      "terms": [
+        {
+          "planet": "Venus",
+          "to_degree": 6
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 12
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 19
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 25
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Jupiter",
+        "Mars",
+        "Sun"
+      ],
+      "detriment": "Moon",
+      "fall": "Jupiter"
+    },
+    {
+      "sign": "Aquarius",
+      "domicile": "Saturn",
+      "domicile_day_night": "D",
+      "exaltation": null,
+      "triplicity": {
+        "day": "Saturn",
+        "night": "Mercury"
+      },
+      "terms": [
+        {
+          "planet": "Saturn",
+          "to_degree": 6
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 12
+        },
+        {
+          "planet": "Venus",
+          "to_degree": 20
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 25
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Venus",
+        "Mercury",
+        "Moon"
+      ],
+      "detriment": "Sun",
+      "fall": null
+    },
+    {
+      "sign": "Pisces",
+      "domicile": "Jupiter",
+      "domicile_day_night": "N",
+      "exaltation": {
+        "planet": "Venus",
+        "degree": 27
+      },
+      "triplicity": {
+        "day": "Mars",
+        "night": "Mars"
+      },
+      "terms": [
+        {
+          "planet": "Venus",
+          "to_degree": 8
+        },
+        {
+          "planet": "Jupiter",
+          "to_degree": 14
+        },
+        {
+          "planet": "Mercury",
+          "to_degree": 20
+        },
+        {
+          "planet": "Mars",
+          "to_degree": 26
+        },
+        {
+          "planet": "Saturn",
+          "to_degree": 30
+        }
+      ],
+      "faces": [
+        "Saturn",
+        "Jupiter",
+        "Mars"
+      ],
+      "detriment": "Mercury",
+      "fall": "Mercury"
+    }
+  ],
+  "scores": {
+    "domicile": 5,
+    "exaltation": 4,
+    "triplicity": 3,
+    "term": 2,
+    "face": 1,
+    "detriment": -5,
+    "fall": -4,
+    "peregrine": -5,
+    "notes": "Printed values from p. 115 'A ready Table whereby to examine the Fortitudes and Debilities of the Planets': Essential Dignities - in his own house or mutual reception by house 5; in his exaltation or reception by exaltation 4; own triplicity 3; own term 2; decanate or face 1. Debilities - in his detriment 5; in his fall 4; peregrine 5. The table lists debilities in a separate 'Debilities' column as unsigned numbers; the minus signs here express that they count against the planet. Pp. 101-103 state the same dignity values in prose (house 'five dignities', exaltation 'four', triplicity 'three', terms 'two', face 'one'). The 1647 Wellcome copy also has a contemporary handwritten row under the p. 104 table reading 5,4,3,2,1 under the dignity columns and 5,4 under Detriment/Fall; this is a reader's annotation, not print.",
+    "page": "115 (also 101-103)"
+  },
+  "problems": [
+    "Gemini exaltation is printed as the Dragon's Head (North Node) at 3 Gemini, and Sagittarius exaltation as the Dragon's Tail (South Node) at 3 Sagittarius; correspondingly the Fall column shows the Dragon's Tail in Gemini and the Dragon's Head in Sagittarius. Recorded as printed ('North Node'/'South Node'), not as a planet; consumers wanting planets only should treat these as no planetary exaltation/fall.",
+    "Exaltation cell is blank for Leo, Scorpio and Aquarius; Fall cell is blank for Taurus, Leo and Aquarius. Recorded as null. (Scorpio does have a printed fall, the Moon.)",
+    "Cancer and Leo have both 'N' and 'D' in the day/night column (the luminaries have one house each); recorded as 'N D'.",
+    "Triplicity: Lilly's table gives only day and night rulers (no participating ruler). Water signs show Mars for both day and night; the text on p. 105 says Mars 'according to Ptolomy and Naibod, ruleth onely that Triplicity both day and night'.",
+    "Taurus 4th term end degree '26' is overwritten by hand in ink in the Wellcome copy (printed digit partly obscured); reading 26 is consistent with the sequence (22 < 26 < 30).",
+    "The OCR text (djvu.txt) of the table is unusable (glyphs lost); all values were read visually from the page image of leaf n137, zoomed. The 1659 second edition was not consulted.",
+    "skyscript.co.uk/deginf.html (Houlding's Degree Influences page, a secondary source) was fetched only through a summarising tool and its summary was unreliable (e.g. reported missing exaltations), so it was not used for any value.",
+    "All sanity checks passed: 5 terms per sign, term end degrees strictly increasing and ending at 30, faces follow the Chaldean order cycling from Mars at 0 Aries."
+  ]
+}

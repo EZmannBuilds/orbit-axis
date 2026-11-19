@@ -115,11 +115,65 @@ zodiac order.
   `checkWovenText()` still refuses any output that adds a card or a forbidden
   claim.
 
+## The wider library (added 2026-11-19)
+
+Erik asked for the research to go further, so that a local model can learn
+from more of the tradition. Each layer is a separate module, read from a
+primary source, tagged with that source, and tested against structure the
+tradition fixes. The raw transcriptions, with every gap and variant listed
+under `problems`, are in `lib/esoteric/sources/`.
+
+| Layer | Module | Source | Shown in readings? |
+|---|---|---|---|
+| Elemental dignities: how neighbouring cards strengthen or weaken | `lib/tarot/dignities.js` | Book T, "Of the Dignities" | Yes, as a factual sentence |
+| Several of a kind ("3 Aces") | `lib/tarot/dignities.js` | Book T | No: fortune-telling glosses |
+| Essential dignities: house, exaltation, triplicity, terms, faces, detriment, fall, scores | `lib/esoteric/lilly.js` | Lilly, *Christian Astrology*, 1647, p. 104 and p. 115, read from a scan | Yes, as a factual sentence |
+| Decan images, 28 mansions of the Moon, 15 Behenian stars | `lib/esoteric/agrippa.js` | Agrippa, *Three Books*, 1651 English | No: magical claims |
+| Gods, archangels, choirs, four colour scales, stones, plants, animals, perfumes, weapons | `lib/esoteric/liber777.js` | *Liber 777*, 1909 tables | No |
+| Letters: season, day, month, body, faculty, opposites | `lib/esoteric/yetzirah.js` | Westcott, *Sepher Yetzirah*, 1893 | No |
+| Historical card meanings | `lib/tarot/historical-meanings.js` | Mathers 1888; Papus 1892 | Never: owner's reference only |
+| 72 angels' attributes | `lib/esoteric/lenain.js` | Lenain, *La Science cabalistique*, 1823 | No |
+
+"Shown in readings" means the composer may state it. Everything else carries
+`display: false`: it is there for study and for training context, and a test
+holds that the composer doesn't import the historical meanings.
+
+### Findings worth knowing
+
+- **Two independent sources agree on all 36 decan rulers.** Lilly's "faces"
+  (read by eye from the 1647 scan) and Book T's decans are the same Chaldean
+  sequence, and the test checks every one.
+- **Book T leaves Cups and Pentacles unrelated.** It names Swords and Wands as
+  friendly with others, and Swords–Pentacles and Wands–Cups as inimical, but
+  says nothing of Cups with Pentacles. Later writers make them friendly. The
+  table leaves the pair "unstated".
+- **A card can't be both strengthened and weakened by its neighbours.** If one
+  neighbour is its own suit and the other is opposed, those two neighbours are
+  contrary to each other, and Book T's rule for that case ("not much affected")
+  governs.
+- **The Sepher Yetzirah's planets differ from the Golden Dawn's.** The ancient
+  text never pairs planets with letters. Westcott's per-letter table is from a
+  supplement he calls "a modern illustration… not found in the ancient copies",
+  after Kalisch, and he says in his own note 40 that it is wrong. Its mothers and
+  simples match the Golden Dawn; its doubles don't (Beth = Moon, not Mercury).
+  The tarot keeps the Golden Dawn; Westcott's doubles are kept and labelled.
+- **Liber 777 has two editions.** The text first used for path numbers was an
+  e-text of *777 Revised* (1955). The 1909 tables, checked from a scan, agree on
+  every column used. Crowley's 1955 additions are not included, because their
+  US copyright status is unclear.
+- **Lilly gives the Moon's nodes as exaltations** (Dragon's Head 3° Gemini, Tail
+  3° Sagittarius). They are kept as printed and ignored when scoring planets.
+- **Lenain and Book T place the same 72 angels 120° apart.** Same names, same
+  order, two to a decan; Lenain starts at 0° Aries (Vehuiah 0°–5° Aries), Book T
+  at 0° Leo. Both placements are kept and the offset is tested on all 36 decans.
+  The tarot uses Book T's.
+- **Agrippa gives exact starts for only the first seven mansions.** The rest use
+  the equal division he describes, and `mansionAt()` says so in its result.
+
 ## Not done yet
 
-- The angels' traditional meanings, the Golden Dawn colour scales, and the
-  Princesses' earthly quadrants are left out. They are in the same sources and
-  can be added the same way if wanted.
+- The Princesses' earthly quadrants, and the Golden Dawn's own (rather than
+  777's) colour scales, are not included.
 - The engine doesn't run on Windows. The composer takes the sky as an argument,
   so its tests use a fixed snapshot. Real sky facts for training data will come
   from the engine on macOS, or on Linux (WSL on Erik's PC is available but not

@@ -1,0 +1,1979 @@
+{
+  "source": {
+    "title": "La Science cabalistique, ou l'art de connaître les bons génies qui influent sur la destinée des hommes; avec l'explication de leurs talismans et caractères mystérieux, et la véritable manière de les composer, suivant la doctrine des anciens mages égyptiens, arabes et chaldéens…",
+    "author": "Lazare Lenain (Lenain, Lazare-Républicain)",
+    "year": 1823,
+    "place": "Amiens (chez l'auteur)",
+    "pages_used": "Ch. IV (tables cabalistiques, pp. 25–37), Ch. V (calendrier sacré, pp. 41–44), Ch. VI (influences des 72 génies, pp. 45–97)",
+    "url_used": [
+      "http://iapsop.com/ssoc/1823__lenain___science_cabalistique.pdf",
+      "https://archive.org/details/LaCabbale",
+      "https://archive.org/details/BIUSante_ms05365"
+    ],
+    "url_notes": [
+      "iapsop.com PDF = scan of the printed 1823 Amiens edition (Google-digitised copy, 'Digitized by Google' watermarks). All 72 entries were read from its embedded OCR text layer, page by page, with OCR errors corrected by hand. Primary source.",
+      "archive.org/details/LaCabbale = Papus, La Cabbale (Paris, 1903, public domain), section '§ 9. La Kabbale pratique – génies correspondant aux 72 noms d'après Lenain'. An abridged digest of Lenain. Used ONLY to cross-check illegible numbers and to supply n° 58's missing psalm verse; such uses are flagged in the entries.",
+      "archive.org/details/BIUSante_ms05365 = BIU Santé Ms 5365, catalogued under Lenain 1823 but it is a handwritten manuscript and its OCR cannot be used. Not used for content.",
+      "Located but not reachable: Google Books full-view copies (ids qt9SAAAAcAAJ, ZqgpxTZ43HkC [1823]; x85nqbx1xgUC [1909 Papus reprint]) returned a CAPTCHA/403; Gallica blocked us (Cloudflare 403)."
+    ]
+  },
+  "angels": [
+    {
+      "number": 1,
+      "name_lenain": "Vehuiah",
+      "attribute_fr": "Dieu élevé et exalté au-dessus de toutes choses",
+      "attribute_en": "God raised up and exalted above all things [our translation]",
+      "psalm": "Ps. 3, v. 3 [Vulgate numbering; Lenain: 'le troisième verset du psaume' – psalm number illegible in our OCR, confirmed as Ps. 3 by Papus 1903]: « Et tu Domine susceptor meus et gloria mea et exaltans caput meum »",
+      "rules_fr": "Il domine sur les Hébreux ; il gouverne le premier rayon de l'Orient dans la saison du printemps ; on l'invoque pour obtenir des lumières (« devenir illuminé de l'esprit de Dieu »)",
+      "rules_en": "Rules over the Hebrews; governs the first ray of the East in spring; invoked to obtain enlightenment ('to be illuminated by the spirit of God') [our translation]",
+      "invoked_for_fr": "pour obtenir des lumières ; être illuminé de l'esprit de Dieu",
+      "divine_name_correspondence_fr": "Jehovah (Hébreux)",
+      "degrees": {
+        "lenain_sphere_degrees": "1–5",
+        "zodiac_equivalent": "0°–5° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 1,
+        "decan_genie_and_planet": "Chontaré (Mars)",
+        "rules_physical_days": "20 mars – 24 mars (deuxième table)",
+        "presides_days_moral": [
+          "20 mars",
+          "31 mai",
+          "11 août",
+          "22 octobre",
+          "2 janvier"
+        ],
+        "hour_of_invocation": "00:00–00:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Séraphins (génies 1–8). « Il habite la région du feu ; son signe est le bélier. » Natif : esprit subtil, sagacité, sciences et arts, état militaire (Mars), énergie. Génie contraire : hommes turbulents, promptitude, colère. Texte imprimé: jours « 20 mars, 31 avril [sic, = 31 mai], 11 août, 22 octobre, 2 janvier »."
+    },
+    {
+      "number": 2,
+      "name_lenain": "Jeliel",
+      "attribute_fr": "Dieu secourable",
+      "attribute_en": "God who comes to aid (helpful God) [our translation]",
+      "psalm": "Ps. 21, v. 20: « Tu autem Domine ne elongaveris auxilium tuum a me: ad defensionem meam conspice »",
+      "rules_fr": "Ce génie domine sur les rois et les princes ; il maintient leurs sujets dans l'obéissance ; il influe sur la génération de tous les êtres du règne animal ; il rétablit la paix parmi les époux et la fidélité conjugale. Il domine sur la Turquie",
+      "rules_en": "Rules over kings and princes, keeps their subjects obedient; influences the generation of all beings in the animal kingdom; restores peace between spouses and conjugal fidelity. Rules over Turkey [our translation]",
+      "invoked_for_fr": "pour apaiser les séditions populaires, et pour obtenir la victoire contre ceux qui vous attaquent injustement",
+      "divine_name_correspondence_fr": "Aydy (Turquie)",
+      "degrees": {
+        "lenain_sphere_degrees": "6–10",
+        "zodiac_equivalent": "5°–10° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 1,
+        "decan_genie_and_planet": "Asican (Mars)",
+        "rules_physical_days": "25 mars – 29 mars (deuxième table)",
+        "presides_days_moral": [
+          "21 mars",
+          "1 juin",
+          "12 août",
+          "23 octobre",
+          "3 janvier"
+        ],
+        "hour_of_invocation": "00:20–00:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : tout ce qui est nuisible aux êtres animés, désunit les époux, goût du célibat, mauvaises mœurs."
+    },
+    {
+      "number": 3,
+      "name_lenain": "Sitael",
+      "attribute_fr": "Dieu, l'espérance de toutes les créatures",
+      "attribute_en": "God, the hope of all creatures [our translation]",
+      "psalm": "Ps. 90, v. 2: « Dicet Domino: susceptor meus es tu et refugium meum: Deus meus, sperabo in eum »",
+      "rules_fr": "Il domine sur la noblesse, la magnanimité et les grands emplois ; il protège contre les armes et les bêtes féroces",
+      "rules_en": "Rules over nobility, magnanimity and high office; protects against weapons and wild beasts [our translation]",
+      "invoked_for_fr": "contre les adversités",
+      "divine_name_correspondence_fr": "(aucun nom de nation donné)",
+      "degrees": {
+        "lenain_sphere_degrees": "11–15",
+        "zodiac_equivalent": "10°–15° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 2,
+        "decan_genie_and_planet": "Chontacré (Soleil)",
+        "rules_physical_days": "30 mars – 3 avril (deuxième table)",
+        "presides_days_moral": [
+          "22 mars",
+          "2 juin",
+          "13 août",
+          "24 octobre",
+          "4 janvier"
+        ],
+        "hour_of_invocation": "00:40–01:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : hypocrisie, ingratitude, parjure."
+    },
+    {
+      "number": 4,
+      "name_lenain": "Elemiah",
+      "attribute_fr": "Dieu caché",
+      "attribute_en": "Hidden God [our translation]",
+      "psalm": "Ps. 6, v. 4: « Convertere Domine, et eripe animam meam: salvum me fac propter misericordiam tuam »",
+      "rules_fr": "Ce génie domine les voyages, les expéditions maritimes, et il influe sur les découvertes utiles",
+      "rules_en": "Rules over journeys and sea expeditions; influences useful discoveries [our translation]",
+      "invoked_for_fr": "contre les tourments d'esprit et pour connaître les traîtres",
+      "divine_name_correspondence_fr": "Allah (Arabes)",
+      "degrees": {
+        "lenain_sphere_degrees": "16–20",
+        "zodiac_equivalent": "15°–20° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 2,
+        "decan_genie_and_planet": "Sénacher (Soleil)",
+        "rules_physical_days": "4 avril – 8 avril (deuxième table)",
+        "presides_days_moral": [
+          "23 mars",
+          "3 juin",
+          "14 août",
+          "25 octobre",
+          "5 janvier"
+        ],
+        "hour_of_invocation": "01:00–01:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : mauvaise éducation, découvertes dangereuses à la société, entrave aux entreprises."
+    },
+    {
+      "number": 5,
+      "name_lenain": "Mahasiah",
+      "attribute_fr": "Dieu sauveur",
+      "attribute_en": "God the Saviour [our translation]",
+      "psalm": "Ps. 33, v. 4: « Exquisivi Dominum, et exaudivit me: et ex omnibus tribulationibus meis eripuit me »",
+      "rules_fr": "Il domine les hautes sciences, la philosophie occulte, la théologie et les arts libéraux",
+      "rules_en": "Rules over the high sciences, occult philosophy, theology and the liberal arts [our translation]",
+      "invoked_for_fr": "pour vivre en paix avec tout le monde",
+      "divine_name_correspondence_fr": "Teut ou Theuth (Égyptiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "21–25",
+        "zodiac_equivalent": "20°–25° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 3,
+        "decan_genie_and_planet": "Seket (Vénus)",
+        "rules_physical_days": "9 avril – 13 avril (deuxième table)",
+        "presides_days_moral": [
+          "24 mars",
+          "4 juin",
+          "15 août",
+          "26 octobre",
+          "6 janvier"
+        ],
+        "hour_of_invocation": "01:20–01:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ignorance, libertinage, mauvaises qualités du corps et de l'esprit. Texte imprimé : « 14 août » [sic ; la table donne 15 août]."
+    },
+    {
+      "number": 6,
+      "name_lenain": "Lelahel",
+      "attribute_fr": "Dieu louable",
+      "attribute_en": "Praiseworthy God [our translation]",
+      "psalm": "Ps. 9, v. 11 [Vulgate 9:12]: « Psallite Domino, qui habitat in Sion: annuntiate inter gentes studia ejus »",
+      "rules_fr": "Ce génie domine l'amour, la renommée, les sciences, les arts et la fortune",
+      "rules_en": "Rules over love, renown, the sciences, the arts and fortune [our translation]",
+      "invoked_for_fr": "pour acquérir des lumières et pour guérir les maladies",
+      "divine_name_correspondence_fr": "Abgd (Éthiopiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "26–30",
+        "zodiac_equivalent": "25°–30° Bélier/Aries (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 3,
+        "decan_genie_and_planet": "Asentacer (Vénus)",
+        "rules_physical_days": "14 avril – 18 avril (deuxième table)",
+        "presides_days_moral": [
+          "25 mars",
+          "5 juin",
+          "16 août",
+          "27 octobre",
+          "7 janvier"
+        ],
+        "hour_of_invocation": "01:40–02:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ambition ; fortune acquise par des moyens illicites."
+    },
+    {
+      "number": 7,
+      "name_lenain": "Achaiah",
+      "attribute_fr": "Dieu bon et patient",
+      "attribute_en": "God good and patient [our translation]",
+      "psalm": "Ps. 102, v. 8: « Miserator et misericors Dominus: longanimis, et multum misericors »",
+      "rules_fr": "Ce génie domine la patience ; il découvre les secrets de la nature ; il influe sur la propagation des lumières et sur l'industrie",
+      "rules_en": "Rules over patience; uncovers the secrets of nature; influences the spread of knowledge ('lights') and industry [our translation]",
+      "invoked_for_fr": "(non précisé ; récitation du verset)",
+      "divine_name_correspondence_fr": "(aucun nom de nation donné)",
+      "degrees": {
+        "lenain_sphere_degrees": "31–35",
+        "zodiac_equivalent": "0°–5° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 4,
+        "decan_genie_and_planet": "Chous (Mercure)",
+        "rules_physical_days": "19 avril – 23 avril (deuxième table)",
+        "presides_days_moral": [
+          "26 mars",
+          "6 juin",
+          "17 août",
+          "28 octobre",
+          "8 janvier"
+        ],
+        "hour_of_invocation": "02:00–02:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ennemi des lumières ; négligence, paresse, insouciance pour l'étude."
+    },
+    {
+      "number": 8,
+      "name_lenain": "Cahethel",
+      "attribute_fr": "Dieu adorable",
+      "attribute_en": "Adorable God (God worthy of worship) [our translation]",
+      "psalm": "Ps. 94, v. 6: « Venite adoremus, et procidamus: et ploremus ante Dominum, qui fecit nos »",
+      "rules_fr": "Ce génie domine sur toutes les productions agricoles, et principalement celles qui sont nécessaires à l'existence des hommes et des animaux",
+      "rules_en": "Rules over all agricultural produce, chiefly what is needed for the life of men and animals [our translation]",
+      "invoked_for_fr": "pour obtenir la bénédiction de Dieu et pour chasser les mauvais esprits",
+      "divine_name_correspondence_fr": "Moti (Géorgiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "36–40",
+        "zodiac_equivalent": "5°–10° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 4,
+        "decan_genie_and_planet": "Asicat (Mercure)",
+        "rules_physical_days": "24 avril – 28 avril (deuxième table)",
+        "presides_days_moral": [
+          "27 mars",
+          "7 juin",
+          "18 août",
+          "29 octobre",
+          "9 janvier"
+        ],
+        "hour_of_invocation": "02:20–02:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ce qui nuit aux productions de la terre ; porte à blasphémer."
+    },
+    {
+      "number": 9,
+      "name_lenain": "Haziel",
+      "attribute_fr": "Dieu de miséricorde",
+      "attribute_en": "God of mercy [our translation]",
+      "psalm": "Ps. 24, v. 6: « Reminiscere miserationum tuarum, Domine, et misericordiarum tuarum quae a saeculo sunt »",
+      "rules_fr": "Il domine la bonne foi et la réconciliation",
+      "rules_en": "Rules over good faith and reconciliation [our translation]",
+      "invoked_for_fr": "pour obtenir la miséricorde de Dieu, l'amitié et les faveurs des grands, et l'exécution d'une promesse faite par une personne",
+      "divine_name_correspondence_fr": "Agzi (Abyssiniens)",
+      "degrees": {
+        "lenain_sphere_degrees": "41–45",
+        "zodiac_equivalent": "10°–15° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 5,
+        "decan_genie_and_planet": "Ero (Lune)",
+        "rules_physical_days": "29 avril – 3 mai (deuxième table)",
+        "presides_days_moral": [
+          "28 mars",
+          "8 juin",
+          "19 août",
+          "30 octobre",
+          "10 janvier"
+        ],
+        "hour_of_invocation": "02:40–03:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Chérubins (génies 9–16). Génie contraire : haine, hypocrisie, ennemis irréconciliables."
+    },
+    {
+      "number": 10,
+      "name_lenain": "Aladiah",
+      "attribute_fr": "Dieu propice",
+      "attribute_en": "Propitious (gracious) God [our translation]",
+      "psalm": "Ps. 32, v. 22: « Fiat misericordia tua Domine super nos: quemadmodum speravimus in te »",
+      "rules_fr": "Ce génie domine contre la rage et la peste, et influe sur la guérison des maladies",
+      "rules_en": "Rules against rabies and plague; influences the healing of diseases [our translation]",
+      "invoked_for_fr": "bon pour ceux qui ont des crimes cachés et qui craignent d'être découverts",
+      "divine_name_correspondence_fr": "Sire et Eipi (Perses)",
+      "degrees": {
+        "lenain_sphere_degrees": "46–50",
+        "zodiac_equivalent": "15°–20° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 5,
+        "decan_genie_and_planet": "Viroaso (Lune)",
+        "rules_physical_days": "4 mai – 8 mai (deuxième table)",
+        "presides_days_moral": [
+          "29 mars",
+          "9 juin",
+          "20 août",
+          "31 octobre",
+          "11 janvier"
+        ],
+        "hour_of_invocation": "03:00–03:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Nom OCR « Aiadiah » ; Papus 1903 lit « Aladiah ». Génie contraire : négligence de la santé et des affaires."
+    },
+    {
+      "number": 11,
+      "name_lenain": "Lauviah",
+      "attribute_fr": "Dieu loué et exalté",
+      "attribute_en": "God praised and exalted [our translation]",
+      "psalm": "Ps. 17, v. 50 [as printed; Vulgate 17:47]: « Vivit Dominus et benedictus Deus meus, et exaltetur Deus salutis meae »",
+      "rules_fr": "Ce génie domine la renommée ; il influe sur les grands personnages, les savants, et sur tous ceux qui deviennent célèbres par leurs talents",
+      "rules_en": "Rules over renown; influences great personages, scholars and all who become famous through their talents [our translation]",
+      "invoked_for_fr": "contre la foudre, et pour obtenir la victoire",
+      "divine_name_correspondence_fr": "Deus (Latins)",
+      "degrees": {
+        "lenain_sphere_degrees": "51–55",
+        "zodiac_equivalent": "20°–25° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 6,
+        "decan_genie_and_planet": "Rombomaré (Saturne)",
+        "rules_physical_days": "9 mai – 13 mai (deuxième table)",
+        "presides_days_moral": [
+          "30 mars",
+          "10 juin",
+          "21 août",
+          "1 novembre",
+          "12 janvier"
+        ],
+        "hour_of_invocation": "03:20–03:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : orgueil, ambition, jalousie, calomnie."
+    },
+    {
+      "number": 12,
+      "name_lenain": "Hahaiah",
+      "attribute_fr": "Dieu refuge",
+      "attribute_en": "God the refuge [our translation]",
+      "psalm": "Ps. 9, v. 22: « Ut quid Domine recessisti longe, despicis in opportunitatibus, in tribulatione »",
+      "rules_fr": "Il domine sur les songes, et révèle des mystères cachés aux mortels ; il influe sur les personnes sages, spirituelles et discrètes",
+      "rules_en": "Rules over dreams and reveals mysteries hidden from mortals; influences wise, witty and discreet people [our translation]",
+      "invoked_for_fr": "contre les adversités",
+      "divine_name_correspondence_fr": "Théos (Grecs)",
+      "degrees": {
+        "lenain_sphere_degrees": "56–60",
+        "zodiac_equivalent": "25°–30° Taureau/Taurus (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 6,
+        "decan_genie_and_planet": "Atarph (Saturne)",
+        "rules_physical_days": "14 mai – 18 mai (deuxième table)",
+        "presides_days_moral": [
+          "31 mars",
+          "11 juin",
+          "22 août",
+          "2 novembre",
+          "13 janvier"
+        ],
+        "hour_of_invocation": "03:40–04:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : indiscrétion, mensonge, abus de confiance."
+    },
+    {
+      "number": 13,
+      "name_lenain": "Iezalel",
+      "attribute_fr": "Dieu glorifié sur toutes choses",
+      "attribute_en": "God glorified over all things [our translation]",
+      "psalm": "Ps. 97, v. 6 [as printed; Vulgate 97:4]: « Jubilate Deo omnis terra: cantate, et exultate, et psallite »",
+      "rules_fr": "Il domine l'amitié, la réconciliation, et la fidélité conjugale",
+      "rules_en": "Rules over friendship, reconciliation and conjugal fidelity [our translation]",
+      "invoked_for_fr": "(non précisé ; récitation du verset)",
+      "divine_name_correspondence_fr": "Boog (Illyriens)",
+      "degrees": {
+        "lenain_sphere_degrees": "61–65",
+        "zodiac_equivalent": "0°–5° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 7,
+        "decan_genie_and_planet": "Théosolk (Jupiter)",
+        "rules_physical_days": "19 mai – 23 mai (deuxième table)",
+        "presides_days_moral": [
+          "1 avril",
+          "12 juin",
+          "23 août",
+          "3 novembre",
+          "14 janvier"
+        ],
+        "hour_of_invocation": "04:00–04:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Natif : apprend avec facilité, mémoire heureuse. Génie contraire : ignorance, erreur, mensonge. Texte imprimé : « 3 septembre » [sic ; la table donne 3 novembre]."
+    },
+    {
+      "number": 14,
+      "name_lenain": "Mebahel",
+      "attribute_fr": "Dieu conservateur",
+      "attribute_en": "God the preserver [our translation]",
+      "psalm": "Ps. 9, v. 9 [as printed; Vulgate 9:10]: « Et factus est Dominus refugium pauperi: adjutor in opportunitatibus, in tribulatione »",
+      "rules_fr": "Il domine sur la justice, la vérité et la liberté ; il délivre les opprimés et les prisonniers ; il protège l'innocence et fait connaître la vérité",
+      "rules_en": "Rules over justice, truth and liberty; frees the oppressed and prisoners; protects innocence and makes truth known [our translation]",
+      "invoked_for_fr": "contre ceux qui cherchent à usurper la fortune d'autrui",
+      "divine_name_correspondence_fr": "Dios (Espagnols)",
+      "degrees": {
+        "lenain_sphere_degrees": "66–70",
+        "zodiac_equivalent": "5°–10° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 7,
+        "decan_genie_and_planet": "Thésogar (Jupiter)",
+        "rules_physical_days": "24 mai – 28 mai (deuxième table)",
+        "presides_days_moral": [
+          "2 avril",
+          "13 juin",
+          "24 août",
+          "4 novembre",
+          "15 janvier"
+        ],
+        "hour_of_invocation": "04:20–04:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Natif : jurisprudence, barreau. Génie contraire : calomnie, faux témoignages, procédures."
+    },
+    {
+      "number": 15,
+      "name_lenain": "Hariel",
+      "attribute_fr": "Dieu créateur",
+      "attribute_en": "God the creator [our translation]",
+      "psalm": "Ps. 93, v. 22: « Et factus est mihi Dominus in refugium: et Deus meus in adjutorium spei meae »",
+      "rules_fr": "Ce génie domine sur les sciences et les arts ; il influe sur les découvertes utiles et les nouvelles méthodes",
+      "rules_en": "Rules over the sciences and the arts; influences useful discoveries and new methods [our translation]",
+      "invoked_for_fr": "contre les impies de la religion",
+      "divine_name_correspondence_fr": "Idio ou Iddio (Italiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "71–75",
+        "zodiac_equivalent": "10°–15° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 8,
+        "decan_genie_and_planet": "Ouéré (Mars)",
+        "rules_physical_days": "29 mai – 2 juin (deuxième table)",
+        "presides_days_moral": [
+          "3 avril",
+          "14 juin",
+          "25 août",
+          "5 novembre",
+          "16 janvier"
+        ],
+        "hour_of_invocation": "04:40–05:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : schismes, guerres de religion, sectes dangereuses."
+    },
+    {
+      "number": 16,
+      "name_lenain": "Hakamiah",
+      "attribute_fr": "Dieu qui érige l'univers",
+      "attribute_en": "God who raises up (erects) the universe [our translation]",
+      "psalm": "Ps. 87, v. 1 ['le 1er verset mystérieux'; Vulgate 87:2]: « Domine Deus salutis meae, in die clamavi, et nocte coram te »",
+      "rules_fr": "Ce génie domine sur les têtes couronnées et les grands capitaines ; il donne la victoire, et prévient les séditions ; il influe sur le fer, les arsenaux, et tout ce qui a rapport au génie de la guerre. Il domine sur la France",
+      "rules_en": "Rules over crowned heads and great commanders; gives victory and forestalls sedition; influences iron, arsenals and all that pertains to the art of war. Rules over France [our translation]",
+      "invoked_for_fr": "contre les traîtres, pour obtenir la victoire sur l'ennemi, et pour être délivré de ceux qui veulent nous opprimer",
+      "divine_name_correspondence_fr": "Dieu (France)",
+      "degrees": {
+        "lenain_sphere_degrees": "76–80",
+        "zodiac_equivalent": "15°–20° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 8,
+        "decan_genie_and_planet": "Vérasua (Mars)",
+        "rules_physical_days": "3 juin – 7 juin (deuxième table)",
+        "presides_days_moral": [
+          "4 avril",
+          "15 juin",
+          "26 août",
+          "6 novembre",
+          "17 janvier"
+        ],
+        "hour_of_invocation": "05:00–05:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Lenain donne une prière propre pour la France. Génie contraire : traîtres, trahisons, sédition, révolte."
+    },
+    {
+      "number": 17,
+      "name_lenain": "Lauviah",
+      "attribute_fr": "Dieu admirable",
+      "attribute_en": "Wonderful (admirable) God [our translation]",
+      "psalm": "Ps. 8, v. 1 [Vulgate 8:2]: « Domine Deus noster, quam admirabile est nomen tuum in universa terra! »",
+      "rules_fr": "Il domine sur les hautes sciences, les découvertes merveilleuses, et donne des révélations en songe",
+      "rules_en": "Rules over the high sciences and marvellous discoveries; gives revelations in dreams [our translation]",
+      "invoked_for_fr": "contre les tourments d'esprit, la tristesse, et pour bien reposer la nuit",
+      "divine_name_correspondence_fr": "Goth (Germains)",
+      "degrees": {
+        "lenain_sphere_degrees": "81–85",
+        "zodiac_equivalent": "20°–25° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 9,
+        "decan_genie_and_planet": "Phuor (Soleil)",
+        "rules_physical_days": "8 juin – 12 juin (deuxième table)",
+        "presides_days_moral": [
+          "5 avril",
+          "16 juin",
+          "27 août",
+          "7 novembre",
+          "18 janvier"
+        ],
+        "hour_of_invocation": "05:20–05:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Trônes (génies 17–24). Second Lauviah (même graphie que le n° 11). Heure imprimée « 5 h à 5 h 20 » [sic ; la quatrième table donne 5 h 20 – 5 h 40]. Génie contraire : athéisme, philosophes impies."
+    },
+    {
+      "number": 18,
+      "name_lenain": "Caliel",
+      "attribute_fr": "Dieu prompt à exaucer",
+      "attribute_en": "God swift to answer (prayers) [our translation]",
+      "psalm": "Ps. 7, v. 9: « Judica me Domine secundum justitiam meam, et secundum innocentiam meam super me »",
+      "rules_fr": "Ce génie fait connaître la vérité dans les procédures, il fait triompher l'innocence, il confond les coupables et les faux témoins",
+      "rules_en": "Makes truth known in lawsuits, makes innocence triumph, confounds the guilty and false witnesses [our translation]",
+      "invoked_for_fr": "pour obtenir un prompt secours lorsqu'il arrive quelques adversités",
+      "divine_name_correspondence_fr": "Boog (Polonais)",
+      "degrees": {
+        "lenain_sphere_degrees": "86–90",
+        "zodiac_equivalent": "25°–30° Gémeaux/Gemini (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 9,
+        "decan_genie_and_planet": "Tépisatosoa (Soleil)",
+        "rules_physical_days": "13 juin – 17 juin (deuxième table)",
+        "presides_days_moral": [
+          "6 avril",
+          "17 juin",
+          "28 août",
+          "8 novembre",
+          "19 janvier"
+        ],
+        "hour_of_invocation": "05:40–06:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Texte imprimé : « 18 janvier » [sic ; la table donne 19 janvier]. Génie contraire : procès scandaleux, hommes vils."
+    },
+    {
+      "number": 19,
+      "name_lenain": "Leuviah",
+      "attribute_fr": "Dieu qui exauce les pécheurs",
+      "attribute_en": "God who hears sinners [our translation]",
+      "psalm": "Ps. 39, v. 1 [Vulgate 39:2]: « Expectans expectavi Dominum, et intendit mihi »",
+      "rules_fr": "Ce génie domine la mémoire et l'intelligence de l'homme",
+      "rules_en": "Rules over human memory and intelligence [our translation]",
+      "invoked_for_fr": "pour obtenir la grâce de Dieu",
+      "divine_name_correspondence_fr": "Bogy (Hongrois)",
+      "degrees": {
+        "lenain_sphere_degrees": "91–95",
+        "zodiac_equivalent": "0°–5° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 10,
+        "decan_genie_and_planet": "Sotis (Vénus)",
+        "rules_physical_days": "18 juin – 22 juin (deuxième table)",
+        "presides_days_moral": [
+          "7 avril",
+          "18 juin",
+          "29 août",
+          "9 novembre",
+          "20 janvier"
+        ],
+        "hour_of_invocation": "06:00–06:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "« Il gouverne le premier rayon du midi » (invocation tournée vers le midi). Génie contraire : chagrins, pertes, débauche, désespoir."
+    },
+    {
+      "number": 20,
+      "name_lenain": "Pahaliah",
+      "attribute_fr": "Dieu rédempteur",
+      "attribute_en": "God the redeemer [our translation]",
+      "psalm": "Ps. 119, v. 2: « Domine libera animam meam a labiis iniquis, et a lingua dolosa »",
+      "rules_fr": "Ce génie domine la religion, la théologie et la morale ; il influe sur la chasteté et la piété, et sur ceux dont la vocation est pour l'état ecclésiastique",
+      "rules_en": "Rules over religion, theology and morals; influences chastity and piety, and those called to the priesthood [our translation]",
+      "invoked_for_fr": "contre les ennemis de la religion, et pour convertir les peuples au christianisme",
+      "divine_name_correspondence_fr": "Tios (Moscovites)",
+      "degrees": {
+        "lenain_sphere_degrees": "96–100",
+        "zodiac_equivalent": "5°–10° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 10,
+        "decan_genie_and_planet": "Sothis (Vénus)",
+        "rules_physical_days": "23 juin – 27 juin (deuxième table)",
+        "presides_days_moral": [
+          "8 avril",
+          "19 juin",
+          "30 août",
+          "10 novembre",
+          "21 janvier"
+        ],
+        "hour_of_invocation": "06:20–06:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 95e au 100e » [sic ; = 96–100]. Génie contraire : irréligion, apostats, libertins, renégats."
+    },
+    {
+      "number": 21,
+      "name_lenain": "Nelchael",
+      "attribute_fr": "Dieu seul et unique",
+      "attribute_en": "God one and only [our translation]",
+      "psalm": "Ps. 30, v. 18 [as printed; Vulgate 30:15–16]: « Ego autem in te speravi Domine: dixi, Deus meus es tu: in manibus tuis sortes meae »",
+      "rules_fr": "Ce génie domine sur l'astronomie, les mathématiques, la géographie, et toutes les sciences abstraites ; il influe sur les savants et les philosophes",
+      "rules_en": "Rules over astronomy, mathematics, geography and all abstract sciences; influences scholars and philosophers [our translation]",
+      "invoked_for_fr": "contre les calomniateurs, les charmes, et pour détruire la puissance des mauvais esprits",
+      "divine_name_correspondence_fr": "Bueg (Bohémiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "101–105",
+        "zodiac_equivalent": "10°–15° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 11,
+        "decan_genie_and_planet": "Sith (Mercure)",
+        "rules_physical_days": "28 juin – 2 juillet (deuxième table)",
+        "presides_days_moral": [
+          "9 avril",
+          "20 juin",
+          "31 août",
+          "11 novembre",
+          "22 janvier"
+        ],
+        "hour_of_invocation": "06:40–07:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ignorance, erreur, préjugés."
+    },
+    {
+      "number": 22,
+      "name_lenain": "Ieiaiel",
+      "attribute_fr": "la droite de Dieu",
+      "attribute_en": "The right hand of God [our translation]",
+      "psalm": "Ps. 120, v. 3 [as printed; Vulgate 120:5]: « Dominus custodit te; Dominus protectio tua, super manum dexteram tuam »",
+      "rules_fr": "Ce génie domine la fortune, la renommée, la diplomatie et le commerce ; il influe sur les voyages, les découvertes, et les expéditions maritimes ; il protège contre les tempêtes et naufrages",
+      "rules_en": "Rules over fortune, renown, diplomacy and commerce; influences journeys, discoveries and sea expeditions; protects against storms and shipwrecks [our translation]",
+      "invoked_for_fr": "(non précisé ; récitation du verset)",
+      "divine_name_correspondence_fr": "Good (Anglais)",
+      "degrees": {
+        "lenain_sphere_degrees": "106–110",
+        "zodiac_equivalent": "15°–20° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 11,
+        "decan_genie_and_planet": "Syth (Mercure)",
+        "rules_physical_days": "3 juillet – 7 juillet (deuxième table)",
+        "presides_days_moral": [
+          "10 avril",
+          "21 juin",
+          "1 septembre",
+          "12 novembre",
+          "23 janvier"
+        ],
+        "hour_of_invocation": "07:00–07:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Texte imprimé : « 22 janvier » [sic ; la table donne 23 janvier]. Génie contraire : pirates, corsaires, esclaves."
+    },
+    {
+      "number": 23,
+      "name_lenain": "Melahel",
+      "attribute_fr": "Dieu qui délivre des maux",
+      "attribute_en": "God who delivers from evils [our translation]",
+      "psalm": "Ps. 120, v. 8: « Dominus custodiat introitum tuum, et exitum tuum: ex hoc nunc, et usque in saeculum »",
+      "rules_fr": "Ce génie domine l'eau, toutes les productions de la terre, et principalement les plantes qui sont nécessaires à la guérison des maladies",
+      "rules_en": "Rules over water and all produce of the earth, chiefly the plants needed to heal diseases [our translation]",
+      "invoked_for_fr": "contre les armes, et pour voyager en sûreté",
+      "divine_name_correspondence_fr": "Dieh (Hibernais)",
+      "degrees": {
+        "lenain_sphere_degrees": "111–115",
+        "zodiac_equivalent": "20°–25° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 12,
+        "decan_genie_and_planet": "Chumis (Lune)",
+        "rules_physical_days": "8 juillet – 12 juillet (deuxième table)",
+        "presides_days_moral": [
+          "11 avril",
+          "22 juin",
+          "2 septembre",
+          "13 novembre",
+          "24 janvier"
+        ],
+        "hour_of_invocation": "07:20–07:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ce qui nuit à la végétation ; maladies, peste."
+    },
+    {
+      "number": 24,
+      "name_lenain": "Hahiuiah",
+      "attribute_fr": "Dieu bon par lui-même",
+      "attribute_en": "God good in himself [our translation]",
+      "psalm": "Ps. 32, v. 18: « Ecce oculi Domini super metuentes eum: et in eis, qui sperant in misericordia ejus »",
+      "rules_fr": "Ce génie domine sur les exilés, les prisonniers fugitifs, les condamnés contumax ; il empêche la découverte des crimes secrets ; il protège contre les animaux nuisibles, et il préserve des voleurs et des assassins",
+      "rules_en": "Rules over exiles, fugitive prisoners and those condemned in absentia; prevents the discovery of secret crimes (if not repeated); protects against harmful animals and preserves from thieves and murderers [our translation]",
+      "invoked_for_fr": "pour obtenir la grâce et la miséricorde de Dieu",
+      "divine_name_correspondence_fr": "Esar (Étrusques)",
+      "degrees": {
+        "lenain_sphere_degrees": "116–120",
+        "zodiac_equivalent": "25°–30° Cancer (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 12,
+        "decan_genie_and_planet": "Thuimis (Lune)",
+        "rules_physical_days": "13 juillet – 17 juillet (deuxième table)",
+        "presides_days_moral": [
+          "12 avril",
+          "23 juin",
+          "3 septembre",
+          "14 novembre",
+          "25 janvier"
+        ],
+        "hour_of_invocation": "07:40–08:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : êtres nuisibles, crimes, moyens illicites."
+    },
+    {
+      "number": 25,
+      "name_lenain": "Nith-Haiah",
+      "attribute_fr": "Dieu qui donne la sagesse",
+      "attribute_en": "God who gives wisdom [our translation]",
+      "psalm": "Ps. 9, v. 1 [Vulgate 9:2]: « Confitebor tibi Domine in toto corde meo: narrabo omnia mirabilia tua »",
+      "rules_fr": "Ce génie domine toutes les sciences occultes ; il donne des révélations en songe ; il influe sur les hommes sages qui aiment la paix et la solitude, et sur ceux qui cherchent la vérité et pratiquent la magie des sages",
+      "rules_en": "Rules over all the occult sciences; gives revelations in dreams; influences wise men who love peace and solitude and those who seek truth and practise the 'magic of the sages' [our translation]",
+      "invoked_for_fr": "pour avoir la sagesse, et pour découvrir la vérité des mystères cachés",
+      "divine_name_correspondence_fr": "Orsy (Mages)",
+      "degrees": {
+        "lenain_sphere_degrees": "121–125",
+        "zodiac_equivalent": "0°–5° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 13,
+        "decan_genie_and_planet": "Charchumis (Saturne)",
+        "rules_physical_days": "18 juillet – 22 juillet (deuxième table)",
+        "presides_days_moral": [
+          "13 avril",
+          "24 juin",
+          "4 septembre",
+          "15 novembre",
+          "26 janvier"
+        ],
+        "hour_of_invocation": "08:00–08:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Dominations (génies 25–32). Génie contraire : magie noire (pacte avec le démon)."
+    },
+    {
+      "number": 26,
+      "name_lenain": "Haaiah",
+      "attribute_fr": "Dieu caché",
+      "attribute_en": "Hidden God [our translation]",
+      "psalm": "Ps. 118, v. 145: « Clamavi in toto corde meo, exaudi me Domine: justificationes tuas requiram »",
+      "rules_fr": "Ce génie protège tous ceux qui cherchent la vérité ; il domine la politique, les diplomates, les plénipotentiaires, les ambassadeurs, les traités de paix et de commerce, et toutes les conventions en général ; il influe sur les courriers, les dépêches, les agents et les expéditions secrètes",
+      "rules_en": "Protects all who seek truth; rules over politics, diplomats, plenipotentiaries, ambassadors, peace and trade treaties and all agreements; influences couriers, dispatches, agents and secret expeditions [our translation]",
+      "invoked_for_fr": "pour gagner son procès et pour se rendre les juges favorables",
+      "divine_name_correspondence_fr": "Agdy et Abdi (Sarrazins)",
+      "degrees": {
+        "lenain_sphere_degrees": "126–130",
+        "zodiac_equivalent": "5°–10° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 13,
+        "decan_genie_and_planet": "Aphruimis (Saturne)",
+        "rules_physical_days": "23 juillet – 27 juillet (deuxième table)",
+        "presides_days_moral": [
+          "14 avril",
+          "25 juin",
+          "5 septembre",
+          "16 novembre",
+          "27 janvier"
+        ],
+        "hour_of_invocation": "08:20–08:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : traîtres, ambitieux, conspirations."
+    },
+    {
+      "number": 27,
+      "name_lenain": "Ierathel",
+      "attribute_fr": "Dieu qui punit les méchants",
+      "attribute_en": "God who punishes the wicked [our translation]",
+      "psalm": "Ps. 139, v. 1 [Vulgate 139:2]: « Eripe me Domine ab homine malo: a viro iniquo eripe me »",
+      "rules_fr": "Ce génie protège contre ceux qui nous provoquent et nous attaquent injustement ; il domine sur la propagation des lumières, la civilisation et la liberté",
+      "rules_en": "Protects against those who provoke and unjustly attack us; rules over the spread of enlightenment, civilisation and liberty [our translation]",
+      "invoked_for_fr": "pour confondre les méchants et les calomniateurs, et pour être délivrés de nos ennemis",
+      "divine_name_correspondence_fr": "Teos (Coptes)",
+      "degrees": {
+        "lenain_sphere_degrees": "131–135",
+        "zodiac_equivalent": "10°–15° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 14,
+        "decan_genie_and_planet": "Hépé (Jupiter)",
+        "rules_physical_days": "28 juillet – 1 août (deuxième table)",
+        "presides_days_moral": [
+          "15 avril",
+          "26 juin",
+          "6 septembre",
+          "17 novembre",
+          "28 janvier"
+        ],
+        "hour_of_invocation": "08:40–09:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ignorance, esclavage, intolérance."
+    },
+    {
+      "number": 28,
+      "name_lenain": "Séheiah",
+      "attribute_fr": "Dieu qui guérit les malades",
+      "attribute_en": "God who heals the sick [our translation]",
+      "psalm": "Ps. 70, v. 13 [as printed; Vulgate 70:12]: « Deus ne elongeris a me: Deus meus in auxilium meum respice »",
+      "rules_fr": "Ce génie protège contre les incendies, les ruines de bâtiments, les chutes, les maladies ; il domine sur la santé et la longévité de la vie",
+      "rules_en": "Protects against fires, collapsing buildings, falls and illness; rules over health and long life [our translation]",
+      "invoked_for_fr": "contre les infirmités et le tonnerre",
+      "divine_name_correspondence_fr": "Adad (Assyriens)",
+      "degrees": {
+        "lenain_sphere_degrees": "136–140",
+        "zodiac_equivalent": "15°–20° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 14,
+        "decan_genie_and_planet": "Sithacer (Jupiter)",
+        "rules_physical_days": "2 août – 6 août (deuxième table)",
+        "presides_days_moral": [
+          "16 avril",
+          "27 juin",
+          "7 septembre",
+          "18 novembre",
+          "29 janvier"
+        ],
+        "hour_of_invocation": "09:00–09:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « du 136e au 140e, exclusivement » [sic]. Génie contraire : catastrophes, accidents, apoplexies."
+    },
+    {
+      "number": 29,
+      "name_lenain": "Reiiel",
+      "attribute_fr": "Dieu prompt à secourir",
+      "attribute_en": "God swift to help [our translation]",
+      "psalm": "Ps. 53, v. 4 [as printed; Vulgate 53:6]: « Ecce enim Deus adjuvat me: et Dominus susceptor est animae meae »",
+      "rules_fr": "Ce génie domine tous les sentiments religieux, la philosophie divine et la méditation",
+      "rules_en": "Rules over all religious feeling, divine philosophy and meditation [our translation]",
+      "invoked_for_fr": "contre les impies et les ennemis de la religion, et pour être délivré de tous ses ennemis tant visibles qu'invisibles",
+      "divine_name_correspondence_fr": "Zimi (Péruviens)",
+      "degrees": {
+        "lenain_sphere_degrees": "141–145",
+        "zodiac_equivalent": "20°–25° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 15,
+        "decan_genie_and_planet": "Phupé (Mars)",
+        "rules_physical_days": "7 août – 11 août (deuxième table)",
+        "presides_days_moral": [
+          "17 avril",
+          "28 juin",
+          "8 septembre",
+          "19 novembre",
+          "30 janvier"
+        ],
+        "hour_of_invocation": "09:20–09:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : fanatisme, hypocrisie, irréligion."
+    },
+    {
+      "number": 30,
+      "name_lenain": "Omael",
+      "attribute_fr": "Dieu patient",
+      "attribute_en": "Patient God [our translation]",
+      "psalm": "Ps. 70, v. 6 [as printed; Vulgate 70:5]: « Quoniam tu es patientia mea Domine: Domine spes mea a juventute mea »",
+      "rules_fr": "Ce génie domine sur le règne animal ; il surveille la génération des êtres, afin d'en multiplier les espèces et d'en perpétuer les races ; il influe sur les chimistes, les médecins et les chirurgiens",
+      "rules_en": "Rules over the animal kingdom; watches over the generation of beings to multiply species and perpetuate breeds; influences chemists, physicians and surgeons [our translation]",
+      "invoked_for_fr": "contre les chagrins, le désespoir, et pour avoir de la patience",
+      "divine_name_correspondence_fr": "Tura (Indiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "146–150",
+        "zodiac_equivalent": "25°–30° Lion/Leo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 15,
+        "decan_genie_and_planet": "Phuonisié (Mars)",
+        "rules_physical_days": "12 août – 16 août (deuxième table)",
+        "presides_days_moral": [
+          "18 avril",
+          "29 juin",
+          "9 septembre",
+          "20 novembre",
+          "31 janvier"
+        ],
+        "hour_of_invocation": "09:40–10:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Texte imprimé : « 9e décade » [sic ; = 15e], « 28 avril » [sic ; = 18 avril], dernier jour illisible [table : 31 janvier]. Génie contraire : ennemi de la propagation des êtres, phénomènes monstrueux."
+    },
+    {
+      "number": 31,
+      "name_lenain": "Lecabel",
+      "attribute_fr": "Dieu qui inspire",
+      "attribute_en": "God who inspires [our translation]",
+      "psalm": "Ps. 70, v. 16 [as printed; Vulgate 70:15–16]: « Quoniam non cognovi litteraturam, introibo in potentias Domini: Domine memorabor justitiae tuae solius »",
+      "rules_fr": "Il domine la végétation et l'agriculture",
+      "rules_en": "Rules over vegetation and agriculture [our translation]",
+      "invoked_for_fr": "pour avoir des lumières, et pour des procédés utiles à la profession que l'on exerce",
+      "divine_name_correspondence_fr": "Teli (Chinois)",
+      "degrees": {
+        "lenain_sphere_degrees": "151–155",
+        "zodiac_equivalent": "0°–5° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 16,
+        "decan_genie_and_planet": "Tomi (Soleil)",
+        "rules_physical_days": "17 août – 21 août (deuxième table)",
+        "presides_days_moral": [
+          "19 avril",
+          "30 juin",
+          "10 septembre",
+          "21 novembre",
+          "1 février"
+        ],
+        "hour_of_invocation": "10:00–10:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Natif : astronomie, mathématiques, géométrie. Génie contraire : avarice, usure."
+    },
+    {
+      "number": 32,
+      "name_lenain": "Vasariah",
+      "attribute_fr": "Dieu juste",
+      "attribute_en": "Just God [our translation]",
+      "psalm": "Ps. 32, v. 4: « Quia rectum est verbum Domini, et omnia opera ejus in fide »",
+      "rules_fr": "Ce génie domine la justice ; il influe sur la noblesse, les jurisconsultes, les magistrats et les avocats",
+      "rules_en": "Rules over justice; influences the nobility, jurists, magistrates and advocates [our translation]",
+      "invoked_for_fr": "contre ceux qui nous attaquent en justice, et pour obtenir la grâce de ceux qui ont recours à la clémence des rois",
+      "divine_name_correspondence_fr": "Anot (Tartares)",
+      "degrees": {
+        "lenain_sphere_degrees": "156–160",
+        "zodiac_equivalent": "5°–10° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 16,
+        "decan_genie_and_planet": "Thumis (Soleil)",
+        "rules_physical_days": "22 août – 26 août (deuxième table)",
+        "presides_days_moral": [
+          "20 avril",
+          "1 juillet",
+          "11 septembre",
+          "22 novembre",
+          "2 février"
+        ],
+        "hour_of_invocation": "10:20–10:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : mauvaises qualités du corps et de l'âme."
+    },
+    {
+      "number": 33,
+      "name_lenain": "Iehuiah",
+      "attribute_fr": "Dieu qui connaît toutes choses",
+      "attribute_en": "God who knows all things [our translation]",
+      "psalm": "Ps. 93, v. 11: « Dominus scit cogitationes hominum, quoniam vanae sunt »",
+      "rules_fr": "Ce génie protège tous les princes chrétiens ; il maintient leurs sujets dans l'obéissance",
+      "rules_en": "Protects all Christian princes; keeps their subjects obedient [our translation]",
+      "invoked_for_fr": "pour connaître les traîtres, pour détruire leurs projets et leurs machinations",
+      "divine_name_correspondence_fr": "Agad (Hespérides)",
+      "degrees": {
+        "lenain_sphere_degrees": "161–165",
+        "zodiac_equivalent": "10°–15° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 17,
+        "decan_genie_and_planet": "Ouestucati (Vénus)",
+        "rules_physical_days": "27 août – 31 août (deuxième table)",
+        "presides_days_moral": [
+          "21 avril",
+          "2 juillet",
+          "12 septembre",
+          "23 novembre",
+          "3 février"
+        ],
+        "hour_of_invocation": "10:40–11:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Puissances (génies 33–40). Génie contraire : êtres insubordonnés, révolte."
+    },
+    {
+      "number": 34,
+      "name_lenain": "Lehahiah",
+      "attribute_fr": "Dieu clément",
+      "attribute_en": "Clement (merciful) God [our translation]",
+      "psalm": "Ps. 130, v. 5 [as printed; Vulgate 130:3]: « Speret Israel in Domino, ex hoc nunc et usque in saeculum »",
+      "rules_fr": "Ce génie domine sur les têtes couronnées, les princes et les nobles ; il maintient l'harmonie, la bonne intelligence et la paix entre eux ; il influe sur l'obéissance des sujets envers leurs princes",
+      "rules_en": "Rules over crowned heads, princes and nobles; keeps harmony, understanding and peace among them; influences subjects' obedience to their princes [our translation]",
+      "invoked_for_fr": "contre la colère",
+      "divine_name_correspondence_fr": "Aneb (peuples du Congo)",
+      "degrees": {
+        "lenain_sphere_degrees": "166–170",
+        "zodiac_equivalent": "15°–20° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 17,
+        "decan_genie_and_planet": "Thopitus (Vénus)",
+        "rules_physical_days": "1 septembre – 5 septembre (deuxième table)",
+        "presides_days_moral": [
+          "22 avril",
+          "3 juillet",
+          "13 septembre",
+          "24 novembre",
+          "4 février"
+        ],
+        "hour_of_invocation": "11:00–11:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : discorde, guerre, trahisons, ruine des nations."
+    },
+    {
+      "number": 35,
+      "name_lenain": "Chavakiah",
+      "attribute_fr": "Dieu qui donne la joie",
+      "attribute_en": "God who gives joy [our translation]",
+      "psalm": "Ps. 114, v. 1: « Dilexi, quoniam exaudiet Dominus vocem orationis meae »",
+      "rules_fr": "Ce génie domine sur les testaments, les successions, et tous les partages qui se font à l'amiable ; il entretient la paix et l'harmonie dans les familles",
+      "rules_en": "Rules over wills, inheritances and all amicable divisions of property; keeps peace and harmony in families [our translation]",
+      "invoked_for_fr": "pour rentrer en grâce avec ceux que l'on a offensés",
+      "divine_name_correspondence_fr": "Anup (peuple non nommé)",
+      "degrees": {
+        "lenain_sphere_degrees": "171–175",
+        "zodiac_equivalent": "20°–25° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 18,
+        "decan_genie_and_planet": "Aphoso (Mercure)",
+        "rules_physical_days": "6 septembre – 10 septembre (deuxième table)",
+        "presides_days_moral": [
+          "23 avril",
+          "4 juillet",
+          "14 septembre",
+          "25 novembre",
+          "5 février"
+        ],
+        "hour_of_invocation": "11:20–11:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : discorde dans les arrangements de famille, procès injustes."
+    },
+    {
+      "number": 36,
+      "name_lenain": "Menadel",
+      "attribute_fr": "Dieu adorable",
+      "attribute_en": "Adorable God (God worthy of worship) [our translation]",
+      "psalm": "Ps. 25, v. 8: « Domine dilexi decorem domus tuae: et locum habitationis gloriae tuae »",
+      "rules_fr": "Ce génie donne des lumières sur les personnes éloignées dont on n'a point reçu de nouvelles depuis longtemps ; il fait rentrer les exilés dans leur patrie, et découvre les biens égarés ou distraits",
+      "rules_en": "Gives knowledge of distant people not heard from for a long time; brings exiles home; uncovers lost or misappropriated goods [our translation]",
+      "invoked_for_fr": "pour se maintenir dans son emploi, et pour conserver les moyens d'existence que l'on possède ; contre les calomnies et pour délivrer les prisonniers",
+      "divine_name_correspondence_fr": "Alla (Maures)",
+      "degrees": {
+        "lenain_sphere_degrees": "176–180",
+        "zodiac_equivalent": "25°–30° Vierge/Virgo (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 18,
+        "decan_genie_and_planet": "Aphut (Mercure)",
+        "rules_physical_days": "11 septembre – 15 septembre (deuxième table)",
+        "presides_days_moral": [
+          "24 avril",
+          "5 juillet",
+          "15 septembre",
+          "26 novembre",
+          "6 février"
+        ],
+        "hour_of_invocation": "11:40–12:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Pas de formule « domine sur » explicite ; nous avons repris ce que le génie « donne » et « fait ». Génie contraire : ceux qui fuient à l'étranger pour échapper à la justice."
+    },
+    {
+      "number": 37,
+      "name_lenain": "Aniel",
+      "attribute_fr": "Dieu des vertus",
+      "attribute_en": "God of virtues (God of hosts) [our translation]",
+      "psalm": "Ps. 79, v. 8: « Deus virtutum converte nos: et ostende faciem tuam, et salvi erimus »",
+      "rules_fr": "Ce génie domine sur les sciences et les arts ; il révèle les secrets de la nature, et inspire les sages philosophes dans leurs méditations",
+      "rules_en": "Rules over the sciences and the arts; reveals the secrets of nature and inspires wise philosophers in their meditations [our translation]",
+      "invoked_for_fr": "pour avoir la victoire et pour faire lever le siège d'une ville",
+      "divine_name_correspondence_fr": "Abda (anciens philosophes)",
+      "degrees": {
+        "lenain_sphere_degrees": "181–185",
+        "zodiac_equivalent": "0°–5° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 19,
+        "decan_genie_and_planet": "Souchoé (Lune)",
+        "rules_physical_days": "16 septembre – 20 septembre (deuxième table)",
+        "presides_days_moral": [
+          "25 avril",
+          "6 juillet",
+          "16 septembre",
+          "27 novembre",
+          "7 février"
+        ],
+        "hour_of_invocation": "12:00–12:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : esprits pervers, charlatans."
+    },
+    {
+      "number": 38,
+      "name_lenain": "Haamiah",
+      "attribute_fr": "Dieu, l'espérance de tous les enfants de la terre",
+      "attribute_en": "God, the hope of all the children of the earth [our translation]",
+      "psalm": "Ps. 90, v. 9: « Quoniam tu es Domine spes mea: altissimum posuisti refugium tuum »",
+      "rules_fr": "Ce génie domine sur tous les cultes religieux, et sur tout ce qui se rapporte à Dieu ; il protège tous ceux qui cherchent la vérité",
+      "rules_en": "Rules over all religious worship and everything relating to God; protects all who seek truth [our translation]",
+      "invoked_for_fr": "pour acquérir tous les trésors du ciel et de la terre",
+      "divine_name_correspondence_fr": "AGLA (« Dieu triple et un »)",
+      "degrees": {
+        "lenain_sphere_degrees": "186–190",
+        "zodiac_equivalent": "5°–10° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 19,
+        "decan_genie_and_planet": "Serucuth (Lune)",
+        "rules_physical_days": "21 septembre – 25 septembre (deuxième table)",
+        "presides_days_moral": [
+          "26 avril",
+          "7 juillet",
+          "17 septembre",
+          "28 novembre",
+          "8 février"
+        ],
+        "hour_of_invocation": "12:20–12:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Longue note de Lenain sur AGLA et la baguette cabalistique. Génie contraire : erreur, mensonge, absence de principes religieux."
+    },
+    {
+      "number": 39,
+      "name_lenain": "Rehael",
+      "attribute_fr": "Dieu qui reçoit les pécheurs",
+      "attribute_en": "God who receives sinners [our translation]",
+      "psalm": "Ps. 29, v. 13 [as printed; Vulgate 29:11]: « Audivit Dominus, et misertus est mei: Dominus factus est meus adjutor »",
+      "rules_fr": "Ce génie domine la santé et la longévité de la vie ; il influe sur l'amour paternel et filial, sur l'obéissance et le respect des enfants envers leurs parents",
+      "rules_en": "Rules over health and long life; influences paternal and filial love and children's obedience and respect toward parents [our translation]",
+      "invoked_for_fr": "pour la guérison des maladies et pour obtenir la miséricorde de Dieu",
+      "divine_name_correspondence_fr": "Goot (Écossais)",
+      "degrees": {
+        "lenain_sphere_degrees": "191–195",
+        "zodiac_equivalent": "10°–15° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 20,
+        "decan_genie_and_planet": "Ptéchout (Saturne)",
+        "rules_physical_days": "26 septembre – 30 septembre (deuxième table)",
+        "presides_days_moral": [
+          "27 avril",
+          "8 juillet",
+          "18 septembre",
+          "29 novembre",
+          "9 février"
+        ],
+        "hour_of_invocation": "12:40–13:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire nommé « Terre-Morte » ou « Terre-Damnée » (d'après Etteilla) : infanticides, parricides."
+    },
+    {
+      "number": 40,
+      "name_lenain": "Ieiazel",
+      "attribute_fr": "Dieu qui réjouit",
+      "attribute_en": "God who gladdens [our translation]",
+      "psalm": "Ps. 87, v. 15: « Ut quid Domine repellis orationem meam: avertis faciem tuam a me? »",
+      "rules_fr": "Ce génie domine sur l'imprimerie et la librairie ; il influe sur les hommes de lettres et les artistes",
+      "rules_en": "Rules over printing and the book trade; influences men of letters and artists [our translation]",
+      "invoked_for_fr": "pour délivrer les prisonniers, pour avoir des consolations, et pour être délivré de ses ennemis",
+      "divine_name_correspondence_fr": "Goed (Belges)",
+      "degrees": {
+        "lenain_sphere_degrees": "196–200",
+        "zodiac_equivalent": "15°–20° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 20,
+        "decan_genie_and_planet": "Aterchinis (Saturne)",
+        "rules_physical_days": "1 octobre – 5 octobre (deuxième table)",
+        "presides_days_moral": [
+          "28 avril",
+          "9 juillet",
+          "19 septembre",
+          "30 novembre",
+          "10 février"
+        ],
+        "hour_of_invocation": "13:00–13:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : esprits sombres, ceux qui fuient la société."
+    },
+    {
+      "number": 41,
+      "name_lenain": "Hahahel",
+      "attribute_fr": "Dieu en trois personnes",
+      "attribute_en": "God in three persons [our translation]",
+      "psalm": "Ps. 119, v. 2: « Domine libera animam meam a labiis iniquis, et a lingua dolosa »",
+      "rules_fr": "Ce génie domine sur le christianisme ; il protège les missionnaires et tous les disciples du Christ qui annoncent les paroles de l'Évangile aux nations ; il influe sur les âmes pieuses, les prélats, les ecclésiastiques, et sur tout ce qui se rapporte au sacerdoce",
+      "rules_en": "Rules over Christianity; protects missionaries and all disciples of Christ who preach the Gospel to the nations; influences pious souls, prelates, clergy and all that pertains to the priesthood [our translation]",
+      "invoked_for_fr": "contre les ennemis de la religion, les impies et les calomniateurs",
+      "divine_name_correspondence_fr": "Gudi (Irlandais)",
+      "degrees": {
+        "lenain_sphere_degrees": "201–205",
+        "zodiac_equivalent": "20°–25° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 21,
+        "decan_genie_and_planet": "Chontaré (Jupiter)",
+        "rules_physical_days": "6 octobre – 10 octobre (deuxième table)",
+        "presides_days_moral": [
+          "29 avril",
+          "10 juillet",
+          "20 septembre",
+          "1 décembre",
+          "11 février"
+        ],
+        "hour_of_invocation": "13:20–13:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Vertus (génies 41–48 ; imprimé « 5e ordre » [sic, = 6e]). Même verset que le n° 20. Génie contraire : apostats, renégats, prêtres scandaleux."
+    },
+    {
+      "number": 42,
+      "name_lenain": "Mikael",
+      "attribute_fr": "vertu de Dieu, maison de Dieu, semblable à Dieu (attributs donnés par « les cabalistes »)",
+      "attribute_en": "Virtue of God, house of God, like unto God [our translation]",
+      "psalm": "Ps. 120, v. 7 [verse number missing in our OCR; '7e' per Papus 1903]: « Dominus custodit te ab omni malo: custodiat animam tuam Dominus »",
+      "rules_fr": "Ce génie influe sur les monarques, les princes et les nobles ; il maintient leurs sujets dans l'obéissance, découvre les conspirations, et tous ceux qui cherchent à détruire leurs personnes et leurs gouvernements",
+      "rules_en": "Influences monarchs, princes and nobles; keeps their subjects obedient; uncovers conspiracies and all who seek to destroy their persons and governments [our translation]",
+      "invoked_for_fr": "pour voyager en sûreté",
+      "divine_name_correspondence_fr": "Biub ou Biud (Canadiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "206–210",
+        "zodiac_equivalent": "25°–30° Balance/Libra (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 21,
+        "decan_genie_and_planet": "Arpien (Jupiter)",
+        "rules_physical_days": "11 octobre – 15 octobre (deuxième table)",
+        "presides_days_moral": [
+          "30 avril",
+          "11 juillet",
+          "21 septembre",
+          "2 décembre",
+          "12 février"
+        ],
+        "hour_of_invocation": "13:40–14:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 216e au 210e » [sic ; = 206–210, confirmé par Papus]. Natif : politique, diplomatie. Génie contraire : traîtres, fausses nouvelles."
+    },
+    {
+      "number": 43,
+      "name_lenain": "Veualiah",
+      "attribute_fr": "Roi dominateur",
+      "attribute_en": "Ruling King (King who dominates) [our translation]",
+      "psalm": "Ps. 87, v. 14: « Et ego ad te Domine clamavi: et mane oratio mea praeveniet te »",
+      "rules_fr": "Ce génie préside à la paix, et influe sur la prospérité des empires ; il affermit les trônes chancelants et la puissance des rois",
+      "rules_en": "Presides over peace and influences the prosperity of empires; steadies tottering thrones and the power of kings [our translation]",
+      "invoked_for_fr": "pour détruire l'ennemi et pour être délivré de l'esclavage",
+      "divine_name_correspondence_fr": "Solu (Californiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "211–215",
+        "zodiac_equivalent": "0°–5° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 22,
+        "decan_genie_and_planet": "Stochéné (Mars)",
+        "rules_physical_days": "16 octobre – 20 octobre (deuxième table)",
+        "presides_days_moral": [
+          "1 mai",
+          "12 juillet",
+          "22 septembre",
+          "3 décembre",
+          "13 février"
+        ],
+        "hour_of_invocation": "14:00–14:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : discorde entre princes, destruction des empires, révolutions."
+    },
+    {
+      "number": 44,
+      "name_lenain": "Ielahiah",
+      "attribute_fr": "Dieu éternel",
+      "attribute_en": "Eternal God [our translation]",
+      "psalm": "Ps. 118, v. 108: « Voluntaria oris mei beneplacita fac Domine: et judicia tua doce me »",
+      "rules_fr": "Ce génie protège contre les armes ; il donne la victoire",
+      "rules_en": "Protects against weapons; gives victory [our translation]",
+      "invoked_for_fr": "pour obtenir la réussite d'une entreprise utile ; pour avoir la protection des magistrats et pour gagner un procès",
+      "divine_name_correspondence_fr": "Bosa (Mexicains)",
+      "degrees": {
+        "lenain_sphere_degrees": "216–220",
+        "zodiac_equivalent": "5°–10° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 22,
+        "decan_genie_and_planet": "Sentacer (Mars)",
+        "rules_physical_days": "21 octobre – 25 octobre (deuxième table)",
+        "presides_days_moral": [
+          "2 mai",
+          "13 juillet",
+          "23 septembre",
+          "4 décembre",
+          "14 février"
+        ],
+        "hour_of_invocation": "14:20–14:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : préside à la guerre et à ses fléaux ; ceux qui violent les capitulations."
+    },
+    {
+      "number": 45,
+      "name_lenain": "Sealiah",
+      "attribute_fr": "Moteur de toutes choses",
+      "attribute_en": "Mover of all things [our translation]",
+      "psalm": "Ps. 93, v. 18: « Si dicebam, motus est pes meus: misericordia tua Domine adjuvabat me »",
+      "rules_fr": "Ce génie domine la végétation ; il porte la vie et la santé dans tout ce qui respire, et influe sur les principaux agents de la nature",
+      "rules_en": "Rules over vegetation; brings life and health to all that breathes; influences the chief agents of nature [our translation]",
+      "invoked_for_fr": "pour confondre les méchants et les orgueilleux ; il relève ceux qui sont humiliés et déchus",
+      "divine_name_correspondence_fr": "Hobo (peuples de Quito)",
+      "degrees": {
+        "lenain_sphere_degrees": "221–225",
+        "zodiac_equivalent": "10°–15° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 23,
+        "decan_genie_and_planet": "Sesmé (Soleil)",
+        "rules_physical_days": "26 octobre – 30 octobre (deuxième table)",
+        "presides_days_moral": [
+          "3 mai",
+          "14 juillet",
+          "24 septembre",
+          "5 décembre",
+          "15 février"
+        ],
+        "hour_of_invocation": "14:40–15:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : atmosphère – grandes chaleurs ou grands froids, sécheresse ou humidité excessive."
+    },
+    {
+      "number": 46,
+      "name_lenain": "Ariel",
+      "attribute_fr": "Dieu révélateur",
+      "attribute_en": "God the revealer [our translation]",
+      "psalm": "Ps. 144, v. 9: « Suavis Dominus universis: et miserationes ejus super omnia opera ejus »",
+      "rules_fr": "Ce génie découvre les trésors cachés ; il révèle les plus grands secrets de la nature, et il fait voir en songe les objets que l'on désire",
+      "rules_en": "Uncovers hidden treasures; reveals the greatest secrets of nature; shows in dreams the things one desires [our translation]",
+      "invoked_for_fr": "pour avoir des révélations ; pour remercier Dieu des biens qu'il nous envoie",
+      "divine_name_correspondence_fr": "Pino (peuples du Paraguay)",
+      "degrees": {
+        "lenain_sphere_degrees": "226–230",
+        "zodiac_equivalent": "15°–20° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 23,
+        "decan_genie_and_planet": "Tépiseuth (Soleil)",
+        "rules_physical_days": "31 octobre – 4 novembre (deuxième table)",
+        "presides_days_moral": [
+          "4 mai",
+          "15 juillet",
+          "25 septembre",
+          "6 décembre",
+          "16 février"
+        ],
+        "hour_of_invocation": "15:00–15:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 226e au 130e » [sic ; = 226–230]. Génie contraire : tribulations d'esprit, esprits faibles."
+    },
+    {
+      "number": 47,
+      "name_lenain": "Asaliah",
+      "attribute_fr": "Dieu juste, qui indique la vérité",
+      "attribute_en": "Just God, who points to the truth [our translation]",
+      "psalm": "Ps. 104, v. 25 [as printed; Vulgate 103:24]: « Quam magnificata sunt opera tua Domine! omnia in sapientia fecisti: impleta est terra possessione tua »",
+      "rules_fr": "Ce génie domine sur la justice, et fait connaître la vérité dans les procédures ; il influe sur les hommes probes, et sur ceux qui élèvent leur esprit à la contemplation des choses divines",
+      "rules_en": "Rules over justice and makes truth known in lawsuits; influences upright men and those who raise their minds to the contemplation of divine things [our translation]",
+      "invoked_for_fr": "pour louer Dieu et pour s'élever vers lui lorsqu'il nous envoie des lumières",
+      "divine_name_correspondence_fr": "Hana (peuples du Chili)",
+      "degrees": {
+        "lenain_sphere_degrees": "231–235",
+        "zodiac_equivalent": "20°–25° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 24,
+        "decan_genie_and_planet": "Siemé (Vénus)",
+        "rules_physical_days": "5 novembre – 9 novembre (deuxième table)",
+        "presides_days_moral": [
+          "5 mai",
+          "16 juillet",
+          "26 septembre",
+          "7 décembre",
+          "17 février"
+        ],
+        "hour_of_invocation": "15:20–15:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : actions immorales et scandaleuses, systèmes dangereux."
+    },
+    {
+      "number": 48,
+      "name_lenain": "Mihael",
+      "attribute_fr": "Dieu père secourable",
+      "attribute_en": "God, helpful father [our translation]",
+      "psalm": "Ps. 97, v. 3 [as printed; Vulgate 97:2]: « Notum fecit Dominus salutare suum: in conspectu gentium revelavit justitiam suam »",
+      "rules_fr": "Ce génie protège ceux qui ont recours à lui (pressentiments et inspirations secrètes) ; il domine sur la génération des êtres, et il influe sur l'amitié et la fidélité conjugale",
+      "rules_en": "Protects those who turn to him (premonitions, secret inspirations); rules over the generation of beings; influences friendship and conjugal fidelity [our translation]",
+      "invoked_for_fr": "pour conserver la paix et l'union entre les époux",
+      "divine_name_correspondence_fr": "Zaca (Japonais)",
+      "degrees": {
+        "lenain_sphere_degrees": "236–240",
+        "zodiac_equivalent": "25°–30° Scorpion/Scorpio (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 24,
+        "decan_genie_and_planet": "Senciner (Vénus)",
+        "rules_physical_days": "10 novembre – 14 novembre (deuxième table)",
+        "presides_days_moral": [
+          "6 mai",
+          "17 juillet",
+          "27 septembre",
+          "8 décembre",
+          "18 février"
+        ],
+        "hour_of_invocation": "15:40–16:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : luxe, stérilité, inconstance, jalousie."
+    },
+    {
+      "number": 49,
+      "name_lenain": "Vehuel",
+      "attribute_fr": "Dieu grand et élevé",
+      "attribute_en": "God great and lofty [our translation]",
+      "psalm": "Ps. 144, v. 3: « Magnus Dominus et laudabilis nimis: et magnitudinis ejus non est finis »",
+      "rules_fr": "Ce génie domine sur les grands personnages, et sur tous ceux qui s'élèvent et se distinguent par leurs talents et leurs vertus",
+      "rules_en": "Rules over great personages and all who rise and distinguish themselves by their talents and virtues [our translation]",
+      "invoked_for_fr": "pour s'exalter vers Dieu, pour le bénir et le glorifier, quand on est touché d'admiration",
+      "divine_name_correspondence_fr": "Mara (îles Philippines)",
+      "degrees": {
+        "lenain_sphere_degrees": "241–245",
+        "zodiac_equivalent": "0°–5° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 25,
+        "decan_genie_and_planet": "Réuo (Mercure)",
+        "rules_physical_days": "15 novembre – 19 novembre (deuxième table)",
+        "presides_days_moral": [
+          "7 mai",
+          "18 juillet",
+          "28 septembre",
+          "9 décembre",
+          "19 février"
+        ],
+        "hour_of_invocation": "16:00–16:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Principautés (génies 49–56). Heure imprimée illisible dans l'OCR (table : 16 h – 16 h 20). Génie contraire : égoïsme, haine, hypocrisie."
+    },
+    {
+      "number": 50,
+      "name_lenain": "Daniel",
+      "attribute_fr": "le Signe des miséricordes ; suivant d'autres, l'Ange des confessions",
+      "attribute_en": "The Sign of mercies; according to others, the Angel of confessions [our translation]",
+      "psalm": "Ps. 101 [as printed in our OCR, 'i o i'], v. 8: « Miserator et misericors Dominus: longanimis et misericors » (same verse as n° 7, which Lenain cites as Ps. 102:8)",
+      "rules_fr": "Ce génie domine sur la justice, les avocats, les avoués, et tous les magistrats en général ; il donne des inspirations à ceux qui sont embarrassés sur plusieurs choses",
+      "rules_en": "Rules over justice, advocates, solicitors and all magistrates; inspires those who are undecided between several things [our translation]",
+      "invoked_for_fr": "pour obtenir la miséricorde de Dieu, et pour avoir des consolations",
+      "divine_name_correspondence_fr": "Pola (Samaritains)",
+      "degrees": {
+        "lenain_sphere_degrees": "246–250",
+        "zodiac_equivalent": "5°–10° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 25,
+        "decan_genie_and_planet": "Eregbuo (Mercure)",
+        "rules_physical_days": "20 novembre – 24 novembre (deuxième table)",
+        "presides_days_moral": [
+          "8 mai",
+          "19 juillet",
+          "29 septembre",
+          "10 décembre",
+          "20 février"
+        ],
+        "hour_of_invocation": "16:20–16:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 246e au 145e » [sic ; = 246–250]. Génie contraire : chevaliers d'industrie, oisifs vivant de moyens illicites."
+    },
+    {
+      "number": 51,
+      "name_lenain": "Hahasiah",
+      "attribute_fr": "Dieu caché",
+      "attribute_en": "Hidden God [our translation]",
+      "psalm": "Ps. 103, v. 32 [as printed; Vulgate 103:31]: « Sit gloria Domini in saeculum: laetabitur Dominus in operibus suis »",
+      "rules_fr": "Ce génie domine sur la chimie et la physique ; il révèle les plus grands secrets de la nature, notamment la pierre philosophale et la médecine universelle",
+      "rules_en": "Rules over chemistry and physics; reveals nature's greatest secrets, notably the philosopher's stone and the universal medicine [our translation]",
+      "invoked_for_fr": "pour élever son âme à la contemplation des choses divines, et pour découvrir les mystères de la sagesse",
+      "divine_name_correspondence_fr": "Bila (Barsiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "251–255",
+        "zodiac_equivalent": "10°–15° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 26,
+        "decan_genie_and_planet": "Sesmé (Lune)",
+        "rules_physical_days": "25 novembre – 29 novembre (deuxième table)",
+        "presides_days_moral": [
+          "9 mai",
+          "20 juillet",
+          "30 septembre",
+          "11 décembre",
+          "21 février"
+        ],
+        "hour_of_invocation": "16:40–17:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : charlatans."
+    },
+    {
+      "number": 52,
+      "name_lenain": "Imamiah",
+      "attribute_fr": "Dieu élevé au-dessus de toutes choses",
+      "attribute_en": "God exalted above all things [our translation]",
+      "psalm": "Ps. 7, v. 18: « Confitebor Domino secundum justitiam ejus: et psallam nomini Domini altissimi »",
+      "rules_fr": "Ce génie domine sur tous les voyages en général ; il protège les prisonniers qui ont recours à lui ; il influe sur tous ceux qui cherchent la vérité de bonne foi",
+      "rules_en": "Rules over all journeys in general; protects prisoners who turn to him; influences all who seek truth in good faith [our translation]",
+      "invoked_for_fr": "pour détruire la puissance des ennemis et pour les humilier",
+      "divine_name_correspondence_fr": "Abag (Mélindais)",
+      "degrees": {
+        "lenain_sphere_degrees": "256–260",
+        "zodiac_equivalent": "15°–20° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 26,
+        "decan_genie_and_planet": "Sagen (Lune)",
+        "rules_physical_days": "30 novembre – 4 décembre (deuxième table)",
+        "presides_days_moral": [
+          "10 mai",
+          "21 juillet",
+          "1 octobre",
+          "12 décembre",
+          "22 février"
+        ],
+        "hour_of_invocation": "17:00–17:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : orgueil, blasphème, méchanceté."
+    },
+    {
+      "number": 53,
+      "name_lenain": "Nanael",
+      "attribute_fr": "Dieu qui abaisse les orgueilleux",
+      "attribute_en": "God who humbles the proud [our translation]",
+      "psalm": "Ps. 118, v. 75: « Cognovi Domine quia aequitas judicia tua: et in veritate tua humiliasti me »",
+      "rules_fr": "Ce génie domine sur les hautes sciences ; il influe sur les ecclésiastiques, les professeurs, les magistrats, et les hommes de loi",
+      "rules_en": "Rules over the high sciences; influences clergy, professors, magistrates and men of law [our translation]",
+      "invoked_for_fr": "(non précisé ; récitation du verset)",
+      "divine_name_correspondence_fr": "Obra (Maltais)",
+      "degrees": {
+        "lenain_sphere_degrees": "261–265",
+        "zodiac_equivalent": "20°–25° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 27,
+        "decan_genie_and_planet": "Chommé (Saturne)",
+        "rules_physical_days": "5 décembre – 9 décembre (deuxième table)",
+        "presides_days_moral": [
+          "11 mai",
+          "22 juillet",
+          "2 octobre",
+          "13 décembre",
+          "23 février"
+        ],
+        "hour_of_invocation": "17:20–17:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 2i6e [= 261e] au 265e ». Génie contraire : ignorance."
+    },
+    {
+      "number": 54,
+      "name_lenain": "Nithael",
+      "attribute_fr": "Roi des cieux",
+      "attribute_en": "King of the heavens [our translation]",
+      "psalm": "Ps. 102, v. 19: « Dominus in caelo paravit sedem suam: et regnum ipsius omnibus dominabitur »",
+      "rules_fr": "Ce génie domine sur les empereurs, les rois, les princes, et toutes les dignités civiles et ecclésiastiques ; il veille sur les dynasties légitimes, et sur la stabilité des empires",
+      "rules_en": "Rules over emperors, kings, princes and all civil and ecclesiastical dignities; watches over legitimate dynasties and the stability of empires [our translation]",
+      "invoked_for_fr": "pour obtenir la miséricorde de Dieu et pour vivre longtemps",
+      "divine_name_correspondence_fr": "Bora (Zaflaniens)",
+      "degrees": {
+        "lenain_sphere_degrees": "266–270",
+        "zodiac_equivalent": "25°–30° Sagittaire/Sagittarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 27,
+        "decan_genie_and_planet": "Chénen (Saturne)",
+        "rules_physical_days": "10 décembre – 14 décembre (deuxième table)",
+        "presides_days_moral": [
+          "12 mai",
+          "23 juillet",
+          "3 octobre",
+          "14 décembre",
+          "24 février"
+        ],
+        "hour_of_invocation": "17:40–18:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ruine des empires, révolutions."
+    },
+    {
+      "number": 55,
+      "name_lenain": "Mebahiah",
+      "attribute_fr": "Dieu éternel",
+      "attribute_en": "Eternal God [our translation]",
+      "psalm": "Ps. 101, v. 13: « Tu autem Domine in aeternum permanes: et memoriale tuum in generationem et generationem »",
+      "rules_fr": "Ce génie domine sur la morale et la religion ; il influe sur ceux qui la protègent et la propagent",
+      "rules_en": "Rules over morals and religion; influences those who protect and spread it [our translation]",
+      "invoked_for_fr": "pour avoir des consolations, et pour ceux qui désirent avoir des enfants",
+      "divine_name_correspondence_fr": "Alay (peuples d'Ormuz)",
+      "degrees": {
+        "lenain_sphere_degrees": "271–275",
+        "zodiac_equivalent": "0°–5° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 28,
+        "decan_genie_and_planet": "Smat (Jupiter)",
+        "rules_physical_days": "15 décembre – 19 décembre (deuxième table)",
+        "presides_days_moral": [
+          "13 mai",
+          "24 juillet",
+          "4 octobre",
+          "15 décembre",
+          "25 février"
+        ],
+        "hour_of_invocation": "18:00–18:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ennemi de la vérité et de la religion."
+    },
+    {
+      "number": 56,
+      "name_lenain": "Poiel",
+      "attribute_fr": "Dieu qui soutient l'univers",
+      "attribute_en": "God who upholds the universe [our translation]",
+      "psalm": "Ps. 144, v. 15 [as printed; Vulgate 144:14]: « Allevat Dominus omnes qui corruunt: et erigit omnes elisos »",
+      "rules_fr": "Ce génie domine la renommée, la fortune et la philosophie",
+      "rules_en": "Rules over renown, fortune and philosophy [our translation]",
+      "invoked_for_fr": "pour obtenir ce que l'on demande",
+      "divine_name_correspondence_fr": "Illi (peuples d'Aden)",
+      "degrees": {
+        "lenain_sphere_degrees": "276–280",
+        "zodiac_equivalent": "5°–10° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 28,
+        "decan_genie_and_planet": "Théméso (Jupiter)",
+        "rules_physical_days": "20 décembre – 24 décembre (deuxième table)",
+        "presides_days_moral": [
+          "14 mai",
+          "25 juillet",
+          "5 octobre",
+          "16 décembre",
+          "26 février"
+        ],
+        "hour_of_invocation": "18:20–18:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ambition, orgueil."
+    },
+    {
+      "number": 57,
+      "name_lenain": "Nemamiah",
+      "attribute_fr": "Dieu louable",
+      "attribute_en": "Praiseworthy God [our translation]",
+      "psalm": "Ps. 113, v. 19 [as printed; Vulgate 113:11 of the second part]: « Qui timent Dominum speraverunt in Domino: adjutor eorum et protector eorum est »",
+      "rules_fr": "Ce génie domine sur les grands capitaines, les amiraux, les généraux, et tous ceux qui combattent pour une cause juste",
+      "rules_en": "Rules over great commanders, admirals, generals and all who fight for a just cause [our translation]",
+      "invoked_for_fr": "pour prospérer en toutes choses, et pour délivrer les prisonniers",
+      "divine_name_correspondence_fr": "Popa (Cyréniens)",
+      "degrees": {
+        "lenain_sphere_degrees": "281–285",
+        "zodiac_equivalent": "10°–15° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 29,
+        "decan_genie_and_planet": "Sré (Mars)",
+        "rules_physical_days": "25 décembre – 29 décembre (deuxième table)",
+        "presides_days_moral": [
+          "15 mai",
+          "26 juillet",
+          "6 octobre",
+          "17 décembre",
+          "27 février"
+        ],
+        "hour_of_invocation": "18:40–19:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Archanges (génies 57–63 ; imprimé « 8e ordre »). Génie contraire : trahisons, mésintelligence entre chefs."
+    },
+    {
+      "number": 58,
+      "name_lenain": "Ieialel",
+      "attribute_fr": "Dieu qui exauce les générations",
+      "attribute_en": "God who hears (answers) the generations [our translation]",
+      "psalm": "NOT READ from the 1823 text layer (lines missing at the page break pp. 85/86). Papus 1903 (derived from Lenain) gives: Ps. 6, v. 3 [Vulgate 6:4]: « Et anima mea turbata est valde: sed tu Domine usque quo? »",
+      "rules_fr": "Ce génie domine sur le fer ; il influe sur les armuriers, les serruriers, les couteliers, et tous ceux qui en font le commerce ; il confond les méchants et les faux témoins",
+      "rules_en": "Rules over iron; influences armourers, locksmiths, cutlers and all who trade in it; confounds the wicked and false witnesses [our translation]",
+      "invoked_for_fr": "[début de la phrase manquant dans l'OCR 1823] « …dies, principalement le mal des yeux » ; Papus 1903 : « sert contre les chagrins et guérit les maladies, principalement le mal des yeux »",
+      "divine_name_correspondence_fr": "Para (Célamites)",
+      "degrees": {
+        "lenain_sphere_degrees": "286–290",
+        "zodiac_equivalent": "15°–20° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 29,
+        "decan_genie_and_planet": "Epima (Mars)",
+        "rules_physical_days": "30 décembre – 3 janvier (deuxième table)",
+        "presides_days_moral": [
+          "16 mai",
+          "27 juillet",
+          "7 octobre",
+          "18 décembre",
+          "28 février"
+        ],
+        "hour_of_invocation": "19:00–19:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : colère, méchants, homicides."
+    },
+    {
+      "number": 59,
+      "name_lenain": "Harahel",
+      "attribute_fr": "Dieu qui connaît toutes choses",
+      "attribute_en": "God who knows all things [our translation]",
+      "psalm": "Ps. 112, v. 3: « A solis ortu usque ad occasum, laudabile nomen Domini »",
+      "rules_fr": "Ce génie domine sur les trésors, les agents de change, les fonds publics, les archives, les bibliothèques, et tous les cabinets rares et précieux ; il influe sur l'imprimerie, la librairie, et sur tous ceux qui en font le commerce",
+      "rules_en": "Rules over treasuries, stockbrokers, public funds, archives, libraries and all rare and precious collections; influences printing and the book trade [our translation]",
+      "invoked_for_fr": "contre la stérilité des femmes, et pour rendre les enfants soumis et respectueux envers leurs parents",
+      "divine_name_correspondence_fr": "Ella (Mésopotamiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "291–295",
+        "zodiac_equivalent": "20°–25° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 30,
+        "decan_genie_and_planet": "Isré (Soleil)",
+        "rules_physical_days": "4 janvier – 8 janvier (deuxième table)",
+        "presides_days_moral": [
+          "17 mai",
+          "28 juillet",
+          "8 octobre",
+          "19 décembre",
+          "1 mars"
+        ],
+        "hour_of_invocation": "19:20–19:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : ennemi des lumières, incendies, faillites frauduleuses."
+    },
+    {
+      "number": 60,
+      "name_lenain": "Mitzrael",
+      "attribute_fr": "Dieu qui soulage les opprimés",
+      "attribute_en": "God who relieves the oppressed [our translation]",
+      "psalm": "Ps. 144, v. 18 [as printed; Vulgate 144:17]: « Justus Dominus in omnibus viis suis: et sanctus in omnibus operibus suis »",
+      "rules_fr": "Il domine sur les personnages illustres qui se distinguent par leurs talents et leurs vertus ; il influe sur la fidélité et l'obéissance des subalternes envers leurs supérieurs",
+      "rules_en": "Rules over illustrious people distinguished by talent and virtue; influences the loyalty and obedience of subordinates to superiors [our translation]",
+      "invoked_for_fr": "pour guérir les maladies d'esprit, et pour être délivrés de ceux qui nous persécutent",
+      "divine_name_correspondence_fr": "Géna (peuples du Thibet)",
+      "degrees": {
+        "lenain_sphere_degrees": "296–300",
+        "zodiac_equivalent": "25°–30° Capricorne/Capricorn (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 30,
+        "decan_genie_and_planet": "Homoth (Soleil)",
+        "rules_physical_days": "9 janvier – 13 janvier (deuxième table)",
+        "presides_days_moral": [
+          "18 mai",
+          "29 juillet",
+          "9 octobre",
+          "20 décembre",
+          "2 mars"
+        ],
+        "hour_of_invocation": "19:40–20:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : êtres insubordonnés."
+    },
+    {
+      "number": 61,
+      "name_lenain": "Umabel",
+      "attribute_fr": "Dieu au-dessus de toutes choses",
+      "attribute_en": "God above all things [our translation]",
+      "psalm": "Ps. 112, v. 2: « Sit nomen Domini benedictum, ex hoc nunc et usque in saeculum »",
+      "rules_fr": "Ce génie domine sur l'astronomie et la physique ; il influe sur tous ceux qui se distinguent dans cette partie",
+      "rules_en": "Rules over astronomy and physics; influences all who excel in these [our translation]",
+      "invoked_for_fr": "pour obtenir l'amitié d'une personne",
+      "divine_name_correspondence_fr": "Sila (anciens Béthuliens)",
+      "degrees": {
+        "lenain_sphere_degrees": "301–305",
+        "zodiac_equivalent": "0°–5° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 31,
+        "decan_genie_and_planet": "Ptiau (Vénus)",
+        "rules_physical_days": "14 janvier – 18 janvier (deuxième table)",
+        "presides_days_moral": [
+          "19 mai",
+          "30 juillet",
+          "10 octobre",
+          "21 décembre",
+          "3 mars"
+        ],
+        "hour_of_invocation": "20:00–20:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : libertins, passions « contraires à l'ordre de la nature »."
+    },
+    {
+      "number": 62,
+      "name_lenain": "Iah-hel",
+      "attribute_fr": "Être suprême",
+      "attribute_en": "Supreme Being [our translation]",
+      "psalm": "Ps. 118, v. 159: « Vide quoniam mandata tua dilexi Domine, in misericordia tua vivifica me »",
+      "rules_fr": "Ce génie domine sur les philosophes, les illuminés et tous ceux qui veulent se retirer du monde",
+      "rules_en": "Rules over philosophers, illuminati and all who wish to withdraw from the world [our translation]",
+      "invoked_for_fr": "pour acquérir la sagesse",
+      "divine_name_correspondence_fr": "Suna (anciens Carmaniens)",
+      "degrees": {
+        "lenain_sphere_degrees": "306–310",
+        "zodiac_equivalent": "5°–10° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 31,
+        "decan_genie_and_planet": "Oroasoer (Vénus)",
+        "rules_physical_days": "19 janvier – 23 janvier (deuxième table)",
+        "presides_days_moral": [
+          "20 mai",
+          "31 juillet",
+          "11 octobre",
+          "22 décembre",
+          "4 mars"
+        ],
+        "hour_of_invocation": "20:20–20:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 306e au 301e » [sic ; = 306–310]. Génie contraire : scandale, luxe, inconstance, divorce."
+    },
+    {
+      "number": 63,
+      "name_lenain": "Anauel",
+      "attribute_fr": "Dieu infiniment bon",
+      "attribute_en": "God infinitely good [our translation]",
+      "psalm": "Ps. 2, v. 11: « Servite Domino in timore: et exultate ei cum tremore »",
+      "rules_fr": "Ce génie protège contre les accidents ; il conserve la santé et guérit les maladies ; il domine sur le commerce, les banquiers, les agents d'affaires et les commis",
+      "rules_en": "Protects against accidents, preserves health and heals illness; rules over commerce, bankers, business agents and clerks [our translation]",
+      "invoked_for_fr": "pour convertir les nations au christianisme, et pour confondre ceux qui en sont les ennemis",
+      "divine_name_correspondence_fr": "Miri (Camboens)",
+      "degrees": {
+        "lenain_sphere_degrees": "311–315",
+        "zodiac_equivalent": "10°–15° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 32,
+        "decan_genie_and_planet": "Aseü (Mercure)",
+        "rules_physical_days": "24 janvier – 28 janvier (deuxième table)",
+        "presides_days_moral": [
+          "21 mai",
+          "1 août",
+          "12 octobre",
+          "23 décembre",
+          "5 mars"
+        ],
+        "hour_of_invocation": "20:40–21:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : folie, prodigalité."
+    },
+    {
+      "number": 64,
+      "name_lenain": "Mehiel",
+      "attribute_fr": "Dieu qui vivifie toutes choses",
+      "attribute_en": "God who gives life to all things [our translation]",
+      "psalm": "Ps. 32, v. 18: « Ecce oculi Domini super metuentes eum: et in eis, qui sperant super misericordiam ejus »",
+      "rules_fr": "Ce génie protège contre la rage et les animaux féroces ; il domine sur les savants, les professeurs, les orateurs et les auteurs ; il influe sur l'imprimerie et la librairie",
+      "rules_en": "Protects against rabies and wild animals; rules over scholars, professors, orators and authors; influences printing and the book trade [our translation]",
+      "invoked_for_fr": "contre les adversités (le psaume « exauce les prières de ceux qui espèrent en la miséricorde de Dieu »)",
+      "divine_name_correspondence_fr": "Alli (Mongols)",
+      "degrees": {
+        "lenain_sphere_degrees": "316–320",
+        "zodiac_equivalent": "15°–20° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 32,
+        "decan_genie_and_planet": "Astiro (Mercure)",
+        "rules_physical_days": "29 janvier – 2 février (deuxième table)",
+        "presides_days_moral": [
+          "22 mai",
+          "2 août",
+          "13 octobre",
+          "24 décembre",
+          "6 mars"
+        ],
+        "hour_of_invocation": "21:00–21:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Anges (génies 64–72 ; imprimé « 9e ordre »). Même verset que le n° 24. Degrés imprimés « 316e au 220e » [sic ; = 316–320]. Génie contraire : faux savants, controverses."
+    },
+    {
+      "number": 65,
+      "name_lenain": "Damabiah",
+      "attribute_fr": "Dieu fontaine de sagesse",
+      "attribute_en": "God, fountain of wisdom [our translation]",
+      "psalm": "Ps. 89, v. 15 [as printed; Vulgate 89:13]: « Convertere Domine, usquequo? et deprecabilis esto super servos tuos »",
+      "rules_fr": "Ce génie domine sur les mers, les fleuves, les sources, les expéditions maritimes, et les constructions navales ; il influe sur les marins, les pilotes, la pêche, et sur tous ceux qui en font le commerce",
+      "rules_en": "Rules over seas, rivers, springs, sea expeditions and shipbuilding; influences sailors, pilots, fishing and all who trade in these [our translation]",
+      "invoked_for_fr": "contre les sortilèges, et pour obtenir la sagesse et la réussite des entreprises utiles",
+      "divine_name_correspondence_fr": "Tara (Gymnosophes)",
+      "degrees": {
+        "lenain_sphere_degrees": "321–325",
+        "zodiac_equivalent": "20°–25° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 33,
+        "decan_genie_and_planet": "Ptébiou (Lune)",
+        "rules_physical_days": "3 février – 7 février (deuxième table)",
+        "presides_days_moral": [
+          "23 mai",
+          "3 août",
+          "14 octobre",
+          "25 décembre",
+          "7 mars"
+        ],
+        "hour_of_invocation": "21:20–21:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Texte imprimé : « 5 août » [sic ; la table donne 3 août]. Génie contraire : tempêtes, naufrages."
+    },
+    {
+      "number": 66,
+      "name_lenain": "Manakel",
+      "attribute_fr": "Dieu qui seconde et entretient toutes choses",
+      "attribute_en": "God who supports and sustains all things [our translation]",
+      "psalm": "Ps. 37, v. 22: « Ne derelinquas me Domine Deus meus: ne discesseris a me »",
+      "rules_fr": "Il domine sur la végétation et sur les animaux aquatiques ; il influe sur le sommeil et sur les songes",
+      "rules_en": "Rules over vegetation and aquatic animals; influences sleep and dreams [our translation]",
+      "invoked_for_fr": "pour apaiser la colère de Dieu, et pour guérir le mal caduc (épilepsie)",
+      "divine_name_correspondence_fr": "Pora (Brahmanes)",
+      "degrees": {
+        "lenain_sphere_degrees": "326–330",
+        "zodiac_equivalent": "25°–30° Verseau/Aquarius (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 33,
+        "decan_genie_and_planet": "Tépisatras (Lune)",
+        "rules_physical_days": "8 février – 12 février (deuxième table)",
+        "presides_days_moral": [
+          "24 mai",
+          "4 août",
+          "15 octobre",
+          "26 décembre",
+          "8 mars"
+        ],
+        "hour_of_invocation": "21:40–22:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : mauvaises qualités physiques et morales."
+    },
+    {
+      "number": 67,
+      "name_lenain": "Eiael",
+      "attribute_fr": "Dieu, délice des enfants des hommes",
+      "attribute_en": "God, delight of the children of men [our translation]",
+      "psalm": "Ps. 36, v. 4: « Delectare in Domino, et dabit tibi petitiones cordis tui »",
+      "rules_fr": "Ce génie domine sur les changements, sur la conservation des monuments, et sur la longévité de la vie ; il influe sur les sciences occultes ; il fait connaître la vérité à ceux qui ont recours à lui",
+      "rules_en": "Rules over changes, the preservation of monuments and long life; influences the occult sciences; reveals truth to those who turn to him [our translation]",
+      "invoked_for_fr": "pour avoir des consolations dans les adversités, et pour acquérir la sagesse",
+      "divine_name_correspondence_fr": "Bogo (Albanais)",
+      "degrees": {
+        "lenain_sphere_degrees": "331–335",
+        "zodiac_equivalent": "0°–5° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 34,
+        "decan_genie_and_planet": "Abiou (Saturne)",
+        "rules_physical_days": "13 février – 17 février (deuxième table)",
+        "presides_days_moral": [
+          "25 mai",
+          "5 août",
+          "16 octobre",
+          "27 décembre",
+          "9 mars"
+        ],
+        "hour_of_invocation": "22:00–22:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Graphie OCR « E'iael » (probablement « Eïael » avec tréma) ; table OCR « Eiael ». Génie contraire : erreur, préjugés."
+    },
+    {
+      "number": 68,
+      "name_lenain": "Habuhiah",
+      "attribute_fr": "Dieu qui donne avec libéralité",
+      "attribute_en": "God who gives generously [our translation]",
+      "psalm": "Ps. 105, v. 1: « Confitemini Domino, quoniam bonus: quoniam in saeculum misericordia ejus »",
+      "rules_fr": "Ce génie domine sur l'agriculture et la fécondité",
+      "rules_en": "Rules over agriculture and fertility [our translation]",
+      "invoked_for_fr": "pour conserver la santé et pour guérir les maladies",
+      "divine_name_correspondence_fr": "Dépos (Péloponésiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "336–340",
+        "zodiac_equivalent": "5°–10° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 34,
+        "decan_genie_and_planet": "Archatapias (Saturne)",
+        "rules_physical_days": "18 février – 22 février (deuxième table)",
+        "presides_days_moral": [
+          "26 mai",
+          "6 août",
+          "17 octobre",
+          "28 décembre",
+          "10 mars"
+        ],
+        "hour_of_invocation": "22:20–22:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Degrés imprimés « 337e au 340e » [sic ; = 336–340]. Génie contraire : stérilité, famine, peste, insectes nuisibles."
+    },
+    {
+      "number": 69,
+      "name_lenain": "Rochel",
+      "attribute_fr": "Dieu qui voit tout",
+      "attribute_en": "God who sees all [our translation]",
+      "psalm": "Ps. 15, v. 5: « Dominus pars haereditatis meae, et calicis mei: tu es, qui restitues haereditatem meam mihi »",
+      "rules_fr": "Ce génie domine la renommée, la fortune et les successions ; il influe sur les jurisconsultes, les magistrats, les avoués, les avocats et les notaires",
+      "rules_en": "Rules over renown, fortune and inheritances; influences jurists, magistrates, solicitors, advocates and notaries [our translation]",
+      "invoked_for_fr": "pour retrouver les objets perdus ou dérobés, et pour connaître la personne qui les a soustraits",
+      "divine_name_correspondence_fr": "Déos (Crétois)",
+      "degrees": {
+        "lenain_sphere_degrees": "341–345",
+        "zodiac_equivalent": "10°–15° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 35,
+        "decan_genie_and_planet": "Chontaré (Jupiter)",
+        "rules_physical_days": "23 février – 27 février (deuxième table)",
+        "presides_days_moral": [
+          "27 mai",
+          "7 août",
+          "18 octobre",
+          "29 décembre",
+          "11 mars"
+        ],
+        "hour_of_invocation": "22:40–23:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : procès, testaments au détriment des héritiers légitimes."
+    },
+    {
+      "number": 70,
+      "name_lenain": "Jabamiah",
+      "attribute_fr": "Verbe qui produit toutes choses",
+      "attribute_en": "The Word that produces all things [our translation]",
+      "psalm": "Not a psalm: Genèse 1:1 (given in French) « Au commencement Dieu créa le ciel et la terre »",
+      "rules_fr": "Ce génie domine sur la génération des êtres, et sur les phénomènes de la nature ; il protège ceux qui veulent se régénérer",
+      "rules_en": "Rules over the generation of beings and the phenomena of nature; protects those who wish to regenerate themselves [our translation]",
+      "invoked_for_fr": "(non précisé ; régénération)",
+      "divine_name_correspondence_fr": "Aris (Béotiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "346–350",
+        "zodiac_equivalent": "15°–20° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 35,
+        "decan_genie_and_planet": "Thopibui (Jupiter)",
+        "rules_physical_days": "28 février – 4 mars (deuxième table)",
+        "presides_days_moral": [
+          "28 mai",
+          "8 août",
+          "19 octobre",
+          "30 décembre",
+          "12 mars"
+        ],
+        "hour_of_invocation": "23:00–23:20 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Note de Lenain citant le Comte de Gabalis (Abbé de Villars). Génie contraire : athéisme, écrits dangereux."
+    },
+    {
+      "number": 71,
+      "name_lenain": "Haiaiel",
+      "attribute_fr": "Dieu maître de l'univers",
+      "attribute_en": "God, master of the universe [our translation]",
+      "psalm": "Ps. 108, v. 29 [as printed; Vulgate 108:30]: « Confitebor Domino nimis in ore meo: et in medio multorum laudabo eum »",
+      "rules_fr": "Ce génie protège tous ceux qui ont recours à lui ; il donne la victoire et la paix ; il influe sur le fer, les arsenaux, les villes de guerre, et tout ce qui se rapporte au génie militaire",
+      "rules_en": "Protects all who turn to him; gives victory and peace; influences iron, arsenals, fortified towns and all things military [our translation]",
+      "invoked_for_fr": "pour confondre les méchants, et pour se délivrer de ceux qui veulent nous opprimer",
+      "divine_name_correspondence_fr": "Zeut (Phrygiens)",
+      "degrees": {
+        "lenain_sphere_degrees": "351–355",
+        "zodiac_equivalent": "20°–25° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 36,
+        "decan_genie_and_planet": "Ptibiou (Mars)",
+        "rules_physical_days": "5 mars – 9 mars (deuxième table)",
+        "presides_days_moral": [
+          "29 mai",
+          "9 août",
+          "20 octobre",
+          "31 décembre",
+          "13 mars"
+        ],
+        "hour_of_invocation": "23:20–23:40 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Texte imprimé : « 14 mars » [sic ; la table donne 13 mars]. Génie contraire : discorde, traîtres."
+    },
+    {
+      "number": 72,
+      "name_lenain": "Mumiah",
+      "attribute_fr": "figuré par l'oméga, qui désigne la fin de toutes choses",
+      "attribute_en": "Figured by Omega, which signifies the end of all things [our translation]",
+      "psalm": "Ps. 114, v. 7: « Convertere anima mea in requiem tuam: quia Dominus benefecit tibi »",
+      "rules_fr": "Ce génie protège dans les opérations mystérieuses ; il fait réussir en toutes choses, et conduit toute expérience à sa fin ; il domine sur la chimie, la physique et la médecine ; il influe sur la santé et la longévité de la vie. Il domine sur la Thrace ou la Roumélie",
+      "rules_en": "Protects in mysterious (occult) operations; brings success in all things and carries every experiment to its end; rules over chemistry, physics and medicine; influences health and long life. Rules over Thrace or Rumelia [our translation]",
+      "invoked_for_fr": "(invocation avec « alpha et oméga » et le talisman du frontispice)",
+      "divine_name_correspondence_fr": "alpha et oméga ; Thrace/Roumélie",
+      "degrees": {
+        "lenain_sphere_degrees": "356–360",
+        "zodiac_equivalent": "25°–30° Poissons/Pisces (our conversion: Lenain counts the sphere's 360 degrees from the first degree of Aries)",
+        "decade": 36,
+        "decan_genie_and_planet": "Atembui (Mars)",
+        "rules_physical_days": "10 mars – 14 mars (deuxième table)",
+        "presides_days_moral": [
+          "30 mai",
+          "10 août",
+          "21 octobre",
+          "1 janvier",
+          "14 mars"
+        ],
+        "hour_of_invocation": "23:40–24:00 (quatrième table; 'minuit' = 00:00)"
+      },
+      "notes_fr": "Génie contraire : désespoir, suicide."
+    }
+  ],
+  "ordering_note": "Lenain's ordering begins at the first degree of Aries = 20 March at midnight (\"Les mages et les cabalistes commencent l'année au premier degré du bélier, c'est-à-dire, le 20 mars\"). Génie n covers degrees 5n−4 to 5n of the 360-degree sphere (one quinary each), so Vehuiah = 1–5 (0°–5° Aries), Jeliel = 6–10, … Mumiah = 356–360 (25°–30° Pisces). Two génies share each 10-day 'décade' (decan). Each décade is paired with two Egyptian/Greek decan genies (Chontaré and Asican for the first) and a planet in the Chaldean order starting with Mars for the first decan of Aries (Mars, Soleil, Vénus, Mercure, Lune, Saturne, Jupiter, …). This is the same decan-ruler sequence the Golden Dawn uses. For Vehuiah Lenain says outright 'son signe est le bélier', and 'il habite la région du feu'. He gives no sign for the other génies, only the degree ranges; the zodiac_equivalent field is our arithmetic. Lenain gives four calendar layers. (1) Table 2: each génie rules 5 consecutive days, 20 March onward, and rules the 'physique de l'homme'; 72 rules 10–14 March, and the five days 15–19 March are left over for the four elemental intelligences and God. (2) Table 3: five 72-day revolutions; génie n presides over day n of each cycle, which gives 5 single days a year, the 'moral de l'homme' (Vehuiah: 20 mars, 31 mai, 11 août, 22 octobre, 2 janvier). (3) Table 4: 72 slots of 20 minutes from midnight, the 'âme et l'esprit'. (4) Each génie also 'domine sur' a nation or language name for God. Choirs: 1–8 Séraphins, 9–16 Chérubins, 17–24 Trônes, 25–32 Dominations, 33–40 Puissances, 41–48 Vertus, 49–56 Principautés, 57–63 Archanges, 64–72 Anges. Comparison with Book T: the sequence of names is the same (Kircher/Agrippa order, as Lenain says), and so is the quinary scheme of two angels per decan. Only the starting point differs. Lenain starts at 0° Aries (Vehuiah = 0°–5° Aries). Book T starts at 0° Leo (Vehuiah = 0°–5° Leo). So every Lenain zodiac position is 120° (four signs) earlier than the Book T position for the same angel. Lenain's Vehuiah/Jeliel decan is Aries I, ruled by Mars; Book T's is Leo I, ruled by Saturn.",
+  "problems": [
+    "The text was read from the OCR layer of the iapsop scan, not from page images. We corrected accents and broken words by hand. Latin psalm incipits were normalised to Lenain's evident reading, but small Latin spellings may differ from the printed page.",
+    "Psalm numbers are Lenain's own, which follow Vulgate/Douay numbering. He often counts verses one lower than the modern Vulgate (e.g. Ps. 97 v.6, Ps. 30 v.18). Where his figure differs, the entry says 'as printed' and gives our Vulgate reference.",
+    "n° 58 Ieialel: a few lines at the page break (pp. 85/86) are missing from the OCR text. That covers the psalm verse and the start of the 'sert pour' sentence. We took them from Papus 1903, which is a derivative of Lenain and not the original; the entry is flagged.",
+    "n° 1 psalm number and n° 42 verse number are illegible in the OCR. We supplied them from Papus 1903 (Ps. 3 and Ps. 120 v.7), consistent with the verse texts Lenain prints.",
+    "n° 50: our OCR reads the psalm as 'i o i' (101). Lenain gives the same verse text for n° 7 and cites it there as Ps. 102:8. This may be a misprint in the original or an OCR error; we could not verify from the page image.",
+    "Printing/OCR anomalies in Ch. VI, kept in notes_fr. Degree misprints: n°20 95–100, n°28 'exclusivement', n°42 216–210, n°46 226–130, n°50 246–145, n°62 306–301, n°64 316–220, n°68 337–340. Day mismatches against Table 3: n°1 '31 avril', n°5 '14 août', n°13 '3 septembre', n°18 '18 janvier', n°22 '22 janvier', n°30 '28 avril', n°65 '5 août', n°71 '14 mars'. Choir misprint: 'Vertus' as 5e ordre. The degrees, days and hours fields in the JSON are computed from Lenain's own regular scheme (Tables 2–4 and 5° per génie), not copied from the misprinted lines.",
+    "Table 2 as OCR'd lists génie 71 as '3 mars au 9' (sic, = 5–9 mars). n° 17 hour is printed 5h–5h20, which duplicates n°16 (the table gives 5h20–5h40).",
+    "'rules_fr' gives the génie's 'domine sur / influe sur / protège' clause. The talismanic purpose ('on l'invoque pour… / il sert pour…') is in a separate field, invoked_for_fr. Native-temperament text and the 'génie contraire' are summarised in notes_fr, not quoted in full.",
+    "Lenain's spellings come from Ch. VI headings. The Ch. IV name table was too garbled in the OCR to compare spellings against. n°10 is OCR 'Aiadiah', read as 'Aladiah' (Papus agrees). n°67 is OCR 'E'iael', probably 'Eïael'.",
+    "The Golden Dawn comparison in ordering_note is our inference from Lenain's own degree scheme. Lenain does not mention Book T, which postdates him."
+  ]
+}
