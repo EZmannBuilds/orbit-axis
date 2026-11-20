@@ -1,10 +1,15 @@
 // Orbit Axis :: write the LoRA training set for the local tarot model.
 //
-//   npm run tarot:export-training -- [--readings 3000] [--seed 1] [--sky-file sky.json]
+//   npm run tarot:export-training -- [--seed 1] [--readings 0] [--sky-file sky.json]
+//
+// STUDY ONLY BY DEFAULT. The owner's decision: readings stay exactly as the
+// composer writes them and the model never rewords one, so the default run
+// writes no reading examples. `--readings N` still produces them, for an
+// experiment only; nothing in the app would show the result.
 //
 // Two kinds of example, in chat format (system / user / assistant):
 //
-//   reading  The user turn is everything the composer knows about a spread —
+//   reading  (off by default) The user turn is everything the composer knows about a spread —
 //            each card's approved meaning and prompt, and the facts it may
 //            state. The assistant turn is the composer's reading. The model
 //            learns Orbit's register and structure; it never sees a meaning
@@ -48,7 +53,7 @@ import {
 } from "../../lib/esoteric/retrieval.js";
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith("--") ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
-const READINGS = Number(args.readings ?? 3000);
+const READINGS = Number(args.readings ?? 0); // study only unless asked
 const SEED = Number(args.seed ?? 1);
 const OUT = new URL("../../.cache/tarot-lora/data/", import.meta.url);
 

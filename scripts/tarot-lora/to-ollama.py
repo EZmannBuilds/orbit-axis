@@ -4,8 +4,8 @@
 
 Writes the merged safetensors to .cache/tarot-lora/merged/ and a Modelfile,
 then runs `ollama create`. Ollama quantises on import. The model runs only
-where Ollama runs; production on Vercel never calls it and always serves the
-composer's deterministic reading.
+where Ollama runs; production on Vercel never calls it. It answers study
+questions only; readings are always the composer's deterministic text.
 """
 
 from __future__ import annotations

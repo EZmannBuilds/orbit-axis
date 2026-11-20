@@ -1,0 +1,803 @@
+{
+  "version": 1,
+  "arch": "mobilenetv3_small_100",
+  "input": {
+    "width": 224,
+    "height": 224,
+    "channels": "RGB",
+    "scale": "0..1",
+    "mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "crop": "perspective-corrected card, stretched to a square, top of the card at the top of the phone"
+  },
+  "classes": [
+    {
+      "index": 0,
+      "slug": "ace-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 1,
+      "slug": "ace-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 2,
+      "slug": "ace-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 3,
+      "slug": "ace-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 4,
+      "slug": "death",
+      "reversed": false
+    },
+    {
+      "index": 5,
+      "slug": "eight-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 6,
+      "slug": "eight-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 7,
+      "slug": "eight-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 8,
+      "slug": "eight-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 9,
+      "slug": "five-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 10,
+      "slug": "five-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 11,
+      "slug": "five-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 12,
+      "slug": "five-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 13,
+      "slug": "four-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 14,
+      "slug": "four-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 15,
+      "slug": "four-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 16,
+      "slug": "four-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 17,
+      "slug": "judgement",
+      "reversed": false
+    },
+    {
+      "index": 18,
+      "slug": "justice",
+      "reversed": false
+    },
+    {
+      "index": 19,
+      "slug": "king-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 20,
+      "slug": "king-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 21,
+      "slug": "king-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 22,
+      "slug": "king-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 23,
+      "slug": "knight-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 24,
+      "slug": "knight-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 25,
+      "slug": "knight-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 26,
+      "slug": "knight-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 27,
+      "slug": "nine-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 28,
+      "slug": "nine-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 29,
+      "slug": "nine-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 30,
+      "slug": "nine-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 31,
+      "slug": "page-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 32,
+      "slug": "page-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 33,
+      "slug": "page-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 34,
+      "slug": "page-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 35,
+      "slug": "queen-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 36,
+      "slug": "queen-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 37,
+      "slug": "queen-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 38,
+      "slug": "queen-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 39,
+      "slug": "seven-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 40,
+      "slug": "seven-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 41,
+      "slug": "seven-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 42,
+      "slug": "seven-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 43,
+      "slug": "six-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 44,
+      "slug": "six-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 45,
+      "slug": "six-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 46,
+      "slug": "six-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 47,
+      "slug": "strength",
+      "reversed": false
+    },
+    {
+      "index": 48,
+      "slug": "temperance",
+      "reversed": false
+    },
+    {
+      "index": 49,
+      "slug": "ten-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 50,
+      "slug": "ten-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 51,
+      "slug": "ten-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 52,
+      "slug": "ten-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 53,
+      "slug": "the-chariot",
+      "reversed": false
+    },
+    {
+      "index": 54,
+      "slug": "the-devil",
+      "reversed": false
+    },
+    {
+      "index": 55,
+      "slug": "the-emperor",
+      "reversed": false
+    },
+    {
+      "index": 56,
+      "slug": "the-empress",
+      "reversed": false
+    },
+    {
+      "index": 57,
+      "slug": "the-fool",
+      "reversed": false
+    },
+    {
+      "index": 58,
+      "slug": "the-hanged-one",
+      "reversed": false
+    },
+    {
+      "index": 59,
+      "slug": "the-hermit",
+      "reversed": false
+    },
+    {
+      "index": 60,
+      "slug": "the-hierophant",
+      "reversed": false
+    },
+    {
+      "index": 61,
+      "slug": "the-high-priestess",
+      "reversed": false
+    },
+    {
+      "index": 62,
+      "slug": "the-lovers",
+      "reversed": false
+    },
+    {
+      "index": 63,
+      "slug": "the-magician",
+      "reversed": false
+    },
+    {
+      "index": 64,
+      "slug": "the-moon",
+      "reversed": false
+    },
+    {
+      "index": 65,
+      "slug": "the-star",
+      "reversed": false
+    },
+    {
+      "index": 66,
+      "slug": "the-sun",
+      "reversed": false
+    },
+    {
+      "index": 67,
+      "slug": "the-tower",
+      "reversed": false
+    },
+    {
+      "index": 68,
+      "slug": "the-world",
+      "reversed": false
+    },
+    {
+      "index": 69,
+      "slug": "three-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 70,
+      "slug": "three-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 71,
+      "slug": "three-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 72,
+      "slug": "three-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 73,
+      "slug": "two-of-cups",
+      "reversed": false
+    },
+    {
+      "index": 74,
+      "slug": "two-of-pentacles",
+      "reversed": false
+    },
+    {
+      "index": 75,
+      "slug": "two-of-swords",
+      "reversed": false
+    },
+    {
+      "index": 76,
+      "slug": "two-of-wands",
+      "reversed": false
+    },
+    {
+      "index": 77,
+      "slug": "wheel-of-fortune",
+      "reversed": false
+    },
+    {
+      "index": 78,
+      "slug": "ace-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 79,
+      "slug": "ace-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 80,
+      "slug": "ace-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 81,
+      "slug": "ace-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 82,
+      "slug": "death",
+      "reversed": true
+    },
+    {
+      "index": 83,
+      "slug": "eight-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 84,
+      "slug": "eight-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 85,
+      "slug": "eight-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 86,
+      "slug": "eight-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 87,
+      "slug": "five-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 88,
+      "slug": "five-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 89,
+      "slug": "five-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 90,
+      "slug": "five-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 91,
+      "slug": "four-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 92,
+      "slug": "four-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 93,
+      "slug": "four-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 94,
+      "slug": "four-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 95,
+      "slug": "judgement",
+      "reversed": true
+    },
+    {
+      "index": 96,
+      "slug": "justice",
+      "reversed": true
+    },
+    {
+      "index": 97,
+      "slug": "king-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 98,
+      "slug": "king-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 99,
+      "slug": "king-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 100,
+      "slug": "king-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 101,
+      "slug": "knight-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 102,
+      "slug": "knight-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 103,
+      "slug": "knight-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 104,
+      "slug": "knight-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 105,
+      "slug": "nine-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 106,
+      "slug": "nine-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 107,
+      "slug": "nine-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 108,
+      "slug": "nine-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 109,
+      "slug": "page-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 110,
+      "slug": "page-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 111,
+      "slug": "page-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 112,
+      "slug": "page-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 113,
+      "slug": "queen-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 114,
+      "slug": "queen-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 115,
+      "slug": "queen-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 116,
+      "slug": "queen-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 117,
+      "slug": "seven-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 118,
+      "slug": "seven-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 119,
+      "slug": "seven-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 120,
+      "slug": "seven-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 121,
+      "slug": "six-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 122,
+      "slug": "six-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 123,
+      "slug": "six-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 124,
+      "slug": "six-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 125,
+      "slug": "strength",
+      "reversed": true
+    },
+    {
+      "index": 126,
+      "slug": "temperance",
+      "reversed": true
+    },
+    {
+      "index": 127,
+      "slug": "ten-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 128,
+      "slug": "ten-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 129,
+      "slug": "ten-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 130,
+      "slug": "ten-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 131,
+      "slug": "the-chariot",
+      "reversed": true
+    },
+    {
+      "index": 132,
+      "slug": "the-devil",
+      "reversed": true
+    },
+    {
+      "index": 133,
+      "slug": "the-emperor",
+      "reversed": true
+    },
+    {
+      "index": 134,
+      "slug": "the-empress",
+      "reversed": true
+    },
+    {
+      "index": 135,
+      "slug": "the-fool",
+      "reversed": true
+    },
+    {
+      "index": 136,
+      "slug": "the-hanged-one",
+      "reversed": true
+    },
+    {
+      "index": 137,
+      "slug": "the-hermit",
+      "reversed": true
+    },
+    {
+      "index": 138,
+      "slug": "the-hierophant",
+      "reversed": true
+    },
+    {
+      "index": 139,
+      "slug": "the-high-priestess",
+      "reversed": true
+    },
+    {
+      "index": 140,
+      "slug": "the-lovers",
+      "reversed": true
+    },
+    {
+      "index": 141,
+      "slug": "the-magician",
+      "reversed": true
+    },
+    {
+      "index": 142,
+      "slug": "the-moon",
+      "reversed": true
+    },
+    {
+      "index": 143,
+      "slug": "the-star",
+      "reversed": true
+    },
+    {
+      "index": 144,
+      "slug": "the-sun",
+      "reversed": true
+    },
+    {
+      "index": 145,
+      "slug": "the-tower",
+      "reversed": true
+    },
+    {
+      "index": 146,
+      "slug": "the-world",
+      "reversed": true
+    },
+    {
+      "index": 147,
+      "slug": "three-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 148,
+      "slug": "three-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 149,
+      "slug": "three-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 150,
+      "slug": "three-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 151,
+      "slug": "two-of-cups",
+      "reversed": true
+    },
+    {
+      "index": 152,
+      "slug": "two-of-pentacles",
+      "reversed": true
+    },
+    {
+      "index": 153,
+      "slug": "two-of-swords",
+      "reversed": true
+    },
+    {
+      "index": 154,
+      "slug": "two-of-wands",
+      "reversed": true
+    },
+    {
+      "index": 155,
+      "slug": "wheel-of-fortune",
+      "reversed": true
+    }
+  ]
+}

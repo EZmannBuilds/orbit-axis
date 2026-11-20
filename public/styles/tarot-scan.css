@@ -1,0 +1,140 @@
+/* Orbit Axis :: "Read my own cards" (public/tarot-scan.js).
+   Own file so the camera flow never edits the shared stylesheets. Tokens only. */
+
+body.tscan-open { overflow: hidden; }
+
+.tscan {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: end center;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.tscan__sheet {
+  width: min(720px, 100%);
+  max-height: 100dvh;
+  overflow: auto;
+  background: var(--color-surface-elevated, var(--color-surface));
+  color: var(--color-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-lg) var(--space-md) calc(var(--space-xl) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 760px) {
+  .tscan { place-items: center; }
+  .tscan__sheet { border-radius: var(--radius-xl); max-height: calc(100dvh - 2 * var(--space-xl)); }
+}
+
+.tscan__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); margin-bottom: var(--space-md); }
+.tscan__title { font-family: var(--font-display); font-size: 1.35rem; margin: 0; }
+.tscan__step { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 var(--space-xs); }
+.tscan__help, .tscan__note { color: var(--color-muted); margin: 0 0 var(--space-md); line-height: 1.5; }
+.tscan__note { font-size: 0.9rem; }
+.tscan__status { color: var(--color-muted); margin: var(--space-sm) 0; min-height: 1.5em; }
+.tscan__error { color: var(--color-danger, #e5484d); margin: var(--space-sm) 0; }
+.tscan__saved { min-height: 1.5em; color: var(--color-muted); }
+
+.tscan__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-top: var(--space-md); }
+
+.tscan__spread { border: 0; padding: 0; margin: 0 0 var(--space-md); display: flex; gap: var(--space-md); flex-wrap: wrap; }
+.tscan__label { font-size: 0.85rem; color: var(--color-muted); }
+.tscan__spread .tscan__label { width: 100%; margin-bottom: var(--space-xxs); }
+.tscan__choice { display: inline-flex; align-items: center; gap: var(--space-xs); }
+
+/* Camera with card-shaped guides laid over it. */
+.tscan__camera {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 3 / 4;
+  max-height: 62dvh;
+  margin-inline: auto;
+}
+.tscan__video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tscan__guides {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4%;
+  padding: 6%;
+  pointer-events: none;
+}
+.tscan__guide {
+  position: relative;
+  height: 78%;
+  aspect-ratio: var(--aspect);
+  border: 2px dashed rgba(255, 255, 255, 0.75);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.18);
+}
+.tscan__guides--3 .tscan__guide { height: auto; width: 28%; }
+.tscan__guide.is-found { border-style: solid; border-color: var(--color-accent-border, #b9a7ff); }
+.tscan__guide-label {
+  position: absolute;
+  left: 50%;
+  bottom: -2.2em;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+/* Confirm sheet. */
+.tscan__confirm { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-md); }
+.tscan__pick { display: grid; grid-template-columns: 72px 1fr; gap: var(--space-sm); align-items: start; }
+.tscan__thumb {
+  width: 72px;
+  aspect-ratio: 0.57;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken, var(--color-surface));
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: transform 0.25s ease;
+}
+.tscan__thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tscan__thumb.is-reversed { transform: rotate(180deg); }
+.tscan__thumb--large { width: min(160px, 40vw); justify-self: center; }
+@media (prefers-reduced-motion: reduce) { .tscan__thumb { transition: none; } }
+
+.tscan__fields { display: grid; gap: var(--space-xxs); }
+.tscan__position { font-weight: 600; }
+.tscan__unsure { color: var(--color-accent); font-size: 0.9rem; }
+.tscan__select {
+  min-height: 44px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  padding: 0 var(--space-sm);
+  font: inherit;
+}
+.tscan__orient { display: inline-flex; gap: var(--space-xxs); margin-top: var(--space-xxs); }
+.tscan__toggle {
+  min-height: 36px;
+  padding: 0 var(--space-sm);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.tscan__toggle[aria-pressed="true"] { background: var(--color-accent-soft); border-color: var(--color-accent-border); }
+.tscan__toggle:focus-visible, .tscan__select:focus-visible { outline: 2px solid var(--color-border-focus); outline-offset: 2px; }
+
+/* Reading. */
+.tscan__reading { display: grid; gap: var(--space-xl); }
+.tscan__card { display: grid; gap: var(--space-md); }
+@media (min-width: 560px) { .tscan__card { grid-template-columns: 160px 1fr; align-items: start; } }
+.tscan__facts { margin-top: var(--space-sm); color: var(--color-muted); font-size: 0.92rem; }
+.tscan__facts summary { cursor: pointer; color: var(--color-primary); }
+.tscan__facts ul { margin: var(--space-xs) 0 0; padding-left: 1.1em; display: grid; gap: var(--space-xxs); }

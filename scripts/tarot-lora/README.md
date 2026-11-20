@@ -1,23 +1,24 @@
 # Local tarot model (LoRA)
 
 Step 3 of `docs/tarot-camera-plan.md`: a small local model, `orbit-tarot`, that
-rewrites the composer's deterministic reading into Orbit's voice and answers
-questions about the tradition. It runs only where Ollama runs. Production on
-Vercel never calls it and always serves the composer's reading.
+answers study questions about the tradition from the source rows it is given.
+It runs only where Ollama runs. Production on Vercel never calls it.
+
+**Study only.** Readings stay exactly as the deterministic composer writes
+them. The model never rewords a reading, in the web flow or anywhere else.
 
 ## What it learns from
 
 `npm run tarot:export-training` writes `.cache/tarot-lora/data/`:
 
-- **Reading examples.** The input is everything the composer knows about a
-  spread: each card's approved meaning and prompt, and the facts it may state
-  (correspondences, Lilly's dignities, Book T's elemental dignities, sky links).
-  The target is the composer's reading. The model never sees a meaning that
-  isn't the deck's own.
 - **Study examples.** A question about one source, answered with that source
   named: Book T, Liber 777, Lilly, Agrippa, Westcott and Lenain, from
   `lib/esoteric/`. A separate system prompt keeps this mode apart from
   readings.
+- **Reading examples: off by default.** `--readings N` writes them (the
+  composer's reading as the target) for experiments only. The first two
+  training runs included them, so the current `orbit-tarot` has seen readings;
+  the next run, on the default export, will not.
 - **Left out:** Mathers and Papus. Their fortune-telling keywords would pull the
   model toward the predictive register Orbit forbids.
 
@@ -29,9 +30,10 @@ so. They teach the model to carry sky sentences through unchanged. They are
 never shown to anyone. To train on real positions, generate `currentSky()`
 snapshots where the engine runs (macOS or Linux) and pass `--sky-file`.
 
-## Guard at run time
+## Guard
 
-Before the app shows a rewrite, `checkWovenText()` in
+The app shows no rewritten readings. The guard stays for the eval and for any
+experiment run with `--readings`: `checkWovenText()` in
 `lib/tarot/scan-reading.js` refuses it if it:
 
 - trips a forbidden pattern,
