@@ -1,6 +1,6 @@
 """Merge the adapter into the base model and import it into Ollama as orbit-tarot.
 
-    python scripts/tarot-lora/to-ollama.py --base Qwen/Qwen3-1.7B --name orbit-tarot --quantize q4_K_M
+    python scripts/tarot-lora/to-ollama.py --base Qwen/Qwen3-1.7B --name orbit-tarot --quantize int8
 
 Writes the merged safetensors to .cache/tarot-lora/merged/ and a Modelfile,
 then runs `ollama create`. Ollama quantises on import. The model runs only
@@ -26,7 +26,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="Qwen/Qwen3-1.7B")
     ap.add_argument("--name", default="orbit-tarot")
-    ap.add_argument("--quantize", default="q4_K_M")
+    # Ollama 0.40+ quantises safetensors imports to int4/int8 (not the older
+    # GGUF names like q4_K_M). int8 keeps facts sharper for a 1.7B model.
+    ap.add_argument("--quantize", default="int8")
     ap.add_argument("--skip-create", action="store_true")
     args = ap.parse_args()
 

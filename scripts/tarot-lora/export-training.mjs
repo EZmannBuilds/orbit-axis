@@ -43,6 +43,9 @@ import { LIBER777 } from "../../lib/esoteric/liber777.js";
 import { YETZIRAH_LETTERS } from "../../lib/esoteric/yetzirah.js";
 import { LENAIN_ANGELS } from "../../lib/esoteric/lenain.js";
 import { studyLeaks } from "../../lib/esoteric/study-language.js";
+import {
+  agrippaDecanRow, cardRow, decanRow, lenainRow, liber777KeyRow, lillyRow, mansionRow, renderRows, starRow, suitPairRow, westcottRow,
+} from "../../lib/esoteric/retrieval.js";
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith("--") ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
 const READINGS = Number(args.readings ?? 3000);
@@ -58,7 +61,8 @@ export const SYSTEM_READING = [
 
 export const SYSTEM_STUDY = [
   "You are Orbit's study companion for the Western esoteric tradition.",
-  "Answer from the source the question names, say which source, and quote or paraphrase it faithfully.",
+  "Answer only from the source rows given with the question: name the source, and use no fact that is not in those rows.",
+  "Some rows may be about something else; use the one the question asks about.",
   "This is history and reference: do not apply it to the reader's life, and do not predict.",
 ].join(" ");
 
@@ -135,110 +139,155 @@ function readingExamples() {
 }
 
 // ── Study examples ──────────────────────────────────────────────────────────
+//
+// Every study question carries its source rows (lib/esoteric/retrieval.js),
+// and every answer uses only facts in those rows: the model learns to explain
+// what it is handed, not to recall. Half the questions also carry one row about
+// something else, so it learns to pick the right row. Held-out items are split
+// by ITEM (not by question), so evaluation asks about rows the model has never
+// trained on and can only read from the prompt.
 
 const the = (p) => (p === "Sun" || p === "Moon" ? `the ${p}` : p);
+const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 const NAME = Object.fromEntries(PRODUCTION_CARDS.map((c) => [c.slug, c.name]));
-const study = [];
-function qa(source, questions, answer) {
-  for (const q of questions) study.push({ kind: "study", source, messages: [{ role: "system", content: SYSTEM_STUDY }, { role: "user", content: q }, { role: "assistant", content: answer }] });
+const items = [];
+function item(key, source, questions, row, answer) {
+  if (row) items.push({ key, source, questions, row, answer });
 }
 
-// Book T and 777 correspondences, per card.
+// Book T: cards.
 for (const c of Object.values(CORRESPONDENCES)) {
   const name = NAME[c.slug];
-  const lines = [correspondenceLine(c.slug), standingLine(c.slug)].filter(Boolean);
+  let answer;
   if (c.arcana === "major") {
     const l = c.hebrew_letter;
-    lines.push(`Its letter, ${l.name} (${l.glyph}), has the value ${l.value} and is a ${l.kind} letter in the Sepher Yetzirah. Book T titles the card "${c.title}".`);
+    const second = c.secondary_attribution ? ` and to ${c.secondary_attribution.name}` : "";
+    answer = `In Book T, the ${name} is titled "${c.title}". It belongs to the ${c.attribution.kind} ${c.attribution.name}${second}; to the letter ${l.name} (${l.glyph}), "${l.meaning}", value ${l.value}, a ${l.kind} letter; and to path ${c.path.number}, joining ${c.path.joins[0].name} and ${c.path.joins[1].name}.`;
+  } else if (c.kind === "ace") {
+    answer = `In Book T, the ${name} is "${c.title}": ${c.element} as a whole, in Kether, in ${c.world}, ${c.world_gloss}. Its throne is the Page of its suit.`;
   } else if (c.kind === "pip") {
-    lines.push(`Book T sets the angels ${c.angels[0].name} and ${c.angels[1].name} over this decan, numbers ${c.angels[0].number} and ${c.angels[1].number} of the seventy-two.`);
-  } else if (c.kind === "court") {
-    lines.push(`In Book T this card is the ${c.book_t_rank}, ${c.figure}, the ${c.letter_of_name} of the Name in its suit.`);
+    answer = `In Book T, the ${name} is "${c.title}". It is the ${c.decan.ordinal} decan of ${c.decan.sign}, ${c.decan.start_longitude % 30}° to ${(c.decan.start_longitude % 30) + 10}°, ruled by ${the(c.decan.ruler)}, in ${c.sephirah.name} (${c.sephirah.gloss}) of ${c.world}, ${c.world_gloss}. The angels of its decan are ${c.angels[0].name} and ${c.angels[1].name}, numbers ${c.angels[0].number} and ${c.angels[1].number}.`;
+  } else {
+    const rules = c.rules ? `It rules from 20° ${c.rules.from.sign} to 20° ${c.rules.to.sign}.` : "It rules a quadrant around the North Pole and is the throne of the Ace of its suit.";
+    answer = `In Book T, the ${name} is "${c.title}", the ${c.book_t_rank}, ${c.figure}, the ${c.letter_of_name} of the Name: ${c.sub_element.label}. ${rules}`;
   }
-  qa("book_t", [`What does the Golden Dawn attach to the ${name}?`, `Give the Book T correspondences of the ${name}.`], `According to Book T (the Golden Dawn's tarot manuscript, 1912): ${lines.join(" ")}`);
+  item(`card:${c.slug}`, "book_t", [`What does the Golden Dawn attach to the ${name}?`, `Give the Book T correspondences of the ${name}.`, `In Book T, what is the ${name}?`], cardRow(c.slug, name), answer);
 }
 
-// Decans as sky facts.
+// Book T: decans.
 for (const d of DECANS) {
-  qa("book_t", [`Which card rules the ${d.ordinal} decan of ${d.sign}?`], `In Book T the ${d.ordinal} decan of ${d.sign} (${d.start_longitude % 30}° to ${(d.start_longitude % 30) + 10}°) is ruled by ${the(d.ruler)} and belongs to the ${NAME[d.slug]}, "${d.title}".`);
+  item(`decan:${d.slug}`, "book_t", [`Which card rules the ${d.ordinal} decan of ${d.sign}?`, `In Book T, what belongs to ${d.sign}'s ${d.ordinal} decan?`], decanRow(d.sign, d.index, (s) => NAME[s]),
+    `In Book T the ${d.ordinal} decan of ${d.sign}, ${d.start_longitude % 30}° to ${(d.start_longitude % 30) + 10}°, is ruled by ${the(d.ruler)} and belongs to the ${NAME[d.slug]}, "${d.title}".`);
 }
 
-// Book T's dignity rule.
-for (const a of ["wands", "cups", "swords", "pentacles"]) for (const b of ["wands", "cups", "swords", "pentacles"]) {
+// Book T: elemental dignities.
+const SUITS = ["wands", "cups", "swords", "pentacles"];
+for (const a of SUITS) for (const b of SUITS) {
   if (a >= b) continue;
   const rel = suitRelation(a, b);
-  const said = { inimical: "inimical: a card of one beside the other weakens it", friendly: "friendly", unstated: "not given: Book T states no relation between them" }[rel];
-  qa("book_t", [`In Book T's elemental dignities, how do ${a} and ${b} relate?`], `In Book T's rule of elemental dignities, ${a} and ${b} are ${said}. Cards of the same suit beside a card strengthen it, and a card between two contrary cards is not much affected.`);
+  const said = { inimical: "inimical: a card of one beside the other weakens it", friendly: "friendly", unstated: "not stated: Book T gives no relation between them" }[rel];
+  item(`suits:${a}-${b}`, "book_t", [`In Book T's elemental dignities, how do ${a} and ${b} relate?`], suitPairRow(a, b),
+    `In Book T's elemental dignities, ${a} and ${b} are ${said}. The same suit beside a card strengthens it, and a card between two contraries is not much affected.`);
 }
 
 // Lilly.
 for (const sign of SIGN_ORDER) {
-  const row = DIGNITY_TABLE[sign];
-  const terms = row.terms.map((t, i) => `${t.planet} to ${t.to_degree}°`).join(", ");
-  const ex = row.exaltation ? `${the(row.exaltation.planet).replace("North Node", "the Dragon's Head").replace("South Node", "the Dragon's Tail")} is exalted at ${row.exaltation.degree}°` : "no planet is exalted";
-  qa("lilly", [`What are the essential dignities of ${sign} in Lilly?`, `Summarise Lilly's table of dignities for ${sign}.`],
-    `In Lilly's Christian Astrology (1647), ${sign} is the house of ${the(row.domicile)}; ${ex}; its triplicity is ruled by ${the(row.triplicity.day)} by day and ${the(row.triplicity.night)} by night; its terms run ${terms}; its faces are ${row.faces.map(the).join(", ")}; ${the(row.detriment)} is in detriment there${row.fall && ["Saturn", "Jupiter", "Mars", "Sun", "Venus", "Mercury", "Moon"].includes(row.fall) ? ` and ${the(row.fall)} in its fall` : ""}.`);
+  const r = DIGNITY_TABLE[sign];
+  const node = (p) => p.replace("North Node", "the Dragon's Head").replace("South Node", "the Dragon's Tail");
+  const ex = r.exaltation ? `${node(the(r.exaltation.planet))} is exalted at ${r.exaltation.degree}°` : "no planet is exalted there";
+  const fall = r.fall ? `, and ${node(the(r.fall))} is in its fall` : "";
+  item(`lilly:${sign}`, "lilly", [`What are the essential dignities of ${sign} in Lilly?`, `Summarise Lilly's table of dignities for ${sign}.`], lillyRow(sign),
+    `In Lilly's Christian Astrology (1647), ${sign} is the house of ${the(r.domicile)}; ${ex}; its triplicity is ruled by ${the(r.triplicity.day)} by day and ${the(r.triplicity.night)} by night; its terms run ${r.terms.map((t) => `${t.planet} to ${t.to_degree}°`).join(", ")}; its faces are ${r.faces.map(the).join(", ")}. ${cap(the(r.detriment))} is in detriment there${fall}.`);
 }
 
 // Agrippa.
 for (const d of DECAN_IMAGES) {
   const ord = ["first", "second", "third"][d.face - 1];
-  qa("agrippa", [`What is Agrippa's image for the ${ord} face of ${d.sign}?`], `In Agrippa's Three Books of Occult Philosophy (1651 English), the ${ord} face of ${d.sign} is ${d.image}.${d.virtue ? ` He writes that it ${d.virtue}.` : ""}`);
+  item(`agrippa-face:${d.sign}-${d.face}`, "agrippa", [`What is Agrippa's image for the ${ord} face of ${d.sign}?`, `How does Agrippa picture ${d.sign}'s ${ord} face?`], agrippaDecanRow(d.sign, d.face),
+    `In Agrippa's Three Books of Occult Philosophy (1651 English), the ${ord} face of ${d.sign} is ${d.image}.${d.virtue ? ` He writes that it ${d.virtue}.` : ""}`);
 }
 for (const m of LUNAR_MANSIONS) {
-  qa("agrippa", [`What does Agrippa say of the ${m.number}th mansion of the Moon?`], `Agrippa's ${m.number}th mansion of the Moon is ${m.name}; it ${/^from|^begin/i.test(m.starts) ? "begins " : ""}${m.starts}. He says ${m.effects}.`);
+  item(`mansion:${m.number}`, "agrippa", [`What does Agrippa say of mansion ${m.number} of the Moon?`, `Name Agrippa's ${m.number}th lunar mansion and its effects.`], mansionRow(m.number),
+    `Agrippa's mansion ${m.number} of the Moon is ${m.name}. Where it starts: ${m.starts}. Its effects: ${m.effects}.`);
 }
 for (const s of BEHENIAN_STARS) {
-  qa("agrippa", [`What does Agrippa give for the fixed star ${s.name}?`], `Agrippa counts ${s.name} among the fifteen fixed stars, of the nature of ${s.nature_of.join(" and ")}; its stone is ${s.stone} and its herb ${s.herb}.`);
+  item(`star:${s.name}`, "agrippa", [`What does Agrippa give for the fixed star ${s.name}?`], starRow(s.name),
+    `Agrippa gives ${s.name} the nature of ${s.nature_of.join(" and ")}; its stone is ${s.stone} and its herb ${s.herb}.`);
 }
 
 // Liber 777.
-for (const row of Object.values(LIBER777)) {
-  const what = row.key <= 10 ? `the Sephirah ${row.name}` : `path ${row.key} (${row.name})`;
+for (const r of Object.values(LIBER777)) {
+  const what = r.key <= 10 ? `the Sephirah ${r.name}` : `path ${r.key} (${r.name})`;
   const parts = [
-    row.egyptian_gods && `Egyptian gods: ${row.egyptian_gods}`,
-    row.greek_gods && `Greek: ${row.greek_gods}`,
-    row.roman_gods && `Roman: ${row.roman_gods}`,
-    row.archangel && `archangel: ${row.archangel}`,
-    row.choir && `choir: ${row.choir}`,
-    `colours in the four scales: ${[row.king_scale, row.queen_scale, row.prince_scale, row.princess_scale].join("; ")}`,
-    row.stones && `stones: ${row.stones}`,
-    row.plants && `plants: ${row.plants}`,
-    row.animals && `animals: ${row.animals}`,
-    row.perfumes && `perfumes: ${row.perfumes}`,
-    row.weapons && `weapons: ${row.weapons}`,
+    r.egyptian_gods && `Egyptian gods ${r.egyptian_gods}`, r.greek_gods && `Greek gods ${r.greek_gods}`, r.roman_gods && `Roman gods ${r.roman_gods}`,
+    r.archangel && `the archangel ${r.archangel}`, r.choir && `the choir ${r.choir}`,
+    `colours ${[r.king_scale, r.queen_scale, r.prince_scale, r.princess_scale].join("; ")}`,
+    r.stones && `stones ${r.stones}`, r.plants && `plants ${r.plants}`, r.animals && `animals ${r.animals}`, r.perfumes && `perfumes ${r.perfumes}`, r.weapons && `weapons ${r.weapons}`,
   ].filter(Boolean);
-  qa("liber_777", [`What does Liber 777 list for ${what}?`, `Give the 777 correspondences of key ${row.key}.`], `Liber 777 (1909) gives, for key ${row.key}, ${what}: ${parts.join("; ")}.`);
+  item(`777:${r.key}`, "liber_777", [`What does Liber 777 list for ${what}?`, `Give the 777 correspondences of key ${r.key}.`], liber777KeyRow(r.key),
+    `Liber 777 (1909), key ${r.key}, ${what}: ${parts.join("; ")}.`);
 }
 
 // Westcott.
 for (const l of Object.values(YETZIRAH_LETTERS)) {
-  const parts = [l.element && `the element ${l.element}`, l.planet && `the planet ${l.planet} (after Kalisch; the Golden Dawn differs)`, l.sign && `the sign ${l.sign}`, l.day, l.month && `the month ${l.month}`, l.body && `the ${l.body}`, l.function && `the faculty of ${l.function.toLowerCase()}`].filter(Boolean);
-  qa("westcott", [`What does Westcott's Sepher Yetzirah assign to the letter ${l.westcott_name}?`], `In the supplement to Westcott's Sepher Yetzirah (1893), which he calls a modern illustration not found in the ancient copies, ${l.westcott_name}, a ${l.class} letter, is given ${parts.join(", ")}.`);
+  const parts = [l.element && `the element ${l.element}`, l.planet && `the planet ${l.planet} (Kalisch's allotment; the Golden Dawn differs)`, l.sign && `the sign ${l.sign}`, l.day, l.month && `the month ${l.month}`, l.season, l.body && `the ${l.body}`, l.function && `the faculty ${l.function}`].filter(Boolean);
+  item(`westcott:${l.id}`, "westcott", [`What does Westcott's Sepher Yetzirah assign to the letter ${l.westcott_name}?`], westcottRow(l.id),
+    `In the modern supplement to Westcott's Sepher Yetzirah (1893), ${l.westcott_name}, a ${l.class} letter, is given ${parts.join(", ")}.`);
 }
 
 // Lenain.
 for (const a of LENAIN_ANGELS) {
-  const attr = a.attribute_en.replace(/\s*\[our translation\]/, "");
-  const rules = a.rules_en.replace(/\s*\[our translation\]/, "");
-  const lsign = SIGN_ORDER[Math.floor(a.lenain_start_longitude / 30)];
-  const bsign = SIGN_ORDER[Math.floor(a.book_t_start_longitude / 30)];
-  qa("lenain", [`What does Lenain say of the angel ${a.name_lenain}?`], `In La Science cabalistique (1823), Lenain gives angel ${a.number}, ${a.name_lenain}, the attribute "${attr}". ${rules}. He places it at ${a.lenain_start_longitude % 30}° ${lsign}; Book T sets the same angel at ${a.book_t_start_longitude % 30}° ${bsign}.`);
+  const r = lenainRow(a.number);
+  const get = (prefix) => r.lines.find((x) => x.startsWith(prefix)).slice(prefix.length);
+  item(`lenain:${a.number}`, "lenain", [`What does Lenain say of the angel ${a.name_lenain}?`, `Who is angel ${a.number} in Lenain?`], r,
+    `In La Science cabalistique (1823), Lenain's angel ${a.number}, ${a.name_lenain}, has the attribute "${get("attribute: ")}". ${get("rules: ")}. Lenain places it at ${get("Lenain's place: ")}; Book T sets the same angel at ${get("Book T's place for the same angel: ")}.`);
+}
+
+// Questions → examples, each with its row and sometimes a distractor.
+const study = [];
+for (const it of items) {
+  for (const q of it.questions) {
+    const rows = [it.row];
+    if (rand() < 0.5) {
+      const others = items.filter((x) => x.source === it.source && x.key !== it.key);
+      rows.push(pick(others).row);
+      if (rand() < 0.5) rows.reverse();
+    }
+    study.push({
+      kind: "study", source: it.source, key: it.key,
+      messages: [
+        { role: "system", content: SYSTEM_STUDY },
+        { role: "user", content: `${q}\n\nSource rows:\n${renderRows(rows)}` },
+        { role: "assistant", content: it.answer },
+      ],
+    });
+  }
 }
 
 // ── Write ───────────────────────────────────────────────────────────────────
 
+// Every proper name and number in a study answer must appear in its prompt:
+// the model is trained to use what it is handed and nothing else.
+const COMMON = new Set(["The", "In", "It", "Its", "He", "His", "Her", "She", "They", "Where", "Name", "Who", "What", "Give", "How", "Which", "Summarise", "Source", "Some", "Answer", "This", "And", "Of"]);
+export const groundTerms = (s) => new Set([...(s.match(/\b[A-Z][a-z]{2,}\b/g) || []).filter((w) => !COMMON.has(w)), ...(s.match(/\b\d+\b/g) || [])]);
+const ungrounded = (ex) => {
+  const have = groundTerms(ex.messages[1].content);
+  return [...groundTerms(ex.messages[2].content)].some((t) => !have.has(t));
+};
+
 const readings = readingExamples();
-const dropped = { forbidden: 0, leak: 0 };
+const dropped = { forbidden: 0, leak: 0, ungrounded: 0 };
 const keep = [...readings, ...study].filter((ex) => {
   const answer = ex.messages[2].content;
   if (auditReadingText(answer).length) { dropped.forbidden++; return false; }
   if (ex.kind === "reading" && studyLeaks(answer).length) { dropped.leak++; return false; }
+  if (ex.kind === "study" && ungrounded(ex)) { dropped.ungrounded++; return false; }
   return true;
 });
 
-// Split by a hash of the user turn, so the same question never lands in both.
-const isVal = (ex) => createHash("sha1").update(ex.messages[1].content).digest()[0] < 26; // ~10%
+// Readings split by their prompt; study split by ITEM, so every paraphrase of a
+// held-out item stays held out and evaluation reads facts it never trained on.
+const isVal = (ex) => createHash("sha1").update(ex.kind === "study" ? ex.key : ex.messages[1].content).digest()[0] < 26; // ~10%
 mkdirSync(OUT, { recursive: true });
 const train = keep.filter((ex) => !isVal(ex));
 const val = keep.filter(isVal);

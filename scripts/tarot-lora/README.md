@@ -54,7 +54,7 @@ npm run tarot:export-training
 & $py scripts\tarot-lora\train.py --base Qwen/Qwen3-1.7B --epochs 1
 & $py scripts\tarot-lora\generate.py --readings 60 --study 30
 node scripts\tarot-lora\eval-guard.mjs
-& $py scripts\tarot-lora\to-ollama.py --name orbit-tarot --quantize q4_K_M
+& $py scripts\tarot-lora\to-ollama.py --name orbit-tarot --quantize int8
 ```
 
 ### Stopping and resuming
