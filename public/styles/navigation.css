@@ -31,7 +31,7 @@
    current tab also states itself with weight. */
 @media (max-width: 1023px) {
   .rail__link[aria-current="page"] { color: var(--color-accent); }
-  .rail__link[aria-current="page"] .rail__label::before { font-weight: var(--weight-semibold); }
+  .rail__link[aria-current="page"] .rail__label { font-weight: var(--weight-semibold); }
 }
 
 /* Forced colours discard the tint entirely — the filled icon and a real border

@@ -348,3 +348,10 @@
     padding: var(--space-sm) var(--space-md);
   }
 }
+
+.more-section > .o-group__label {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: var(--type-caption);
+  color: var(--color-secondary);
+}

@@ -217,9 +217,8 @@ test("Today renders its hierarchy in order", () => {
   // `today-explore` is gone from this list. It was a five-item "Continue
   // exploring" card at the foot of the page, restating destinations that are
   // one tap away in the tab bar — navigation dressed as content. The week strip
-  // took its place, because "which day am I reading" is a question someone has
-  // before the reading, not after it.
-  const order = ["today-moon", "today-days", "today-fortune",
+  // now follows the reading: returning to a past day is a secondary action.
+  const order = ["today-moon", "today-fortune", "today-days",
                  "today-highlights", "today-sky", "today-secondary"];
   const at = order.map((id) => {
     const i = HTML.indexOf(`id="${id}"`);

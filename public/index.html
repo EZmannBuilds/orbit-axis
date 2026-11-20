@@ -44,6 +44,7 @@
   <link rel="stylesheet" href="/styles/motion.css" />
   <!-- Last, so its container corrections win over the base primitives. -->
   <link rel="stylesheet" href="/styles/native.css" />
+  <link rel="stylesheet" href="/styles/observatory.css" />
   <link rel="icon" type="image/svg+xml" href="/brand/orbit-axis-mark.svg" />
 </head>
 <body>
@@ -60,11 +61,11 @@
         <img class="orbit-mark orbit-mark--rail" src="/brand/orbit-axis-mark.svg" alt="" />
         <span class="rail__brand-copy">
           <span class="rail__wordmark">ORBIT AXIS</span>
-          <span class="rail__tagline">YOUR ACCESS TO THE SKY</span>
+          <span class="rail__tagline">Your access to the sky</span>
         </span>
       </div>
 
-      <div class="rail__section-label">Sections</div>
+
       <div class="rail__nav" id="rail-nav">
         <!-- populated by app.js -->
       </div>
@@ -115,19 +116,16 @@
         <!-- ══ TODAY ═══════════════════════════════════════════════════════
              The daily return point, and the reason someone opens the app.
 
-             Order is the whole design: what does today mean for me, which day
-             am I reading, what is the Moon doing, what else is in the sky, and
-             only then the technical detail. The reading leads because it is
-             what was asked for; the positions that produced it come after,
-             because a reader who wants degrees can ask and a reader who does
-             not should never scroll past a table to finish the page. -->
+             The Moon gives every visitor a finished first view. The personal
+             reading follows, then past readings and ranked sky highlights.
+             Technical detail stays last and folded. -->
         <section class="workspace-panel" id="panel-home" role="region" aria-labelledby="home-title">
           <div class="axis-today-head">
             <div class="axis-today-head__main">
               <p class="axis-today-date" id="today-date"></p>
               <p class="cache-note" id="today-cache-note" hidden></p>
               <h1 class="axis-wordmark" id="home-title">Your sky today</h1>
-              <p class="axis-subtitle">Calculated from real astronomy, written in plain language.</p>
+              <p class="axis-subtitle">The Moon, today’s sky, and your daily reading.</p>
               <p class="axis-timezone" id="today-timezone" hidden></p>
             </div>
           </div>
@@ -189,16 +187,6 @@
             <button type="button" class="o-btn o-btn--secondary o-btn--sm" id="today-chart-retry">Try again</button>
           </div>
 
-          <!-- ── The week ──────────────────────────────────────────────────
-               Seven days ending today. Each one says whether Orbit Axis wrote
-               you a reading that day, and tapping a day that has one opens it.
-               Days with nothing saved are stated as such rather than being
-               tappable and empty — a control that does nothing reads as a bug.
-
-               The data is your own reading history; nothing here is predicted
-               or back-filled. -->
-          <nav class="day-strip" id="today-days" aria-label="Your last seven days" hidden></nav>
-
           <!-- The reading. -->
           <div id="today-fortune" class="axis-rise-2"><div class="axis-shimmer" style="height:240px"></div></div>
 
@@ -220,10 +208,19 @@
             </div>
           </div>
 
+          <!-- ── The week ──────────────────────────────────────────────────
+               Seven days ending today. Each one says whether Orbit Axis wrote
+               you a reading that day, and tapping a day that has one opens it.
+               Days with nothing saved are stated as such rather than being
+               tappable and empty — a control that does nothing reads as a bug.
+
+               The data is your own reading history; nothing here is predicted
+               or back-filled. -->
+          <nav class="day-strip" id="today-days" aria-label="Your last seven days" hidden></nav>
+
           <!-- What else is worth noticing, most personally relevant first. -->
           <section class="axis-card axis-rise-3" id="today-highlights" aria-labelledby="today-highlights-title" hidden>
             <h2 class="axis-section-title" id="today-highlights-title">In the sky today</h2>
-            <p class="axis-section-help">A few things worth noticing, most personally relevant first.</p>
             <div id="today-highlights-body"></div>
           </section>
 
@@ -243,7 +240,6 @@
         <section class="workspace-panel" id="panel-transits" role="region" aria-labelledby="transits-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <span class="a2-eyebrow">The moving sky</span>
               <h1 class="u-title" id="transits-title" tabindex="-1">The sky today</h1>
               <p class="u-caption">Where the planets are, and what they are touching in <strong id="transits-chart-name">your chart</strong>.</p>
             </div>
@@ -277,6 +273,11 @@
 
           <!-- Forthcoming shared-sky changes: not chart-specific, so they sit
                after the personal reading. -->
+          <figure class="sky-orbit" id="sky-orbit" hidden>
+            <div class="sky-orbit__art" id="sky-orbit-art"></div>
+            <figcaption>Seen from Earth · each body at today's position along the zodiac</figcaption>
+          </figure>
+
           <div class="o-card">
             <div class="o-card-head"><h2 class="u-card-title">Upcoming sky events</h2><span class="u-meta" id="events-count"></span></div>
             <div class="o-timeline" id="events-timeline"></div>
@@ -293,7 +294,6 @@
         <section class="workspace-panel" id="panel-positions" role="region" aria-labelledby="positions-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <span class="a2-eyebrow">The sky everyone shares</span>
               <h1 class="u-title" id="positions-title" tabindex="-1">Everyone's sky</h1>
               <p class="u-caption">Where the planets are in the zodiac right now. These positions are the same for everyone.</p>
               <p class="u-meta" id="positions-time"></p>
@@ -350,9 +350,8 @@
           <div class="o-section-head">
             <div class="o-section-head__text">
               <nav class="atlas-crumbs" id="atlas-crumbs" aria-label="Atlas location"></nav>
-              <span class="a2-eyebrow">Plain-language reference</span>
               <h1 class="u-title sr-only-mobile" id="symbol-atlas-title" tabindex="-1">Atlas</h1>
-              <p class="u-caption" id="atlas-subtitle">Every symbol Orbit Axis uses, in plain language.</p>
+              <p class="u-caption" id="atlas-subtitle">Look up a sign, planet, house, or aspect.</p>
             </div>
           </div>
 
@@ -377,9 +376,8 @@
         <section class="workspace-panel" id="panel-me" role="region" aria-labelledby="mychart-title" hidden>
           <div class="o-section-head me-page-head">
             <div class="o-section-head__text">
-              <span class="a2-eyebrow">Your birth chart</span>
               <h1 class="u-title" id="mychart-title" tabindex="-1">Your chart</h1>
-              <p class="u-caption">Your birth chart, explained placement by placement.</p>
+              <p class="u-caption">Explore the planets, signs, and houses in your birth chart.</p>
               <div class="me-active-line">
                 <span id="mychart-name">No active chart yet</span>
                 <span class="o-pill o-pill--success" id="me-active-badge" hidden>Active</span>
@@ -512,7 +510,7 @@
           <div class="o-section-head me-page-head">
             <div class="o-section-head__text">
               <h1 class="u-title sr-only-mobile" id="saved-charts-title" tabindex="-1">Saved charts</h1>
-              <p class="u-caption">The people and launch moments Orbit Axis remembers for you.</p>
+              <p class="u-caption">Manage your saved charts.</p>
             </div>
             <div class="o-section-head__actions">
               <button type="button" class="o-btn o-btn--primary" id="me-saved-chart-add">Add chart</button>
@@ -591,9 +589,8 @@
         <section class="workspace-panel" id="panel-more" role="region" aria-labelledby="more-title" hidden>
           <div class="o-section-head">
             <div class="o-section-head__text">
-              <span class="a2-eyebrow">Your orbit</span>
               <h1 class="u-title sr-only-mobile" id="more-title" tabindex="-1">You</h1>
-              <p class="u-caption">Your account, what Orbit Axis stores, and how it looks.</p>
+              <p class="u-caption">Manage your account, saved readings, and preferences.</p>
             </div>
           </div>
 
@@ -663,8 +660,8 @@
               <div class="auth-message" id="account-billing-message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
               <div class="account-offer" id="account-signed-out" hidden>
-                <p class="account-offer__lead">You're using Orbit Axis without an account. Today's sky, the Atlas, and every position are yours either way.</p>
-                <p class="account-offer__sub">An account adds the part that's about you: your birth chart, your daily reading, and your history — on every device.</p>
+                <p class="account-offer__lead">You're using Orbit Axis without an account. You can explore the sky and Atlas.</p>
+                <p class="account-offer__sub">Create a free account to save your chart and readings across devices.</p>
                 <button type="button" class="o-btn o-btn--primary" id="account-create">Create your chart — free</button>
                 <button type="button" class="linklike" id="account-signin">Already have an account?</button>
               </div>
@@ -681,7 +678,7 @@
                   <span class="o-row__icon" data-icon="clock-counter-clockwise"></span>
                   <span class="o-row__main">
                     <span class="o-row__title">Reading history</span>
-                    <span class="o-row__sub">Every daily reading Orbit Axis has written for you.</span>
+                    <span class="o-row__sub">Revisit your saved daily readings.</span>
                   </span>
                 </a>
                 <a class="o-row o-row--link" href="#settings">
@@ -928,7 +925,7 @@
           <div class="o-section-head">
             <div class="o-section-head__text">
               <h1 class="u-title" id="settings-title" tabindex="-1">Appearance</h1>
-              <p class="u-caption">How Orbit Axis looks and moves. Saved on this device.</p>
+              <p class="u-caption">Choose what’s comfortable for you. These settings stay on this device.</p>
             </div>
             <div class="o-section-head__actions">
               <a class="o-btn o-btn--utility" href="#more">Back to You</a>
@@ -1132,6 +1129,8 @@
       <!-- Create account leads, and is the default tab: most people opening
            this have no account yet, and a returning user recognises the tab
            they need without being defaulted onto it. -->
+      <div id="auth-sample"></div>
+
       <div class="auth-tabs o-segment o-segment--block" role="group" aria-label="Account action">
         <button type="button" data-auth-mode="signup" aria-pressed="true">Create account</button>
         <button type="button" data-auth-mode="signin" aria-pressed="false">Sign in</button>

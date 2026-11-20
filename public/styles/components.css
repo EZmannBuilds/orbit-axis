@@ -336,7 +336,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 .o-group__label {
   display: block;
-  padding: 0 var(--space-xxs) var(--space-xs);
+  padding: 0 0 var(--space-xs);
   font-size: var(--type-fine);
   font-weight: var(--weight-semibold);
   letter-spacing: var(--track-caps);
@@ -534,15 +534,15 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 /* ── Timeline ────────────────────────────────────────────────────────────── */
 .o-timeline { display: grid; gap: 0; }
 .o-timeline__item {
-  position: relative; display: grid; grid-template-columns: 88px 1fr; gap: var(--space-md);
+  position: relative; display: grid; grid-template-columns: 56px 1fr; gap: var(--space-md);
   padding: var(--space-sm) 0 var(--space-md);
 }
 .o-timeline__item::before {
-  content: ""; position: absolute; left: 98px; top: 24px; bottom: -4px; width: 1px;
+  content: ""; position: absolute; left: 66px; top: 24px; bottom: -4px; width: 1px;
   background: var(--color-border);
 }
 .o-timeline__item:last-child::before { display: none; }
-.o-timeline__date { font-size: var(--type-caption); color: var(--color-accent); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.o-timeline__date { display: block; font-size: var(--type-caption); font-weight: var(--weight-semibold); color: var(--color-accent); font-variant-numeric: tabular-nums; padding-top: 2px; white-space: nowrap; }
 .o-timeline__body { position: relative; padding-left: var(--space-lg); }
 .o-timeline__body::before {
   content: ""; position: absolute; left: -5px; top: 7px; width: 9px; height: 9px;
